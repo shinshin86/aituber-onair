@@ -1086,3 +1086,177 @@ describe('OpenRouter public-preview model flow with offline fixtures', () => {
     );
   });
 });
+
+describe('OpenAI-compatible local TTS setup', () => {
+  const detectButton = '.local-tts-actions button:first-child';
+  const previewButton = '.local-tts-actions button:last-child';
+  const previewPlayed = vi.fn();
+
+  beforeEach(async () => {
+    previewPlayed.mockReset().mockResolvedValue(undefined);
+    vi.stubGlobal(
+      'Audio',
+      class {
+        play = previewPlayed;
+        pause = vi.fn();
+      },
+    );
+    vi.stubGlobal(
+      'URL',
+      class extends URL {
+        static createObjectURL = vi.fn(() => 'blob:local-tts-preview');
+        static revokeObjectURL = vi.fn();
+      },
+    );
+    await change('engine', 'openaiCompatible');
+  });
+
+  it.each([
+    'http://localhost:20203',
+    'http://localhost:20203/v1',
+    'http://localhost:20203/v1/audio/speech',
+  ])('resolves %s for the main Speak flow', async (endpoint) => {
+    expect(container.querySelector('#apiUrl')).toBeNull();
+    expect(container.querySelector('#speaker')).toBeNull();
+    await change('tts-openai-compatible-url', endpoint);
+    await change('tts-openai-compatible-model', 'aquestalkplayer');
+    const bodies: Record<string, unknown>[] = [];
+    routes.set('POST http://localhost:20203/v1/audio/speech', (init) => {
+      bodies.push(JSON.parse(init.body as string));
+      return audioResponse(wavBytes, 'audio/wav');
+    });
+    expect(container.textContent).toContain(
+      'Requests go to: http://localhost:20203/v1/audio/speech',
+    );
+    await click(speakButton);
+    expect(bodies).toEqual([
+      {
+        model: 'aquestalkplayer',
+        input: field('text').value,
+        // No speed override: the existing engine uses its default of 1.
+        speed: 1,
+      },
+    ]);
+    expect(audio.played).toHaveBeenCalledWith(wavBytes);
+  });
+
+  it('detects aqtpserver without a voice list and plays preview and main speech', async () => {
+    await change('tts-openai-compatible-url', 'http://localhost:20203');
+    routes.set('GET http://localhost:20203/', () =>
+      jsonResponse({ engine: 'aqtpserver', model: 'aquestalkplayer' }),
+    );
+    routes.set('GET http://localhost:20203/v1/models', () =>
+      jsonResponse({ data: [{ id: 'aquestalkplayer' }] }),
+    );
+    for (const path of ['audio/voices', 'voices']) {
+      routes.set(`GET http://localhost:20203/v1/${path}`, () =>
+        jsonResponse({}, 404),
+      );
+    }
+    await click(detectButton);
+    expect(container.textContent).toContain('Detected engine: aqtpserver');
+    expect(field('tts-openai-compatible-model').value).toBe('aquestalkplayer');
+    expect(container.textContent).toContain('No voice list');
+    expect(container.textContent).toContain('AquesTalkPlayer preset name');
+    expect(container.textContent).toContain('does not accept instructions');
+    await change('tts-openai-compatible-speaker', 'れいむ');
+    const bodies: Record<string, unknown>[] = [];
+    routes.set('POST http://localhost:20203/v1/audio/speech', (init) => {
+      bodies.push(JSON.parse(init.body as string));
+      return audioResponse(wavBytes, 'audio/wav');
+    });
+    await click(previewButton);
+    expect(bodies[0]).toEqual({
+      model: 'aquestalkplayer',
+      input: 'こんにちは、音声合成のテストです。',
+      voice: 'れいむ',
+    });
+    expect(previewPlayed).toHaveBeenCalledOnce();
+    expect(container.textContent).toContain('Speech generated in');
+    await click(speakButton);
+    expect(bodies[1]).toEqual({
+      model: 'aquestalkplayer',
+      input: field('text').value,
+      voice: 'れいむ',
+      speed: 1,
+    });
+    expect(audio.played).toHaveBeenCalledWith(wavBytes);
+  });
+
+  it('supports discovered and manual choices and forwards optional fields to both speech paths', async () => {
+    await change('tts-openai-compatible-url', 'https://tts.example.test/v1');
+    routes.set('GET https://tts.example.test/', () => jsonResponse({}, 404));
+    routes.set('GET https://tts.example.test/v1/models', () =>
+      jsonResponse({ data: [{ id: 'fixture-model' }] }),
+    );
+    routes.set('GET https://tts.example.test/v1/audio/voices', () =>
+      jsonResponse({
+        voices: ['fixture-voice'],
+        default_voice: 'fixture-voice',
+      }),
+    );
+    await click(detectButton);
+    expect(field('tts-openai-compatible-model').value).toBe('fixture-model');
+    expect(field('tts-openai-compatible-speaker').value).toBe('fixture-voice');
+    await change('tts-openai-compatible-model', '__manual__');
+    await change('tts-openai-compatible-model-manual', 'custom-model');
+    await change('tts-openai-compatible-speaker', '__manual__');
+    await change('tts-openai-compatible-speaker-manual', 'custom-voice');
+    await change('tts-openai-compatible-instructions', '  Calm voice  ');
+    await change('openaiCompatibleSpeed', '1.2');
+    await change('apiKey', '<YOUR_API_KEY>');
+    const bodies: Record<string, unknown>[] = [];
+    routes.set('POST https://tts.example.test/v1/audio/speech', (init) => {
+      expect(new Headers(init.headers).get('Authorization')).toBe(
+        'Bearer <YOUR_API_KEY>',
+      );
+      bodies.push(JSON.parse(init.body as string));
+      return audioResponse(wavBytes, 'audio/wav');
+    });
+    await click(previewButton);
+    await click(speakButton);
+    expect(bodies).toHaveLength(2);
+    for (const body of bodies) {
+      expect(body).toMatchObject({
+        model: 'custom-model',
+        voice: 'custom-voice',
+        instructions: 'Calm voice',
+        speed: 1.2,
+      });
+    }
+    await change('engine', 'openai');
+    expect(container.querySelector('.local-tts-setup')).toBeNull();
+    expect(field('speaker').value).toBe('alloy');
+    await change('engine', 'openaiCompatible');
+    expect(field('tts-openai-compatible-instructions').value).toBe('');
+    expect(field('openaiCompatibleSpeed').value).toBe('');
+  });
+
+  it('shows invalid URL and unreachable server errors without retaining old status', async () => {
+    await change('tts-openai-compatible-url', 'not a URL');
+    expect(
+      field('tts-openai-compatible-url').getAttribute('aria-invalid'),
+    ).toBe('true');
+    expect(button(detectButton).disabled).toBe(true);
+    expect(button(previewButton).disabled).toBe(true);
+    await change('tts-openai-compatible-model', 'fixture-model');
+    await click(speakButton);
+    expect(container.querySelector('.status.error')).not.toBeNull();
+    await change(
+      'tts-openai-compatible-url',
+      'https://unreachable.example.test',
+    );
+    for (const path of ['/', '/v1/models', '/v1/audio/voices', '/v1/voices']) {
+      routes.set(`GET https://unreachable.example.test${path}`, () => {
+        throw new TypeError('Failed to fetch');
+      });
+    }
+    await click(detectButton);
+    expect(container.querySelector('.local-tts-error')?.textContent).toContain(
+      'Could not reach the speech server',
+    );
+    expect(container.querySelector('.local-tts-error a')).not.toBeNull();
+    await change('tts-openai-compatible-url', 'http://localhost:20203');
+    expect(container.querySelector('.local-tts-error')).toBeNull();
+  });
+});

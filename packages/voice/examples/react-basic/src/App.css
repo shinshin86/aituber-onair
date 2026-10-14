@@ -480,6 +480,66 @@
   color: var(--error-text);
 }
 
+.local-tts-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  min-width: 0;
+}
+
+.local-tts-field {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.local-tts-field small,
+.local-tts-status {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.local-tts-preview {
+  overflow-wrap: anywhere;
+}
+
+.local-tts-preview code {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.local-tts-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.local-tts-status-ok {
+  color: var(--success-text);
+}
+
+.local-tts-error {
+  display: block;
+  color: var(--error-text);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.local-tts-error-help {
+  margin: 0.25rem 0 0;
+}
+
+.local-tts-error-help a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.local-tts-field textarea {
+  min-height: 4rem;
+  background: var(--panel-overlay);
+}
+
 .piper-plus-panel {
   display: flex;
   flex-direction: column;
@@ -636,4 +696,13 @@
   .app-footer {
     padding: 0 1.25rem 1.5rem;
   }
+}
+
+.local-tts-card .collapsible-card__panel {
+  display: block;
+}
+
+.local-tts-card__title {
+  margin: 0 0 4px;
+  font-size: 1rem;
 }

@@ -46,6 +46,7 @@ import {
   VOICEPEAK_WEIGHT_KEYS,
 } from '../constants';
 import { CollapsibleCard } from './CollapsibleCard';
+import { LocalTtsSetup } from './LocalTtsSetup';
 import { NumberSliderField } from './NumberSliderField';
 
 interface StringField {
@@ -140,6 +141,10 @@ interface EngineParametersProps {
     models: Record<string, string>;
   };
   openaiCompatible: {
+    endpoint: StringField;
+    voice: StringField;
+    instructions: StringField;
+    apiKey: string;
     model: StringField;
     speed: StringField;
   };
@@ -1136,26 +1141,47 @@ export function EngineParameters({
       )}
 
       {engine === 'openaiCompatible' && (
+        <section
+          className="local-tts-card"
+          aria-labelledby="local-tts-card-title"
+        >
+          <div className="collapsible-card__panel parameter-card openai-card">
+            <h3 id="local-tts-card-title" className="local-tts-card__title">
+              サーバーへの接続
+            </h3>
+            <p className="collapsible-card__description">
+              <code>/v1/audio/speech</code> 互換のセルフホスト /
+              ローカルTTSサーバーのURLを入力し、「Detect
+              server」を押すとモデルや声の候補とサーバーごとのヒントが表示されます。「Test
+              speech」で試聴できます。
+            </p>
+            <div className="collapsible-card__content">
+              <LocalTtsSetup
+                endpoint={openaiCompatible.endpoint.value}
+                onEndpointChange={openaiCompatible.endpoint.onChange}
+                model={openaiCompatible.model.value}
+                onModelChange={openaiCompatible.model.onChange}
+                voice={openaiCompatible.voice.value}
+                onVoiceChange={openaiCompatible.voice.onChange}
+                instructions={openaiCompatible.instructions.value}
+                onInstructionsChange={openaiCompatible.instructions.onChange}
+                speed={openaiCompatible.speed.value}
+                apiKey={openaiCompatible.apiKey}
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {engine === 'openaiCompatible' && (
         <CollapsibleCard
           className="parameter-card openai-card"
-          title="OpenAI互換 TTS パラメータ"
-          description="`/v1/audio/speech` 互換のセルフホスト / ローカルTTSエンドポイント向けです。"
+          title="OpenAI互換 TTS 詳細パラメータ"
+          description="サーバーが対応している場合のみ指定してください。"
         >
           <div className="parameter-section">
-            <div className="parameter-section__title">モデル・話速</div>
+            <div className="parameter-section__title">話速</div>
             <div className="parameter-grid parameter-grid--two">
-              <div className="form-group">
-                <label htmlFor="openaiCompatibleModel">Model</label>
-                <input
-                  id="openaiCompatibleModel"
-                  type="text"
-                  value={openaiCompatible.model.value}
-                  onChange={(e) =>
-                    openaiCompatible.model.onChange(e.target.value)
-                  }
-                  placeholder="例: your-model-id"
-                />
-              </div>
               <NumberSliderField
                 id="openaiCompatibleSpeed"
                 label="Speed (0.25 - 4.0)"
@@ -1168,8 +1194,7 @@ export function EngineParameters({
           </div>
 
           <p className="parameter-card__note">
-            Speaker を空欄にすると `voice` は送信されません。API URL の既定値は
-            `http://localhost:8880/v1/audio/speech` です。
+            Speed は対応するサーバーでのみ指定してください。
           </p>
         </CollapsibleCard>
       )}
