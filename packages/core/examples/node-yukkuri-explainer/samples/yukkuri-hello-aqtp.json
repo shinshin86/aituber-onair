@@ -1,0 +1,107 @@
+{
+  "show": {
+    "title": "音と動きのしくみ",
+    "subtitle": "だんご と ぼぶ の ゆっくり解説"
+  },
+  "seed": 42,
+  "leadIn": 0.5,
+  "leadOut": 0.6,
+  "defaultPauseAfter": 0.3,
+  "speakers": {
+    "dango": {
+      "name": "だんご",
+      "image": "../assets/yukkuri/dango.png",
+      "position": "left",
+      "mirror": true,
+      "subtitleColor": "#c9343f",
+      "voice": {
+        "engine": "aituber-voice",
+        "options": {
+          "engineType": "openaiCompatible",
+          "openAiCompatibleApiUrl": "http://127.0.0.1:20203/v1/audio/speech",
+          "openAiCompatibleModel": "aquestalkplayer",
+          "speaker": "れいむ",
+          "openAiCompatibleResponseFormat": "wav"
+        }
+      }
+    },
+    "bob": {
+      "name": "ぼぶ",
+      "image": "../assets/yukkuri/bob.png",
+      "position": "right",
+      "mirror": true,
+      "subtitleColor": "#2d65c8",
+      "voice": {
+        "engine": "aituber-voice",
+        "options": {
+          "engineType": "openaiCompatible",
+          "openAiCompatibleApiUrl": "http://127.0.0.1:20203/v1/audio/speech",
+          "openAiCompatibleModel": "aquestalkplayer",
+          "speaker": "まりさ",
+          "openAiCompatibleResponseFormat": "wav"
+        }
+      }
+    }
+  },
+  "lines": [
+    {
+      "speaker": "dango",
+      "text": "今日は、音に合わせてキャラクターが動くしくみを話すよ。",
+      "chapter": "音を動きに変えてみよう",
+      "point": "音の大きさを、動きに変える",
+      "keywords": ["音の大きさ", "キャラクター"],
+      "emotion": "happy"
+    },
+    {
+      "speaker": "bob",
+      "text": "話している方だけが、ぴょんと跳ねるんだね。",
+      "point": "話しているキャラクターだけが跳ねる",
+      "keywords": ["話者ごとに動く"]
+    },
+    {
+      "speaker": "dango",
+      "text": "そう。短い区間ごとに、音の大きさを調べているんだ。",
+      "chapter": "短い区間の音量を調べる",
+      "point": "短い区間の平均的な音量を計算",
+      "slide": {
+        "text": "音声 → 音量 → ジャンプ"
+      },
+      "keywords": ["音声", "音量", "ジャンプ"]
+    },
+    {
+      "speaker": "bob",
+      "text": "音が大きいと、ジャンプも少し元気になるの？",
+      "point": "音が大きいほど、弾む動きも強くなる",
+      "emotion": "surprised"
+    },
+    {
+      "speaker": "dango",
+      "text": "うん。音が止まったら着地して、動きも落ち着くよ。",
+      "chapter": "音が止まったら着地",
+      "point": "無音では新しいジャンプを始めない",
+      "keywords": ["無音", "着地"]
+    },
+    {
+      "speaker": "bob",
+      "text": "聞いている間は、ゆっくり呼吸するように動くんだね。",
+      "point": "聞き手は小さな呼吸の動きだけ",
+      "keywords": ["呼吸", "待機"]
+    },
+    {
+      "speaker": "dango",
+      "text": "字幕も話す人の色にすれば、誰のせりふか分かるよ。",
+      "chapter": "声と動きと字幕をそろえる",
+      "point": "声・動き・字幕の色を話者ごとに切り替える",
+      "keywords": ["声", "動き", "字幕"],
+      "emotion": "happy"
+    },
+    {
+      "speaker": "bob",
+      "text": "画像が一枚ずつでも、ふたりの会話を表現できたね。",
+      "point": "一枚ずつの画像で、ふたりの解説動画に",
+      "keywords": ["ふたりの会話"],
+      "emotion": "happy"
+    }
+  ],
+  "output": "../work/yukkuri-hello-aqtp.mp4"
+}
