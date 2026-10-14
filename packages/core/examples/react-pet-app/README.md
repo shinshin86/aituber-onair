@@ -36,7 +36,7 @@ The app keeps the same basic structure as the other React core samples:
 
 ## Chat and Voice model updates
 
-This example uses Chat 0.63.0 and Voice 0.26.0 through Core. Select a
+This example uses Chat 0.64.0 and Voice 0.26.0 through Core. Select a
 supported model such as `gpt-6-sol`, `gpt-6-luna`, `claude-opus-5-5`,
 `claude-sonnet-5-5`,
 `grok-4.7`, or `deepseek-flash` in
@@ -179,7 +179,7 @@ prohibited.
 
 ## Updated Chat and Voice options
 
-This example uses published Chat 0.63.0 and Voice 0.26.0 through Core.
+This example uses published Chat 0.64.0 and Voice 0.26.0 through Core.
 New Chat models are available in the model selector, including GPT-6.1 Sol,
 GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
 Chat's capability checks and model-specific reasoning defaults. The avatar
@@ -201,6 +201,11 @@ Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
 `sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
 model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
+Chat 0.64.0 adds the OpenRouter public preview Mistral Large 4
+(`mistralai/mistral-large-4-0`) after Pareto, with text and image input. Its
+reasoning defaults to `none` for responsive chat. The model selected when
+switching to OpenRouter is unchanged.
+
 Chat 0.63.0 adds Claude Haiku 5.5 at the end of the Claude model list; the
 model selected when switching to Claude is unchanged. Claude requests now use
 `low` effort for faster replies.
