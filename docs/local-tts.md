@@ -35,6 +35,22 @@ Press **Test speech** to synthesize one short sentence with the current model, v
 
 A React example runs in the browser, so the TTS server must allow the page's origin through CORS (for example `http://localhost:5173` for the Vite dev server). Otherwise the browser blocks the request and the settings show a network error. If your app is served over HTTPS, a plain HTTP server URL may also be blocked as mixed content.
 
+## Desktop apps without an HTTP API
+
+Some local TTS apps only offer a command-line interface. To use one from AITuber OnAir, run a small local server that calls the app's command line and exposes it as `POST /v1/audio/speech`; the app itself stays on your PC and is not bundled with AITuber OnAir. Currently documented here: AquesTalkPlayer through [aqtpserver](https://github.com/shinshin86/aqtpserver).
+
+### AquesTalkPlayer (aqtpserver)
+
+[AquesTalkPlayer](https://www.a-quest.com/products/aquestalkplayer.html) is AQUEST's speech synthesis app for Windows and macOS, known for "yukkuri" voices. aqtpserver starts your installed AquesTalkPlayer through its command line and accepts connections only from your own PC.
+
+1. Download and install AquesTalkPlayer from the official product page.
+2. Install and start aqtpserver as described in its [README](https://github.com/shinshin86/aqtpserver#readme). On Windows, pass the path of `AquesTalkPlayer.exe` with `--aquestalkplayer-path`.
+3. In a React example, select **OpenAI-Compatible TTS**, enter `http://127.0.0.1:20203`, and press **Detect server**. If **Model** is empty, `aquestalkplayer` is filled in.
+4. Enter an AquesTalkPlayer preset name in **Voice**, such as the built-in `れいむ` or `まりさ`, or a preset you created in the app. aqtpserver has no voice list, so type the name.
+5. Leave **Instructions** empty and **Speed** empty or `1`. Voice type, speed, and pitch come from the preset; create another preset in the app to change them. Other values return HTTP 400.
+
+aqtpserver allows `http://localhost` and `http://127.0.0.1` pages by default, so the Vite dev server needs no extra CORS setting. AquesTalkPlayer is free only for personal non-commercial use, and AQUEST's terms do not allow letting third parties use it over a network. Check the [aqtpserver README](https://github.com/shinshin86/aqtpserver#license) and AQUEST's terms before using it in streams or videos.
+
 ## Google Colab
 
 The repository's [connect-colab-local-tts skill](../skills/connect-colab-local-tts/SKILL.md) describes starting an OpenAI-compatible TTS server on Colab and exposing it through a temporary cloudflared Quick Tunnel URL. Enter that URL (the `/v1` base URL is enough) in the React example and press **Detect server**.
