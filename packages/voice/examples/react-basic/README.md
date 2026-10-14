@@ -245,10 +245,26 @@ Official references: [OpenRouter TTS guide](https://openrouter.ai/docs/guides/ov
 and [Microsoft's preview and language documentation](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/mai-voices).
 
 #### OpenAI-Compatible TTS
-```bash
-# Kokoro FastAPI default endpoint: http://localhost:8880/v1/audio/speech
-# API key is optional. Set the model explicitly to one accepted by your endpoint.
-```
+
+For local or self-hosted `/v1/audio/speech` servers, select **OpenAI-Compatible
+TTS** and expand **OpenAI互換 TTS パラメータ**. Enter the server origin, `/v1`
+base URL, or full speech URL in **Endpoint URL**; **Requests go to:** shows the
+resolved URL used by both the preview and the main **Speak** button.
+
+Use **Detect server** to load the available models and voices. If the server
+does not provide a list, enter the model or voice manually. **Test speech**
+generates and plays a short sample and displays the result or error. API keys
+are optional. Empty Voice and Instructions fields are omitted from requests.
+An empty Speed field leaves the server default for **Test speech** and the
+Voice engine default of `1` for **Speak**. Set only the fields your server
+accepts.
+
+Engine-specific hints appear when the server reports its engine name. For
+example, `aqtpserver` uses model `aquestalkplayer` and AquesTalkPlayer preset
+names such as `れいむ` for Voice. Leave Instructions and Speed empty; the preset
+controls speed and pitch. Irodori-TTS variants show their own voice and
+instructions guidance. See the [local TTS setup guide](../../../../docs/local-tts.md)
+for server setup and troubleshooting.
 
 #### Inworld TTS
 Select `inworld-tts-2` (default) for quality or `inworld-tts-2-flash` for lower

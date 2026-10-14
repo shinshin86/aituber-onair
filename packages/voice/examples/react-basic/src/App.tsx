@@ -1,6 +1,7 @@
 import {
   VoiceEngineAdapter,
   getVoiceEngineVoiceList,
+  resolveOpenAICompatibleSpeechEndpoint,
   type AivisSpeechQueryParameterOverrides,
   type CartesiaLanguage,
   type CartesiaOutputContainer,
@@ -273,6 +274,8 @@ function App() {
   );
   const [geminiTtsPrompt, setGeminiTtsPrompt] = useState<string>('');
   const [openaiCompatibleModel, setOpenaiCompatibleModel] = useState('');
+  const [openaiCompatibleInstructions, setOpenaiCompatibleInstructions] =
+    useState('');
   const [aivisCloudModelUuid, setAivisCloudModelUuid] = useState('');
   const [aivisCloudSpeakerUuid, setAivisCloudSpeakerUuid] = useState('');
   const [aivisCloudStyleId, setAivisCloudStyleId] = useState('');
@@ -539,6 +542,7 @@ function App() {
     setGeminiTtsLanguageCode(ENGINE_DEFAULTS.geminiTts.defaultLanguageCode);
     setGeminiTtsPrompt('');
     setOpenaiCompatibleModel('');
+    setOpenaiCompatibleInstructions('');
     setAivisCloudModelUuid('');
     setAivisCloudSpeakerUuid('');
     setAivisCloudStyleId('');
@@ -1213,6 +1217,12 @@ function App() {
           options.geminiTtsPrompt = geminiTtsPrompt.trim();
         }
       } else if (engine === 'openaiCompatible') {
+        options.openAiCompatibleApiUrl =
+          resolveOpenAICompatibleSpeechEndpoint(apiUrl).speechUrl;
+        if (openaiCompatibleInstructions.trim()) {
+          options.openAiCompatibleInstructions =
+            openaiCompatibleInstructions.trim();
+        }
         if (openaiCompatibleModel.trim()) {
           options.openAiCompatibleModel = openaiCompatibleModel.trim();
         }
@@ -1488,9 +1498,6 @@ function App() {
             if (apiUrl !== ENGINE_DEFAULTS.gradium.apiUrl) {
               options.gradiumApiUrl = apiUrl;
             }
-            break;
-          case 'openaiCompatible':
-            options.openAiCompatibleApiUrl = apiUrl;
             break;
           case 'aivisSpeech':
             options.aivisSpeechApiUrl = apiUrl;
@@ -1800,6 +1807,13 @@ function App() {
                   models: GEMINI_TTS_MODELS,
                 }}
                 openaiCompatible={{
+                  endpoint: { value: apiUrl, onChange: setApiUrl },
+                  voice: { value: speaker, onChange: setSpeaker },
+                  instructions: {
+                    value: openaiCompatibleInstructions,
+                    onChange: setOpenaiCompatibleInstructions,
+                  },
+                  apiKey,
                   model: {
                     value: openaiCompatibleModel,
                     onChange: setOpenaiCompatibleModel,
