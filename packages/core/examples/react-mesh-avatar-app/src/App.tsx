@@ -465,6 +465,8 @@ export default function App() {
   }, []);
 
   const voiceInput: ChatVoiceInputProps = {
+    local: settingsHook.settings.voiceInput.local,
+    onLocalChange: settingsHook.updateLocalVoiceInput,
     mode: settingsHook.settings.voiceInput.mode,
     service: settingsHook.settings.voiceInput.service,
     onModeChange: settingsHook.updateVoiceInputMode,

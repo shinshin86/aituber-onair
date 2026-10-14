@@ -779,6 +779,8 @@ body {
 }
 
 .voice-menu {
+  max-height: min(70dvh, 640px);
+  overflow-y: auto;
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
@@ -878,7 +880,9 @@ body {
   color: #8899aa;
 }
 
+.voice-menu-key select,
 .voice-menu-key input {
+  min-width: 0;
   padding: 8px 10px;
   background: #16213e;
   border: 1px solid #0f3460;
@@ -890,6 +894,16 @@ body {
 
 .voice-menu-key input:focus {
   border-color: #e94560;
+}
+
+.voice-menu-local > label {
+  font-size: 0.72rem;
+  color: #b8c2d6;
+}
+
+.voice-menu-local .voice-menu-note {
+  margin: 2px 0 6px;
+  overflow-wrap: anywhere;
 }
 
 .voice-menu-note {

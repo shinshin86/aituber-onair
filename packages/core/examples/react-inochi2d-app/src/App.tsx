@@ -486,6 +486,8 @@ export default function App() {
         '未読み込み';
 
   const voiceInput: ChatVoiceInputProps = {
+    local: settingsHook.settings.voiceInput.local,
+    onLocalChange: settingsHook.updateLocalVoiceInput,
     mode: settingsHook.settings.voiceInput.mode,
     service: settingsHook.settings.voiceInput.service,
     onModeChange: settingsHook.updateVoiceInputMode,

@@ -3,10 +3,16 @@
 import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import type { VoiceInputMode } from '../lib/voiceInput';
+import {
+  DEFAULT_LOCAL_VOICE_INPUT,
+  type VoiceInputService,
+  type VoiceInputMode,
+} from '../lib/voiceInput';
 import { VoiceInputControl } from './VoiceInputControl';
 
 function Harness() {
+  const [service, setService] = useState<VoiceInputService>('browser');
+  const [local, setLocal] = useState(DEFAULT_LOCAL_VOICE_INPUT);
   const [mode, setMode] = useState<VoiceInputMode>('once');
   return (
     <VoiceInputControl
@@ -16,8 +22,10 @@ function Harness() {
       onMicClick={() => undefined}
       mode={mode}
       onModeChange={setMode}
-      service="browser"
-      onServiceChange={() => undefined}
+      service={service}
+      onServiceChange={setService}
+      local={local}
+      onLocalChange={setLocal}
       apiKeys={{ openai: '', gemini: '' }}
       onApiKeyChange={() => undefined}
     />
@@ -65,5 +73,60 @@ describe('VoiceInputControl', () => {
       document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     });
     expect(menu()).toBeNull();
+  });
+
+  it('shows the verified preset, optional fields, resolved URL and CORS origin', () => {
+    act(() =>
+      container
+        .querySelector<HTMLButtonElement>('[aria-haspopup="menu"]')
+        ?.click(),
+    );
+    act(() => modeItem('ローカルサーバー')?.click());
+    const inputFor = (label: string) => {
+      const element = Array.from(container.querySelectorAll('label')).find(
+        (item) => item.textContent === label,
+      );
+      return container.querySelector<HTMLInputElement>(
+        `[id="${element?.htmlFor}"]`,
+      )!;
+    };
+    const url = inputFor('サーバー URL');
+    expect(url.value).toBe('');
+    expect(url.placeholder).toBe('http://127.0.0.1:8080');
+    expect(inputFor('モデル（任意）').value).toBe('');
+    expect(inputFor('API キー（任意）').type).toBe('password');
+    const preset = container.querySelector('select')!;
+    expect(Array.from(preset.options).map((option) => option.text)).toEqual([
+      '手動入力',
+      'speech.cpp',
+    ]);
+    act(() => {
+      preset.value = 'http://127.0.0.1:8080';
+      preset.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(url.value).toBe('http://127.0.0.1:8080');
+    expect(container.textContent).toContain(
+      'http://127.0.0.1:8080/v1/audio/transcriptions',
+    );
+    expect(container.textContent).toContain(window.location.origin);
+    expect(container.textContent).toContain('プルリクエスト');
+    const editUrl = (value: string) =>
+      act(() => {
+        Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value',
+        )?.set?.call(url, value);
+        url.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    editUrl('http://localhost:9000/v1');
+    expect(preset.value).toBe('');
+    expect(container.textContent).toContain(
+      'http://localhost:9000/v1/audio/transcriptions',
+    );
+    editUrl('invalid');
+    expect(container.textContent).toContain('無効な URL');
+    act(() => modeItem('OpenAI の API キー')?.click());
+    expect(container.querySelector('select')).toBeNull();
+    expect(container.textContent).toContain('OpenAI の API キー');
   });
 });

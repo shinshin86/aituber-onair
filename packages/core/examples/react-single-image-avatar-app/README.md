@@ -42,7 +42,8 @@ and service options. The choices are saved in the browser.
 - Listening mode: **一回だけ** (once) sends one utterance and stops.
   **継続して会話** (continuous) listens again after the reply has been generated
   and spoken
-- Service: **ブラウザ** (Web Speech API), **OpenAI**, or **Gemini**. The example
+- Service: **ブラウザ** (Web Speech API), **OpenAI**, **Gemini**, or
+  **ローカルサーバー（OpenAI 互換）** (local server). The example
   uses `@aituber-onair/transcription` and sends each confirmed utterance as a
   chat message
 - OpenAI and Gemini use the same API keys as the LLM settings, and the keys can
@@ -51,6 +52,23 @@ and service options. The choices are saved in the browser.
 - OpenAI and Gemini do not accept audio until the connection is ready. Right
   after pressing the microphone the form shows a connecting status, and the
   button changes once you can speak
+
+For a server that accepts multipart `POST /v1/audio/transcriptions` and returns
+JSON with a `text` string, select **ローカルサーバー（OpenAI 互換）** in the mic
+menu. Enter **サーバー URL** as an origin, a `/v1` base, or a full endpoint, and
+check the displayed request URL. The URL starts empty. **モデル（任意）** and
+**API キー（任意）** can stay blank unless the server requires them. These
+settings, including the local key, are saved separately from the LLM keys in
+this browser. Audio and any key go to that URL; use a server you trust.
+
+Presets list only verified servers; pull requests for additional presets are
+welcome. The **speech.cpp** preset sets `http://127.0.0.1:8080`. For example, run
+`speech serve reazonspeech-v2 --cors-origin <page-origin>`, replacing
+`<page-origin>` with the Origin shown in the mic menu. Speak after the listening
+indicator appears, then pause to send the final transcript as a chat message.
+Local input sends final results only, with a `ja-JP` language hint. Both once
+and continuous modes are supported. See the [local STT guide](../../../../docs/local-stt.md)
+for server setup, CORS, HTTPS, and troubleshooting.
 
 ## Setup
 
