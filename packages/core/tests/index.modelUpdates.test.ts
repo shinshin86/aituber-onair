@@ -50,6 +50,7 @@ describe('Released Chat and Voice model exports', () => {
     'MODEL_XIAOMI_MIMO_V2_6_FLASH',
     'MODEL_APODEX_1_1_MINI_FREE',
     'MODEL_UNBIASED_PARETO_26_10_PREVIEW',
+    'MODEL_OPENROUTER_MISTRAL_LARGE_4_0',
     'MODEL_CLAUDE_5_5_HAIKU',
     'isOpenAIReasoningModel',
     'getDefaultReasoningEffortForOpenAIModel',

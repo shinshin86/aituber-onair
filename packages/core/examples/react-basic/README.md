@@ -6,7 +6,7 @@ A comprehensive React-based AI chat application demonstrating the full capabilit
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.63.0 and the
+Core exposes the models and capability helpers from Chat 0.64.0 and the
 Gemini TTS model type from Voice 0.26.0. Existing provider defaults are unchanged.
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
@@ -671,7 +671,7 @@ Contributions are welcome! Feel free to submit issues or pull requests to improv
 
 ## Updated Chat and Voice options
 
-This example uses published Chat 0.63.0 and Voice 0.26.0 through Core.
+This example uses published Chat 0.64.0 and Voice 0.26.0 through Core.
 New Chat models are available in the model selector, including GPT-6.1 Sol,
 GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
 Chat's capability checks and model-specific reasoning defaults. The avatar
@@ -693,6 +693,11 @@ Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
 `sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
 model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
+Chat 0.64.0 adds the OpenRouter public preview Mistral Large 4
+(`mistralai/mistral-large-4-0`) after Pareto, with text and image input. Its
+reasoning defaults to `none` for responsive chat. The model selected when
+switching to OpenRouter is unchanged.
+
 Chat 0.63.0 adds Claude Haiku 5.5 at the end of the Claude selector, and the
 Claude effort selector starts at Low for faster replies.
 

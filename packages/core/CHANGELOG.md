@@ -1,5 +1,19 @@
 # @aituber-onair/core
 
+## 0.26.22
+
+### Patch Changes
+
+- Propagate published Chat 0.64.0.
+- Re-export Mistral Large 4 (`MODEL_OPENROUTER_MISTRAL_LARGE_4_0`), an explicit
+  OpenRouter public preview with text and image input, and add it after Pareto
+  in the React basic OpenRouter selector. Avatar examples list it after Pareto
+  through the Core model list. The model selected when switching to OpenRouter
+  is unchanged.
+- Its reasoning defaults to `none` through Chat 0.64.0; explicit `high` is
+  preserved.
+- Refresh Core and example documentation and all embedded Core lockfiles.
+
 ## 0.26.21
 
 ### Patch Changes
