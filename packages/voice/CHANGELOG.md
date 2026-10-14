@@ -10,6 +10,12 @@
 - Cover the preview request, model switching, binary response, errors, and
   existing development/preview proxy routes with mock-only regression tests.
 
+### Fixed
+
+- Skip playback of empty audio buffers, including those returned by the `none`
+  engine, so custom playback callbacks do not try to decode missing audio.
+  Silent requests complete immediately and invoke `onComplete` once.
+
 ## 0.26.0
 
 ### Minor Changes
