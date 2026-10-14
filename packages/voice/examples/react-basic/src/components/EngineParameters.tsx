@@ -1141,23 +1141,44 @@ export function EngineParameters({
       )}
 
       {engine === 'openaiCompatible' && (
+        <section
+          className="local-tts-card"
+          aria-labelledby="local-tts-card-title"
+        >
+          <div className="collapsible-card__panel parameter-card openai-card">
+            <h3 id="local-tts-card-title" className="local-tts-card__title">
+              サーバーへの接続
+            </h3>
+            <p className="collapsible-card__description">
+              <code>/v1/audio/speech</code> 互換のセルフホスト /
+              ローカルTTSサーバーのURLを入力し、「Detect
+              server」を押すとモデルや声の候補とサーバーごとのヒントが表示されます。「Test
+              speech」で試聴できます。
+            </p>
+            <div className="collapsible-card__content">
+              <LocalTtsSetup
+                endpoint={openaiCompatible.endpoint.value}
+                onEndpointChange={openaiCompatible.endpoint.onChange}
+                model={openaiCompatible.model.value}
+                onModelChange={openaiCompatible.model.onChange}
+                voice={openaiCompatible.voice.value}
+                onVoiceChange={openaiCompatible.voice.onChange}
+                instructions={openaiCompatible.instructions.value}
+                onInstructionsChange={openaiCompatible.instructions.onChange}
+                speed={openaiCompatible.speed.value}
+                apiKey={openaiCompatible.apiKey}
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {engine === 'openaiCompatible' && (
         <CollapsibleCard
           className="parameter-card openai-card"
-          title="OpenAI互換 TTS パラメータ"
-          description="`/v1/audio/speech` 互換のセルフホスト / ローカルTTSエンドポイント向けです。"
+          title="OpenAI互換 TTS 詳細パラメータ"
+          description="サーバーが対応している場合のみ指定してください。"
         >
-          <LocalTtsSetup
-            endpoint={openaiCompatible.endpoint.value}
-            onEndpointChange={openaiCompatible.endpoint.onChange}
-            model={openaiCompatible.model.value}
-            onModelChange={openaiCompatible.model.onChange}
-            voice={openaiCompatible.voice.value}
-            onVoiceChange={openaiCompatible.voice.onChange}
-            instructions={openaiCompatible.instructions.value}
-            onInstructionsChange={openaiCompatible.instructions.onChange}
-            speed={openaiCompatible.speed.value}
-            apiKey={openaiCompatible.apiKey}
-          />
           <div className="parameter-section">
             <div className="parameter-section__title">話速</div>
             <div className="parameter-grid parameter-grid--two">

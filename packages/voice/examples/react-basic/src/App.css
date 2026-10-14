@@ -697,3 +697,12 @@
     padding: 0 1.25rem 1.5rem;
   }
 }
+
+.local-tts-card .collapsible-card__panel {
+  display: block;
+}
+
+.local-tts-card__title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}

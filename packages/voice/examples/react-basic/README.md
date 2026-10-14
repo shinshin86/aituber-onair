@@ -247,7 +247,7 @@ and [Microsoft's preview and language documentation](https://learn.microsoft.com
 #### OpenAI-Compatible TTS
 
 For local or self-hosted `/v1/audio/speech` servers, select **OpenAI-Compatible
-TTS** and expand **OpenAI互換 TTS パラメータ**. Enter the server origin, `/v1`
+TTS**. The **サーバーへの接続** section appears right away. Enter the server origin, `/v1`
 base URL, or full speech URL in **Endpoint URL**; **Requests go to:** shows the
 resolved URL used by both the preview and the main **Speak** button.
 
