@@ -5,6 +5,7 @@ import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENROUTER_API,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
@@ -22,6 +23,12 @@ import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import type { Message, MessageWithVision } from '../../src/types';
 
 const candidates = [
+  {
+    provider: 'openrouter',
+    model: MODEL_UNBIASED_PARETO_26_9,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
   {
     provider: 'openrouter',
     model: MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
@@ -302,7 +309,12 @@ describe.each(candidates)(
             : undefined,
         );
         expect(body.reasoning?.max_tokens).toBeUndefined();
-        if (model === MODEL_UNBIASED_PARETO_26_10_PREVIEW) {
+        if (
+          [
+            MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+            MODEL_UNBIASED_PARETO_26_9,
+          ].includes(model)
+        ) {
           expect(body.reasoning).toBeUndefined();
         } else if (provider === 'openrouter') {
           expect(body.reasoning?.exclude).toBe(
@@ -416,6 +428,7 @@ it('keeps Pareto preview explicit with vision and no reasoning controls', () => 
 
 it.each(
   [
+    MODEL_UNBIASED_PARETO_26_9,
     MODEL_UNBIASED_PARETO_26_10_PREVIEW,
     MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   ].flatMap((model) => [
@@ -526,9 +539,9 @@ it.each(
 it('keeps Mistral Large 4 explicit and exposes only documented effort values', () => {
   const model = MODEL_OPENROUTER_MISTRAL_LARGE_4_0;
   expect(model).toBe('mistralai/mistral-large-4-0');
-  expect(ChatServiceFactory.getSupportedModels('openrouter').slice(-2)).toEqual(
-    [MODEL_UNBIASED_PARETO_26_10_PREVIEW, model],
-  );
+  expect(
+    ChatServiceFactory.getSupportedModels('openrouter').slice(-3, -1),
+  ).toEqual([MODEL_UNBIASED_PARETO_26_10_PREVIEW, model]);
   expect(
     ChatServiceFactory.getProviderCapabilities('openrouter')?.defaultModel,
   ).not.toBe(model);
@@ -575,3 +588,50 @@ it.each([
     );
   },
 );
+
+it('appends stable Pareto without changing prior model order or defaults', () => {
+  const models = ChatServiceFactory.getSupportedModels('openrouter');
+  expect(models.slice(-3)).toEqual([
+    MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+    MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+    MODEL_UNBIASED_PARETO_26_9,
+  ]);
+  expect(
+    models.filter((model) => model === MODEL_UNBIASED_PARETO_26_9),
+  ).toHaveLength(1);
+  expect(
+    getOpenRouterSupportedReasoningEfforts(MODEL_UNBIASED_PARETO_26_9),
+  ).toEqual([]);
+  expect(
+    getDefaultOpenRouterReasoningEffort(MODEL_UNBIASED_PARETO_26_9),
+  ).toBeUndefined();
+  expect(
+    ChatServiceFactory.getProviderCapabilities('openrouter')?.defaultModel,
+  ).not.toBe(MODEL_UNBIASED_PARETO_26_9);
+});
+
+it('preserves stable Pareto output budgets while omitting inherited reasoning controls', async () => {
+  const transport = vi
+    .fn()
+    .mockResolvedValue(
+      new Response(
+        JSON.stringify({ choices: [{ message: { content: 'OK' } }] }),
+      ),
+    );
+  ChatServiceHttpClient.setFetch(transport);
+  const service = ChatServiceFactory.createChatService('openrouter', {
+    apiKey: 'EXAMPLE_API_KEY',
+    model: MODEL_UNBIASED_PARETO_26_9,
+    reasoning_effort: 'high',
+    reasoningMaxTokens: 1024,
+    includeReasoning: true,
+  });
+  await service.chatOnce!(messages, false, undefined, 256);
+  expect(transport.mock.calls[0][0]).toBe(ENDPOINT_OPENROUTER_API);
+  expect(JSON.parse(transport.mock.calls[0][1].body)).toEqual({
+    model: 'unbiased/pareto-26.9',
+    messages,
+    stream: false,
+    max_tokens: 256,
+  });
+});

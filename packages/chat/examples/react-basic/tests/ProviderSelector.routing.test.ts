@@ -13,6 +13,7 @@ import {
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_ZAI_GLM_5_3,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
+  MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_APODEX_1_1_MINI_FREE,
@@ -31,6 +32,16 @@ import ProviderSelector, {
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: MODEL_UNBIASED_PARETO_26_9,
+    label: 'Pareto 26.9',
+    defaultModel: MODEL_GPT_OSS_20B_FREE,
+    defaultLabel: 'GPT OSS 20B (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
   {
     provider: 'openrouter',
     providerLabel: 'OpenRouter',
@@ -248,16 +259,46 @@ afterEach(async () => {
 });
 
 describe('ProviderSelector rendered configuration for recent models', () => {
+  it('keeps stable Pareto last in the offline curated fallback without changing the default', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new Error('Mock offline')),
+    );
+    await renderApp();
+    await click(button('OpenRouter', 'provider'));
+    expect(container.textContent).toContain(
+      'Using unverified curated fallback IDs',
+    );
+    const labels = Array.from(
+      container.querySelectorAll('.model-item .model-name'),
+      (node) => node.textContent?.trim(),
+    );
+    expect(labels.slice(-3)).toEqual([
+      'Pareto 26.10 Preview',
+      'Mistral Large 4',
+      'Pareto 26.9',
+    ]);
+    expect(
+      button('GPT OSS 20B (Free)', 'model').getAttribute('aria-pressed'),
+    ).toBe('true');
+    await click(button('Pareto 26.9', 'model'));
+    expect(button('Pareto 26.9', 'model').getAttribute('aria-pressed')).toBe(
+      'true',
+    );
+    expectNoEffortControls();
+  });
+
   it('appends Pareto after the existing OpenRouter choices without changing selection', async () => {
     // The curated fallback keeps every old choice in order before the appended model.
     // A fetched catalog is listed by model ID, so only its presence is checked.
     const curatedLabels = allModels
       .filter((model) => model.provider === 'openrouter')
       .map((model) => model.name);
-    expect(curatedLabels.slice(-3)).toEqual([
+    expect(curatedLabels.slice(-4)).toEqual([
       'KAT-Coder-Pro V2.5 (OpenRouter)',
       'Pareto 26.10 Preview',
       'Mistral Large 4',
+      'Pareto 26.9',
     ]);
 
     await renderApp();
@@ -495,7 +536,12 @@ describe('ProviderSelector rendered configuration for recent models', () => {
         element<HTMLInputElement>('#openrouter-include-reasoning').checked,
       ).toBe(true);
       await sendMessage();
-      if (addition.model === MODEL_UNBIASED_PARETO_26_10_PREVIEW) {
+      if (
+        [
+          MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+          MODEL_UNBIASED_PARETO_26_9,
+        ].includes(addition.model)
+      ) {
         expect(requestBody().reasoning).toBeUndefined();
       } else {
         expect(requestBody().reasoning).not.toHaveProperty('effort');
