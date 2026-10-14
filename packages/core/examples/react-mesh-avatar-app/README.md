@@ -14,7 +14,7 @@ the same as in `react-single-image-avatar-app`; only the avatar is replaced.
 - Head turn / tilt, breathing, blinking, gaze, brows, per-strand hair sway, tassel pendulums
 - 12 idle motions and 9 reaction motions played at random while waiting
 - Lip sync from the TTS audio level; while speaking, idle motions pause and the head nods along
-- Emotion tags (`[happy]` `[sad]` `[angry]` `[surprised]` `[relaxed]` `[neutral]`) switch the face and play a motion
+- Emotion tags (`[happy]` `[sad]` `[angry]` `[surprised]` `[relaxed]` `[neutral]`) switch the face and play a motion; sad, surprised and angry also switch to drawn eyes or a drawn mouth (`mesh-avatar` 0.2.0 or later)
 - Settings → Avatar: sway strength, motion buttons, and a speech preview that needs no API key
 - Settings → Avatar: load a `.mavatar` file to swap the avatar
 
@@ -124,9 +124,10 @@ To keep a different filename, place it under `public/avatar/` and change
 
 `public/avatar/miko-qipao.mavatar` contains the rig, original illustration, layers
 (body, hand, tassels, eye parts, hair mask), drawn closed-eye and mouth variants,
+drawn expression variants (sad and surprised eyes, angry and sad closed mouths),
 and manifest for Miko in a qipao. The illustration was generated with
-ChatGPT from a Miko image; the eye and mouth variants were painted to match it
-with image generation.
+ChatGPT from a Miko image; the eye, mouth and expression variants were painted
+to match it with image generation.
 
 The bundled Miko-derived avatar images are © Yuki Shindo (AITuber OnAir) and
 are not covered by the repository's MIT License. They may be redistributed as
