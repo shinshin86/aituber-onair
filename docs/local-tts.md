@@ -45,7 +45,7 @@ Some local TTS apps only offer a command-line interface. To use one from AITuber
 
 1. Download and install AquesTalkPlayer from the official product page.
 2. Install and start aqtpserver as described in its [README](https://github.com/shinshin86/aqtpserver#readme). On Windows, pass the path of `AquesTalkPlayer.exe` with `--aquestalkplayer-path`.
-3. In a React example, select **OpenAI-Compatible TTS**, enter `http://127.0.0.1:20203`, and press **Detect server**. If **Model** is empty, `aquestalkplayer` is filled in.
+3. In a React example, select **OpenAI-Compatible TTS**, enter `http://127.0.0.1:20203`, and press **Detect server**. The settings show `Detected engine: aqtpserver`, fill in the model `aquestalkplayer` if **Model** is empty, and show AquesTalkPlayer-specific hints for **Voice** and **Instructions** (aqtpserver 0.1.1 or later).
 4. Enter an AquesTalkPlayer preset name in **Voice**, such as the built-in `れいむ` or `まりさ`, or a preset you created in the app. aqtpserver has no voice list, so type the name.
 5. Leave **Instructions** empty and **Speed** empty or `1`. Voice type, speed, and pitch come from the preset; create another preset in the app to change them. Other values return HTTP 400.
 

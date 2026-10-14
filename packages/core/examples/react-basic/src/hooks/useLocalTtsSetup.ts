@@ -54,6 +54,15 @@ export function getLocalTtsEngineHint(
       instructionsSupported: true,
     };
   }
+  if (name === 'aqtpserver') {
+    return {
+      voice:
+        'Enter an AquesTalkPlayer preset name, such as "れいむ", "まりさ", or a preset you created in the app. Speed and pitch come from the preset.',
+      instructions:
+        'AquesTalkPlayer does not accept instructions; leave it empty.',
+      instructionsSupported: false,
+    };
+  }
   return null;
 }
 

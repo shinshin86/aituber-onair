@@ -45,7 +45,7 @@ React サンプルはブラウザで動くため、TTS サーバー側で CORS �
 
 1. 公式の製品ページから AquesTalkPlayer をダウンロードし、インストールします。
 2. aqtpserver の [README](https://github.com/shinshin86/aqtpserver/blob/main/README.ja.md) に従ってインストールし、起動します。Windows では `--aquestalkplayer-path` で `AquesTalkPlayer.exe` のパスを指定します。
-3. React サンプルで **OpenAI-Compatible TTS** を選び、`http://127.0.0.1:20203` を入力して **Detect server** を押します。**Model** が空なら `aquestalkplayer` が入力されます。
+3. React サンプルで **OpenAI-Compatible TTS** を選び、`http://127.0.0.1:20203` を入力して **Detect server** を押します。`Detected engine: aqtpserver` と表示され、**Model** が空なら `aquestalkplayer` が入力されます。**Voice** と **Instructions** には AquesTalkPlayer 用のヒントが表示されます（aqtpserver 0.1.1 以降）。
 4. **Voice** に AquesTalkPlayer のプリセット名を入力します。最初から用意されている `れいむ`、`まりさ` のほか、アプリで作ったプリセットも使えます。aqtpserver には声の一覧がないため、名前を手入力してください。
 5. **Instructions** は空、**Speed** は空か `1` にします。声種・話速・高さはプリセットで決まるため、変えたい場合はアプリで別のプリセットを作ります。それ以外の値は HTTP 400 になります。
 
