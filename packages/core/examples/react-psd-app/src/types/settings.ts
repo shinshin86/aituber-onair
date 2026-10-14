@@ -5,7 +5,11 @@ import type {
   PsdEmotionEffectControlMode,
   PsdEmotionEffectMap,
 } from '../lib/psdEmotionEffects';
-import type { VoiceInputMode, VoiceInputService } from '../lib/voiceInput';
+import type {
+  LocalVoiceInputSettings,
+  VoiceInputMode,
+  VoiceInputService,
+} from '../lib/voiceInput';
 
 export type ChatProviderOption =
   | 'openai'
@@ -239,6 +243,7 @@ export interface ScreenVisionSettings {
 }
 
 export interface VoiceInputSettings {
+  local: LocalVoiceInputSettings;
   mode: VoiceInputMode;
   service: VoiceInputService;
 }

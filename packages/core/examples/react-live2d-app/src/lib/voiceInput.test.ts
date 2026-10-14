@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   VOICE_INPUT_RETRY_LIMIT,
+  isCloudVoiceInputService,
+  normalizeLocalVoiceInputSettings,
+  voiceInputNoticeText,
   isVoiceInputMode,
   isVoiceInputService,
   shouldRetryVoiceInput,
@@ -15,6 +18,8 @@ describe('voice input settings', () => {
     expect(isVoiceInputService('browser')).toBe(true);
     expect(isVoiceInputService('openai')).toBe(true);
     expect(isVoiceInputService('gemini')).toBe(true);
+    expect(isVoiceInputService('local')).toBe(true);
+    expect(isCloudVoiceInputService('local')).toBe(false);
     expect(isVoiceInputService('whisper')).toBe(false);
   });
 });
@@ -81,5 +86,55 @@ describe('voiceInputNoticeForError', () => {
     expect(voiceInputNoticeForError('connection-failed', 'openai')).toEqual({
       type: 'connection',
     });
+  });
+});
+
+describe('local voice input settings and errors', () => {
+  it('defaults missing and malformed saved fields without losing valid fields', () => {
+    expect(normalizeLocalVoiceInputSettings(undefined)).toEqual({
+      baseUrl: '',
+      model: '',
+      apiKey: '',
+    });
+    expect(normalizeLocalVoiceInputSettings(null)).toEqual({
+      baseUrl: '',
+      model: '',
+      apiKey: '',
+    });
+    expect(
+      normalizeLocalVoiceInputSettings({
+        baseUrl: 'http://localhost:8080',
+        model: 12,
+        apiKey: null,
+      }),
+    ).toEqual({ baseUrl: 'http://localhost:8080', model: '', apiKey: '' });
+  });
+  it('distinguishes invalid URLs, authentication/CORS, and network errors', () => {
+    expect(voiceInputNoticeForError('invalid-configuration', 'local')).toEqual({
+      type: 'configuration',
+    });
+    expect(
+      voiceInputNoticeText(
+        voiceInputNoticeForError('invalid-configuration', 'local'),
+      ),
+    ).toContain('サーバー URL');
+    expect(voiceInputNoticeForError('authentication-failed', 'local')).toEqual({
+      type: 'auth',
+      service: 'local',
+    });
+    for (const code of ['authentication-failed', 'connection-failed']) {
+      expect(
+        voiceInputNoticeText(voiceInputNoticeForError(code, 'local')),
+      ).toContain('CORS');
+    }
+    expect(
+      shouldRetryVoiceInput({
+        code: 'invalid-configuration',
+        mode: 'continuous',
+        sessionActive: true,
+        awaitingReply: false,
+        retryCount: 0,
+      }),
+    ).toBe(false);
   });
 });

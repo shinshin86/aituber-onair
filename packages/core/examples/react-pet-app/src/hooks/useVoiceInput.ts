@@ -7,6 +7,8 @@ import {
   useState,
 } from 'react';
 import {
+  DEFAULT_LOCAL_VOICE_INPUT,
+  type LocalVoiceInputSettings,
   VOICE_INPUT_RESTART_DELAY_MS,
   type VoiceInputMode,
   type VoiceInputNotice,
@@ -21,6 +23,7 @@ import {
 interface UseVoiceInputOptions {
   mode: VoiceInputMode;
   service: VoiceInputService;
+  local?: LocalVoiceInputSettings;
   /** Returns the API key for a cloud service, or an empty string. */
   getApiKey: (service: VoiceInputService) => string;
   /** True while the reply is generated or spoken. */
@@ -39,6 +42,7 @@ interface UseVoiceInputOptions {
 export function useVoiceInput({
   mode,
   service,
+  local = DEFAULT_LOCAL_VOICE_INPUT,
   getApiKey,
   busy,
   onInterimTranscript,
@@ -51,6 +55,7 @@ export function useVoiceInput({
   // Session callbacks outlive renders, so they read the latest values here.
   const modeRef = useRef(mode);
   const serviceRef = useRef(service);
+  const localRef = useRef(local);
   const getApiKeyRef = useRef(getApiKey);
   const busyRef = useRef(busy);
   const onInterimRef = useRef(onInterimTranscript);
@@ -58,6 +63,7 @@ export function useVoiceInput({
   useLayoutEffect(() => {
     modeRef.current = mode;
     serviceRef.current = service;
+    localRef.current = local;
     getApiKeyRef.current = getApiKey;
     busyRef.current = busy;
     onInterimRef.current = onInterimTranscript;
@@ -66,6 +72,7 @@ export function useVoiceInput({
 
   const sessionRef = useRef<RealtimeTranscriptionSession | null>(null);
   const sessionServiceRef = useRef<VoiceInputService | null>(null);
+  const sessionLocalRef = useRef<LocalVoiceInputSettings | null>(null);
   const generationRef = useRef(0);
   // True from pressing the mic until an utterance is confirmed or stopped.
   const acceptingRef = useRef(false);
@@ -157,7 +164,16 @@ export function useVoiceInput({
 
   const ensureSession = useCallback(
     async (target: VoiceInputService) => {
-      if (sessionRef.current && sessionServiceRef.current === target) {
+      const localSettings = localRef.current;
+      const sameLocalSettings =
+        sessionLocalRef.current?.baseUrl === localSettings.baseUrl &&
+        sessionLocalRef.current?.model === localSettings.model &&
+        sessionLocalRef.current?.apiKey === localSettings.apiKey;
+      if (
+        sessionRef.current &&
+        sessionServiceRef.current === target &&
+        (target !== 'local' || sameLocalSettings)
+      ) {
         return sessionRef.current;
       }
 
@@ -168,17 +184,21 @@ export function useVoiceInput({
         await previous.dispose().catch(() => undefined);
       }
 
-      const session = createVoiceInputSession(target, async () => {
-        const key = getApiKeyRef.current(target).trim();
-        if (!key) throw new Error('Missing API key');
-        return key;
-      });
+      const session = createVoiceInputSession(
+        target,
+        async () => {
+          const key = getApiKeyRef.current(target).trim();
+          if (!key) throw new Error('Missing API key');
+          return key;
+        },
+        localSettings,
+      );
 
       session.onTranscript((update) => {
-        if (!acceptingRef.current) return;
+        if (sessionRef.current !== session || !acceptingRef.current) return;
         const text = update.text.trim();
         if (!update.isFinal) {
-          onInterimRef.current(update.text);
+          if (target !== 'local') onInterimRef.current(update.text);
           return;
         }
         if (!text) return;
@@ -201,6 +221,7 @@ export function useVoiceInput({
       });
 
       session.onStateChange((state) => {
+        if (sessionRef.current !== session) return;
         if (state === 'connecting' || state === 'listening') {
           if (acceptingRef.current) setPhase(state);
           return;
@@ -221,10 +242,13 @@ export function useVoiceInput({
         }
       });
 
-      session.onError((error) => handleError(error.code));
+      session.onError((error) => {
+        if (sessionRef.current === session) handleError(error.code);
+      });
 
       sessionRef.current = session;
       sessionServiceRef.current = target;
+      sessionLocalRef.current = { ...localSettings };
       return session;
     },
     [endContinuous, handleError, scheduleListen],
@@ -256,15 +280,18 @@ export function useVoiceInput({
           return;
         }
         if (acceptingRef.current) setPhase('listening');
-      } catch {
-        // Errors reach the onError listener; this only guards the promise.
+      } catch (error) {
+        // Invalid URLs can throw before a session has an onError listener.
         if (generation === generationRef.current && acceptingRef.current) {
-          acceptingRef.current = false;
-          setPhase('idle');
+          const code =
+            error && typeof error === 'object' && 'code' in error
+              ? String(error.code)
+              : 'connection-failed';
+          handleError(code);
         }
       }
     })();
-  }, [clearTimer, endContinuous, ensureSession]);
+  }, [clearTimer, endContinuous, ensureSession, handleError]);
   useLayoutEffect(() => {
     listenRef.current = listen;
   }, [listen]);

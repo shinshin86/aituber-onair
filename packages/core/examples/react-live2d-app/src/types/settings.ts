@@ -3,7 +3,11 @@ import type { XaiReasoningEffort } from '@aituber-onair/core';
 import type { EmotionEffectAnchor } from '../lib/emotionEffectAnchor';
 import type { Live2DModelIdleMotionMaps } from '../lib/live2dIdleMotions';
 import type { Live2DModelMotionMaps } from '../lib/live2dMotions';
-import type { VoiceInputMode, VoiceInputService } from '../lib/voiceInput';
+import type {
+  LocalVoiceInputSettings,
+  VoiceInputMode,
+  VoiceInputService,
+} from '../lib/voiceInput';
 import type {
   Live2DEmotionEffectMap,
   Live2DReactionControlMode,
@@ -235,6 +239,7 @@ export interface ScreenVisionSettings {
 }
 
 export interface VoiceInputSettings {
+  local: LocalVoiceInputSettings;
   mode: VoiceInputMode;
   service: VoiceInputService;
 }

@@ -5,7 +5,11 @@ import type {
   PngTuberEmotionEffectMap,
   PngTuberReactionControlMode,
 } from '../lib/pngtuberEmotionEffects';
-import type { VoiceInputMode, VoiceInputService } from '../lib/voiceInput';
+import type {
+  LocalVoiceInputSettings,
+  VoiceInputMode,
+  VoiceInputService,
+} from '../lib/voiceInput';
 
 export type ChatProviderOption =
   | 'openai'
@@ -236,6 +240,7 @@ export interface ScreenVisionSettings {
 }
 
 export interface VoiceInputSettings {
+  local: LocalVoiceInputSettings;
   mode: VoiceInputMode;
   service: VoiceInputService;
 }
