@@ -21,10 +21,29 @@ export interface ScriptVoice {
   options?: Record<string, unknown>;
 }
 
-export interface ScriptSpeaker {
+export const AVATAR_STATES = [
+  'mouth_close_eyes_open',
+  'mouth_open_eyes_open',
+  'mouth_close_eyes_close',
+  'mouth_open_eyes_close',
+] as const;
+
+export type AvatarState = (typeof AVATAR_STATES)[number];
+export type AvatarImages = string | Record<AvatarState, string>;
+
+export interface PerformanceOptions {
+  mouthMode?: 'flap' | 'rms';
+  /** Duration of each open/closed state in seconds. */
+  flapInterval?: number;
+  /** Normalized RMS gate used in both mouth modes. */
+  mouthThreshold?: number;
+  motion?: 'bounce' | 'subtle' | 'none';
+}
+
+export interface ScriptSpeaker extends PerformanceOptions {
   name: string;
   /** Relative to the JSON script. */
-  image: string;
+  image: AvatarImages;
   voice: ScriptVoice;
   position: 'left' | 'right';
   subtitleColor: string;
@@ -54,7 +73,7 @@ export interface ScriptLine {
   pauseAfter?: number;
 }
 
-export interface ExplainerScript {
+export interface ExplainerScript extends PerformanceOptions {
   output?: string;
   speakers: Record<string, ScriptSpeaker>;
   show?: ScriptShow;
@@ -72,7 +91,7 @@ export interface TimedLine extends ScriptLine {
   end: number;
 }
 
-export interface RenderConfig {
+export interface RenderConfig extends PerformanceOptions {
   width: number;
   height: number;
   fps: number;

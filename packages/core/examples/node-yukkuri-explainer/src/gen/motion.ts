@@ -1,5 +1,11 @@
-import type { RenderConfig, TimedLine } from '../types.js';
+import type { AvatarState, RenderConfig, TimedLine } from '../types.js';
 import type { DecodedAudio } from './audio.js';
+import {
+  avatarState,
+  isMouthOpen,
+  performanceOptions,
+} from './avatarStates.js';
+import { createBlinkSchedule } from './blink.js';
 import {
   advanceBouncyAvatarMotion,
   createBouncyAvatarMotionState,
@@ -19,6 +25,16 @@ export interface CharacterPose {
   scaleY: number;
   level: number;
   speaking: boolean;
+  mouthOpen: boolean;
+  eyesClosed: boolean;
+  state: AvatarState;
+}
+
+export function speakerSeed(id: string, seed: number): number {
+  return Array.from(id).reduce(
+    (n, c) => (n * 31 + (c.codePointAt(0) ?? 0)) >>> 0,
+    seed >>> 0,
+  );
 }
 
 /** Precompute at a fixed clock so seeking and fresh runs produce identical poses. */
@@ -26,17 +42,18 @@ export function buildMotion(
   config: RenderConfig,
   audio: DecodedAudio,
 ): Record<string, CharacterPose[]> {
-  const result: Record<string, CharacterPose[]> = {};
+  const result: Record<string, CharacterPose[]> = Object.create(null);
   const totalFrames = Math.ceil(config.duration * config.fps);
-  for (const [id] of Object.entries(config.speakers)) {
+  for (const [id, speaker] of Object.entries(config.speakers)) {
     const state = createBouncyAvatarMotionState();
-    const phase =
-      (Array.from(id).reduce(
-        (n, c) => (n * 31 + (c.codePointAt(0) ?? 0)) >>> 0,
-        config.seed >>> 0,
-      ) %
-        6283) /
-      1000;
+    const seed = speakerSeed(id, config.seed);
+    const phase = (seed % 6283) / 1000;
+    const blink = createBlinkSchedule(totalFrames, config.fps, seed);
+    const options = performanceOptions(speaker, config);
+    const strength =
+      options.motion === 'bounce' ? 1 : options.motion === 'subtle' ? 0.18 : 0;
+    const breathing =
+      options.motion === 'bounce' ? 1 : options.motion === 'subtle' ? 0.35 : 0;
     state.direction = Math.sin(phase) > 0 ? 1 : -1;
     let smoothed = 0;
     const frames: CharacterPose[] = [];
@@ -81,12 +98,23 @@ export function buildMotion(
         frame === 0 ? 0 : 1 / config.fps,
       );
       const breath = Math.sin(time * 1.8 + phase);
+      const mouthOpen = isMouthOpen(
+        Boolean(speaking),
+        Math.min(rms / 0.12, 1),
+        time - (line?.start ?? time),
+        options,
+      );
+      const eyesClosed = Boolean(blink[frame]);
       frames.push({
-        ...pose,
-        y: pose.y + breath * 2,
-        scaleY: pose.scaleY + breath * 0.006,
+        y: pose.y * strength + breath * 2 * breathing,
+        rotation: pose.rotation * strength,
+        scaleX: 1 + (pose.scaleX - 1) * strength,
+        scaleY: 1 + (pose.scaleY - 1) * strength + breath * 0.006 * breathing,
         level,
         speaking: Boolean(speaking),
+        mouthOpen,
+        eyesClosed,
+        state: avatarState(mouthOpen, eyesClosed),
       });
     }
     result[id] = frames;

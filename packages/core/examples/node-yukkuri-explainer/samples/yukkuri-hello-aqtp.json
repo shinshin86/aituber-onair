@@ -1,6 +1,6 @@
 {
   "show": {
-    "title": "音と動きのしくみ",
+    "title": "口パクとまばたきのしくみ",
     "subtitle": "だんご と ぼぶ の ゆっくり解説"
   },
   "seed": 42,
@@ -10,7 +10,7 @@
   "speakers": {
     "dango": {
       "name": "だんご",
-      "image": "../assets/yukkuri/dango.png",
+      "image": "../assets/yukkuri/dango",
       "position": "left",
       "mirror": true,
       "subtitleColor": "#c9343f",
@@ -27,7 +27,7 @@
     },
     "bob": {
       "name": "ぼぶ",
-      "image": "../assets/yukkuri/bob.png",
+      "image": "../assets/yukkuri/bob",
       "position": "right",
       "mirror": true,
       "subtitleColor": "#2d65c8",
@@ -46,46 +46,46 @@
   "lines": [
     {
       "speaker": "dango",
-      "text": "今日は、音に合わせてキャラクターが動くしくみを話すよ。",
-      "chapter": "音を動きに変えてみよう",
-      "point": "音の大きさを、動きに変える",
-      "keywords": ["音の大きさ", "キャラクター"],
+      "text": "今日は、口パクとまばたきで会話を表現してみるよ。",
+      "chapter": "表情を切り替えてみよう",
+      "point": "口パクとまばたきで会話を表現",
+      "keywords": ["口パク", "まばたき"],
       "emotion": "happy"
     },
     {
       "speaker": "bob",
-      "text": "話している方だけが、ぴょんと跳ねるんだね。",
-      "point": "話しているキャラクターだけが跳ねる",
-      "keywords": ["話者ごとに動く"]
+      "text": "話している方だけが、口を開いたり閉じたりするんだね。",
+      "point": "話しているキャラクターだけが口パク",
+      "keywords": ["話者ごとに切り替え"]
     },
     {
       "speaker": "dango",
-      "text": "そう。短い区間ごとに、音の大きさを調べているんだ。",
-      "chapter": "短い区間の音量を調べる",
-      "point": "短い区間の平均的な音量を計算",
+      "text": "そう。短い間隔で画像を切り替えるだけなんだ。",
+      "chapter": "短い間隔で画像を切り替える",
+      "point": "口の開閉は約0.12秒おき",
       "slide": {
-        "text": "音声 → 音量 → ジャンプ"
+        "text": "開く → 閉じる → 開く"
       },
-      "keywords": ["音声", "音量", "ジャンプ"]
+      "keywords": ["開く", "閉じる"]
     },
     {
       "speaker": "bob",
-      "text": "音が大きいと、ジャンプも少し元気になるの？",
-      "point": "音が大きいほど、弾む動きも強くなる",
+      "text": "音が止まったら、口も閉じるの？",
+      "point": "小さな無音区間でも口を閉じる",
       "emotion": "surprised"
     },
     {
       "speaker": "dango",
-      "text": "うん。音が止まったら着地して、動きも落ち着くよ。",
-      "chapter": "音が止まったら着地",
-      "point": "無音では新しいジャンプを始めない",
-      "keywords": ["無音", "着地"]
+      "text": "うん。聞いている方も、ときどきまばたきするよ。",
+      "chapter": "聞き手にもまばたきを",
+      "point": "ふたりが別々のタイミングでまばたき",
+      "keywords": ["独立したまばたき"]
     },
     {
       "speaker": "bob",
-      "text": "聞いている間は、ゆっくり呼吸するように動くんだね。",
-      "point": "聞き手は小さな呼吸の動きだけ",
-      "keywords": ["呼吸", "待機"]
+      "text": "体の動きは小さくして、表情が分かりやすくなったね。",
+      "point": "小さな動きで、表情を見やすく",
+      "keywords": ["小さな跳ね", "呼吸"]
     },
     {
       "speaker": "dango",
@@ -97,11 +97,15 @@
     },
     {
       "speaker": "bob",
-      "text": "画像が一枚ずつでも、ふたりの会話を表現できたね。",
-      "point": "一枚ずつの画像で、ふたりの解説動画に",
+      "text": "口パクとまばたきで、ふたりの会話を表現できたね。",
+      "point": "口パクとまばたきで会話を表現",
       "keywords": ["ふたりの会話"],
       "emotion": "happy"
     }
   ],
-  "output": "../work/yukkuri-hello-aqtp.mp4"
+  "output": "../work/yukkuri-hello-aqtp.mp4",
+  "mouthMode": "flap",
+  "flapInterval": 0.12,
+  "mouthThreshold": 0.08,
+  "motion": "subtle"
 }

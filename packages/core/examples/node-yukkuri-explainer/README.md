@@ -1,9 +1,9 @@
 # Yukkuri Explainer (Node)
 
-Generate a 1920×1080, 30 fps MP4 from a JSON conversation and two transparent
-character images. Each speaker has its own voice and subtitle color. The speaking
-character bounces with the audio volume; the listener breathes gently. A single
-image is used per character, so mouths do not change shape.
+Generate a 1920×1080, 30 fps MP4 from a JSON conversation and two sets of transparent
+character images. Each speaker has its own voice, subtitle color and blink timing.
+The speaking character opens and closes its mouth at a fixed cadence, with a small
+audio-driven hop; the listener keeps its mouth closed and breathes gently.
 
 [日本語](./README.ja.md)
 
@@ -61,6 +61,34 @@ A connection failure stops generation and identifies the failing line and speake
 Use exactly two entries in `speakers`, one `left` and one `right`. Each entry needs
 `name`, `image`, `position`, `subtitleColor` (`#rrggbb`), and `voice` (`engine` and
 optional `options`). Set `mirror: true` to flip the image horizontally.
+
+`image` is a directory relative to the script, such as `"../assets/yukkuri/dango"`,
+containing four equally sized PNGs:
+
+```text
+mouth_close_eyes_open.png
+mouth_open_eyes_open.png
+mouth_close_eyes_close.png
+mouth_open_eyes_close.png
+```
+
+Alternatively, use an object with those four names (without `.png`) as keys and
+individual file paths as values. Images must share the same character placement
+and transparent canvas; the renderer checks their dimensions. Old single-PNG
+`image` values must be replaced with a state directory or four-path object.
+
+Set these options at the top level or override them per speaker:
+
+| Option | Default | Behavior |
+| --- | --- | --- |
+| `mouthMode` | `"flap"` | `"flap"` alternates open/closed; `"rms"` opens above the audio threshold. |
+| `flapInterval` | `0.12` | Seconds per mouth state, from 1/30 to 1 second. |
+| `mouthThreshold` | `0.08` | Normalized RMS threshold (greater than 0, at most 1). Silence always closes the mouth. |
+| `motion` | `"subtle"` | `"subtle"` gives a small hop, `"bounce"` restores the larger hop, `"none"` disables all body motion. |
+
+Each character blinks independently, roughly every 2–6 seconds for 0.1–0.2
+seconds, including while listening. Mouth and eye changes still work with
+`motion: "none"`.
 
 Each line needs `speaker` (a key from `speakers`) and `text`. An unknown speaker
 is rejected before synthesis. Optional fields:

@@ -1,4 +1,4 @@
-import { LINE_EMOTIONS, type ExplainerScript } from './types.js';
+import { AVATAR_STATES, LINE_EMOTIONS, type ExplainerScript } from './types.js';
 
 type RecordValue = Record<string, unknown>;
 function isObject(value: unknown): value is RecordValue {
@@ -32,6 +32,37 @@ export function parseScript(raw: string): ExplainerScript {
       );
   };
   const speakers = isObject(script.speakers) ? script.speakers : {};
+  const performance = (value: RecordValue, key: string) => {
+    if (
+      value.mouthMode !== undefined &&
+      !['flap', 'rms'].includes(String(value.mouthMode))
+    )
+      errors.push(`${key}.mouthMode must be flap or rms.`);
+    if (
+      value.motion !== undefined &&
+      !['bounce', 'subtle', 'none'].includes(String(value.motion))
+    )
+      errors.push(`${key}.motion must be bounce, subtle, or none.`);
+    if (
+      value.flapInterval !== undefined &&
+      (typeof value.flapInterval !== 'number' ||
+        !Number.isFinite(value.flapInterval) ||
+        value.flapInterval < 1 / 30 ||
+        value.flapInterval > 1)
+    )
+      errors.push(`${key}.flapInterval must be between 1/30 and 1 second.`);
+    if (
+      value.mouthThreshold !== undefined &&
+      (typeof value.mouthThreshold !== 'number' ||
+        !Number.isFinite(value.mouthThreshold) ||
+        value.mouthThreshold <= 0 ||
+        value.mouthThreshold > 1)
+    )
+      errors.push(
+        `${key}.mouthThreshold must be greater than 0 and at most 1.`,
+      );
+  };
+  performance(script, 'script');
   if (Object.keys(speakers).length !== 2)
     errors.push('speakers must contain exactly two speakers.');
   const positions = new Set<string>();
@@ -42,7 +73,16 @@ export function parseScript(raw: string): ExplainerScript {
       continue;
     }
     string(speaker.name, `${key}.name`, 16);
-    string(speaker.image, `${key}.image`, 4096);
+    if (typeof speaker.image === 'string')
+      string(speaker.image, `${key}.image`, 4096);
+    else if (isObject(speaker.image)) {
+      for (const state of AVATAR_STATES)
+        string(speaker.image[state], `${key}.image.${state}`, 4096);
+    } else
+      errors.push(
+        `${key}.image must be a directory or an object with four state paths.`,
+      );
+    performance(speaker, key);
     if (!['left', 'right'].includes(String(speaker.position)))
       errors.push(`${key}.position must be left or right.`);
     positions.add(String(speaker.position));

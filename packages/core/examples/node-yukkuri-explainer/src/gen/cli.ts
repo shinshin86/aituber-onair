@@ -14,6 +14,7 @@ import { parseScript } from '../schema.js';
 import type { ExplainerScript, RenderConfig, TimedLine } from '../types.js';
 import { concatWavs, decodeWav, writeSilenceWav } from './audio.js';
 import { openCompositor } from './compositor.js';
+import { resolveImagePaths } from './avatarStates.js';
 import * as aituberVoice from './engines/aituberVoice.js';
 import * as sine from './engines/sine.js';
 import { assertFfmpeg, encodeMp4, writeFrame } from './ffmpeg.js';
@@ -176,14 +177,21 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
   const speakers = Object.fromEntries(
     Object.entries(script.speakers).map(([id, speaker]) => [
       id,
-      { ...speaker, image: resolveFrom(scriptPath, speaker.image) },
+      {
+        ...speaker,
+        image: resolveImagePaths(speaker.image, path.dirname(scriptPath)),
+      },
     ]),
   );
   for (const [id, speaker] of Object.entries(speakers)) {
-    try {
-      await access(speaker.image);
-    } catch {
-      throw new Error(`Image not found for speaker "${id}": ${speaker.image}`);
+    for (const [state, file] of Object.entries(speaker.image)) {
+      try {
+        await access(file);
+      } catch {
+        throw new Error(
+          `Image ${state} not found for speaker "${id}": ${file}`,
+        );
+      }
     }
   }
   const resolvedScript = {
@@ -206,6 +214,10 @@ export async function main(argv = process.argv.slice(2)): Promise<void> {
       height: 1080,
       fps: 30,
       speakers,
+      mouthMode: script.mouthMode,
+      flapInterval: script.flapInterval,
+      mouthThreshold: script.mouthThreshold,
+      motion: script.motion,
       show: {
         title: script.show?.title ?? 'ゆっくり解説',
         subtitle: script.show?.subtitle ?? 'AITuber OnAir',

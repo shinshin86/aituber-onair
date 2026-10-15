@@ -13,6 +13,7 @@ import {
 import { synthesize } from '../src/gen/engines/aituberVoice.js';
 import { buildMotion } from '../src/gen/motion.js';
 import { openCompositor } from '../src/gen/compositor.js';
+import { resolveImagePaths } from '../src/gen/avatarStates.js';
 import type { RenderConfig } from '../src/types.js';
 
 const fixture = JSON.parse(
@@ -185,7 +186,7 @@ describe('per-speaker synthesis', () => {
 function renderConfig(): RenderConfig {
   const script = parseScript(JSON.stringify(fixture));
   for (const speaker of Object.values(script.speakers))
-    speaker.image = path.resolve('samples', speaker.image);
+    speaker.image = resolveImagePaths(speaker.image, path.resolve('samples'));
   return {
     width: 1920,
     height: 1080,
@@ -206,6 +207,7 @@ function renderConfig(): RenderConfig {
 describe('deterministic motion and drawing', () => {
   it('isolates each speaker, settles after speech, and repeats for the same seed', () => {
     const config = renderConfig();
+    config.motion = 'bounce';
     const samples = new Float32Array(SAMPLE_RATE * 10).fill(0.12);
     const audio = { samples, sampleRate: SAMPLE_RATE, duration: 10 };
     const motion = buildMotion(config, audio);

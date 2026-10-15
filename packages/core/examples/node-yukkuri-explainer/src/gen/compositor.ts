@@ -5,8 +5,9 @@ import {
   type SKRSContext2D,
   type Image,
 } from '@napi-rs/canvas';
-import type { RenderConfig } from '../types.js';
+import type { AvatarState, RenderConfig } from '../types.js';
 import type { DecodedAudio } from './audio.js';
+import { loadAvatarStates } from './avatarStates.js';
 import { activeLine, buildMotion } from './motion.js';
 
 const FONT = '"Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif';
@@ -95,9 +96,9 @@ export async function openCompositor(
     );
   const canvas = createCanvas(config.width, config.height);
   const ctx = canvas.getContext('2d');
-  const images = new Map<string, Image>();
+  const images = new Map<string, Record<AvatarState, Image>>();
   for (const [id, speaker] of Object.entries(config.speakers))
-    images.set(id, await loadImage(speaker.image));
+    images.set(id, await loadAvatarStates(speaker.image, id));
   const slides = new Map<string, Image>();
   for (const line of config.lines) {
     if (line.slide && 'image' in line.slide && !slides.has(line.slide.image))
@@ -186,7 +187,7 @@ export async function openCompositor(
       for (const [id, speaker] of Object.entries(config.speakers)) {
         const pose = motion[id][frame];
         const x = speaker.position === 'left' ? 218 : 1702;
-        const picture = images.get(id);
+        const picture = images.get(id)?.[pose.state];
         if (!picture) throw new Error(`Image missing for speaker ${id}.`);
         ctx.fillStyle = '#cfc5ad';
         ctx.beginPath();
