@@ -7,8 +7,12 @@ as a [mesh avatar](https://github.com/shinshin86/mesh-avatar-studio) and talks
 back with voice, lip sync and expressions. Nothing runs on a server; the page is
 published to GitHub Pages.
 
-- Chat: Chrome's built-in Gemini Nano (no key), or OpenAI / Gemini / Claude with
-  your own API key entered in **Settings**. Keys stay in the browser.
+- Chat: Chrome's built-in Gemini Nano (no key), any of the API providers
+  `@aituber-onair/chat` can call from a browser (OpenAI, Gemini, Claude, xAI,
+  Z.ai, Kimi, DeepSeek, Mistral, PLaMo, OpenRouter) with your own API key, or
+  an OpenAI-compatible server such as a local LLM. Providers whose APIs cannot
+  be called from a browser are listed but disabled (currently Sakana AI). Keys
+  and settings stay in this browser's local storage.
 - Voice: the Web Speech API plays immediately. In the background the page
   prepares [piper-plus](https://github.com/ayutaz/piper-plus) with Miko's own
   voice model (about 160 MB including the OpenJTalk dictionary, synthesised in

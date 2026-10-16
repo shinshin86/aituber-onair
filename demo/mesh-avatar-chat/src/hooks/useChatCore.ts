@@ -1,6 +1,10 @@
-import { AITuberOnAirCore, AITuberOnAirCoreEvent } from '@aituber-onair/core';
+import {
+  AITuberOnAirCore,
+  AITuberOnAirCoreEvent,
+  resolveOpenAICompatibleEndpoint,
+} from '@aituber-onair/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Provider } from './useSettings';
+import { type Provider, getProvider } from '../lib/providers';
 
 export interface ChatMessage {
   id: string;
@@ -16,6 +20,8 @@ export interface AssistantReply {
 export interface UseChatCoreOptions {
   provider: Provider;
   apiKey: string;
+  /** For the OpenAI-compatible provider: server URL and model name */
+  openaiCompatible: { endpoint: string; model: string };
   /** Whether Chrome's built-in model can answer right now */
   nanoReady: boolean;
   systemPrompt: string;
@@ -37,6 +43,7 @@ const nextId = () => `${Date.now()}-${++messageSeq}`;
 export function useChatCore({
   provider,
   apiKey,
+  openaiCompatible,
   nanoReady,
   systemPrompt,
   fallbackReply,
@@ -55,8 +62,25 @@ export function useChatCore({
     fallbackRef.current = fallbackReply;
   }, [onReply, fallbackReply]);
 
+  const info = getProvider(provider);
+  let compatibleUrl = '';
+  if (info.auth === 'endpoint' && openaiCompatible.endpoint.trim()) {
+    try {
+      compatibleUrl = resolveOpenAICompatibleEndpoint(
+        openaiCompatible.endpoint,
+      ).chatCompletionsUrl;
+    } catch {
+      compatibleUrl = '';
+    }
+  }
+  const compatibleModel = openaiCompatible.model.trim();
   const canChat =
-    provider === 'gemini-nano' ? nanoReady : apiKey.trim().length > 0;
+    info.browser &&
+    (info.auth === 'none'
+      ? nanoReady
+      : info.auth === 'endpoint'
+        ? compatibleUrl.length > 0
+        : apiKey.trim().length > 0);
 
   useEffect(() => {
     if (!canChat) {
@@ -69,6 +93,12 @@ export function useChatCore({
       apiKey,
       chatProvider: provider,
       ...(provider === 'gemini-nano' ? { model: 'gemini-nano' } : {}),
+      ...(info.auth === 'endpoint'
+        ? {
+            model: compatibleModel || 'local-model',
+            providerOptions: { endpoint: compatibleUrl },
+          }
+        : {}),
       chatOptions: { systemPrompt },
       debug: false,
     });
@@ -123,7 +153,15 @@ export function useChatCore({
       core.offAll();
       if (coreRef.current === core) coreRef.current = null;
     };
-  }, [apiKey, canChat, provider, systemPrompt]);
+  }, [
+    apiKey,
+    canChat,
+    provider,
+    systemPrompt,
+    info.auth,
+    compatibleUrl,
+    compatibleModel,
+  ]);
 
   const send = useCallback(async (input: string) => {
     const text = input.trim();

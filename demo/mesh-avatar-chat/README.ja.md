@@ -5,7 +5,7 @@
 AITuber OnAir の公式キャラクター「ミコ」を
 [メッシュアバター](https://github.com/shinshin86/mesh-avatar-studio)として描画し、声と口パクと表情つきで会話できる、ブラウザだけで動くデモです。サーバーはなく、GitHub Pages に公開します。
 
-- 会話: Chrome 内蔵の Gemini Nano（キー不要）か、設定から入力した自分の API キーで OpenAI / Gemini / Claude を使います。キーはブラウザの中にだけ保存されます。
+- 会話: Chrome 内蔵の Gemini Nano（キー不要）、`@aituber-onair/chat` がブラウザから呼べる各社の API（OpenAI、Gemini、Claude、xAI、Z.ai、Kimi、DeepSeek、Mistral、PLaMo、OpenRouter）を自分の API キーで、またはローカル LLM などの OpenAI 互換サーバーを使えます。ブラウザから直接呼べないプロバイダー（現在は Sakana AI）は一覧に出ますが選べません。キーと設定はこのブラウザのローカルストレージにだけ保存されます。
 - 声: Web Speech API ですぐに喋ります。裏で [piper-plus](https://github.com/ayutaz/piper-plus) のミコ専用モデル（OpenJTalk 辞書を含めて約160MB、ブラウザ内で合成）を準備し、準備できたら切り替えられます。スマホや省データ設定の環境では自動で取得せず、リンクを押したときだけ取得します。
 - アバター: 会話と感情タグは `@aituber-onair/core` が処理し、`.mavatar` ファイルは `mesh-avatar` ランタイムが動かします。
 

@@ -1,12 +1,17 @@
 import type { GeminiNanoStatus } from '../hooks/useGeminiNano';
 import {
   type DemoSettings,
-  type KeyedProvider,
   PIPER_SPEED_RANGE,
-  type Provider,
   type VoiceKind,
 } from '../hooks/useSettings';
 import type { PiperStatus } from '../hooks/useTts';
+import {
+  type KeyedProvider,
+  PROVIDERS,
+  type Provider,
+  getProvider,
+  isKeyedProvider,
+} from '../lib/providers';
 
 interface SettingsSheetProps {
   settings: DemoSettings;
@@ -17,19 +22,16 @@ interface SettingsSheetProps {
   };
   piperStatus: PiperStatus;
   voices: SpeechSynthesisVoice[];
-  onUpdate: (patch: Partial<DemoSettings>) => void;
+  onUpdateLlm: (patch: Partial<DemoSettings['llm']>) => void;
+  onUpdateVoice: (patch: Partial<DemoSettings['voice']>) => void;
   onSetApiKey: (provider: KeyedProvider, key: string) => void;
+  onSetOpenaiCompatible: (
+    patch: Partial<DemoSettings['llm']['openaiCompatible']>,
+  ) => void;
   onPreparePiper: () => void;
   onReset: () => void;
   onClose: () => void;
 }
-
-const PROVIDERS: Array<{ id: Provider; label: string }> = [
-  { id: 'gemini-nano', label: 'Gemini Nano（Chrome 内蔵・キー不要）' },
-  { id: 'openai', label: 'OpenAI' },
-  { id: 'gemini', label: 'Google Gemini' },
-  { id: 'claude', label: 'Anthropic Claude' },
-];
 
 function nanoLabel(status: GeminiNanoStatus, progress: number | null): string {
   switch (status) {
@@ -55,13 +57,18 @@ export function SettingsSheet({
   nano,
   piperStatus,
   voices,
-  onUpdate,
+  onUpdateLlm,
+  onUpdateVoice,
   onSetApiKey,
+  onSetOpenaiCompatible,
   onPreparePiper,
   onReset,
   onClose,
 }: SettingsSheetProps) {
-  const keyed = settings.provider !== 'gemini-nano';
+  const provider = settings.llm.provider;
+  const info = getProvider(provider);
+  const voice = settings.voice;
+
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div
@@ -86,18 +93,19 @@ export function SettingsSheet({
         <fieldset className="group">
           <legend>会話に使う AI</legend>
           <select
-            value={settings.provider}
+            value={provider}
             onChange={(event) =>
-              onUpdate({ provider: event.target.value as Provider })
+              onUpdateLlm({ provider: event.target.value as Provider })
             }
           >
-            {PROVIDERS.map((provider) => (
-              <option key={provider.id} value={provider.id}>
-                {provider.label}
+            {PROVIDERS.map((item) => (
+              <option key={item.id} value={item.id} disabled={!item.browser}>
+                {item.label}
+                {item.browser ? '' : '（ブラウザから直接は呼べません）'}
               </option>
             ))}
           </select>
-          {settings.provider === 'gemini-nano' ? (
+          {info.auth === 'none' && (
             <p className="hint">
               Gemini Nano: {nanoLabel(nano.status, nano.progress)}
               {nano.status === 'downloadable' && (
@@ -106,28 +114,52 @@ export function SettingsSheet({
                 </button>
               )}
             </p>
-          ) : (
+          )}
+          {isKeyedProvider(provider) && (
             <>
               <input
                 type="password"
                 className="text"
-                placeholder="API キー"
-                value={settings.apiKeys[settings.provider as KeyedProvider]}
+                placeholder={`${info.label} の API キー`}
+                value={settings.llm.apiKeys[provider] ?? ''}
+                onChange={(event) => onSetApiKey(provider, event.target.value)}
+                autoComplete="off"
+              />
+              <p className="hint">
+                各社の既定モデルを使います。キーはこのブラウザにだけ保存され、選んだ会社の
+                API へ直接送られます。共用の端末では使わないでください。
+              </p>
+            </>
+          )}
+          {info.auth === 'endpoint' && (
+            <>
+              <input
+                type="url"
+                className="text"
+                placeholder="サーバー URL（例: http://localhost:11434）"
+                value={settings.llm.openaiCompatible.endpoint}
                 onChange={(event) =>
-                  onSetApiKey(
-                    settings.provider as KeyedProvider,
-                    event.target.value,
-                  )
+                  onSetOpenaiCompatible({ endpoint: event.target.value })
+                }
+                autoComplete="off"
+              />
+              <input
+                type="text"
+                className="text"
+                placeholder="モデル名（例: gemma3）"
+                value={settings.llm.openaiCompatible.model}
+                onChange={(event) =>
+                  onSetOpenaiCompatible({ model: event.target.value })
                 }
                 autoComplete="off"
               />
               <p className="hint">
-                キーはこのブラウザにだけ保存され、各社の API
-                へ直接送られます。共用の端末では使わないでください。
+                OpenAI 互換の Chat Completions API
+                を持つサーバーに、このブラウザから直接つなぎます。サーバー側で
+                CORS の許可が必要です。
               </p>
             </>
           )}
-          {!keyed && null}
         </fieldset>
 
         <fieldset className="group">
@@ -136,22 +168,24 @@ export function SettingsSheet({
             <input
               type="radio"
               name="voice"
-              checked={settings.voice === 'webSpeech'}
-              onChange={() => onUpdate({ voice: 'webSpeech' as VoiceKind })}
+              checked={voice.engine === 'webSpeech'}
+              onChange={() =>
+                onUpdateVoice({ engine: 'webSpeech' as VoiceKind })
+              }
             />
             ブラウザ標準（Web Speech API）
           </label>
-          {settings.voice === 'webSpeech' && voices.length > 0 && (
+          {voice.engine === 'webSpeech' && voices.length > 0 && (
             <select
-              value={settings.webSpeechVoice}
+              value={voice.webSpeechVoice}
               onChange={(event) =>
-                onUpdate({ webSpeechVoice: event.target.value })
+                onUpdateVoice({ webSpeechVoice: event.target.value })
               }
             >
               <option value="">自動で選ぶ</option>
-              {voices.map((voice) => (
-                <option key={voice.voiceURI} value={voice.name}>
-                  {voice.name}
+              {voices.map((item) => (
+                <option key={item.voiceURI} value={item.name}>
+                  {item.name}
                 </option>
               ))}
             </select>
@@ -160,26 +194,27 @@ export function SettingsSheet({
             <input
               type="radio"
               name="voice"
-              checked={settings.voice === 'piperPlus'}
+              checked={voice.engine === 'piperPlus'}
               disabled={piperStatus !== 'ready'}
-              onChange={() => onUpdate({ voice: 'piperPlus' as VoiceKind })}
+              onChange={() =>
+                onUpdateVoice({ engine: 'piperPlus' as VoiceKind })
+              }
             />
             ミコの声（piper-plus、ブラウザ内で合成）
           </label>
           {piperStatus === 'ready' && (
             <label className="slider">
               <span>
-                ミコの声の速さ{' '}
-                <strong>{settings.piperSpeed.toFixed(2)}×</strong>
+                ミコの声の速さ <strong>{voice.piperSpeed.toFixed(2)}×</strong>
               </span>
               <input
                 type="range"
                 min={PIPER_SPEED_RANGE.min}
                 max={PIPER_SPEED_RANGE.max}
                 step={PIPER_SPEED_RANGE.step}
-                value={settings.piperSpeed}
+                value={voice.piperSpeed}
                 onChange={(event) =>
-                  onUpdate({ piperSpeed: Number(event.target.value) })
+                  onUpdateVoice({ piperSpeed: Number(event.target.value) })
                 }
               />
             </label>

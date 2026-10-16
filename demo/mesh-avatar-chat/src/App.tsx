@@ -45,7 +45,14 @@ function shouldAutoPreparePiper(): boolean {
 }
 
 export default function App() {
-  const { settings, update, setApiKey, apiKey } = useSettings();
+  const {
+    settings,
+    updateLlm,
+    updateVoice,
+    setApiKey,
+    setOpenaiCompatible,
+    apiKey,
+  } = useSettings();
   const nano = useGeminiNano();
   const audioMotion = useAudioMotion();
   const envelope = useSpeechEnvelope();
@@ -78,9 +85,9 @@ export default function App() {
         emotionSeqRef.current += 1;
         setEmotion({ tag: reply.emotion, seq: emotionSeqRef.current });
       }
-      const current = settingsRef.current;
+      const current = settingsRef.current.voice;
       void tts.speak(reply.text, {
-        voice: current.voice,
+        voice: current.engine,
         webSpeechVoice: current.webSpeechVoice,
         piperSpeed: current.piperSpeed,
       });
@@ -89,8 +96,9 @@ export default function App() {
   );
 
   const chat = useChatCore({
-    provider: settings.provider,
+    provider: settings.llm.provider,
     apiKey,
+    openaiCompatible: settings.llm.openaiCompatible,
     nanoReady,
     systemPrompt: SYSTEM_PROMPT,
     fallbackReply: FALLBACK_REPLY,
@@ -102,10 +110,10 @@ export default function App() {
   }, [tts.setVoices]);
 
   const voiceMode: VoiceMode =
-    settings.voice === 'piperPlus' && tts.piperReady
+    settings.voice.engine === 'piperPlus' && tts.piperReady
       ? 'piper'
       : webSpeechEarly ||
-          (tts.piperStatus === 'ready' && settings.voice === 'webSpeech')
+          (tts.piperStatus === 'ready' && settings.voice.engine === 'webSpeech')
         ? 'web'
         : 'waiting';
 
@@ -130,7 +138,7 @@ export default function App() {
   useEffect(() => {
     if (!started || !tts.piperReady || autoSwitchedRef.current) return;
     autoSwitchedRef.current = true;
-    update({ voice: 'piperPlus' });
+    updateVoice({ engine: 'piperPlus' });
     if (!webSpeechEarly) return;
     const show = window.setTimeout(() => setJustSwitched(true), 0);
     const hide = window.setTimeout(() => setJustSwitched(false), 6000);
@@ -138,16 +146,16 @@ export default function App() {
       window.clearTimeout(show);
       window.clearTimeout(hide);
     };
-  }, [started, tts.piperReady, update, webSpeechEarly]);
+  }, [started, tts.piperReady, updateVoice, webSpeechEarly]);
 
   const handleUseWebSpeech = useCallback(() => {
     setWebSpeechEarly(true);
-    update({ voice: 'webSpeech' });
-  }, [update]);
+    updateVoice({ engine: 'webSpeech' });
+  }, [updateVoice]);
 
   const handleUsePiper = useCallback(() => {
-    update({ voice: 'piperPlus' });
-  }, [update]);
+    updateVoice({ engine: 'piperPlus' });
+  }, [updateVoice]);
 
   const handleReset = useCallback(() => {
     tts.stop();
@@ -160,7 +168,7 @@ export default function App() {
   const chatDisabled = !started || voiceMode === 'waiting';
 
   const nanoBanner = useMemo(() => {
-    if (settings.provider !== 'gemini-nano') return null;
+    if (settings.llm.provider !== 'gemini-nano') return null;
     if (nano.status === 'downloadable') {
       return (
         <div className="banner">
@@ -185,7 +193,7 @@ export default function App() {
       );
     }
     return null;
-  }, [nano.prepare, nano.progress, nano.status, settings.provider]);
+  }, [nano.prepare, nano.progress, nano.status, settings.llm.provider]);
 
   return (
     <div className="app">
@@ -263,8 +271,10 @@ export default function App() {
           nano={nano}
           piperStatus={tts.piperStatus}
           voices={tts.voices}
-          onUpdate={update}
+          onUpdateLlm={updateLlm}
+          onUpdateVoice={updateVoice}
           onSetApiKey={setApiKey}
+          onSetOpenaiCompatible={setOpenaiCompatible}
           onPreparePiper={() => void tts.preparePiper()}
           onReset={handleReset}
           onClose={() => setSettingsOpen(false)}
