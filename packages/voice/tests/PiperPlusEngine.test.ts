@@ -61,7 +61,7 @@ function createMockResponse(body: unknown): Response {
   });
 }
 
-function createRuntimeMocks() {
+function createRuntimeMocks(configOverrides: Record<string, unknown> = {}) {
   const originalDocument = globalThis.document;
   const originalWindow = globalThis.window;
   const originalFetch = globalThis.fetch;
@@ -156,6 +156,7 @@ function createRuntimeMocks() {
           0: [0],
           1: [1],
         },
+        ...configOverrides,
       }),
     ),
     writable: true,
@@ -295,6 +296,149 @@ describe('PiperPlusEngine', () => {
     const view = new DataView(audioBuffer);
     expect(String.fromCharCode(view.getUint8(0), view.getUint8(1))).toBe('RI');
     expect(view.getUint32(24, true)).toBe(22050);
+
+    runtime.restore();
+  });
+
+  it('should not feed a language id to single-language models', async () => {
+    const runtime = createRuntimeMocks();
+    const engine = new PiperPlusEngine();
+    engine.setAssets(assets);
+
+    await engine.fetchAudio({ style: 'neutral', message: 'こんにちは' }, '');
+
+    const feeds = runtime.run.mock.calls[0][0] as Record<string, unknown>;
+    expect(Object.keys(feeds).sort()).toEqual([
+      'input',
+      'input_lengths',
+      'prosody_features',
+      'scales',
+    ]);
+
+    runtime.restore();
+  });
+
+  it('should feed the Japanese language id to multilingual models', async () => {
+    const runtime = createRuntimeMocks({
+      language_id_map: { ja: 0, en: 1, zh: 2 },
+    });
+    const engine = new PiperPlusEngine();
+    engine.setAssets(assets);
+
+    await engine.fetchAudio({ style: 'neutral', message: 'こんにちは' }, '');
+
+    const feeds = runtime.run.mock.calls[0][0] as Record<
+      string,
+      { type: string; data: BigInt64Array; dims: number[] }
+    >;
+    expect(feeds.lid.type).toBe('int64');
+    expect(Array.from(feeds.lid.data)).toEqual([0n]);
+    expect(feeds.lid.dims).toEqual([1]);
+
+    runtime.restore();
+  });
+
+  it('should intersperse pad ids and raw accents for multilingual models', async () => {
+    const runtime = createRuntimeMocks({
+      language_id_map: { ja: 0, en: 1 },
+    });
+    runtime.phonemizer.textToPhonemes.mockResolvedValue(
+      [
+        'xx-sil+yy/A:0+0+0/zz',
+        'xx-a+yy/A:-2+1+3/zz',
+        'xx-a+yy/A:0+2+3/zz',
+        'xx-sil+yy/A:0+0+0/zz',
+      ].join('\n'),
+    );
+    runtime.phonemizer.extractPhonemes.mockReturnValue(['^', 'a', 'a', '$']);
+    const engine = new PiperPlusEngine();
+    engine.setAssets(assets);
+
+    await engine.fetchAudio({ style: 'neutral', message: 'ああ' }, '');
+
+    const feeds = runtime.run.mock.calls[0][0] as Record<
+      string,
+      { data: BigInt64Array; dims: number[] }
+    >;
+    // BOS, a, PAD, a, PAD, EOS; shorter than 15 ids, so silence is added
+    // after BOS (4) and before EOS (5)
+    expect(Array.from(feeds.input.data)).toEqual([
+      1n,
+      0n,
+      0n,
+      0n,
+      0n,
+      10n,
+      0n,
+      10n,
+      0n,
+      0n,
+      0n,
+      0n,
+      0n,
+      0n,
+      2n,
+    ]);
+    expect(feeds.input_lengths.data[0]).toBe(15n);
+    expect(feeds.prosody_features.dims).toEqual([1, 15, 3]);
+    const prosody = Array.from(feeds.prosody_features.data);
+    expect(prosody.slice(15, 24)).toEqual([
+      -2n,
+      1n,
+      3n,
+      0n,
+      0n,
+      0n,
+      0n,
+      2n,
+      3n,
+    ]);
+    expect(prosody.slice(0, 15).every((value) => value === 0n)).toBe(true);
+
+    runtime.restore();
+  });
+
+  it('should keep the plain token sequence for single-language models', async () => {
+    const runtime = createRuntimeMocks();
+    runtime.phonemizer.extractPhonemes.mockReturnValue(['^', 'a', 'a', '$']);
+    const engine = new PiperPlusEngine();
+    engine.setAssets(assets);
+
+    await engine.fetchAudio({ style: 'neutral', message: 'ああ' }, '');
+
+    const feeds = runtime.run.mock.calls[0][0] as Record<
+      string,
+      { data: BigInt64Array }
+    >;
+    expect(Array.from(feeds.input.data)).toEqual([
+      1n,
+      0n,
+      0n,
+      10n,
+      10n,
+      0n,
+      0n,
+      2n,
+    ]);
+
+    runtime.restore();
+  });
+
+  it('should use the configured language when the model supports it', async () => {
+    const runtime = createRuntimeMocks({
+      language_id_map: { ja: 0, en: 1 },
+    });
+    const engine = new PiperPlusEngine();
+    engine.setAssets(assets);
+    engine.setLanguage('en');
+
+    await engine.fetchAudio({ style: 'neutral', message: 'hello' }, '');
+
+    const feeds = runtime.run.mock.calls[0][0] as Record<
+      string,
+      { data: BigInt64Array }
+    >;
+    expect(Array.from(feeds.lid.data)).toEqual([1n]);
 
     runtime.restore();
   });

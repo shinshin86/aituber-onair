@@ -10,6 +10,12 @@
 - Cover the preview request, model switching, binary response, errors, and
   existing development/preview proxy routes with mock-only regression tests.
 
+- Support multilingual piper-plus models (fine-tuned from the `zs-v1` base) in
+  `PiperPlusEngine`: pass the `lid` language input, build the padded phoneme
+  id sequence with raw accent features the way piper-plus 2.0 does, and add
+  `setLanguage()`. Single-language Japanese models keep their existing
+  behavior.
+
 ### Fixed
 
 - Skip playback of empty audio buffers, including those returned by the `none`
