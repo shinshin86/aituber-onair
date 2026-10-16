@@ -16,6 +16,7 @@
 > from modular TypeScript packages.
 
 <p align="center">
+  <a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">Live demo</a> ・
   <a href="https://aituberonair.com">Try the hosted web app</a> ・
   <a href="./docs/quickstart.md">Quickstart</a> ・
   <a href="./docs/examples.md">Examples</a> ・
@@ -24,6 +25,14 @@
 </p>
 
 ![AITuber OnAir Demo](./images/aituber-onair-demo.png)
+
+> **See it in your browser:** the
+> [Mesh Avatar Chat demo](https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/)
+> runs Miko, the official character, with no server at all. Chat comes from
+> Chrome's built-in Gemini Nano, her voice from a piper-plus model synthesised
+> in the browser, and the avatar from
+> [Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio).
+> The source is in [`demo/mesh-avatar-chat`](./demo/mesh-avatar-chat).
 
 ## What you can build
 
