@@ -1,5 +1,16 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Added
+
+- Add stable Pareto 26.9 (`unbiased/pareto-26.9`) as an explicit OpenRouter
+  text/image, streaming, and tool-calling option. Preserve defaults and existing
+  model order; omit undocumented reasoning controls, including inherited values.
+- Cover the package transport and React selector/runtime with mocked tests and
+  document setup and limitations in English/Japanese. No live inference or
+  authenticated browser CORS validation was performed.
+
 ## 0.64.0
 
 ### Minor Changes
