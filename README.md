@@ -34,6 +34,15 @@
 > [Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio).
 > The source is in [`demo/mesh-avatar-chat`](./demo/mesh-avatar-chat).
 
+<a href="https://start-aituber-with-ai-agent.aituberonair.com/en/">
+  <img src="./images/start-aituber-with-ai-agent.jpg" alt="Start AITuber with an AI agent" width="720">
+</a>
+
+> **Want your own AITuber today?** Paste one prompt into Claude Code, Codex or
+> Copilot CLI and it sets up a streaming-ready AITuber on your machine, with
+> nine avatar styles to choose from.
+> [Start AITuber with an AI agent →](https://start-aituber-with-ai-agent.aituberonair.com/en/)
+
 ## What you can build
 
 - AI VTubers that chat and speak with live viewers

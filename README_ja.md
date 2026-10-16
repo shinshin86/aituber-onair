@@ -33,6 +33,14 @@
 > [Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio)
 > で作ったものです。ソースは [`demo/mesh-avatar-chat`](./demo/mesh-avatar-chat) にあります。
 
+<a href="https://start-aituber-with-ai-agent.aituberonair.com/">
+  <img src="./images/start-aituber-with-ai-agent.jpg" alt="AITuber を AI エージェントで始める" width="720">
+</a>
+
+> **今すぐ自分の AITuber を始めたい人へ:** Claude Code や Codex、Copilot CLI
+> にプロンプトを1つ貼るだけで、配信できる AITuber 環境が手元にできます。アバターは9種類から選べます。
+> [AITuber を AI エージェントで始める →](https://start-aituber-with-ai-agent.aituberonair.com/)
+
 ## 作れるもの
 
 - ライブ視聴者と会話し、話しかける AI VTuber
