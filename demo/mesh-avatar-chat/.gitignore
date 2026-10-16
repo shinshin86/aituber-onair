@@ -1,0 +1,9 @@
+node_modules
+dist
+*.local
+*.log
+.DS_Store
+
+# piper-plus runtime, dictionary and the Tsukuyomi-chan model are fetched by
+# scripts/fetch-piper-assets.sh and never committed
+/public/piper/
