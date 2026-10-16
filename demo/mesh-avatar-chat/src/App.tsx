@@ -71,6 +71,8 @@ export default function App() {
   /** The visitor chose to talk with the browser voice before Miko's was ready */
   const [webSpeechEarly, setWebSpeechEarly] = useState(false);
   const autoSwitchedRef = useRef(false);
+  /** True once Miko's voice took over; after that, the browser voice is an explicit choice */
+  const [autoSwitched, setAutoSwitched] = useState(false);
   const greetedRef = useRef(false);
   const emotionSeqRef = useRef(0);
   const settingsRef = useRef(settings);
@@ -113,8 +115,7 @@ export default function App() {
   const voiceMode: VoiceMode =
     settings.tts.engine === 'piperPlus' && tts.piperReady
       ? 'piper'
-      : webSpeechEarly ||
-          (tts.piperStatus === 'ready' && settings.tts.engine === 'webSpeech')
+      : webSpeechEarly || (autoSwitched && settings.tts.engine === 'webSpeech')
         ? 'web'
         : 'waiting';
 
@@ -140,10 +141,12 @@ export default function App() {
     if (!started || !tts.piperReady || autoSwitchedRef.current) return;
     autoSwitchedRef.current = true;
     updateTts({ engine: 'piperPlus' });
-    if (!webSpeechEarly) return;
+    const mark = window.setTimeout(() => setAutoSwitched(true), 0);
+    if (!webSpeechEarly) return () => window.clearTimeout(mark);
     const show = window.setTimeout(() => setJustSwitched(true), 0);
     const hide = window.setTimeout(() => setJustSwitched(false), 6000);
     return () => {
+      window.clearTimeout(mark);
       window.clearTimeout(show);
       window.clearTimeout(hide);
     };
