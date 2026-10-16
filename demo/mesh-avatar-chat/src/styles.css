@@ -807,9 +807,33 @@ select {
 
 .data-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.button-outline {
+  padding: 8px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.button-outline:hover {
+  background: var(--accent-soft);
+}
+
+.button-danger {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.button-danger:hover {
+  background: #fdecea;
 }
 
 .hint.notice {

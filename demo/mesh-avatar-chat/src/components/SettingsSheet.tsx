@@ -242,7 +242,7 @@ export function SettingsSheet({
         </fieldset>
 
         <div className="sheet-actions">
-          <button type="button" className="link" onClick={onReset}>
+          <button type="button" className="button-outline" onClick={onReset}>
             会話をリセット
           </button>
         </div>
@@ -252,7 +252,7 @@ export function SettingsSheet({
           <div className="data-actions">
             <button
               type="button"
-              className="link"
+              className="button-outline button-danger"
               onClick={() => {
                 onClearStored();
                 setNotice('保存していた設定と API キーを消しました。');
@@ -262,7 +262,7 @@ export function SettingsSheet({
             </button>
             <button
               type="button"
-              className="link"
+              className="button-outline button-danger"
               onClick={() => {
                 void onClearVoiceCache().then((removed) =>
                   setNotice(
