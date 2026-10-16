@@ -221,7 +221,8 @@ export function SettingsSheet({
           )}
           {piperStatus === 'idle' && (
             <button type="button" className="link" onClick={onPreparePiper}>
-              準備する（モデル 38MB と辞書など、合計約160MB をダウンロード）
+              準備する（モデル 38MB、辞書 102MB、実行環境 12MB の合計約150MB
+              をダウンロード）
             </button>
           )}
           {piperStatus === 'loading' && <p className="hint">準備中…</p>}

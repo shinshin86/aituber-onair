@@ -34,7 +34,7 @@ const FALLBACK_REPLY: AssistantReply = {
   emotion: 'sad',
 };
 
-/** Phones and metered connections should not download about 160MB on their own. */
+/** Phones and metered connections should not download about 150MB on their own. */
 function shouldAutoPreparePiper(): boolean {
   const connection = (
     navigator as Navigator & { connection?: { saveData?: boolean } }
