@@ -1,16 +1,21 @@
 # @aituber-onair/voice
 
-## Unreleased
+## 0.27.0
 
-### Added
+### Minor Changes
 
 - Add Fish Audio `drama-3-preview` as an explicit preview option for one-shot,
   single-speaker TTS, including React sample selection and runtime updates.
   Behavior and availability may change; the `s2-pro` default is unchanged.
 - Cover the preview request, model switching, binary response, errors, and
   existing development/preview proxy routes with mock-only regression tests.
+- Support multilingual piper-plus models (fine-tuned from the `zs-v1` base) in
+  `PiperPlusEngine`: pass the `lid` language input, build the padded phoneme
+  id sequence with raw accent features the way piper-plus 2.0 does, and add
+  `setLanguage()`. Single-language Japanese models keep their existing
+  behavior.
 
-### Fixed
+### Patch Changes
 
 - Skip playback of empty audio buffers, including those returned by the `none`
   engine, so custom playback callbacks do not try to decode missing audio.
