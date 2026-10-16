@@ -26,6 +26,10 @@
 
 ![AITuber OnAir Demo](./images/aituber-onair-demo.png)
 
+<a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">
+  <img src="./images/mesh-avatar-chat-demo.jpg" alt="Mesh Avatar Chat デモ: ブラウザで会話するミコ" width="720">
+</a>
+
 > **ブラウザで動くところを見る:**
 > [Mesh Avatar Chat デモ](https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/)
 > は、公式キャラクターのミコをサーバーなしで動かします。会話は Chrome 内蔵の

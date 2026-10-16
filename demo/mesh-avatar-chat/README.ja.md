@@ -2,6 +2,12 @@
 
 [English README](./README.md)
 
+<a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">
+  <img src="../../images/mesh-avatar-chat-demo.jpg" alt="Mesh Avatar Chat デモ: ブラウザで会話するミコ" width="720">
+</a>
+
+**公開ページ:** https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/
+
 AITuber OnAir の公式キャラクター「ミコ」を
 [メッシュアバター](https://github.com/shinshin86/mesh-avatar-studio)として描画し、声と口パクと表情つきで会話できる、ブラウザだけで動くデモです。サーバーはなく、GitHub Pages に公開します。
 

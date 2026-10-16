@@ -2,6 +2,12 @@
 
 [日本語 README](./README.ja.md)
 
+<a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">
+  <img src="../../images/mesh-avatar-chat-demo.jpg" alt="Mesh Avatar Chat demo: Miko talking in the browser" width="720">
+</a>
+
+**Live:** https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/
+
 A browser-only demo of AITuber OnAir: Miko, the official character, is rendered
 as a [mesh avatar](https://github.com/shinshin86/mesh-avatar-studio) and talks
 back with voice, lip sync and expressions. Nothing runs on a server; the page is
