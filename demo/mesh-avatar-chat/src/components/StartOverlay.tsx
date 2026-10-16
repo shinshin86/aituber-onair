@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { type Provider, getProvider } from '../lib/providers';
 
 interface StartOverlayProps {
+  /** Provider saved in this browser; decides where messages go */
+  provider: Provider;
   onStart: () => void;
 }
 
@@ -76,7 +79,9 @@ const reply = await session.prompt('自己紹介して');`,
 ];
 
 /** First screen. The tap that starts the demo also unlocks audio playback. */
-export function StartOverlay({ onStart }: StartOverlayProps) {
+export function StartOverlay({ provider, onStart }: StartOverlayProps) {
+  const info = getProvider(provider);
+  const external = info.auth !== 'none';
   const [active, setActive] = useState<Tech | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -119,6 +124,9 @@ export function StartOverlay({ onStart }: StartOverlayProps) {
               キャラクターのチャット体験を提供できます。
               <br />
               このページはその実例で、会話も声も口の動きも、ぜんぶブラウザの中で動いています。
+              <br />
+              設定で外部の API（OpenAI など）を選んだ場合は、会話の内容がその
+              API に送られます。
             </p>
 
             <ol className="steps" aria-label="声の流れ">
@@ -177,7 +185,10 @@ export function StartOverlay({ onStart }: StartOverlayProps) {
         )}
 
         <p className="overlay-note">
-          音が出ます。会話はこのブラウザの中だけで処理されます。
+          音が出ます。
+          {external
+            ? `会話に使う AI に ${info.label} を選んでいるため、メッセージは ${info.label} の API に送られます。`
+            : '会話はこのブラウザの中だけで処理されます。'}
         </p>
       </div>
     </div>

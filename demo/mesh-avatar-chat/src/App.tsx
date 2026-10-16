@@ -264,7 +264,9 @@ export default function App() {
         </section>
       </main>
 
-      {!started && <StartOverlay onStart={handleStart} />}
+      {!started && (
+        <StartOverlay provider={settings.llm.provider} onStart={handleStart} />
+      )}
       {settingsOpen && (
         <SettingsSheet
           settings={settings}
