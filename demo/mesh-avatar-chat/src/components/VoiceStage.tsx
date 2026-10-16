@@ -61,7 +61,8 @@ export function VoiceStage({
               ? 'ミコの声を読み込んでいます… あと少しです'
               : `ミコの声をダウンロード中… ${percent}%`}
             <small>
-              piper-plus のモデルと辞書（約160MB）をブラウザに置きます
+              モデル 38MB と日本語の読み上げ辞書など、合計約160MB
+              をブラウザに置きます
             </small>
           </span>
           <span
@@ -123,7 +124,7 @@ export function VoiceStage({
     <div className="voice-stage">
       {piperStatus === 'idle' && (
         <button type="button" className="prepare" onClick={onPrepare}>
-          ミコの声を準備する（約160MB をブラウザに読み込みます）
+          ミコの声を準備する（モデル 38MB と辞書など、合計約160MB）
         </button>
       )}
       {piperStatus === 'error' && (

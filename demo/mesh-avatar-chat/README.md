@@ -15,8 +15,9 @@ published to GitHub Pages.
   and settings stay in this browser's local storage.
 - Voice: the Web Speech API plays immediately. In the background the page
   prepares [piper-plus](https://github.com/ayutaz/piper-plus) with Miko's own
-  voice model (about 160 MB including the OpenJTalk dictionary, synthesised in
-  the browser) and offers it as a switch once it is ready. Phones and metered
+  voice model: the model itself is 38 MB, and with the OpenJTalk dictionary
+  and the ONNX Runtime files the download is about 160 MB in total. Speech is
+  synthesised in the browser, and the voice takes over once it is ready. Phones and metered
   connections are not downloaded to automatically; a link starts the download
   instead.
 - Avatar: `@aituber-onair/core` handles the conversation and emotion tags, and
