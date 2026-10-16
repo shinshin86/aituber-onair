@@ -51,6 +51,7 @@ export default function App() {
     updateVoice,
     setApiKey,
     setOpenaiCompatible,
+    clearStored,
     apiKey,
   } = useSettings();
   const nano = useGeminiNano();
@@ -279,6 +280,8 @@ export default function App() {
           onSetOpenaiCompatible={setOpenaiCompatible}
           onPreparePiper={() => void tts.preparePiper()}
           onReset={handleReset}
+          onClearStored={clearStored}
+          onClearVoiceCache={tts.clearPiperCache}
           onClose={() => setSettingsOpen(false)}
         />
       )}

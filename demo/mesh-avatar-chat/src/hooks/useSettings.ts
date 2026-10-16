@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   type KeyedProvider,
   PROVIDERS,
@@ -92,14 +92,30 @@ function load(): DemoSettings {
 
 export function useSettings() {
   const [settings, setSettings] = useState<DemoSettings>(load);
+  const skipPersistRef = useRef(false);
 
   useEffect(() => {
+    if (skipPersistRef.current) {
+      skipPersistRef.current = false;
+      return;
+    }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch {
       // storage may be unavailable (private mode); keep in memory
     }
   }, [settings]);
+
+  /** Removes everything this page saved in localStorage and returns to defaults. */
+  const clearStored = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // nothing to remove
+    }
+    skipPersistRef.current = true;
+    setSettings(DEFAULT_SETTINGS);
+  }, []);
 
   const updateLlm = useCallback((patch: Partial<DemoSettings['llm']>) => {
     setSettings((prev) => ({ ...prev, llm: { ...prev.llm, ...patch } }));
@@ -143,6 +159,7 @@ export function useSettings() {
     updateVoice,
     setApiKey,
     setOpenaiCompatible,
+    clearStored,
     apiKey,
   };
 }

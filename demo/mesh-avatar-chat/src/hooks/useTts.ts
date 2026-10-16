@@ -285,6 +285,16 @@ export function useTts({ play, stopPlayback, envelope }: UseTtsOptions) {
     [getWeb, stop, voices, webSpeechAvailable],
   );
 
+  /** Deletes the downloaded voice files from Cache Storage (the loaded voice keeps working). */
+  const clearPiperCache = useCallback(async (): Promise<boolean> => {
+    if (!('caches' in window)) return false;
+    try {
+      return await caches.delete(PIPER_CACHE_NAME);
+    } catch {
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     return () => {
       stop();
@@ -296,6 +306,7 @@ export function useTts({ play, stopPlayback, envelope }: UseTtsOptions) {
     speak,
     stop,
     preparePiper,
+    clearPiperCache,
     piperStatus,
     piperProgress,
     piperReady: piperStatus === 'ready',

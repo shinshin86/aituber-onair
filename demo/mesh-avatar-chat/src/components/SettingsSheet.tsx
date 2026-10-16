@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { GeminiNanoStatus } from '../hooks/useGeminiNano';
 import {
   type DemoSettings,
@@ -30,6 +31,10 @@ interface SettingsSheetProps {
   ) => void;
   onPreparePiper: () => void;
   onReset: () => void;
+  /** Removes saved settings and API keys from this browser */
+  onClearStored: () => void;
+  /** Removes the downloaded voice files from this browser */
+  onClearVoiceCache: () => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -63,8 +68,11 @@ export function SettingsSheet({
   onSetOpenaiCompatible,
   onPreparePiper,
   onReset,
+  onClearStored,
+  onClearVoiceCache,
   onClose,
 }: SettingsSheetProps) {
+  const [notice, setNotice] = useState('');
   const provider = settings.llm.provider;
   const info = getProvider(provider);
   const voice = settings.voice;
@@ -242,6 +250,46 @@ export function SettingsSheet({
             会話をリセット
           </button>
         </div>
+
+        <fieldset className="group">
+          <legend>このブラウザに残っているデータ</legend>
+          <div className="data-actions">
+            <button
+              type="button"
+              className="link"
+              onClick={() => {
+                onClearStored();
+                setNotice('保存していた設定と API キーを消しました。');
+              }}
+            >
+              保存した設定と API キーを消す
+            </button>
+            <button
+              type="button"
+              className="link"
+              onClick={() => {
+                void onClearVoiceCache().then((removed) =>
+                  setNotice(
+                    removed
+                      ? 'ダウンロードした音声データを消しました。次回は再びダウンロードします。'
+                      : '消せる音声データはありませんでした。',
+                  ),
+                );
+              }}
+            >
+              ダウンロードした音声データ（約150MB）を消す
+            </button>
+          </div>
+          <p className="hint">
+            設定と API キーはローカルストレージに、音声データは Cache Storage
+            に置いています。どちらもこのブラウザの中にだけあり、ここから消せます。
+          </p>
+          {notice && (
+            <p className="hint notice" role="status">
+              {notice}
+            </p>
+          )}
+        </fieldset>
 
         <p className="credits">
           ミコ © Yuki Shindo（AITuber OnAir）。ミコの声は
