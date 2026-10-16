@@ -61,8 +61,8 @@ export function VoiceStage({
               ? 'ミコの声を読み込んでいます… あと少しです'
               : `ミコの声をダウンロード中… ${percent}%`}
             <small>
-              モデル 38MB と日本語の読み上げ辞書など、合計約160MB
-              をブラウザに置きます
+              モデル 38MB、日本語の読み上げ辞書 102MB、実行環境 12MB
+              の合計約150MB をブラウザに置きます
             </small>
           </span>
           <span
@@ -124,7 +124,8 @@ export function VoiceStage({
     <div className="voice-stage">
       {piperStatus === 'idle' && (
         <button type="button" className="prepare" onClick={onPrepare}>
-          ミコの声を準備する（モデル 38MB と辞書など、合計約160MB）
+          ミコの声を準備する（モデル 38MB、辞書 102MB、実行環境 12MB
+          の合計約150MB）
         </button>
       )}
       {piperStatus === 'error' && (
