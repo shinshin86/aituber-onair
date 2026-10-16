@@ -15,10 +15,11 @@ export type VoiceKind = 'webSpeech' | 'piperPlus';
  *
  * Grouped by concern so new areas (another TTS engine, avatar options) can be
  * added as new top-level groups without touching the others. Bump `version`
- * and extend `migrate()` when a stored shape changes.
+ * and extend `migrate()` when a stored shape changes; anything else stored
+ * under this key is ignored.
  */
 export interface DemoSettings {
-  version: 2;
+  version: 1;
   llm: {
     provider: Provider;
     apiKeys: Partial<Record<KeyedProvider, string>>;
@@ -43,7 +44,7 @@ export const DEFAULT_PIPER_SPEED = 0.9;
 export const PIPER_SPEED_RANGE = { min: 0.7, max: 1.2, step: 0.05 };
 
 export const DEFAULT_SETTINGS: DemoSettings = {
-  version: 2,
+  version: 1,
   llm: {
     provider: 'gemini-nano',
     apiKeys: {},
@@ -56,49 +57,22 @@ export const DEFAULT_SETTINGS: DemoSettings = {
   },
 };
 
-/** Shape stored before `version` existed (flat keys). */
-interface LegacySettings {
-  provider?: Provider;
-  apiKeys?: Partial<Record<KeyedProvider, string>>;
-  voice?: VoiceKind;
-  webSpeechVoice?: string;
-  piperSpeed?: number;
-}
-
 function migrate(raw: unknown): DemoSettings {
   if (!raw || typeof raw !== 'object') return DEFAULT_SETTINGS;
-  const stored = raw as Partial<DemoSettings> & LegacySettings;
-  if (stored.version === 2) {
-    return {
-      version: 2,
-      llm: {
-        ...DEFAULT_SETTINGS.llm,
-        ...stored.llm,
-        apiKeys: { ...stored.llm?.apiKeys },
-        openaiCompatible: {
-          ...DEFAULT_SETTINGS.llm.openaiCompatible,
-          ...stored.llm?.openaiCompatible,
-        },
-      },
-      voice: {
-        ...DEFAULT_SETTINGS.voice,
-        ...(stored.voice as Partial<DemoSettings['voice']>),
-      },
-    };
-  }
-  // version 1: flat keys
+  const stored = raw as Partial<DemoSettings>;
+  if (stored.version !== 1) return DEFAULT_SETTINGS;
   return {
-    version: 2,
+    version: 1,
     llm: {
       ...DEFAULT_SETTINGS.llm,
-      provider: stored.provider ?? DEFAULT_SETTINGS.llm.provider,
-      apiKeys: { ...stored.apiKeys },
+      ...stored.llm,
+      apiKeys: { ...stored.llm?.apiKeys },
+      openaiCompatible: {
+        ...DEFAULT_SETTINGS.llm.openaiCompatible,
+        ...stored.llm?.openaiCompatible,
+      },
     },
-    voice: {
-      engine: stored.voice ?? DEFAULT_SETTINGS.voice.engine,
-      webSpeechVoice: stored.webSpeechVoice ?? '',
-      piperSpeed: stored.piperSpeed ?? DEFAULT_PIPER_SPEED,
-    },
+    voice: { ...DEFAULT_SETTINGS.voice, ...stored.voice },
   };
 }
 
