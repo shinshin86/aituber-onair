@@ -24,7 +24,7 @@ interface SettingsSheetProps {
   piperStatus: PiperStatus;
   voices: SpeechSynthesisVoice[];
   onUpdateLlm: (patch: Partial<DemoSettings['llm']>) => void;
-  onUpdateVoice: (patch: Partial<DemoSettings['voice']>) => void;
+  onUpdateTts: (patch: Partial<DemoSettings['tts']>) => void;
   onSetApiKey: (provider: KeyedProvider, key: string) => void;
   onSetOpenaiCompatible: (
     patch: Partial<DemoSettings['llm']['openaiCompatible']>,
@@ -63,7 +63,7 @@ export function SettingsSheet({
   piperStatus,
   voices,
   onUpdateLlm,
-  onUpdateVoice,
+  onUpdateTts,
   onSetApiKey,
   onSetOpenaiCompatible,
   onPreparePiper,
@@ -75,7 +75,7 @@ export function SettingsSheet({
   const [notice, setNotice] = useState('');
   const provider = settings.llm.provider;
   const info = getProvider(provider);
-  const voice = settings.voice;
+  const tts = settings.tts;
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -177,18 +177,16 @@ export function SettingsSheet({
             <input
               type="radio"
               name="voice"
-              checked={voice.engine === 'webSpeech'}
-              onChange={() =>
-                onUpdateVoice({ engine: 'webSpeech' as VoiceKind })
-              }
+              checked={tts.engine === 'webSpeech'}
+              onChange={() => onUpdateTts({ engine: 'webSpeech' as VoiceKind })}
             />
             ブラウザ標準（Web Speech API）
           </label>
-          {voice.engine === 'webSpeech' && voices.length > 0 && (
+          {tts.engine === 'webSpeech' && voices.length > 0 && (
             <select
-              value={voice.webSpeechVoice}
+              value={tts.webSpeechVoice}
               onChange={(event) =>
-                onUpdateVoice({ webSpeechVoice: event.target.value })
+                onUpdateTts({ webSpeechVoice: event.target.value })
               }
             >
               <option value="">自動で選ぶ</option>
@@ -203,27 +201,25 @@ export function SettingsSheet({
             <input
               type="radio"
               name="voice"
-              checked={voice.engine === 'piperPlus'}
+              checked={tts.engine === 'piperPlus'}
               disabled={piperStatus !== 'ready'}
-              onChange={() =>
-                onUpdateVoice({ engine: 'piperPlus' as VoiceKind })
-              }
+              onChange={() => onUpdateTts({ engine: 'piperPlus' as VoiceKind })}
             />
             ミコの声（piper-plus、ブラウザ内で合成）
           </label>
           {piperStatus === 'ready' && (
             <label className="slider">
               <span>
-                ミコの声の速さ <strong>{voice.piperSpeed.toFixed(2)}×</strong>
+                ミコの声の速さ <strong>{tts.piperSpeed.toFixed(2)}×</strong>
               </span>
               <input
                 type="range"
                 min={PIPER_SPEED_RANGE.min}
                 max={PIPER_SPEED_RANGE.max}
                 step={PIPER_SPEED_RANGE.step}
-                value={voice.piperSpeed}
+                value={tts.piperSpeed}
                 onChange={(event) =>
-                  onUpdateVoice({ piperSpeed: Number(event.target.value) })
+                  onUpdateTts({ piperSpeed: Number(event.target.value) })
                 }
               />
             </label>

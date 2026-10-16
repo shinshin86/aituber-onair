@@ -13,7 +13,7 @@ export type VoiceKind = 'webSpeech' | 'piperPlus';
  * does not have to re-enter them; they never leave the browser except in the
  * requests to the provider the visitor chose.
  *
- * Grouped by concern so new areas (another TTS engine, avatar options) can be
+ * Grouped by concern (`llm`, `tts`) so new areas such as avatar options can be
  * added as new top-level groups without touching the others. Bump `version`
  * and extend `migrate()` when a stored shape changes; anything else stored
  * under this key is ignored.
@@ -29,7 +29,7 @@ export interface DemoSettings {
       model: string;
     };
   };
-  voice: {
+  tts: {
     engine: VoiceKind;
     /** Web Speech voice name; empty picks the best Japanese voice automatically */
     webSpeechVoice: string;
@@ -50,7 +50,7 @@ export const DEFAULT_SETTINGS: DemoSettings = {
     apiKeys: {},
     openaiCompatible: { endpoint: '', model: '' },
   },
-  voice: {
+  tts: {
     engine: 'webSpeech',
     webSpeechVoice: '',
     piperSpeed: DEFAULT_PIPER_SPEED,
@@ -72,7 +72,7 @@ function migrate(raw: unknown): DemoSettings {
         ...stored.llm?.openaiCompatible,
       },
     },
-    voice: { ...DEFAULT_SETTINGS.voice, ...stored.voice },
+    tts: { ...DEFAULT_SETTINGS.tts, ...stored.tts },
   };
 }
 
@@ -121,8 +121,8 @@ export function useSettings() {
     setSettings((prev) => ({ ...prev, llm: { ...prev.llm, ...patch } }));
   }, []);
 
-  const updateVoice = useCallback((patch: Partial<DemoSettings['voice']>) => {
-    setSettings((prev) => ({ ...prev, voice: { ...prev.voice, ...patch } }));
+  const updateTts = useCallback((patch: Partial<DemoSettings['tts']>) => {
+    setSettings((prev) => ({ ...prev, tts: { ...prev.tts, ...patch } }));
   }, []);
 
   const setApiKey = useCallback((provider: KeyedProvider, key: string) => {
@@ -156,7 +156,7 @@ export function useSettings() {
   return {
     settings,
     updateLlm,
-    updateVoice,
+    updateTts,
     setApiKey,
     setOpenaiCompatible,
     clearStored,

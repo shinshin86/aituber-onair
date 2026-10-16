@@ -48,7 +48,7 @@ export default function App() {
   const {
     settings,
     updateLlm,
-    updateVoice,
+    updateTts,
     setApiKey,
     setOpenaiCompatible,
     clearStored,
@@ -86,7 +86,7 @@ export default function App() {
         emotionSeqRef.current += 1;
         setEmotion({ tag: reply.emotion, seq: emotionSeqRef.current });
       }
-      const current = settingsRef.current.voice;
+      const current = settingsRef.current.tts;
       void tts.speak(reply.text, {
         voice: current.engine,
         webSpeechVoice: current.webSpeechVoice,
@@ -111,10 +111,10 @@ export default function App() {
   }, [tts.setVoices]);
 
   const voiceMode: VoiceMode =
-    settings.voice.engine === 'piperPlus' && tts.piperReady
+    settings.tts.engine === 'piperPlus' && tts.piperReady
       ? 'piper'
       : webSpeechEarly ||
-          (tts.piperStatus === 'ready' && settings.voice.engine === 'webSpeech')
+          (tts.piperStatus === 'ready' && settings.tts.engine === 'webSpeech')
         ? 'web'
         : 'waiting';
 
@@ -139,7 +139,7 @@ export default function App() {
   useEffect(() => {
     if (!started || !tts.piperReady || autoSwitchedRef.current) return;
     autoSwitchedRef.current = true;
-    updateVoice({ engine: 'piperPlus' });
+    updateTts({ engine: 'piperPlus' });
     if (!webSpeechEarly) return;
     const show = window.setTimeout(() => setJustSwitched(true), 0);
     const hide = window.setTimeout(() => setJustSwitched(false), 6000);
@@ -147,16 +147,16 @@ export default function App() {
       window.clearTimeout(show);
       window.clearTimeout(hide);
     };
-  }, [started, tts.piperReady, updateVoice, webSpeechEarly]);
+  }, [started, tts.piperReady, updateTts, webSpeechEarly]);
 
   const handleUseWebSpeech = useCallback(() => {
     setWebSpeechEarly(true);
-    updateVoice({ engine: 'webSpeech' });
-  }, [updateVoice]);
+    updateTts({ engine: 'webSpeech' });
+  }, [updateTts]);
 
   const handleUsePiper = useCallback(() => {
-    updateVoice({ engine: 'piperPlus' });
-  }, [updateVoice]);
+    updateTts({ engine: 'piperPlus' });
+  }, [updateTts]);
 
   const handleReset = useCallback(() => {
     tts.stop();
@@ -275,7 +275,7 @@ export default function App() {
           piperStatus={tts.piperStatus}
           voices={tts.voices}
           onUpdateLlm={updateLlm}
-          onUpdateVoice={updateVoice}
+          onUpdateTts={updateTts}
           onSetApiKey={setApiKey}
           onSetOpenaiCompatible={setOpenaiCompatible}
           onPreparePiper={() => void tts.preparePiper()}
