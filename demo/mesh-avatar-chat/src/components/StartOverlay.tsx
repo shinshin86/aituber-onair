@@ -78,6 +78,7 @@ const reply = await session.prompt('自己紹介して');`,
 /** First screen. The tap that starts the demo also unlocks audio playback. */
 export function StartOverlay({ onStart }: StartOverlayProps) {
   const [active, setActive] = useState<Tech | null>(null);
+  const [open, setOpen] = useState(false);
 
   return (
     <div
@@ -90,69 +91,90 @@ export function StartOverlay({ onStart }: StartOverlayProps) {
         <p className="overlay-eyebrow">AITuber OnAir</p>
         <h1 id="start-title">ミコと話してみよう</h1>
         <p className="overlay-text">
-          Chrome 内蔵の Gemini Nano と piper-plus
-          を組み合わせると、サーバーなしでブラウザだけで完結する AITuber・AI
-          キャラクターのチャット体験を提供できます。
-          <br />
-          このページはその実例で、会話も声も口の動きも、ぜんぶブラウザの中で動いています。
+          ブラウザだけで動く AI キャラクターのデモです。
         </p>
-
-        <ol className="steps" aria-label="声の流れ">
-          {STEPS.map((step, index) => (
-            <li
-              key={step.title}
-              className="step"
-              style={{ animationDelay: `${0.2 + index * 0.25}s` }}
-            >
-              <span className="step-number" aria-hidden="true">
-                {index + 1}
-              </span>
-              <span className="step-body">
-                <strong>{step.title}</strong>
-                <span>{step.detail}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
 
         <button type="button" className="start" onClick={onStart}>
           はじめる
         </button>
 
-        <section className="tech" aria-label="使っている技術">
-          <p className="tech-heading">
-            使っている技術（触れるとコード例が出ます）
-          </p>
-          <ul className="tech-list" onMouseLeave={() => setActive(null)}>
-            {TECH.map((tech, index) => (
-              <li key={tech.id}>
-                <button
-                  type="button"
-                  className={`tech-chip${active?.id === tech.id ? ' tech-chip-active' : ''}`}
-                  style={{ animationDelay: `${1.0 + index * 0.1}s` }}
-                  onMouseEnter={() => setActive(tech)}
-                  onFocus={() => setActive(tech)}
-                  onClick={() => setActive(tech)}
-                  aria-pressed={active?.id === tech.id}
+        <button
+          type="button"
+          className={`how-toggle${open ? ' how-toggle-open' : ''}`}
+          aria-expanded={open}
+          aria-controls="how-it-works"
+          onClick={() => setOpen((value) => !value)}
+        >
+          <span className="how-chevron" aria-hidden="true">
+            ›
+          </span>
+          どうやって動いているの？
+        </button>
+
+        {open && (
+          <div id="how-it-works" className="how-body">
+            <p className="how-lead">
+              Chrome 内蔵の Gemini Nano と piper-plus
+              を組み合わせると、サーバーなしでブラウザだけで完結する AITuber・AI
+              キャラクターのチャット体験を提供できます。
+              <br />
+              このページはその実例で、会話も声も口の動きも、ぜんぶブラウザの中で動いています。
+            </p>
+
+            <ol className="steps" aria-label="声の流れ">
+              {STEPS.map((step, index) => (
+                <li
+                  key={step.title}
+                  className="step"
+                  style={{ animationDelay: `${0.1 + index * 0.15}s` }}
                 >
-                  <code>{tech.name}</code>
-                  <span>{tech.summary}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="tech-code" aria-live="polite">
-            {active ? (
-              <pre key={active.id} className="code-pop">
-                <code>{active.code}</code>
-              </pre>
-            ) : (
-              <p className="tech-hint">
-                どのパーツがどこを担当しているか、数行のコードで見られます。
+                  <span className="step-number" aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  <span className="step-body">
+                    <strong>{step.title}</strong>
+                    <span>{step.detail}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+
+            <section className="tech" aria-label="使っている技術">
+              <p className="tech-heading">
+                使っている技術（触れるとコード例が出ます）
               </p>
-            )}
+              <ul className="tech-list" onMouseLeave={() => setActive(null)}>
+                {TECH.map((tech, index) => (
+                  <li key={tech.id}>
+                    <button
+                      type="button"
+                      className={`tech-chip${active?.id === tech.id ? ' tech-chip-active' : ''}`}
+                      style={{ animationDelay: `${0.5 + index * 0.1}s` }}
+                      onMouseEnter={() => setActive(tech)}
+                      onFocus={() => setActive(tech)}
+                      onClick={() => setActive(tech)}
+                      aria-pressed={active?.id === tech.id}
+                    >
+                      <code>{tech.name}</code>
+                      <span>{tech.summary}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="tech-code" aria-live="polite">
+                {active ? (
+                  <pre key={active.id} className="code-pop">
+                    <code>{active.code}</code>
+                  </pre>
+                ) : (
+                  <p className="tech-hint">
+                    どのパーツがどこを担当しているか、数行のコードで見られます。
+                  </p>
+                )}
+              </div>
+            </section>
           </div>
-        </section>
+        )}
 
         <p className="overlay-note">
           音が出ます。会話はこのブラウザの中だけで処理されます。

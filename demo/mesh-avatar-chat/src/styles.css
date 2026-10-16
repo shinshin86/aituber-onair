@@ -273,6 +273,52 @@ select {
   color: var(--ink);
 }
 
+.how-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px auto 0;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.how-toggle:hover,
+.how-toggle-open {
+  color: var(--accent);
+}
+
+.how-chevron {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.how-toggle-open .how-chevron {
+  transform: rotate(90deg);
+}
+
+.how-body {
+  margin-top: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  animation: rise 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.how-lead {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+  text-align: left;
+}
+
 .steps {
   display: flex;
   flex-direction: column;
@@ -630,7 +676,7 @@ select {
 }
 
 .overlay-card {
-  width: min(560px, 100%);
+  width: min(520px, 100%);
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
   text-align: center;
@@ -823,8 +869,13 @@ select {
   .overlay-card .start,
   .step,
   .tech-chip,
-  .code-pop {
+  .code-pop,
+  .how-body {
     animation: none;
+  }
+
+  .how-chevron {
+    transition: none;
   }
 
   .tech-chip {
