@@ -1,0 +1,9 @@
+node_modules/
+dist/
+work/
+*.mp4
+*.wav
+*.timings.json
+*.yukkuri-gen.config.json
+.env
+.env.*

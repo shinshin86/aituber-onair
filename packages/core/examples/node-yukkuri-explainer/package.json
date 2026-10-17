@@ -1,0 +1,30 @@
+{
+  "name": "@aituber-onair/core-example-node-yukkuri-explainer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --project tsconfig.dev.json",
+    "test": "npm run typecheck && vitest run",
+    "test:watch": "vitest",
+    "fmt": "biome format . --write",
+    "fmt:check": "biome format .",
+    "lint": "biome lint .",
+    "gen": "node dist/gen.js"
+  },
+  "dependencies": {
+    "@aituber-onair/core": "file:../..",
+    "@napi-rs/canvas": "^1.0.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^22.15.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.3",
+    "vitest": "^1.6.1"
+  }
+}
