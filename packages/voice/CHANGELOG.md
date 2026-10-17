@@ -1,5 +1,16 @@
 # @aituber-onair/voice
 
+## 0.28.0
+
+### Minor Changes
+
+- Add released Fish Audio `drama-3` as an explicit option for the existing
+  one-shot, single-speaker HTTP path and React voice example. Preserve
+  `drama-3-preview` and the `s2-pro` default.
+- Cover the released model's request headers, tagged text, audio bytes,
+  runtime updates, example selection, and development/preview proxy errors
+  with mock-only regression tests.
+
 ## 0.27.0
 
 ### Minor Changes

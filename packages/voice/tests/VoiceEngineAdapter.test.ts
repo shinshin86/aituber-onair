@@ -1547,7 +1547,7 @@ describe('VoiceEngineAdapter', () => {
       expect(mockEngine.setEnableLogging).toHaveBeenCalledWith(false);
     });
 
-    it.each(['s2.1-pro-free', 'drama-3-preview'] as const)(
+    it.each(['s2.1-pro-free', 'drama-3', 'drama-3-preview'] as const)(
       'should apply updated Fish Audio model %s for the current engine',
       async (model) => {
         const adapter = new VoiceEngineAdapter({
