@@ -1,5 +1,12 @@
 # Mesh Avatar Chat
 
+Core 0.26.23 uses published Chat 0.65.0 and Voice 0.28.0. Select
+`deepseek-flash` for DeepSeek-V4.1-Flash-1017; this rolling API ID follows
+provider updates. Fish Audio's Model selector includes `drama-3` and
+`drama-3-preview` for one-shot, single-speaker speech. The preview may change;
+`s2-pro` remains the default. Voice 0.27.0's empty-audio and Piper Plus model
+input fixes are included; Piper Plus language selection is not exposed here.
+
 [日本語 README](./README.ja.md)
 
 ![react-mesh-avatar-app image](./images/react-mesh-avatar-app.png)
@@ -143,7 +150,7 @@ which links to the authoritative Japanese guidelines.
 
 ## Updated Chat and Voice options
 
-This example uses published Chat 0.64.0 and Voice 0.26.0 through Core.
+This example uses published Chat 0.65.0 and Voice 0.28.0 through Core.
 New Chat models are available in the model selector, including GPT-6.1 Sol,
 GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
 Chat's capability checks and model-specific reasoning defaults. The avatar
