@@ -29,6 +29,11 @@
   "keywords": ["aituber", "vtuber", "ai", "voice", "streaming"],
   "author": "shinshin86 (https://github.com/shinshin86)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shinshin86/aituber-onair.git",
+    "directory": "packages/core"
+  },
   "dependencies": {
     "@aituber-onair/chat": "^0.64.0",
     "@aituber-onair/voice": "^0.27.0"
