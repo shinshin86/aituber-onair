@@ -198,10 +198,15 @@ built-in model status is `available`.
 - Kimi K3 reasoning: selectable `low`, `high`, or `max`, with `max` as the API default. Reasoning cannot be disabled.
 
 **DeepSeek**
-- Models: DeepSeek V4 Flash, DeepSeek V4 Pro
-- Vision: Not pre-validated as supported
-- Reasoning Effort: V4 Flash exposes None/Low/High/Max; V4 Pro exposes None/High/Max. None is the default for responsive chat. Thinking with tool calling is not supported yet.
+- Models: DeepSeek V4.1 Flash 1017 (`deepseek-flash`), V4 Pro, and legacy Flash aliases. The existing `deepseek-v4-flash` package default is preserved.
+- Vision: Supported for `deepseek-flash` and the legacy vision alias.
+- Reasoning Effort: Current Flash exposes None/Low/High/Max; V4 Pro exposes None/High/Max. None is the package default for responsive chat. Thinking with tool calling is not supported yet.
 - Best for: DeepSeek's OpenAI-compatible API without manually configuring an endpoint
+
+The direct DeepSeek selector labels `deepseek-flash` as DeepSeek V4.1 Flash
+1017. The [official API guide](https://api-docs.deepseek.com/) documents this
+rolling ID for the October 17, 2026 update; it follows future provider updates
+as well. Search/Fetch APIs are not exposed by this example.
 
 **Mistral**
 - Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Medium 3.5, Mistral Large Latest/2512, Mistral Small 2603, GLM-5.3 (Mistral)
@@ -341,7 +346,7 @@ Common extensions:
 ### Additional model options
 
 The model selector includes GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
-OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash (`deepseek-flash`). Astra
+OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash 1017 (`deepseek-flash`). Astra
 uses Responses and starts at low reasoning; Luna uses Responses and defaults to
 low reasoning for responsive chat. Fable 5.1 always thinks and uses automatic
 tool selection. DeepSeek tools require reasoning to be set to none.

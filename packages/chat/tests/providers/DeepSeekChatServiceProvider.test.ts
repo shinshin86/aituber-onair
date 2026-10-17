@@ -16,7 +16,7 @@ describe('DeepSeekChatServiceProvider', () => {
     expect(provider.getProviderName()).toBe('deepseek');
   });
 
-  it('returns current DeepSeek V4 supported models', () => {
+  it('returns the current Flash API ID and existing compatibility choices', () => {
     expect(provider.getSupportedModels()).toEqual([
       MODEL_DEEPSEEK_FLASH,
       MODEL_DEEPSEEK_V4_FLASH,
@@ -29,8 +29,12 @@ describe('DeepSeekChatServiceProvider', () => {
     expect(provider.getDefaultModel()).toBe(MODEL_DEEPSEEK_V4_FLASH);
   });
 
-  it('reports vision support only for the experimental vision model', () => {
+  it('reports vision support for current Flash and the legacy vision alias', () => {
     expect(provider.supportsVision()).toBe(true);
+    expect(provider.supportsVisionForModel(MODEL_DEEPSEEK_FLASH)).toBe(true);
+    expect(provider.getVisionSupportLevelForModel(MODEL_DEEPSEEK_FLASH)).toBe(
+      'supported',
+    );
     expect(provider.supportsVisionForModel(MODEL_DEEPSEEK_V4_FLASH)).toBe(
       false,
     );
@@ -75,6 +79,17 @@ describe('DeepSeekChatServiceProvider', () => {
     });
 
     expect((service as any).reasoning_effort).toBe('low');
+  });
+
+  it('uses the rolling Flash ID for both text and vision when selected', () => {
+    const service = provider.createChatService({
+      apiKey: 'test-key',
+      model: MODEL_DEEPSEEK_FLASH,
+    });
+
+    expect(service.getModel()).toBe('deepseek-flash');
+    expect(service.getVisionModel()).toBe('deepseek-flash');
+    expect((service as any).reasoning_effort).toBe('none');
   });
 
   it('uses /chat/completions when baseUrl is provided', () => {
