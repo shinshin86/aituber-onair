@@ -1,6 +1,6 @@
 # @aituber-onair/voice
 
-## 0.27.0
+## 0.28.0
 
 ### Minor Changes
 
@@ -10,6 +10,11 @@
 - Cover the released model's request headers, tagged text, audio bytes,
   runtime updates, example selection, and development/preview proxy errors
   with mock-only regression tests.
+
+## 0.27.0
+
+### Minor Changes
+
 - Add Fish Audio `drama-3-preview` as an explicit preview option for one-shot,
   single-speaker TTS, including React sample selection and runtime updates.
   Behavior and availability may change; the `s2-pro` default is unchanged.
