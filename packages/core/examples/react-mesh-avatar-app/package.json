@@ -16,7 +16,7 @@
     "@aituber-onair/kizuna": "../../../kizuna",
     "@aituber-onair/manneri": "../../../manneri",
     "@aituber-onair/transcription": "../../../transcription",
-    "mesh-avatar": "^0.1.1",
+    "mesh-avatar": "^0.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

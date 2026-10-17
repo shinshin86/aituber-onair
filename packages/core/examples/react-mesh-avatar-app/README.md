@@ -14,7 +14,7 @@ the same as in `react-single-image-avatar-app`; only the avatar is replaced.
 - Head turn / tilt, breathing, blinking, gaze, brows, per-strand hair sway, tassel pendulums
 - 12 idle motions and 9 reaction motions played at random while waiting
 - Lip sync from the TTS audio level; while speaking, idle motions pause and the head nods along
-- Emotion tags (`[happy]` `[sad]` `[angry]` `[surprised]` `[relaxed]` `[neutral]`) switch the face and play a motion
+- Emotion tags (`[happy]` `[sad]` `[angry]` `[surprised]` `[relaxed]` `[neutral]`) switch the face and play a motion; sad, surprised and angry also switch to drawn eyes or a drawn mouth (`mesh-avatar` 0.2.0 or later)
 - Settings → Avatar: sway strength, motion buttons, and a speech preview that needs no API key
 - Settings → Avatar: load a `.mavatar` file to swap the avatar
 
@@ -27,7 +27,8 @@ and service options. The choices are saved in the browser.
 - Listening mode: **一回だけ** (once) sends one utterance and stops.
   **継続して会話** (continuous) listens again after the reply has been generated
   and spoken
-- Service: **ブラウザ** (Web Speech API), **OpenAI**, or **Gemini**. The example
+- Service: **ブラウザ** (Web Speech API), **OpenAI**, **Gemini**, or
+  **ローカルサーバー（OpenAI 互換）** (local server). The example
   uses `@aituber-onair/transcription` and sends each confirmed utterance as a
   chat message
 - OpenAI and Gemini use the same API keys as the LLM settings, and the keys can
@@ -36,6 +37,23 @@ and service options. The choices are saved in the browser.
 - OpenAI and Gemini do not accept audio until the connection is ready. Right
   after pressing the microphone the form shows a connecting status, and the
   button changes once you can speak
+
+For a server that accepts multipart `POST /v1/audio/transcriptions` and returns
+JSON with a `text` string, select **ローカルサーバー（OpenAI 互換）** in the mic
+menu. Enter **サーバー URL** as an origin, a `/v1` base, or a full endpoint, and
+check the displayed request URL. The URL starts empty. **モデル（任意）** and
+**API キー（任意）** can stay blank unless the server requires them. These
+settings, including the local key, are saved separately from the LLM keys in
+this browser. Audio and any key go to that URL; use a server you trust.
+
+Presets list only verified servers; pull requests for additional presets are
+welcome. The **speech.cpp** preset sets `http://127.0.0.1:8080`. For example, run
+`speech serve reazonspeech-v2 --cors-origin <page-origin>`, replacing
+`<page-origin>` with the Origin shown in the mic menu. Speak after the listening
+indicator appears, then pause to send the final transcript as a chat message.
+Local input sends final results only, with a `ja-JP` language hint. Both once
+and continuous modes are supported. See the [local STT guide](../../../../docs/local-stt.md)
+for server setup, CORS, HTTPS, and troubleshooting.
 
 ## Setup
 
@@ -106,9 +124,10 @@ To keep a different filename, place it under `public/avatar/` and change
 
 `public/avatar/miko-qipao.mavatar` contains the rig, original illustration, layers
 (body, hand, tassels, eye parts, hair mask), drawn closed-eye and mouth variants,
+drawn expression variants (sad and surprised eyes, angry and sad closed mouths),
 and manifest for Miko in a qipao. The illustration was generated with
-ChatGPT from a Miko image; the eye and mouth variants were painted to match it
-with image generation.
+ChatGPT from a Miko image; the eye, mouth and expression variants were painted
+to match it with image generation.
 
 The bundled Miko-derived avatar images are © Yuki Shindo (AITuber OnAir) and
 are not covered by the repository's MIT License. They may be redistributed as
@@ -124,7 +143,7 @@ which links to the authoritative Japanese guidelines.
 
 ## Updated Chat and Voice options
 
-This example uses published Chat 0.63.0 and Voice 0.26.0 through Core.
+This example uses published Chat 0.64.0 and Voice 0.26.0 through Core.
 New Chat models are available in the model selector, including GPT-6.1 Sol,
 GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
 Chat's capability checks and model-specific reasoning defaults. The avatar
@@ -146,6 +165,11 @@ Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
 `sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
 model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
+Chat 0.64.0 adds the OpenRouter public preview Mistral Large 4
+(`mistralai/mistral-large-4-0`) after Pareto, with text and image input. Its
+reasoning defaults to `none` for responsive chat. The model selected when
+switching to OpenRouter is unchanged.
+
 Chat 0.63.0 adds Claude Haiku 5.5 at the end of the Claude model list; the
 model selected when switching to Claude is unchanged. Claude requests now use
 `low` effort for faster replies.

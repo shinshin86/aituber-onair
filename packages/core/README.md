@@ -12,10 +12,14 @@ It specializes in generating response text and audio from text or image inputs, 
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.63.0 and the
+Core exposes the models and capability helpers from Chat 0.64.0 and the
 speech engines, option types, and endpoint helpers from Voice 0.26.0.
 Existing provider defaults are unchanged.
 
+- Chat 0.64.0 adds Mistral Large 4 (`mistralai/mistral-large-4-0`) as an
+  explicit OpenRouter public preview after Pareto, with text and image input.
+  Its reasoning defaults to `none`; explicit `high` is preserved. The model
+  selected when switching to OpenRouter is unchanged.
 - Chat 0.63.0 adds Claude Haiku 5.5 (`claude-haiku-5-5`) as an explicit option
   appended to the Claude model list. Avatar examples that list Claude models
   newest first (Inochi2D, Live2D, Purupuru, and VRM) now select Haiku 5.5

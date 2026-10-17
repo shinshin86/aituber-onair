@@ -1,8 +1,8 @@
 # @aituber-onair/voice
 
-## Unreleased
+## 0.27.0
 
-### Added
+### Minor Changes
 
 - Add released Fish Audio `drama-3` as an explicit option for the existing
   one-shot, single-speaker HTTP path and React voice example. Preserve
@@ -15,6 +15,17 @@
   Behavior and availability may change; the `s2-pro` default is unchanged.
 - Cover the preview request, model switching, binary response, errors, and
   existing development/preview proxy routes with mock-only regression tests.
+- Support multilingual piper-plus models (fine-tuned from the `zs-v1` base) in
+  `PiperPlusEngine`: pass the `lid` language input, build the padded phoneme
+  id sequence with raw accent features the way piper-plus 2.0 does, and add
+  `setLanguage()`. Single-language Japanese models keep their existing
+  behavior.
+
+### Patch Changes
+
+- Skip playback of empty audio buffers, including those returned by the `none`
+  engine, so custom playback callbacks do not try to decode missing audio.
+  Silent requests complete immediately and invoke `onComplete` once.
 
 ## 0.26.0
 

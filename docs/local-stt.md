@@ -65,6 +65,22 @@ npm -w @aituber-onair/transcription run example:dev
    end silence finalizes a turn; values below 150 ms are rejected. Results appear
    under **Final utterances**, with no interim updates.
 
+## Core React examples
+
+The nine Core React avatar examples with microphone input also support this
+batch endpoint: Inochi2D, Live2D, Mesh Avatar, Pet, PNGTuber, PSD, Purupuru,
+Single Image Avatar, and VRM. Open the mic options beside the chat input and
+select **ローカルサーバー（OpenAI 互換）**. Enter the server URL and check the
+resolved request URL. The initial URL is empty; model and API key are optional
+when the server does not require them. These settings are saved in the browser,
+with a local API key separate from the LLM keys.
+
+The verified **speech.cpp** preset fills in `http://127.0.0.1:8080`. Configure
+`--cors-origin` with the exact Origin shown in that example's mic menu, including
+its port. Speech uses the `ja-JP` language hint and sends final transcripts as
+chat messages. Once mode stops after one utterance; continuous mode resumes
+after the reply has been generated and spoken. There are no interim results.
+
 ## Application API
 
 ```ts

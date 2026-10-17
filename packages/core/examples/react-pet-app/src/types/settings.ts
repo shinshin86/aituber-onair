@@ -1,6 +1,10 @@
 import type { InworldModel, OpenRouterTtsModel } from '@aituber-onair/core';
 import type { XaiReasoningEffort } from '@aituber-onair/core';
-import type { VoiceInputMode, VoiceInputService } from '../lib/voiceInput';
+import type {
+  LocalVoiceInputSettings,
+  VoiceInputMode,
+  VoiceInputService,
+} from '../lib/voiceInput';
 
 export type ChatProviderOption =
   | 'openai'
@@ -230,6 +234,7 @@ export interface ScreenVisionSettings {
 }
 
 export interface VoiceInputSettings {
+  local: LocalVoiceInputSettings;
   mode: VoiceInputMode;
   service: VoiceInputService;
 }

@@ -100,13 +100,12 @@ export function EngineSelector({
     engine === 'cartesia' ||
     engine === 'deepgram' ||
     engine === 'gradium' ||
-    engine === 'openaiCompatible' ||
     engine === 'voicevox' ||
     engine === 'aivisSpeech' ||
     engine === 'voicepeak';
 
   const renderSpeakerField = () => {
-    if (engine === 'piperPlus') {
+    if (engine === 'piperPlus' || engine === 'openaiCompatible') {
       return null;
     }
 

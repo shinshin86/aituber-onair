@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import {
   type CloudVoiceInputService,
+  type LocalVoiceInputSettings,
   type VoiceInputMode,
   type VoiceInputService,
   voiceInputNoticeText,
@@ -19,6 +20,8 @@ export interface ChatVoiceInputProps {
   onServiceChange: (service: VoiceInputService) => void;
   apiKeys: Record<CloudVoiceInputService, string>;
   onApiKeyChange: (service: CloudVoiceInputService, key: string) => void;
+  local: LocalVoiceInputSettings;
+  onLocalChange: (settings: LocalVoiceInputSettings) => void;
   /** True while the avatar is speaking the reply. */
   isSpeaking: boolean;
 }
@@ -43,13 +46,14 @@ export function ChatInput({ onSend, disabled, voice }: ChatInputProps) {
   );
   const getApiKey = useCallback(
     (service: VoiceInputService) =>
-      service === 'browser' ? '' : apiKeys[service],
+      service === 'browser' || service === 'local' ? '' : apiKeys[service],
     [apiKeys],
   );
 
   const speech = useVoiceInput({
     mode: voice.mode,
     service: voice.service,
+    local: voice.local,
     getApiKey,
     busy: disabled || voice.isSpeaking,
     onInterimTranscript: setText,
@@ -125,6 +129,11 @@ export function ChatInput({ onSend, disabled, voice }: ChatInputProps) {
           }}
           apiKeys={apiKeys}
           onApiKeyChange={voice.onApiKeyChange}
+          local={voice.local}
+          onLocalChange={(settings) => {
+            speech.reset();
+            voice.onLocalChange(settings);
+          }}
         />
         <textarea
           value={text}

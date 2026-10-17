@@ -16,6 +16,7 @@
 > モジュール化された TypeScript パッケージのどこからでも始められます。
 
 <p align="center">
+  <a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">ライブデモ</a> ・
   <a href="https://aituberonair.com">Web アプリを試す</a> ・
   <a href="./docs/quickstart.ja.md">クイックスタート</a> ・
   <a href="./docs/examples.ja.md">サンプル一覧</a> ・
@@ -24,6 +25,25 @@
 </p>
 
 ![AITuber OnAir Demo](./images/aituber-onair-demo.png)
+
+<a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">
+  <img src="./images/mesh-avatar-chat-demo.jpg" alt="Mesh Avatar Chat デモ: ブラウザで会話するミコ" width="720">
+</a>
+
+> **ブラウザで動くところを見る:**
+> [Mesh Avatar Chat デモ](https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/)
+> は、公式キャラクターのミコをサーバーなしで動かします。会話は Chrome 内蔵の
+> Gemini Nano、声はブラウザ内で合成する piper-plus のモデル、アバターは
+> [Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio)
+> で作ったものです。ソースは [`demo/mesh-avatar-chat`](./demo/mesh-avatar-chat) にあります。
+
+<a href="https://start-aituber-with-ai-agent.aituberonair.com/">
+  <img src="./images/start-aituber-with-ai-agent.jpg" alt="AITuber を AI エージェントで始める" width="720">
+</a>
+
+> **今すぐ自分の AITuber を始めたい人へ:** Claude Code や Codex、Copilot CLI
+> にプロンプトを1つ貼るだけで、配信できる AITuber 環境が手元にできます。アバターは9種類から選べます。
+> [AITuber を AI エージェントで始める →](https://start-aituber-with-ai-agent.aituberonair.com/)
 
 ## 作れるもの
 

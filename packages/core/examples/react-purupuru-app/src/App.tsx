@@ -558,6 +558,8 @@ export default function App() {
   }, [resetVisualPuruPuruEffectAnchor]);
 
   const voiceInput: ChatVoiceInputProps = {
+    local: settingsHook.settings.voiceInput.local,
+    onLocalChange: settingsHook.updateLocalVoiceInput,
     mode: settingsHook.settings.voiceInput.mode,
     service: settingsHook.settings.voiceInput.service,
     onModeChange: settingsHook.updateVoiceInputMode,

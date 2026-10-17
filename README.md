@@ -16,6 +16,7 @@
 > from modular TypeScript packages.
 
 <p align="center">
+  <a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">Live demo</a> ・
   <a href="https://aituberonair.com">Try the hosted web app</a> ・
   <a href="./docs/quickstart.md">Quickstart</a> ・
   <a href="./docs/examples.md">Examples</a> ・
@@ -24,6 +25,27 @@
 </p>
 
 ![AITuber OnAir Demo](./images/aituber-onair-demo.png)
+
+<a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">
+  <img src="./images/mesh-avatar-chat-demo.jpg" alt="Mesh Avatar Chat demo: Miko talking in the browser" width="720">
+</a>
+
+> **See it in your browser:** the
+> [Mesh Avatar Chat demo](https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/)
+> runs Miko, the official character, with no server at all. Chat comes from
+> Chrome's built-in Gemini Nano, her voice from a piper-plus model synthesised
+> in the browser, and the avatar from
+> [Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio).
+> The source is in [`demo/mesh-avatar-chat`](./demo/mesh-avatar-chat).
+
+<a href="https://start-aituber-with-ai-agent.aituberonair.com/en/">
+  <img src="./images/start-aituber-with-ai-agent.jpg" alt="Start AITuber with an AI agent" width="720">
+</a>
+
+> **Want your own AITuber today?** Paste one prompt into Claude Code, Codex or
+> Copilot CLI and it sets up a streaming-ready AITuber on your machine, with
+> nine avatar styles to choose from.
+> [Start AITuber with an AI agent →](https://start-aituber-with-ai-agent.aituberonair.com/en/)
 
 ## What you can build
 

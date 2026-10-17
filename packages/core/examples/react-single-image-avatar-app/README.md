@@ -42,7 +42,8 @@ and service options. The choices are saved in the browser.
 - Listening mode: **一回だけ** (once) sends one utterance and stops.
   **継続して会話** (continuous) listens again after the reply has been generated
   and spoken
-- Service: **ブラウザ** (Web Speech API), **OpenAI**, or **Gemini**. The example
+- Service: **ブラウザ** (Web Speech API), **OpenAI**, **Gemini**, or
+  **ローカルサーバー（OpenAI 互換）** (local server). The example
   uses `@aituber-onair/transcription` and sends each confirmed utterance as a
   chat message
 - OpenAI and Gemini use the same API keys as the LLM settings, and the keys can
@@ -51,6 +52,23 @@ and service options. The choices are saved in the browser.
 - OpenAI and Gemini do not accept audio until the connection is ready. Right
   after pressing the microphone the form shows a connecting status, and the
   button changes once you can speak
+
+For a server that accepts multipart `POST /v1/audio/transcriptions` and returns
+JSON with a `text` string, select **ローカルサーバー（OpenAI 互換）** in the mic
+menu. Enter **サーバー URL** as an origin, a `/v1` base, or a full endpoint, and
+check the displayed request URL. The URL starts empty. **モデル（任意）** and
+**API キー（任意）** can stay blank unless the server requires them. These
+settings, including the local key, are saved separately from the LLM keys in
+this browser. Audio and any key go to that URL; use a server you trust.
+
+Presets list only verified servers; pull requests for additional presets are
+welcome. The **speech.cpp** preset sets `http://127.0.0.1:8080`. For example, run
+`speech serve reazonspeech-v2 --cors-origin <page-origin>`, replacing
+`<page-origin>` with the Origin shown in the mic menu. Speak after the listening
+indicator appears, then pause to send the final transcript as a chat message.
+Local input sends final results only, with a `ja-JP` language hint. Both once
+and continuous modes are supported. See the [local STT guide](../../../../docs/local-stt.md)
+for server setup, CORS, HTTPS, and troubleshooting.
 
 ## Setup
 
@@ -103,7 +121,7 @@ Thank you to the author for sharing the prompt.
 
 ## Updated Chat and Voice options
 
-This example uses published Chat 0.63.0 and Voice 0.26.0 through Core.
+This example uses published Chat 0.64.0 and Voice 0.26.0 through Core.
 New Chat models are available in the model selector, including GPT-6.1 Sol,
 GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
 Chat's capability checks and model-specific reasoning defaults. The avatar
@@ -125,6 +143,11 @@ Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
 `sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
 model selector defaults to production; `gradium-tts-beta` is an explicit
 opt-in, and switching back to Gradium resets the model to production.
+Chat 0.64.0 adds the OpenRouter public preview Mistral Large 4
+(`mistralai/mistral-large-4-0`) after Pareto, with text and image input. Its
+reasoning defaults to `none` for responsive chat. The model selected when
+switching to OpenRouter is unchanged.
+
 Chat 0.63.0 adds Claude Haiku 5.5 at the end of the Claude model list; the
 model selected when switching to Claude is unchanged. Claude requests now use
 `low` effort for faster replies.

@@ -16,6 +16,8 @@ import {
   normalizePuruPuruEmotionEffectMap,
 } from '../lib/purupuruReactions';
 import {
+  type LocalVoiceInputSettings,
+  normalizeLocalVoiceInputSettings,
   type VoiceInputMode,
   type VoiceInputService,
   isVoiceInputMode,
@@ -393,6 +395,7 @@ function getDefaultSettings(): AppSettings {
       enabled: false,
     },
     voiceInput: {
+      local: normalizeLocalVoiceInputSettings(undefined),
       mode: 'once',
       service: 'browser',
     },
@@ -425,6 +428,7 @@ function loadSettings(): AppSettings {
         manneri: { ...defaults.manneri, ...saved.manneri },
         kizuna: { ...defaults.kizuna, ...saved.kizuna },
         voiceInput: {
+          local: normalizeLocalVoiceInputSettings(saved.voiceInput?.local),
           mode: isVoiceInputMode(saved.voiceInput?.mode)
             ? saved.voiceInput.mode
             : defaults.voiceInput.mode,
@@ -1484,6 +1488,16 @@ export function useSettings() {
     [],
   );
 
+  const updateLocalVoiceInput = useCallback(
+    (local: LocalVoiceInputSettings) => {
+      setSettings((prev) => ({
+        ...prev,
+        voiceInput: { ...prev.voiceInput, local: { ...local } },
+      }));
+    },
+    [],
+  );
+
   const updateVoiceInputMode = useCallback((mode: VoiceInputMode) => {
     setSettings((prev) => ({
       ...prev,
@@ -1512,6 +1526,7 @@ export function useSettings() {
     settings,
     availableModels,
     catalog,
+    updateLocalVoiceInput,
     updateVoiceInputMode,
     updateVoiceInputService,
     updateLLMProvider,

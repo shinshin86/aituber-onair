@@ -5,7 +5,11 @@ import type {
   Inochi2DEmotionEffectMap,
   Inochi2DReactionControlMode,
 } from '../lib/inochi2dReactions';
-import type { VoiceInputMode, VoiceInputService } from '../lib/voiceInput';
+import type {
+  LocalVoiceInputSettings,
+  VoiceInputMode,
+  VoiceInputService,
+} from '../lib/voiceInput';
 
 export type ChatProviderOption =
   | 'openai'
@@ -231,6 +235,7 @@ export interface ScreenVisionSettings {
 }
 
 export interface VoiceInputSettings {
+  local: LocalVoiceInputSettings;
   mode: VoiceInputMode;
   service: VoiceInputService;
 }

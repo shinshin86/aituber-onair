@@ -35,6 +35,22 @@ React サンプルの TTS エンジンで **OpenAI-Compatible TTS** を選び、
 
 React サンプルはブラウザで動くため、TTS サーバー側で CORS によりページのオリジンを許可する必要があります（Vite の開発サーバーなら `http://localhost:5173` など）。許可されていないとブラウザがリクエストをブロックし、設定欄にはネットワークエラーが表示されます。アプリを HTTPS で配信している場合は、HTTP のサーバー URL が混在コンテンツとしてブロックされることもあります。
 
+## HTTP API を持たないデスクトップアプリ
+
+ローカルの TTS アプリには、コマンドラインしか用意されていないものもあります。AITuber OnAir から使うには、アプリのコマンドラインを呼び出して `POST /v1/audio/speech` として公開する小さなローカルサーバーを起動します。アプリ本体は自分の PC に置いたままで、AITuber OnAir には同梱しません。現在ここで手順を紹介しているのは、[aqtpserver](https://github.com/shinshin86/aqtpserver) を使った AquesTalkPlayer です。
+
+### AquesTalkPlayer（aqtpserver）
+
+[AquesTalkPlayer](https://www.a-quest.com/products/aquestalkplayer.html) は、株式会社アクエストの Windows・macOS 向け音声合成アプリで、「ゆっくりボイス」で知られています。aqtpserver は、インストール済みの AquesTalkPlayer をコマンドラインで起動し、同じ PC からの接続だけを受け付けます。
+
+1. 公式の製品ページから AquesTalkPlayer をダウンロードし、インストールします。
+2. aqtpserver の [README](https://github.com/shinshin86/aqtpserver/blob/main/README.ja.md) に従ってインストールし、起動します。Windows では `--aquestalkplayer-path` で `AquesTalkPlayer.exe` のパスを指定します。
+3. React サンプルで **OpenAI-Compatible TTS** を選び、`http://127.0.0.1:20203` を入力して **Detect server** を押します。`Detected engine: aqtpserver` と表示され、**Model** が空なら `aquestalkplayer` が入力されます。**Voice** と **Instructions** には AquesTalkPlayer 用のヒントが表示されます（aqtpserver 0.1.1 以降）。
+4. **Voice** に AquesTalkPlayer のプリセット名を入力します。最初から用意されている `れいむ`、`まりさ` のほか、アプリで作ったプリセットも使えます。aqtpserver には声の一覧がないため、名前を手入力してください。
+5. **Instructions** は空、**Speed** は空か `1` にします。声種・話速・高さはプリセットで決まるため、変えたい場合はアプリで別のプリセットを作ります。それ以外の値は HTTP 400 になります。
+
+aqtpserver は既定で `http://localhost` と `http://127.0.0.1` のページを許可するため、Vite の開発サーバーでは CORS の追加設定は不要です。AquesTalkPlayer を無償で使えるのは個人の非営利利用に限られ、ネットワーク経由で第三者に使わせることはアクエスト社の利用条件で認められていません。配信や動画で使う前に、[aqtpserver の README](https://github.com/shinshin86/aqtpserver/blob/main/README.ja.md#ライセンス) とアクエスト社の利用条件を確認してください。
+
 ## Google Colab
 
 リポジトリ内の [connect-colab-local-tts スキル](../skills/connect-colab-local-tts/SKILL.md)に、Colab で OpenAI 互換の TTS サーバーを起動し、cloudflared Quick Tunnel の一時 URL で公開する手順があります。得られた URL（`/v1` までのベース URL で足ります）を React サンプルに入力し、**Detect server** を押してください。

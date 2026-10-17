@@ -238,6 +238,12 @@ export class VoiceEngineAdapter implements VoiceService {
     audioBuffer: ArrayBuffer,
     options?: AudioPlayOptions,
   ): Promise<void> {
+    if (audioBuffer.byteLength === 0) {
+      // Neither playback path runs, so complete the silent request here.
+      this.options.onComplete?.();
+      return;
+    }
+
     if (this.options.onPlay) {
       await this.options.onPlay(audioBuffer, options);
       return;
