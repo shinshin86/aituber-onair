@@ -26,6 +26,10 @@
 
 ![AITuber OnAir Demo](./images/aituber-onair-demo.png)
 
+<a href="https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/">
+  <img src="./images/mesh-avatar-chat-demo.jpg" alt="Mesh Avatar Chat demo: Miko talking in the browser" width="720">
+</a>
+
 > **See it in your browser:** the
 > [Mesh Avatar Chat demo](https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/)
 > runs Miko, the official character, with no server at all. Chat comes from
