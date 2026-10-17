@@ -39,12 +39,22 @@ describe('character support TTS providers', () => {
 
   it('publishes explicit reasons for every excluded voice engine', () => {
     expect([...EXCLUDED_SERVER_TTS_ENGINES.keys()]).toEqual([
+      'openRouter',
+      'deepgram',
       'piperPlus',
       'webSpeech',
       'none',
     ]);
     expect(getExcludedTtsProviderRecords()).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          provider: 'openRouter',
+          reason: expect.stringContaining('model-scoped'),
+        }),
+        expect.objectContaining({
+          provider: 'deepgram',
+          reason: expect.stringContaining('provider settings'),
+        }),
         expect.objectContaining({
           provider: 'piperPlus',
           reason: expect.stringContaining('Browser-only'),
@@ -88,6 +98,28 @@ describe('character support TTS providers', () => {
       supportsVoiceList: true,
     });
   });
+
+  it.each(['drama-3-preview', 'drama-3'])(
+    'accepts Fish Audio %s from admin settings and preserves the reference voice',
+    (model) => {
+      const provider = getTtsProvider('fishAudio');
+      expect(provider.models).toContain(model);
+      expect(provider.defaultModel).toBe('s2-pro');
+      const settings = {
+        provider: 'fishAudio',
+        model,
+        voice: 'reference-id',
+        apiKey: 'test-key',
+        speed: 1,
+      };
+      expect(() => validateTtsSettings(settings, {})).not.toThrow();
+      expect(createVoiceServiceOptions(settings)).toMatchObject({
+        engineType: 'fishAudio',
+        fishAudioModel: model,
+        speaker: 'reference-id',
+      });
+    },
+  );
 
   it('migrates the legacy OpenAI-compatible provider ID', () => {
     expect(normalizeTtsProviderId('openai-compatible')).toBe(

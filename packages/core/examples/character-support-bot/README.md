@@ -139,15 +139,21 @@ model ID.
 The server discovers engines from `@aituber-onair/voice` capabilities and uses
 the package's adapters for synthesis. The general rule is that an engine must
 run in a Node/server runtime and return audio bytes to the same-origin speech
-route.
+route. Its provider-specific admin settings must also be implemented.
 
 The current server-capable engines are VOICEVOX, VOICEPEAK, OpenAI, xAI,
 Unreal Speech, ElevenLabs, Fish Audio, Cartesia, Inworld, Gradium, Gemini TTS, OpenAI-compatible,
 AivisSpeech, Aivis Cloud API, and MiniMax. The built-in mock remains available
 for local playback and lip-sync checks.
 
+Fish Audio includes `drama-3` and `drama-3-preview` for one-shot,
+single-speaker speech. The preview may change; `s2-pro` remains the default.
+
 Browser-only PiperPlus and Web Speech are excluded. The `none` engine is also
-excluded because it intentionally returns no audio. `/api/admin/providers`
+excluded because it intentionally returns no audio. OpenRouter's model-scoped
+voice selection and Deepgram Flux's provider settings are not implemented in
+this admin example, so those engines are excluded here as well; the Voice
+package supports them in other integrations. `/api/admin/providers`
 includes these exclusion reasons alongside the selectable providers.
 
 VOICEVOX and AivisSpeech use configurable local endpoints without API keys.

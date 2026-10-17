@@ -1,5 +1,13 @@
 # Single Image Avatar Chat
 
+Core 0.26.23は、公開済みのChat 0.65.0とVoice 0.28.0を利用します。
+DeepSeek-V4.1-Flash-1017には`deepseek-flash`を指定してください。
+同じIDのまま、提供元の更新によって利用するモデルが変わる場合があります。
+Fish AudioのModel欄では、単一話者・一括生成向けの`drama-3`と
+`drama-3-preview`を選択できます。プレビュー版は仕様や提供状況が変わる
+場合があります。既定は`s2-pro`です。Voice 0.27.0の空音声とPiper Plusの
+モデル入力修正も取り込みます。Piper Plusの言語切り替え設定はありません。
+
 <p align="center">
   <img
     src="./images/react-single-image-avatar-app.png"

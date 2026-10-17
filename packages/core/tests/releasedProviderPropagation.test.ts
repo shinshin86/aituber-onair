@@ -11,11 +11,13 @@ import {
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
+  MODEL_DEEPSEEK_FLASH,
   VoiceEngineAdapter,
   VoiceEngineFactory,
   type DeepgramVoiceServiceOptions,
   type DeepgramVoiceServiceOptionsUpdate,
   type GradiumModel,
+  type FishAudioModel,
 } from '../src';
 
 // Keep this release regression scoped to the models propagated in that release.
@@ -49,6 +51,96 @@ function chatResponse() {
 }
 
 describe('Published providers available through Core', () => {
+  it('sends current DeepSeek Flash text and image requests through Core with thinking disabled', async () => {
+    const fetch = vi.fn().mockImplementation(async () => chatResponse());
+    vi.stubGlobal('fetch', fetch);
+    const service = ChatServiceFactory.createChatService('deepseek', {
+      apiKey: 'test-key',
+      model: MODEL_DEEPSEEK_FLASH,
+    });
+    await service.chatOnce!([{ role: 'user', content: 'Hello' }], false);
+    await service.visionChatOnce!(
+      [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Describe this image.' },
+            {
+              type: 'image_url',
+              image_url: { url: 'https://example.com/image.png' },
+            },
+          ],
+        },
+      ],
+      false,
+    );
+    expect(AITuberOnAirCore.getSupportedModels('deepseek')).toContain(
+      MODEL_DEEPSEEK_FLASH,
+    );
+    for (const [url, request] of fetch.mock.calls) {
+      expect(url).toBe('https://api.deepseek.com/chat/completions');
+      expect(JSON.parse(request.body)).toMatchObject({
+        model: 'deepseek-flash',
+        thinking: { type: 'disabled' },
+        stream: false,
+      });
+    }
+    expect(
+      JSON.parse(fetch.mock.calls[1][1].body).messages[0].content,
+    ).toContainEqual({
+      type: 'image_url',
+      image_url: { url: 'https://example.com/image.png' },
+    });
+  });
+
+  it.each(['drama-3-preview', 'drama-3'] satisfies FishAudioModel[])(
+    'synthesizes Fish Audio %s through Core and preserves runtime model switching',
+    async (model) => {
+      const fetch = vi
+        .fn()
+        .mockImplementation(
+          async () => new Response(new Uint8Array([1, 2, 3])),
+        );
+      vi.stubGlobal('fetch', fetch);
+      const onPlay = vi.fn().mockResolvedValue(undefined);
+      const adapter = new VoiceEngineAdapter({
+        engineType: 'fishAudio',
+        apiKey: 'test-key',
+        speaker: 'reference-id',
+        fishAudioModel: model,
+        onPlay,
+      });
+      await adapter.speak({ text: 'Hello', emotion: 'neutral' });
+      const [url, request] = fetch.mock.calls[0];
+      expect(url).toBe('https://api.fish.audio/v1/tts');
+      expect(new Headers(request.headers).get('model')).toBe(model);
+      expect(JSON.parse(request.body)).toMatchObject({
+        reference_id: 'reference-id',
+        format: 'mp3',
+      });
+      const audio = onPlay.mock.calls[0][0] as ArrayBuffer;
+      expect([...new Uint8Array(audio)]).toEqual([1, 2, 3]);
+      adapter.updateOptions({ fishAudioModel: 's2-pro' });
+      await adapter.speak({ text: 'Again', emotion: 'neutral' });
+      expect(new Headers(fetch.mock.calls[1][1].headers).get('model')).toBe(
+        's2-pro',
+      );
+    },
+  );
+
+  it('completes silent Core speech once without invoking custom audio decoding', async () => {
+    const onPlay = vi.fn().mockResolvedValue(undefined);
+    const onComplete = vi.fn();
+    const adapter = new VoiceEngineAdapter({
+      engineType: 'none',
+      onPlay,
+      onComplete,
+    });
+    await adapter.speak({ text: 'Silent reply', emotion: 'neutral' });
+    expect(onPlay).not.toHaveBeenCalled();
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps avatar casual settings valid for GPT-6.1 Sol and routes tools to Responses', async () => {
     const fetch = vi.fn().mockImplementation(async () => chatResponse());
     vi.stubGlobal('fetch', fetch);

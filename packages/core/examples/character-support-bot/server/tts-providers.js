@@ -137,7 +137,14 @@ const PROVIDER_METADATA = {
     defaultEndpoint: FISH_AUDIO_TTS_API_URL,
     defaultModel: 's2-pro',
     defaultVoice: '',
-    models: ['s2-pro', 's2.1-pro', 's2.1-pro-free', 's1'],
+    models: [
+      's2-pro',
+      's2.1-pro',
+      's2.1-pro-free',
+      's1',
+      'drama-3-preview',
+      'drama-3',
+    ],
     voices: [],
     modelRequired: true,
     voiceRequired: true,
@@ -239,6 +246,14 @@ const PROVIDER_METADATA = {
 };
 
 export const EXCLUDED_SERVER_TTS_ENGINES = new Map([
+  [
+    'openRouter',
+    'This admin example does not yet provide model-scoped OpenRouter voice selection.',
+  ],
+  [
+    'deepgram',
+    'This admin example does not yet provide Deepgram Flux catalog and provider settings.',
+  ],
   [
     'piperPlus',
     'Browser-only engine; it loads local browser assets and cannot run in this Node server.',
