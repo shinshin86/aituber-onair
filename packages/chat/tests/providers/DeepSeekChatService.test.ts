@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+  MODEL_DEEPSEEK_FLASH,
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_V4_PRO,
@@ -53,25 +54,28 @@ describe('DeepSeekChatService', () => {
     } as typeof TextDecoder;
   });
 
-  it('sends requests to the DeepSeek chat completions endpoint', async () => {
-    const postSpy = vi
-      .spyOn(ChatServiceHttpClient, 'post')
-      .mockResolvedValue(createOneShotResponse('ok'));
-    const service = new DeepSeekChatService('test-key', MODEL_DEEPSEEK_V4_PRO);
+  it.each([MODEL_DEEPSEEK_FLASH, MODEL_DEEPSEEK_V4_PRO])(
+    'sends %s to the DeepSeek chat completions endpoint',
+    async (model) => {
+      const postSpy = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(createOneShotResponse('ok'));
+      const service = new DeepSeekChatService('test-key', model);
 
-    await service.chatOnce(messages, false);
+      await service.chatOnce(messages, false);
 
-    expect(postSpy).toHaveBeenCalledTimes(1);
-    expect(postSpy).toHaveBeenCalledWith(
-      ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
-      expect.objectContaining({
-        model: MODEL_DEEPSEEK_V4_PRO,
-        stream: false,
-        messages,
-      }),
-      { Authorization: 'Bearer test-key' },
-    );
-  });
+      expect(postSpy).toHaveBeenCalledTimes(1);
+      expect(postSpy).toHaveBeenCalledWith(
+        ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+        expect.objectContaining({
+          model,
+          stream: false,
+          messages,
+        }),
+        { Authorization: 'Bearer test-key' },
+      );
+    },
+  );
 
   it('disables DeepSeek thinking by default for responsive chat', async () => {
     const postSpy = vi
@@ -87,41 +91,44 @@ describe('DeepSeekChatService', () => {
     expect(body.reasoning_effort).toBeUndefined();
   });
 
-  it('sends vision-exp image messages with thinking disabled by default', async () => {
-    const postSpy = vi
-      .spyOn(ChatServiceHttpClient, 'post')
-      .mockResolvedValue(createOneShotResponse('image'));
-    const visionMessages: MessageWithVision[] = [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: 'Describe this image.' },
-          {
-            type: 'image_url',
-            image_url: { url: 'https://example.com/image.png' },
-          },
-        ],
-      },
-    ];
-    const service = new DeepSeekChatService(
-      'test-key',
-      MODEL_DEEPSEEK_V4_FLASH,
-      MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
-    );
+  it.each([MODEL_DEEPSEEK_FLASH, MODEL_DEEPSEEK_V4_FLASH_VISION_EXP])(
+    'sends %s image messages with thinking disabled by default',
+    async (model) => {
+      const postSpy = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(createOneShotResponse('image'));
+      const visionMessages: MessageWithVision[] = [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: 'Describe this image.' },
+            {
+              type: 'image_url',
+              image_url: { url: 'https://example.com/image.png' },
+            },
+          ],
+        },
+      ];
+      const service = new DeepSeekChatService(
+        'test-key',
+        MODEL_DEEPSEEK_V4_FLASH,
+        model,
+      );
 
-    await service.visionChatOnce(visionMessages, false);
+      await service.visionChatOnce(visionMessages, false);
 
-    expect(postSpy).toHaveBeenCalledWith(
-      ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
-      expect.objectContaining({
-        model: MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
-        messages: visionMessages,
-        stream: false,
-        thinking: { type: 'disabled' },
-      }),
-      { Authorization: 'Bearer test-key' },
-    );
-  });
+      expect(postSpy).toHaveBeenCalledWith(
+        ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+        expect.objectContaining({
+          model,
+          messages: visionMessages,
+          stream: false,
+          thinking: { type: 'disabled' },
+        }),
+        { Authorization: 'Bearer test-key' },
+      );
+    },
+  );
 
   it.each(['low', 'high', 'max'] as const)(
     'enables DeepSeek V4 Flash thinking with %s effort',
@@ -258,7 +265,7 @@ describe('DeepSeekChatService', () => {
         'data: [DONE]\n\n',
       ]),
     );
-    const service = new DeepSeekChatService('test-key');
+    const service = new DeepSeekChatService('test-key', MODEL_DEEPSEEK_FLASH);
     const onPartial = vi.fn();
 
     const result = await service.chatOnce(messages, true, onPartial);
@@ -270,6 +277,16 @@ describe('DeepSeekChatService', () => {
       { type: 'text', text: 'Seek' },
     ]);
     expect(result.stop_reason).toBe('end');
+    expect(ChatServiceHttpClient.post).toHaveBeenCalledWith(
+      ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: 'deepseek-flash',
+        messages,
+        stream: true,
+        thinking: { type: 'disabled' },
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
   });
 
   it('ignores reasoning_content and streams visible text in thinking mode', async () => {

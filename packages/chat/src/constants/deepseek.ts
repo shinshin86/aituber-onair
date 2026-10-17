@@ -1,6 +1,7 @@
 export const DEEPSEEK_API_BASE_URL = 'https://api.deepseek.com';
 export const ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API = `${DEEPSEEK_API_BASE_URL}/chat/completions`;
 
+/** Rolling API ID, served by DeepSeek-V4.1-Flash-1017 as of 2026-10-17. */
 export const MODEL_DEEPSEEK_FLASH = 'deepseek-flash';
 
 // DeepSeek V4 models

@@ -1084,25 +1084,33 @@ Notes for self-hosted:
 
 #### DeepSeek
 
-`deepseek-flash` (`MODEL_DEEPSEEK_FLASH`) is the official ID for DeepSeek V4.1 Flash. It supports images and streaming through Chat Completions, with `none` (package default), `low`, `high`, and `max` reasoning. The existing package restriction still requires `none` when using tools. Legacy Flash IDs are compatibility aliases routed to V4.1 by DeepSeek. [API guide](https://api-docs.deepseek.com/).
+Rolling model IDs follow provider updates. As of October 17, 2026,
+`deepseek-flash` (`MODEL_DEEPSEEK_FLASH`) serves
+[DeepSeek-V4.1-Flash-1017](https://api-docs.deepseek.com/zh-cn/news/news261017/)
+through the existing Chat Completions endpoint. Continue sending
+`deepseek-flash` as the API model ID; future provider updates can change the
+model behind this ID. It supports text/image input and streaming. See the
+[API guide](https://api-docs.deepseek.com/).
 
 ```typescript
 const deepSeekService = ChatServiceFactory.createChatService('deepseek', {
   apiKey: process.env.DEEPSEEK_API_KEY,
-  model: 'deepseek-v4-flash',
+  model: 'deepseek-flash',
   reasoning_effort: 'none', // Default: disable thinking for responsive chat
 });
 ```
 
 Notes:
 - DeepSeek uses OpenAI-compatible Chat Completions at `https://api.deepseek.com/chat/completions`.
-- Recommended text models: `deepseek-v4-flash` (default) and `deepseek-v4-pro`. The experimental `deepseek-v4-flash-vision-exp` model is available explicitly for image input.
+- Select `deepseek-flash` for the current text/image model, or `deepseek-v4-pro` for text-only Pro. The package keeps its existing `deepseek-v4-flash` default for compatibility.
+- Legacy Flash IDs `deepseek-v4-flash` and `deepseek-v4-flash-vision-exp` remain accepted by DeepSeek and are routed to DeepSeek-V4.1-Flash-1017. Their original models have been retired; these aliases do not pin an older model.
 - Legacy aliases `deepseek-chat` and `deepseek-reasoner` remain exported for explicit compatibility, but DeepSeek marks them deprecated and scheduled for removal on 2026-07-24.
 - You can still use DeepSeek through `openai-compatible` by providing the full endpoint and model manually, but the first-class `deepseek` provider supplies the endpoint and default model for you.
-- `deepseek-v4-flash` accepts `reasoning_effort: 'none' | 'low' | 'high' | 'max'`. The package defaults to `none`, mapped to `thinking: { type: 'disabled' }`, for responsive chat. Other levels enable thinking and are sent as DeepSeek `reasoning_effort`.
+- `deepseek-flash` accepts `reasoning_effort: 'none' | 'low' | 'high' | 'max'`. DeepSeek defaults to enabled thinking with `high` effort. The package defaults to `none`, mapped to `thinking: { type: 'disabled' }`, for responsive chat. Other levels enable thinking and are sent as DeepSeek `reasoning_effort`.
 - `deepseek-v4-pro` exposes `none`, `high`, and `max`. DeepSeek currently maps a requested `low` to `high`, so the package normalizes it explicitly.
-- `deepseek-v4-flash-vision-exp` uses the same Chat Completions image format and defaults to `none` thinking for responsive vision chat.
+- `deepseek-flash` accepts the OpenAI-compatible `image_url` message format. The legacy `deepseek-v4-flash-vision-exp` alias remains available for existing vision configurations.
 - Thinking with tool calling is intentionally rejected for now because DeepSeek requires `reasoning_content` replay across tool turns and does not accept the normal `tool_choice` request shape in thinking mode. Tool calling works with the default `none` setting.
+- DeepSeek's Search/Fetch endpoints are separate APIs and are not exposed by this chat integration.
 
 #### Mistral
 
@@ -1604,7 +1612,7 @@ Currently, the following AI providers are built-in:
 - **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.7/4.6/4.5 use package-default `reasoning_effort: 'low'`; Grok 4.3 defaults to `none`.
 - **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
-- **DeepSeek**: DeepSeek V4.1 Flash (`deepseek-flash`); Supports DeepSeek V4 Flash (`deepseek-v4-flash`), V4 Pro (`deepseek-v4-pro`), and the explicit experimental vision model (`deepseek-v4-flash-vision-exp`) via OpenAI-compatible Chat Completions. Thinking defaults to disabled for low-latency chat.
+- **DeepSeek**: DeepSeek V4.1 Flash 1017 via the rolling `deepseek-flash` ID, plus text-only V4 Pro (`deepseek-v4-pro`), through OpenAI-compatible Chat Completions. Legacy Flash aliases remain available for compatibility. Thinking defaults to disabled for low-latency chat.
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models. GLM-5.3 (`zai-glm-5-3`) is an explicit text-only option.
 - **Sakana AI**: Supports Fugu (`fugu`), Fugu Ultra (`fugu-ultra-v1.1`), and vision-capable Sakana Namazu (`sakana-namazu`) via OpenAI-compatible Chat Completions. Namazu thinking defaults to disabled for responsive chat.
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) via OpenAI-compatible Chat Completions; the retiring 2.2 constant remains exported for compatibility.

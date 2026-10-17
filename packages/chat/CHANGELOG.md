@@ -1,5 +1,29 @@
 # @aituber-onair/chat
 
+## 0.65.0
+
+### Minor Changes
+
+- Updated the direct DeepSeek integration's model label and documentation for
+  DeepSeek-V4.1-Flash-1017, served through the existing `deepseek-flash` API ID
+  and `MODEL_DEEPSEEK_FLASH` export. The ID follows future provider updates;
+  it does not pin the 1017 revision.
+- Documented text/image input, streaming, reasoning options, and legacy Flash
+  alias routing. Existing model IDs, provider defaults, and the package's
+  default `none` reasoning setting are preserved.
+
+### Patch Changes
+
+- Added mock transport and React example regression coverage for canonical-ID
+  text/image requests, streaming replies, reasoning settings, and recovery
+  after HTTP errors.
+
+### Known Limitations
+
+- Live inference and authenticated upstream browser CORS have not been
+  verified for the 1017 revision. Thinking-enabled tool calling and the
+  separate DeepSeek Search/Fetch APIs remain unsupported.
+
 ## 0.64.0
 
 ### Minor Changes
