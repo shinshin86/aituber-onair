@@ -11,3 +11,7 @@ export const deepseekModels = [
   MODEL_DEEPSEEK_V4_PRO,
   MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
 ];
+
+export const deepseekModelLabels: Record<string, string> = {
+  [MODEL_DEEPSEEK_FLASH]: 'DeepSeek V4.1 Flash 1017 (deepseek-flash)',
+};

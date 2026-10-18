@@ -177,6 +177,8 @@ const FISH_AUDIO_MODELS = [
   's2.1-pro-free',
   's2.1-pro',
   's1',
+  'drama-3-preview',
+  'drama-3',
 ] as const;
 const FISH_AUDIO_FORMATS = ['mp3', 'wav', 'pcm', 'opus'] as const;
 const FISH_AUDIO_LATENCIES = ['normal', 'balanced', 'low'] as const;
@@ -1017,7 +1019,10 @@ export function SettingsPanel({
                 >
                   {availableModels.map((m) => (
                     <option key={m} value={m}>
-                      {m}
+                      {settings.llm.provider === 'deepseek' &&
+                      m === 'deepseek-flash'
+                        ? 'DeepSeek V4.1 Flash 1017 (deepseek-flash)'
+                        : m}
                     </option>
                   ))}
                 </select>
