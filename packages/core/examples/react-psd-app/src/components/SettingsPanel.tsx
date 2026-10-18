@@ -1483,7 +1483,10 @@ export function SettingsPanel({
                 >
                   {availableModels.map((m) => (
                     <option key={m} value={m}>
-                      {m}
+                      {settings.llm.provider === 'deepseek' &&
+                      m === 'deepseek-flash'
+                        ? 'DeepSeek V4.1 Flash 1017 (deepseek-flash)'
+                        : m}
                     </option>
                   ))}
                 </select>
