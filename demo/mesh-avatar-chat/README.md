@@ -46,7 +46,7 @@ npm run dev
 ```
 
 `fetch-piper-assets` downloads the piper-plus runtime and dictionary from a
-GitHub Release tarball and takes the Miko voice model (`sample-voice-v1.onnx`
+GitHub Release tarball and takes the Miko voice model (`sample-voice-v2.onnx`
 and its `.onnx.json`) from `PIPER_MODEL_DIR`, or from `PIPER_MODEL_BASE_URL`
 when the model is hosted online. Without it the demo still works with the Web
 Speech voice and hides the Miko voice option.

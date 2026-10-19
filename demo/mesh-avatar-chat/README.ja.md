@@ -30,7 +30,7 @@ PIPER_MODEL_DIR=/path/to/miko-piper-plus-model npm run fetch-piper-assets   # �
 npm run dev
 ```
 
-`fetch-piper-assets` は、piper-plus のランタイムと辞書を GitHub Release の tarball から取得し、ミコの音声モデル（`sample-voice-v1.onnx` と `.onnx.json`）を `PIPER_MODEL_DIR` から、またはオンラインに置いた場合は `PIPER_MODEL_BASE_URL` から取り込みます。実行しなくても Web Speech の声で動き、ミコの声の選択肢は表示されません。
+`fetch-piper-assets` は、piper-plus のランタイムと辞書を GitHub Release の tarball から取得し、ミコの音声モデル（`sample-voice-v2.onnx` と `.onnx.json`）を `PIPER_MODEL_DIR` から、またはオンラインに置いた場合は `PIPER_MODEL_BASE_URL` から取り込みます。実行しなくても Web Speech の声で動き、ミコの声の選択肢は表示されません。
 
 ## 公開
 

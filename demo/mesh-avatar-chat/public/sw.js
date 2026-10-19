@@ -2,7 +2,7 @@
 // Storage. The page downloads them once with a progress bar and stores them
 // here; the engine's own requests then come from the cache, and later visits
 // start without downloading.
-const CACHE_NAME = 'mesh-avatar-chat-piper-v1';
+const CACHE_NAME = 'mesh-avatar-chat-piper-v2';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

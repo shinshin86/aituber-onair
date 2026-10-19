@@ -2,7 +2,7 @@
 # Prepare public/piper/ for the demo:
 #   1. the piper-plus runtime and OpenJTalk dictionary from a GitHub Release
 #      tarball (PIPER_ASSETS_URL), and
-#   2. the Miko voice model (sample-voice-v1.onnx + .onnx.json) from
+#   2. the Miko voice model (sample-voice-v2.onnx + .onnx.json) from
 #      PIPER_MODEL_BASE_URL, or copied from a local directory PIPER_MODEL_DIR.
 # Nothing under public/piper/ is committed.
 #
@@ -15,7 +15,7 @@ cd "$(dirname "$0")/.."
 
 DEFAULT_ASSETS_URL="https://github.com/shinshin86/chrome-on-aituber/releases/download/piper-assets-v2/piper-assets.tar.gz"
 ASSETS_URL="${PIPER_ASSETS_URL:-$DEFAULT_ASSETS_URL}"
-MODEL_FILES=(sample-voice-v1.onnx sample-voice-v1.onnx.json)
+MODEL_FILES=(sample-voice-v2.onnx sample-voice-v2.onnx.json)
 TARBALL="$(mktemp -t piper-assets.XXXXXX)"
 trap 'rm -f "$TARBALL"' EXIT
 

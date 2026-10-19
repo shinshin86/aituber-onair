@@ -40,7 +40,7 @@ export interface DemoSettings {
 
 const STORAGE_KEY = 'aituber-onair-mesh-avatar-chat';
 
-export const DEFAULT_PIPER_SPEED = 0.9;
+export const DEFAULT_PIPER_SPEED = 1.0;
 export const PIPER_SPEED_RANGE = { min: 0.7, max: 1.2, step: 0.05 };
 
 export const DEFAULT_SETTINGS: DemoSettings = {
