@@ -8,8 +8,8 @@ export type PiperStatus = 'idle' | 'loading' | 'ready' | 'error' | 'missing';
 /** Files inside public/piper/, as packaged by scripts/fetch-piper-assets.sh */
 const PIPER_ASSETS = {
   basePath: `${import.meta.env.BASE_URL}piper/`,
-  modelConfigFile: 'sample-voice-v1.onnx.json',
-  modelFile: 'sample-voice-v1.onnx',
+  modelConfigFile: 'sample-voice-v2.onnx.json',
+  modelFile: 'sample-voice-v2.onnx',
   voiceFile: 'mei_normal.htsvoice',
 };
 
@@ -54,7 +54,7 @@ function toSpokenText(text: string): string {
     .trim();
 }
 
-const PIPER_CACHE_NAME = 'mesh-avatar-chat-piper-v1';
+const PIPER_CACHE_NAME = 'mesh-avatar-chat-piper-v2';
 
 /** Resolves once the page is controlled by the service worker, or gives up quickly. */
 async function waitForServiceWorker(): Promise<boolean> {

@@ -52,8 +52,8 @@ await core.processChat('自己紹介して');`,
     code: `const piper = new PiperPlusEngine();
 piper.setAssets({
   basePath: '/piper/',
-  modelFile: 'sample-voice-v1.onnx',
-  modelConfigFile: 'sample-voice-v1.onnx.json',
+  modelFile: 'sample-voice-v2.onnx',
+  modelConfigFile: 'sample-voice-v2.onnx.json',
   voiceFile: 'mei_normal.htsvoice',
 });
 const wav = await piper.fetchAudio({ style: 'talk', message: 'こんにちは' }, '');`,
