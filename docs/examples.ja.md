@@ -221,6 +221,11 @@ npm run dev
   ニュース動画を作る Node.js パイプライン。1つのフォルダーで`--avatar`を使い、
   PNGTuber・Purupuru・Mesh・VRM・Live2D・Inochi2D・PSDの7種類を
   切り替えられます。PSDは静止・モーションの両モードに対応します。
+- [`packages/core/examples/node-yukkuri-explainer`](../packages/core/examples/node-yukkuri-explainer):
+  JSON の掛け合い台本から、2キャラクターによる「ゆっくり解説」風の動画
+  （1920x1080）を作る Node.js パイプライン。話者ごとに Core 経由の声、
+  字幕の色、まばたき、口パクを持ちます。サンプルはサイン波の音、または
+  aqtpserver 経由の AquesTalkPlayer で動かせます。
 
 ## Chat サンプル
 

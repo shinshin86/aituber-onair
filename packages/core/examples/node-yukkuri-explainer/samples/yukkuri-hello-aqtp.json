@@ -1,0 +1,111 @@
+{
+  "show": {
+    "title": "口パクとまばたきのしくみ",
+    "subtitle": "だんご と ぼぶ の ゆっくり解説"
+  },
+  "seed": 42,
+  "leadIn": 0.5,
+  "leadOut": 0.6,
+  "defaultPauseAfter": 0.3,
+  "speakers": {
+    "dango": {
+      "name": "だんご",
+      "image": "../assets/yukkuri/dango",
+      "position": "left",
+      "mirror": true,
+      "subtitleColor": "#c9343f",
+      "voice": {
+        "engine": "aituber-voice",
+        "options": {
+          "engineType": "openaiCompatible",
+          "openAiCompatibleApiUrl": "http://127.0.0.1:20203/v1/audio/speech",
+          "openAiCompatibleModel": "aquestalkplayer",
+          "speaker": "れいむ",
+          "openAiCompatibleResponseFormat": "wav"
+        }
+      }
+    },
+    "bob": {
+      "name": "ぼぶ",
+      "image": "../assets/yukkuri/bob",
+      "position": "right",
+      "mirror": true,
+      "subtitleColor": "#2d65c8",
+      "voice": {
+        "engine": "aituber-voice",
+        "options": {
+          "engineType": "openaiCompatible",
+          "openAiCompatibleApiUrl": "http://127.0.0.1:20203/v1/audio/speech",
+          "openAiCompatibleModel": "aquestalkplayer",
+          "speaker": "まりさ",
+          "openAiCompatibleResponseFormat": "wav"
+        }
+      }
+    }
+  },
+  "lines": [
+    {
+      "speaker": "dango",
+      "text": "今日は、口パクとまばたきで会話を表現してみるよ。",
+      "chapter": "表情を切り替えてみよう",
+      "point": "口パクとまばたきで会話を表現",
+      "keywords": ["口パク", "まばたき"],
+      "emotion": "happy"
+    },
+    {
+      "speaker": "bob",
+      "text": "話している方だけが、口を開いたり閉じたりするんだね。",
+      "point": "話しているキャラクターだけが口パク",
+      "keywords": ["話者ごとに切り替え"]
+    },
+    {
+      "speaker": "dango",
+      "text": "そう。短い間隔で画像を切り替えるだけなんだ。",
+      "chapter": "短い間隔で画像を切り替える",
+      "point": "口の開閉は約0.12秒おき",
+      "slide": {
+        "text": "開く → 閉じる → 開く"
+      },
+      "keywords": ["開く", "閉じる"]
+    },
+    {
+      "speaker": "bob",
+      "text": "音が止まったら、口も閉じるの？",
+      "point": "小さな無音区間でも口を閉じる",
+      "emotion": "surprised"
+    },
+    {
+      "speaker": "dango",
+      "text": "うん。聞いている方も、ときどきまばたきするよ。",
+      "chapter": "聞き手にもまばたきを",
+      "point": "ふたりが別々のタイミングでまばたき",
+      "keywords": ["独立したまばたき"]
+    },
+    {
+      "speaker": "bob",
+      "text": "体の動きは小さくして、表情が分かりやすくなったね。",
+      "point": "小さな動きで、表情を見やすく",
+      "keywords": ["小さな跳ね", "呼吸"]
+    },
+    {
+      "speaker": "dango",
+      "text": "字幕も話す人の色にすれば、誰のせりふか分かるよ。",
+      "chapter": "声と動きと字幕をそろえる",
+      "point": "声・動き・字幕の色を話者ごとに切り替える",
+      "keywords": ["声", "動き", "字幕"],
+      "emotion": "happy"
+    },
+    {
+      "speaker": "bob",
+      "text": "口パクとまばたきで、ふたりの会話を表現できたね。",
+      "point": "口パクとまばたきで会話を表現",
+      "keywords": ["ふたりの会話"],
+      "emotion": "happy"
+    }
+  ],
+  "output": "../work/yukkuri-hello-aqtp.mp4",
+  "mouthMode": "flap",
+  "flapInterval": 0.12,
+  "mouthThreshold": 0.08,
+  "motion": "subtle"
+}

@@ -222,6 +222,11 @@ npm run dev
   Node.js pipeline from source text through Core chat and voice to a chaptered
   vertical news video. One folder supports seven avatar types via `--avatar`:
   PNGTuber, Purupuru, Mesh, VRM, Live2D, Inochi2D, and PSD (static or motion).
+- [`packages/core/examples/node-yukkuri-explainer`](../packages/core/examples/node-yukkuri-explainer):
+  Node.js pipeline that renders a two-character "yukkuri" explainer video
+  (1920x1080) from a JSON dialogue script. Each speaker has its own voice
+  through Core, subtitle color, blinking, and mouth flaps; the sample works
+  with sine tones or AquesTalkPlayer through aqtpserver.
 
 ## Chat Examples
 
