@@ -1,5 +1,13 @@
 # Yukkuri Explainer (Node)
 
+<p align="center">
+  <img
+    src="./images/node-yukkuri-explainer.png"
+    alt="Two characters, dango and bob, explaining a topic with a center panel and colored subtitles"
+    width="80%"
+  />
+</p>
+
 Generate a 1920×1080, 30 fps MP4 from a JSON conversation and two sets of transparent
 character images. Each speaker has its own voice, subtitle color and blink timing.
 The speaking character opens and closes its mouth at a fixed cadence, with a small
