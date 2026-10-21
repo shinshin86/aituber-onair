@@ -8,6 +8,7 @@ import {
   MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_5_5_HAIKU,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
+  MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
 } from '../../chat/src';
@@ -119,9 +120,10 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     const models = AITuberOnAirCore.getSupportedModels('openrouter');
     expect(listedModels()).toEqual(models);
     expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(listedModels().slice(models.length - 2, models.length)).toEqual([
+    expect(listedModels().slice(models.length - 3, models.length)).toEqual([
       MODEL_UNBIASED_PARETO_26_10_PREVIEW,
       MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+      MODEL_UNBIASED_PARETO_26_9,
     ]);
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
 
@@ -191,9 +193,10 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     expect(listedModels()).toEqual([...models, dynamicModel]);
     expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(listedModels().slice(models.length - 2, models.length)).toEqual([
+    expect(listedModels().slice(models.length - 3, models.length)).toEqual([
       MODEL_UNBIASED_PARETO_26_10_PREVIEW,
       MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+      MODEL_UNBIASED_PARETO_26_9,
     ]);
   });
 });

@@ -499,6 +499,91 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     expect(container.querySelectorAll('.message.assistant')).toHaveLength(2);
   });
 
+  it('switches stable Pareto and preview without leaking inherited reasoning settings', async () => {
+    await selectModel(modelCases[2]);
+    await change('#api-key', FAKE_KEY);
+    await change('#openrouter-reasoning-effort', 'high');
+    await change('#openrouter-reasoning-max-tokens', '1024');
+    for (const [label, model] of [
+      ['Pareto 26.10 Preview', 'unbiased/pareto-26.10-preview'],
+      ['Pareto 26.9', 'unbiased/pareto-26.9'],
+      ['Pareto 26.10 Preview', 'unbiased/pareto-26.10-preview'],
+    ]) {
+      await chooseButton('.model-item', label);
+      expect(
+        container.querySelector('#openrouter-reasoning-effort'),
+      ).toBeNull();
+      expect(
+        container.querySelector('#openrouter-reasoning-max-tokens'),
+      ).toBeNull();
+      await completeReply(OPENROUTER);
+      expect(requests.at(-1)!.body.model).toBe(model);
+      expect(requests.at(-1)!.body.reasoning).toBeUndefined();
+    }
+    await chooseButton('.model-item', 'GPT-6.1 Sol');
+    expect(
+      element<HTMLSelectElement>('#openrouter-reasoning-effort').value,
+    ).toBe('low');
+    expect(
+      element<HTMLInputElement>('#openrouter-reasoning-max-tokens').value,
+    ).toBe('1024');
+    await completeReply(OPENROUTER);
+    expect(requests.at(-1)!.body.reasoning).toMatchObject({
+      effort: 'low',
+      max_tokens: 1024,
+    });
+  });
+
+  it('Pareto 26.9 streams repeated replies and recovers from HTTP errors without unsupported settings', async () => {
+    await chooseButton('.provider-item', 'OpenRouter');
+    await chooseButton('.model-item', 'Pareto 26.9');
+    await change('#api-key', FAKE_KEY);
+    expect(container.querySelector('#openrouter-reasoning-effort')).toBeNull();
+    expect(
+      container.querySelector('#openrouter-reasoning-max-tokens'),
+    ).toBeNull();
+    expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
+    pending.push({
+      endpoint: OPENROUTER,
+      response: new Response('{"error":{"message":"Mock rate limit"}}', {
+        status: 429,
+        statusText: 'Too Many Requests',
+      }),
+    });
+    await send('Rejected prompt');
+    expect(element('.error-message').textContent).toContain('429');
+    expect(container.querySelectorAll('.message.assistant')).toHaveLength(0);
+    expect(element<HTMLInputElement>('.chat-input').disabled).toBe(false);
+
+    const stream = streamResponse(OPENROUTER);
+    await send('Retry prompt');
+    await stream.text('こんにちは ');
+    expect(element('.assistant .message-text').textContent).toBe('こんにちは ');
+    expect(container.querySelector('.streaming-indicator')).not.toBeNull();
+    await stream.text('world');
+    await stream.finish();
+    expect(container.querySelector('.error-message')).toBeNull();
+    expect(element('.assistant .message-text').textContent).toBe(
+      'こんにちは world',
+    );
+    await completeReply(OPENROUTER, 'Again', 'Second reply');
+    expect(requests).toHaveLength(3);
+    for (const { url, body } of requests) {
+      expect(url).toBe(OPENROUTER);
+      expect(body.model).toBe('unbiased/pareto-26.9');
+      expect(body.stream).toBe(true);
+      expect(body.reasoning).toBeUndefined();
+      expect(body.reasoning_effort).toBeUndefined();
+    }
+    expect(requests[2].body.messages).toEqual([
+      { role: 'user', content: 'Rejected prompt' },
+      { role: 'user', content: 'Retry prompt' },
+      { role: 'assistant', content: 'こんにちは world' },
+      { role: 'user', content: 'Again' },
+    ]);
+    expect(container.querySelectorAll('.message.assistant')).toHaveLength(2);
+  });
+
   it.each(['Solar Mini4', 'Solar Pro 4'])(
     'keeps %s effort selectable without inheriting a reasoning budget',
     async (label) => {

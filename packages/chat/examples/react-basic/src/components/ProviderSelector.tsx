@@ -115,6 +115,7 @@ import {
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
+  MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
@@ -1210,6 +1211,13 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
     name: 'Mistral Large 4',
+    provider: 'openrouter',
+    default: false,
+  },
+
+  {
+    id: MODEL_UNBIASED_PARETO_26_9,
+    name: 'Pareto 26.9',
     provider: 'openrouter',
     default: false,
   },

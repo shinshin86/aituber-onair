@@ -2,6 +2,7 @@ import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
+  MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   ENDPOINT_OPENROUTER_API,
@@ -378,7 +379,12 @@ export class OpenRouterChatService implements ChatService {
         : this.reasoningMaxTokens;
 
     // Models without documented reasoning controls must not inherit them.
-    if (model.trim() !== MODEL_UNBIASED_PARETO_26_10_PREVIEW) {
+    if (
+      ![
+        MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+        MODEL_UNBIASED_PARETO_26_9,
+      ].includes(model.trim())
+    ) {
       // Add OpenRouter reasoning control
       const defaultReasoningEffort = getDefaultOpenRouterReasoningEffort(model);
       const reasoningEffort = normalizeOpenRouterReasoningEffort(

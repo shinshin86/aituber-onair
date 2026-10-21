@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
@@ -87,6 +88,7 @@ import {
 } from '../../src/constants/openrouter';
 
 const recentOpenRouterVisionModels = [
+  MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_OPENROUTER_AUTO_BETA,
@@ -229,6 +231,7 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
         MODEL_UNBIASED_PARETO_26_10_PREVIEW,
         MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+        MODEL_UNBIASED_PARETO_26_9,
       ]);
     });
   });

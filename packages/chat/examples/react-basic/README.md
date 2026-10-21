@@ -403,6 +403,26 @@ inference or browser CORS. The provider can parse tool calls, but does not retai
 See the [model API example](https://openrouter.ai/inclusionai/ling-3.1-flash?view=api)
 and the [package limitations](../../README.md#openrouter).
 
+### Pareto 26.9 on OpenRouter
+
+Pareto 26.9 (`unbiased/pareto-26.9`) is a stable, explicit option for text/image
+input, streaming, and automatic tool selection. Select **OpenRouter → Pareto 26.9**
+and enter your OpenRouter API key, or pass this model ID to `ChatServiceFactory`
+with the `openrouter` provider. Existing defaults and model order are unchanged.
+Requests use Bearer-authenticated JSON at
+`https://openrouter.ai/api/v1/chat/completions`, with `choices[].message` responses
+or SSE `choices[].delta` events. Output token limits are supported. No reasoning
+controls are documented, so effort, token budgets, and `includeReasoning` are
+ignored and no reasoning object is sent. The example hides effort/budget inputs.
+The package supports tools; the example chat UI does not configure tools.
+Structured-output enforcement and file/audio/video input are outside this path.
+The [model page](https://openrouter.ai/unbiased/pareto-26.9) and
+[Chat Completions quickstart](https://openrouter.ai/docs/quickstart) document the
+model and API route. The [browser authentication guide](https://openrouter.ai/docs/guides/overview/auth/oauth)
+documents direct browser requests; no proxy is added. Mock transport and DOM
+integration tests cover package behavior, not live inference or authenticated CORS.
+No rendered-browser verification, live generation, or CORS probe was run.
+
 ### Pareto 26.10 Preview on OpenRouter
 
 Select **OpenRouter → Pareto 26.10 Preview** and enter your OpenRouter API key.
