@@ -10,6 +10,56 @@ vi.mock('../src/services/audio/AudioPlayerFactory', () => ({
 afterEach(() => vi.restoreAllMocks());
 
 describe('current model runtime updates', () => {
+  it('routes released and preview Fish Audio selections through the existing HTTP engine', async () => {
+    const audio = new Uint8Array([73, 68, 51, 0, 127, 128, 254, 255]).buffer;
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      arrayBuffer: async () => audio,
+    } as Response);
+    const onPlay = vi.fn();
+    const adapter = new VoiceEngineAdapter({
+      engineType: 'fishAudio',
+      speaker: 'fixture-reference-id',
+      apiKey: '<YOUR_API_KEY>',
+      fishAudioFormat: 'mp3',
+      fishAudioSpeed: 1.1,
+      onPlay,
+    });
+    const text = '[laugh] こんにちは。<whisper>またね。</whisper>';
+    await adapter.speak({ text });
+
+    for (const model of ['drama-3', 'drama-3-preview', 's2-pro'] as const) {
+      adapter.updateOptions({ fishAudioModel: model });
+      await adapter.speak({ text });
+    }
+
+    expect(
+      fetchMock.mock.calls.map(([url, request]) => ({
+        url,
+        headers: request?.headers,
+        body: JSON.parse(request?.body as string),
+      })),
+    ).toEqual(
+      ['s2-pro', 'drama-3', 'drama-3-preview', 's2-pro'].map((model) => ({
+        url: 'https://api.fish.audio/v1/tts',
+        headers: {
+          Authorization: 'Bearer <YOUR_API_KEY>',
+          'Content-Type': 'application/json',
+          model,
+        },
+        body: {
+          text,
+          reference_id: 'fixture-reference-id',
+          format: 'mp3',
+          latency: 'normal',
+          prosody: { speed: 1.1 },
+        },
+      })),
+    );
+    expect(onPlay).toHaveBeenCalledTimes(4);
+    expect(onPlay).toHaveBeenCalledWith(audio, undefined);
+  });
+
   it('filters Eleven v4 settings after updateOptions and restores them when switching back', async () => {
     const audio = new Uint8Array([73, 68, 51]).buffer;
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({

@@ -1,13 +1,20 @@
 # React Basic Example - AITuber OnAir Core
 
+Core 0.26.23 uses published Chat 0.65.0 and Voice 0.28.0. Select
+`deepseek-flash` for DeepSeek-V4.1-Flash-1017; this rolling API ID follows
+provider updates. Fish Audio's Model selector includes `drama-3` and
+`drama-3-preview` for one-shot, single-speaker speech. The preview may change;
+`s2-pro` remains the default. Voice 0.27.0's empty-audio and Piper Plus model
+input fixes are included; Piper Plus language selection is not exposed here.
+
 ![Demo](./images/demo.png)
 
 A comprehensive React-based AI chat application demonstrating the full capabilities of [AITuber OnAir Core](https://www.npmjs.com/package/@aituber-onair/core). This example showcases multi-provider LLM integration, advanced voice synthesis, and real-time streaming features in a modern web interface.
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.64.0 and the
-Gemini TTS model type from Voice 0.26.0. Existing provider defaults are unchanged.
+Core exposes the models and capability helpers from Chat 0.65.0 and the
+voice engines and option types from Voice 0.28.0. Existing provider defaults are unchanged.
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
   Sonnet 5.5;
@@ -671,7 +678,7 @@ Contributions are welcome! Feel free to submit issues or pull requests to improv
 
 ## Updated Chat and Voice options
 
-This example uses published Chat 0.64.0 and Voice 0.26.0 through Core.
+This example uses published Chat 0.65.0 and Voice 0.28.0 through Core.
 New Chat models are available in the model selector, including GPT-6.1 Sol,
 GLM-5.3 FlashX, Mistral GLM-5.3, and the new OpenRouter options. Models use
 Chat's capability checks and model-specific reasoning defaults. The avatar

@@ -25,6 +25,8 @@ interface PiperPlusModelConfig {
   };
   phoneme_id_map: Record<string, number[]>;
   prosody_id_map?: Record<string, number[]>;
+  /** Present on multilingual (zs-v1 based) models, which need a language id input */
+  language_id_map?: Record<string, number>;
 }
 
 interface PiperPlusModule {
@@ -56,6 +58,8 @@ interface OrtInferenceSession {
 
 type ScriptType = 'classic' | 'module';
 
+const DEFAULT_LANGUAGE = 'ja';
+
 /**
  * WASM-based Japanese TTS engine powered by ONNX Runtime Web and OpenJTalk.
  *
@@ -70,6 +74,7 @@ export class PiperPlusEngine implements VoiceEngine {
   private assets?: PiperPlusAssets;
   private speed = 1.0;
   private noiseScale = 1.0;
+  private language = DEFAULT_LANGUAGE;
 
   static isAvailable(): boolean {
     return (
@@ -126,6 +131,15 @@ export class PiperPlusEngine implements VoiceEngine {
     }
 
     this.noiseScale = noiseScale;
+  }
+
+  /**
+   * Set the language passed to multilingual models as their `lid` input.
+   *
+   * Models without a `language_id_map` ignore this. The default is `ja`.
+   */
+  setLanguage(language?: string): void {
+    this.language = language?.trim() || DEFAULT_LANGUAGE;
   }
 
   async initialize(): Promise<void> {
@@ -221,7 +235,14 @@ export class PiperPlusEngine implements VoiceEngine {
     const text = input.message;
     const labels = await phonemizer.textToPhonemes(text, 'ja');
     const phonemes = phonemizer.extractPhonemes(labels, 'ja');
-    const phonemeIds = phonemesToIds(phonemes, modelConfig.phoneme_id_map);
+    const multilingual = isMultilingualModel(modelConfig);
+    const modelInputs = multilingual
+      ? buildMultilingualInputs(phonemes, labels, modelConfig.phoneme_id_map)
+      : {
+          phonemeIds: phonemesToIds(phonemes, modelConfig.phoneme_id_map),
+          prosody: null,
+        };
+    const phonemeIds = modelInputs.phonemeIds;
 
     const feeds: Record<string, unknown> = {
       input: new ort.Tensor(
@@ -247,8 +268,21 @@ export class PiperPlusEngine implements VoiceEngine {
       ),
     };
 
+    const languageId = resolveLanguageId(
+      modelConfig.language_id_map,
+      this.language,
+    );
+    if (languageId !== undefined) {
+      feeds.lid = new ort.Tensor(
+        'int64',
+        new BigInt64Array([BigInt(languageId)]),
+        [1],
+      );
+    }
+
     if (modelConfig.prosody_id_map) {
-      const prosodyFeatures = extractProsody(labels, phonemeIds.length);
+      const prosodyFeatures =
+        modelInputs.prosody ?? extractProsody(labels, phonemeIds.length);
       const flatProsody: bigint[] = [];
       for (const [accent1, accent2, accent3] of prosodyFeatures) {
         flatProsody.push(BigInt(accent1), BigInt(accent2), BigInt(accent3));
@@ -349,6 +383,174 @@ export function float32ToWav(
 
 function normalizeBasePath(basePath: string): string {
   return basePath.endsWith('/') ? basePath : `${basePath}/`;
+}
+
+/**
+ * Multilingual piper-plus models take a language id. Prefer the requested
+ * language, then Japanese (the only language OpenJTalk phonemizes), then the
+ * first entry so the model still receives a valid id.
+ */
+function resolveLanguageId(
+  languageIdMap: Record<string, number> | undefined,
+  language: string,
+): number | undefined {
+  if (!languageIdMap) {
+    return undefined;
+  }
+
+  const candidates = [
+    language,
+    DEFAULT_LANGUAGE,
+    ...Object.keys(languageIdMap),
+  ];
+  for (const candidate of candidates) {
+    const id = languageIdMap[candidate];
+    if (typeof id === 'number') {
+      return id;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Multilingual (zs-v1 based) piper-plus models are trained on sequences with a
+ * pad id after every token: BOS, t0, PAD, t1, PAD, ..., EOS, and with raw
+ * OpenJTalk accent values. Single-language Japanese models use the plain
+ * token sequence built by `phonemesToIds`.
+ */
+function isMultilingualModel(config: PiperPlusModelConfig): boolean {
+  return Object.keys(config.language_id_map ?? {}).length > 1;
+}
+
+const SPECIAL_TOKENS = new Set([
+  '^',
+  '$',
+  '_',
+  '#',
+  '[',
+  ']',
+  '?',
+  '?!',
+  '?.',
+  '?~',
+]);
+const EOS_TOKENS = new Set(['$', '?', '?!', '?.', '?~']);
+/** Short inputs are padded with silence up to this many ids (piper-plus "Strategy A") */
+const MIN_PHONEME_IDS = 15;
+const MIN_BODY_FOR_PADDING = 3;
+
+interface ModelInputs {
+  phonemeIds: number[];
+  prosody: number[][] | null;
+}
+
+function buildMultilingualInputs(
+  tokens: string[],
+  labels: string,
+  phonemeIdMap: Record<string, number[]>,
+): ModelInputs {
+  const accents = extractRawAccents(labels);
+  const firstId = (token: string, fallback: number) =>
+    phonemeIdMap[token]?.[0] ?? fallback;
+  const bos = firstId('^', 1);
+  const pad = firstId('_', 0);
+  const zero = [0, 0, 0];
+
+  const phonemeIds = [bos];
+  const prosody: number[][] = [zero];
+  let eosToken = '$';
+  let accentIndex = 0;
+
+  for (const token of tokens) {
+    if (token === '^') {
+      continue;
+    }
+    if (EOS_TOKENS.has(token)) {
+      eosToken = token;
+      continue;
+    }
+    const isPhoneme = !SPECIAL_TOKENS.has(token);
+    const accent = isPhoneme ? (accents[accentIndex++] ?? zero) : zero;
+    const ids = phonemeIdMap[token];
+    if (ids) {
+      for (const id of ids) {
+        phonemeIds.push(id);
+        prosody.push(accent);
+      }
+    }
+    phonemeIds.push(pad);
+    prosody.push(zero);
+  }
+
+  phonemeIds.push(firstId(eosToken, firstId('$', 2)));
+  prosody.push(zero);
+
+  return padShortInputs({ phonemeIds, prosody }, pad);
+}
+
+/** Insert silence ids after BOS and before EOS so short lines keep their timing. */
+function padShortInputs(inputs: ModelInputs, pad: number): ModelInputs {
+  const { phonemeIds, prosody } = inputs;
+  const total = phonemeIds.length;
+  const body = total - 2;
+  if (body < MIN_BODY_FOR_PADDING || total >= MIN_PHONEME_IDS) {
+    return inputs;
+  }
+  const missing = MIN_PHONEME_IDS - total;
+  const front = Math.floor(missing / 2);
+  const back = missing - front;
+  const zeros = (count: number) =>
+    Array.from({ length: count }, () => [0, 0, 0]);
+  return {
+    phonemeIds: [
+      phonemeIds[0],
+      ...new Array(front).fill(pad),
+      ...phonemeIds.slice(1, -1),
+      ...new Array(back).fill(pad),
+      phonemeIds[total - 1],
+    ],
+    prosody: prosody
+      ? [
+          prosody[0],
+          ...zeros(front),
+          ...prosody.slice(1, -1),
+          ...zeros(back),
+          prosody[total - 1],
+        ]
+      : null,
+  };
+}
+
+/** Raw A1/A2/A3 accent values for every phoneme label (silence and pauses skipped). */
+function extractRawAccents(labels: string): number[][] {
+  const accents: number[][] = [];
+  const reAccent1 = /\/A:([\d-]+)\+/;
+  const reAccent2 = /\+([0-9]+)\+/;
+  const reAccent3 = /\+([0-9]+)\//;
+  for (const line of labels.split('\n')) {
+    const phonemeMatch = line.match(/-([^-+]+)\+/);
+    if (
+      !phonemeMatch ||
+      phonemeMatch[1] === 'sil' ||
+      phonemeMatch[1] === 'pau'
+    ) {
+      continue;
+    }
+    const a1 = reAccent1.exec(line);
+    const a2 = reAccent2.exec(line);
+    const a3 = reAccent3.exec(line);
+    accents.push(
+      a1 && a2 && a3
+        ? [
+            Number.parseInt(a1[1], 10),
+            Number.parseInt(a2[1], 10),
+            Number.parseInt(a3[1], 10),
+          ]
+        : [0, 0, 0],
+    );
+  }
+  return accents;
 }
 
 function phonemesToIds(

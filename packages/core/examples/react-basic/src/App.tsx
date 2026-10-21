@@ -101,7 +101,7 @@ import { claudeModels } from './constants/claude';
 import { zaiModels } from './constants/zai';
 import { kimiModels } from './constants/kimi';
 import { xaiModels } from './constants/xai';
-import { deepseekModels } from './constants/deepseek';
+import { deepseekModelLabels, deepseekModels } from './constants/deepseek';
 import { mistralModels } from './constants/mistral';
 import { sakanaModels } from './constants/sakana';
 import { plamoModels } from './constants/plamo';
@@ -299,6 +299,8 @@ const FISH_AUDIO_MODELS: FishAudioModel[] = [
   's2.1-pro-free',
   's2.1-pro',
   's1',
+  'drama-3-preview',
+  'drama-3',
 ];
 const FISH_AUDIO_FORMATS: FishAudioFormat[] = ['mp3', 'wav', 'pcm', 'opus'];
 const FISH_AUDIO_LATENCIES: FishAudioLatency[] = ['normal', 'balanced', 'low'];
@@ -3669,7 +3671,7 @@ const App: React.FC = () => {
                         {chatProvider === 'deepseek' &&
                           deepseekModels.map((m) => (
                             <option key={m} value={m}>
-                              {m}
+                              {deepseekModelLabels[m] ?? m}
                             </option>
                           ))}
                         {chatProvider === 'mistral' &&

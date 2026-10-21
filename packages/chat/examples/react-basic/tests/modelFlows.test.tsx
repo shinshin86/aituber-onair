@@ -9,6 +9,7 @@ const OPENAI_RESPONSES = 'https://api.openai.com/v1/responses';
 const OPENAI_CHAT = 'https://api.openai.com/v1/chat/completions';
 const OPENROUTER = 'https://openrouter.ai/api/v1/chat/completions';
 const ZAI = 'https://api.z.ai/api/paas/v4/chat/completions';
+const DEEPSEEK = 'https://api.deepseek.com/chat/completions';
 const FAKE_KEY = 'mock-only-not-a-provider-key';
 const mandatoryEfforts = ['low', 'medium', 'high', 'xhigh', 'max'];
 
@@ -76,6 +77,15 @@ const modelCases = [
     efforts: efforts as string[],
     initialEffort: initialEffort as string,
   })),
+  {
+    provider: 'DeepSeek',
+    label: 'DeepSeek V4.1 Flash 1017',
+    model: 'deepseek-flash',
+    endpoint: DEEPSEEK,
+    control: '#deepseek-reasoning-effort',
+    efforts: ['none', 'low', 'high', 'max'],
+    initialEffort: 'none',
+  },
 ];
 
 type ModelCase = (typeof modelCases)[number];
@@ -335,14 +345,28 @@ describe('React sample model-to-transport flows (mock network only)', () => {
       await change('#api-key', FAKE_KEY);
       await completeReply(model.endpoint);
       const first = requests[0].body;
-      expect(first.reasoning?.effort ?? first.reasoning_effort).toBe(
-        model.initialEffort,
-      );
+      if (model.provider === 'DeepSeek') {
+        expect(first.thinking).toEqual({ type: 'disabled' });
+        expect(first.reasoning_effort).toBeUndefined();
+      } else {
+        expect(first.reasoning?.effort ?? first.reasoning_effort).toBe(
+          model.initialEffort,
+        );
+      }
       for (const effort of model.efforts) {
         await change(model.control, effort);
         await completeReply(model.endpoint, `Use ${effort}`);
         const body = requests[requests.length - 1].body;
-        expect(body.reasoning?.effort ?? body.reasoning_effort).toBe(effort);
+        if (model.provider === 'DeepSeek') {
+          expect(body.thinking).toEqual({
+            type: effort === 'none' ? 'disabled' : 'enabled',
+          });
+          expect(body.reasoning_effort).toBe(
+            effort === 'none' ? undefined : effort,
+          );
+        } else {
+          expect(body.reasoning?.effort ?? body.reasoning_effort).toBe(effort);
+        }
       }
     },
   );

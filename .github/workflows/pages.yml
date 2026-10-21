@@ -1,0 +1,95 @@
+name: Deploy demo to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'demo/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  # GitHub Release tarball with the piper-plus runtime and OpenJTalk dictionary.
+  # Leave the repository variable unset to use the default URL in
+  # demo/mesh-avatar-chat/scripts/fetch-piper-assets.sh.
+  PIPER_ASSETS_URL: ${{ vars.PIPER_ASSETS_URL }}
+  # Base URL that serves sample-voice-v2.onnx and sample-voice-v2.onnx.json
+  # (Miko's voice model). Required.
+  PIPER_MODEL_BASE_URL: ${{ vars.PIPER_MODEL_BASE_URL }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            demo/mesh-avatar-chat/package-lock.json
+
+      - name: Install workspace dependencies
+        run: npm ci
+
+      - name: Build workspace packages used by the demo
+        run: |
+          npm -w @aituber-onair/chat run build
+          npm -w @aituber-onair/voice run build
+          npm -w @aituber-onair/core run build
+
+      - name: Install demo dependencies
+        run: npm --prefix demo/mesh-avatar-chat ci
+
+      - name: Download piper-plus assets
+        run: npm --prefix demo/mesh-avatar-chat run fetch-piper-assets
+
+      - name: Build demo
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/mesh-avatar-chat/
+        run: npm --prefix demo/mesh-avatar-chat run build
+
+      - name: Assemble site
+        run: |
+          mkdir -p site/mesh-avatar-chat
+          cp -R demo/mesh-avatar-chat/dist/. site/mesh-avatar-chat/
+          cat > site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta http-equiv="refresh" content="0; url=./mesh-avatar-chat/" />
+              <title>AITuber OnAir demos</title>
+            </head>
+            <body>
+              <p><a href="./mesh-avatar-chat/">Mesh Avatar Chat</a></p>
+            </body>
+          </html>
+          HTML
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

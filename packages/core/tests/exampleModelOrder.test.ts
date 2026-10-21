@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { act, createElement } from 'react';
-import { type Root, createRoot } from 'react-dom/client';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   MODEL_CLAUDE_4_5_SONNET,
@@ -46,7 +47,16 @@ type SettingsResult = Pick<
   'settings' | 'updateLLMProvider' | 'updateLLMModel'
 >;
 
+type ReactModule = typeof import('react');
+type ReactDOMModule = typeof import('react-dom/client');
+
 describe.each(examples)('$name OpenRouter model ordering', (example) => {
+  // Match each hook's React instance when its example dependencies are installed.
+  const requireExample = createRequire(
+    resolve(__dirname, `../examples/${example.name}/src/hooks/useSettings.ts`),
+  );
+  const { act, createElement } = requireExample('react') as ReactModule;
+  const { createRoot } = requireExample('react-dom/client') as ReactDOMModule;
   let container: HTMLDivElement;
   let root: Root;
   let current: SettingsResult;

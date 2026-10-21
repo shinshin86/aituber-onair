@@ -352,13 +352,25 @@ const voiceService = new VoiceService({
 this integration; `s2.1-pro-free` must be selected explicitly and should not be
 treated as an SLA-backed production tier.
 
+Released models for directed performances are explicit choices. Select
+`fishAudioModel: 'drama-3'` for Drama 3, [released October 13, 2026](https://fish.audio/blog/fish-audio-drama-3/).
+The native [TTS endpoint](https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech)
+accepts `model: drama-3` with the existing request fields and binary audio
+response. Existing format, speed, and latency options remain available.
+
 Preview models are opt-in because behavior and availability may change. Select
 `fishAudioModel: 'drama-3-preview'` to use Drama 3 Preview, announced in the
 [September 23, 2026 changelog](https://docs.fish.audio/developer-guide/getting-started/changelog)
-and documented for the same [TTS endpoint](https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech).
+and still listed separately in the [Drama 3 guide](https://docs.fish.audio/features/text-to-speech/drama-3).
 This integration sends one `reference_id` and returns one-shot audio. It does
 not expose multi-speaker dialogue or translate `Talk.style` into model-specific
 direction. The existing `s2-pro` default is unchanged.
+
+To preserve provider directions and paired tags such as `[laugh]` or
+`<whisper>quiet words</whisper>`, pass the script directly to
+`voiceService.speak({ text: script })`. The `speakText()` convenience method
+parses and removes simple bracketed emotion tags before synthesis. Interactive
+editing and audio inpainting are not exposed by this integration.
 
 Voice-list lookups return at most 100 entries by default so they do not traverse
 the full public model catalog. Pass `limit` and optionally `pageSize` to request

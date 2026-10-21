@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 describe('FishAudioEngine', () => {
-  it.each<FishAudioModel>(['s2.1-pro-free', 'drama-3-preview'])(
+  it.each<FishAudioModel>(['s2.1-pro-free', 'drama-3', 'drama-3-preview'])(
     'sends the documented JSON request for %s and returns audio bytes',
     async (model) => {
       const audio = new Uint8Array([1, 2, 3]).buffer;
@@ -27,7 +27,11 @@ describe('FishAudioEngine', () => {
       engine.setSpeed(1.25);
 
       const result = await engine.fetchAudio(
-        { message: ' こんにちは ', style: 'happy' },
+        {
+          message:
+            ' [quiet, thoughtful] こんにちは。<whisper>またね。</whisper> ',
+          style: 'happy',
+        },
         'voice-model-id',
         'fish-key',
       );
@@ -44,7 +48,7 @@ describe('FishAudioEngine', () => {
         }),
       );
       expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
-        text: 'こんにちは',
+        text: '[quiet, thoughtful] こんにちは。<whisper>またね。</whisper>',
         reference_id: 'voice-model-id',
         format: 'mp3',
         latency: 'low',
@@ -56,7 +60,7 @@ describe('FishAudioEngine', () => {
     },
   );
 
-  it('keeps S2 Pro as the default and restores it after an explicit preview selection', async () => {
+  it('keeps S2 Pro as the default and restores it after explicit released and preview selections', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       arrayBuffer: async () => new ArrayBuffer(0),
@@ -69,6 +73,8 @@ describe('FishAudioEngine', () => {
         '<YOUR_API_KEY>',
       );
     await synthesize();
+    engine.setModel('drama-3');
+    await synthesize();
     engine.setModel('drama-3-preview');
     await synthesize();
     engine.setModel(undefined);
@@ -80,6 +86,7 @@ describe('FishAudioEngine', () => {
       })),
     ).toEqual([
       { url: 'https://api.fish.audio/v1/tts', model: 's2-pro' },
+      { url: 'https://api.fish.audio/v1/tts', model: 'drama-3' },
       { url: 'https://api.fish.audio/v1/tts', model: 'drama-3-preview' },
       { url: 'https://api.fish.audio/v1/tts', model: 's2-pro' },
     ]);

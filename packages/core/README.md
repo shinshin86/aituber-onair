@@ -12,10 +12,22 @@ It specializes in generating response text and audio from text or image inputs, 
 
 ## Chat and Voice model updates
 
-Core exposes the models and capability helpers from Chat 0.64.0 and the
-speech engines, option types, and endpoint helpers from Voice 0.26.0.
+Core exposes the models and capability helpers from Chat 0.65.0 and the
+speech engines, option types, and endpoint helpers from Voice 0.28.0.
 Existing provider defaults are unchanged.
 
+- Chat 0.65.0 identifies DeepSeek-V4.1-Flash-1017 through the existing
+  rolling `deepseek-flash` ID (`MODEL_DEEPSEEK_FLASH`). It supports text/image
+  input and streaming; the ID follows provider updates rather than pinning
+  this revision. Thinking stays disabled by default and is required to be
+  disabled for tool calling. See the [DeepSeek API guide](https://api-docs.deepseek.com/).
+- Voice 0.27.0 / 0.28.0 add explicit Fish Audio `drama-3-preview` / `drama-3`
+  choices to all ten React TTS settings examples. These use the existing
+  one-shot, single-speaker HTTP path; `s2-pro` remains the default and the
+  preview model's availability may change.
+- Voice 0.27.0 also fixes empty-audio completion and Piper Plus multilingual
+  model inputs. Piper Plus still defaults to Japanese; `setLanguage()` is an
+  engine-level method, not a Core `voiceOptions` or example setting.
 - Chat 0.64.0 adds Mistral Large 4 (`mistralai/mistral-large-4-0`) as an
   explicit OpenRouter public preview after Pareto, with text and image input.
   Its reasoning defaults to `none`; explicit `high` is preserved. The model
@@ -44,7 +56,7 @@ Existing provider defaults are unchanged.
 
 - Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
   Sonnet 5.5;
-  DeepSeek V4.1 Flash; and Grok 4.7.
+  DeepSeek V4.1 Flash 1017; and Grok 4.7.
 - OpenAI-compatible endpoint helpers: `resolveOpenAICompatibleEndpoint`,
   `listOpenAICompatibleModels`, `testOpenAICompatibleConnection`, and
   `OPENAI_COMPATIBLE_LOCAL_PRESETS` (Ollama, LM Studio, llama.cpp, vLLM). See
@@ -1193,6 +1205,7 @@ This is the overall integration class, responsible for initializing and coordina
 - `isMemoryEnabled()` – Check if memory functionality is enabled
 - `generateOneShotContentFromHistory(prompt, messageHistory)` – Generate new content from a system prompt and provided message history (one-shot, no impact on internal chat history)
 - `offAll()` – Remove all event listeners
+- `dispose()` – Stop speech, release chat service resources (such as persistent Gemini Nano sessions), and remove all event listeners. Call it before discarding an instance, for example when recreating Core after a settings change
 
 ### ChatProcessor
 
@@ -1365,7 +1378,7 @@ Possible use cases for `chatLogUpdated` include:
 - **xAI TTS**: xAI text-to-speech with selectable codec, sample rate, and bit rate options.
 - **Unreal Speech**: Unreal Speech v8 `/stream` endpoint with bitrate, speed, pitch, codec, and temperature options.
 - **ElevenLabs**: ElevenLabs Text to Speech API with model, output format, language code, voice settings, and text normalization options.
-- **Fish Audio**: Fish Audio one-shot TTS with S2 Pro by default, configurable output/latency options, and reference-voice list discovery.
+- **Fish Audio**: Fish Audio one-shot, single-speaker TTS with explicit `drama-3` and `drama-3-preview` model choices, S2 Pro by default, configurable output/latency options, and reference-voice list discovery.
 - **Cartesia**: Cartesia synchronous TTS with Sonic 3.5 / 3.6, language/output controls, and voice-list discovery.
 - **Deepgram Flux**: English-only, one-shot MP3 speech with a public voice catalog and optional speed control.
 - **Inworld**: Inworld TTS REST API with selectable model, audio encoding, sample rate, bitrate, language, delivery mode, and temperature options.

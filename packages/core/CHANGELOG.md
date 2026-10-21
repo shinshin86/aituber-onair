@@ -1,5 +1,41 @@
 # @aituber-onair/core
 
+## 0.26.24
+
+### Patch Changes
+
+- Add `AITuberOnAirCore.dispose()`. It stops speech playback, disposes the
+  active and pending chat services, and removes all event listeners. Use it
+  before discarding a Core instance so that resources such as persistent
+  Gemini Nano Prompt API sessions are released right away instead of waiting
+  for garbage collection.
+
+## 0.26.23
+
+### Patch Changes
+
+- Propagate published Chat 0.65.0 and Voice 0.27.0 / 0.28.0.
+- Document DeepSeek-V4.1-Flash-1017 through the existing rolling
+  `deepseek-flash` ID and `MODEL_DEEPSEEK_FLASH` export. Preserve Chat's
+  default model and disabled thinking setting.
+- Add Fish Audio `drama-3` and `drama-3-preview` to all ten React TTS settings
+  examples, using the existing model option, saved settings, reference-voice
+  lists, and development/preview proxies. Keep `s2-pro` as the default.
+- Add both models to the Character Support Bot admin settings. Restore its
+  provider list with current Voice catalogs by explicitly listing OpenRouter
+  and Deepgram as unsupported by that admin example, with reasons.
+- Include Voice's Piper Plus multilingual model input fixes and skip
+  playback of empty audio buffers while completing silent requests once.
+- Refresh Core/example documentation and embedded Core lockfile metadata.
+
+### Known Limitations
+
+- Live DeepSeek inference and Fish Audio synthesis have not been verified
+  for this propagation. Fish Audio uses one-shot, single-speaker HTTP speech;
+  `drama-3-preview` remains an explicit preview option.
+- Piper Plus defaults to Japanese. Its engine-level `setLanguage()` method
+  is not exposed through Core's `voiceOptions` or the example settings.
+
 ## 0.26.22
 
 ### Patch Changes

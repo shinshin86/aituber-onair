@@ -12,7 +12,11 @@
 
 ## Chat・Voiceモデルの更新
 
-Chat 0.64.0のモデル・能力判定ヘルパーと、Voice 0.26.0の音声エンジン・設定型・エンドポイント用ヘルパーをCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+Chat 0.65.0のモデル・能力判定ヘルパーと、Voice 0.28.0の音声エンジン・設定型・エンドポイント用ヘルパーをCoreから利用できます。既存のプロバイダーのデフォルトは変更していません。
+
+- 提供元の更新に追従するモデルIDは、同じIDのまま利用するモデルが変わります。Chat 0.65.0では、`deepseek-flash`（`MODEL_DEEPSEEK_FLASH`）で使うモデルをDeepSeek-V4.1-Flash-1017として案内しています。テキスト・画像入力とストリーミングに対応しますが、1017版を固定するIDではありません。推論は既定で無効になり、ツール呼び出しとの併用も非推論モードのみ対応します。[DeepSeek公式APIガイド](https://api-docs.deepseek.com/)を参照してください。
+- Fish Audioのモデル選択肢を全10件のReact TTS設定サンプルへ反映しました。Voice 0.27.0の`drama-3-preview`と0.28.0の`drama-3`を、既存の単一話者・一括生成HTTP APIで利用できます。既定は`s2-pro`です。プレビュー版は仕様や提供状況が変わる場合があります。
+- Voice 0.27.0の空音声の完了処理とPiper Plusの多言語モデル向け入力修正も取り込みます。Piper Plusの既定言語は日本語です。`setLanguage()`はエンジンのメソッドで、Coreの`voiceOptions`やサンプルの設定項目にはありません。
 
 - Chat 0.64.0 では、OpenRouter の明示選択モデルとして Mistral Large 4（`mistralai/mistral-large-4-0`）を公開プレビューとして Pareto の後ろに追加しました。テキストと画像の入力に対応します。推論は既定で `none` になり、明示した `high` はそのまま使われます。OpenRouter に切り替えたときに選ばれるモデルは変わりません。
 
@@ -22,7 +26,7 @@ Chat 0.64.0のモデル・能力判定ヘルパーと、Voice 0.26.0の音声エ
 - OpenRouter の既定モデルは変わりません。ただし `AITuberOnAirCore.getSupportedModels('openrouter')` の先頭が Ling 3.1 Flash になりました。アバターサンプルは OpenRouter に切り替えたときに先頭のモデルを選ぶため、Ling 3.1 Flash が選ばれます。
 - Voice 0.26.0 では、公開プレビュー版の `microsoft/mai-voice-2.1` と `microsoft/mai-voice-2.1-flash` を使う `openRouter` エンジンが加わりました。[OpenRouter TTS の設定](#openrouter-tts-の設定)を参照してください。
 
-- ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1 / Opus 5.5 / Sonnet 5.5、DeepSeek V4.1 Flash、Grok 4.7。
+- ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1 / Opus 5.5 / Sonnet 5.5、DeepSeek V4.1 Flash 1017、Grok 4.7。
 - OpenAI 互換エンドポイント用ヘルパー: `resolveOpenAICompatibleEndpoint`、`listOpenAICompatibleModels`、`testOpenAICompatibleConnection`、`OPENAI_COMPATIBLE_LOCAL_PRESETS`（Ollama、LM Studio、llama.cpp、vLLM）。[ローカル LLM ガイド](../../docs/local-llm.ja.md)も参照してください。
 - OpenAI 互換の音声合成用ヘルパー: `resolveOpenAICompatibleSpeechEndpoint`、`listOpenAICompatibleSpeechModels`、`listOpenAICompatibleSpeechVoices`、`getOpenAICompatibleSpeechServerInfo`、`testOpenAICompatibleSpeech`（ローカル TTS サーバー向け）。[ローカル TTS ガイド](../../docs/local-tts.ja.md)も参照してください。
 - OpenRouter: GPT-6 Astra / Astra Pro、Claude Fable 5.1、DeepSeek V4.1 Flash、Gemini 3.8 Flash、Ling 3.0 Flash VL（free）、Mercury 2.5、Nex N2.5 Mini / Pro（free）、Qwen3.8 Max 0902、Muse Spark 1.3。
@@ -1096,6 +1100,7 @@ src/
 - `isMemoryEnabled()` - メモリ機能が有効かどうかの確認
 - `generateOneShotContentFromHistory(prompt, messageHistory)` - システムプロンプトと提供されたメッセージ履歴から新しいコンテンツを生成（一度限り、内部チャット履歴に影響しない）
 - `offAll()` - すべてのイベントリスナーの削除
+- `dispose()` - 音声再生を止め、チャットサービスが持つリソース（Gemini Nano の persistent セッションなど）を解放し、すべてのイベントリスナーを削除。設定変更で Core を作り直すときなど、インスタンスを破棄する前に呼び出す
 
 ### ChatProcessor
 
@@ -1281,7 +1286,7 @@ AITuberOnAirCoreは以下の音声エンジンに対応しています：
 - **xAI TTS**: codec、sample rate、bit rate を切り替え可能な xAI の音声合成
 - **Unreal Speech**: Unreal Speech v8 `/stream` エンドポイントを使う音声合成。bitrate、speed、pitch、codec、temperature を指定可能
 - **ElevenLabs**: ElevenLabs Text to Speech API。model、output format、language code、voice settings、text normalization を指定可能
-- **Fish Audio**: S2 Pro を既定とする Fish Audio one-shot TTS。出力形式、latency、speed と参照音声一覧の取得に対応
+- **Fish Audio**: S2 Proを既定とする単一話者・一括生成の音声合成。`drama-3`と`drama-3-preview`の明示選択、出力形式、latency、speed、参照音声一覧の取得に対応
 - **Cartesia**: Sonic 3.5 を既定とする Cartesia synchronous TTS。language、output、音声一覧の取得に対応
 - **Inworld**: Inworld TTS REST API。model、audio encoding、sample rate、bitrate、language、delivery mode、temperature を指定可能
 - **Gradium**: Gradium REST TTS API。プリセット voice、output format、temperature、similarity、padding、rewrite rules を指定可能

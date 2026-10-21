@@ -58,7 +58,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 - **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
 - **Inworld TTS** - Non-streaming Inworld REST API with Basic authentication
 - **Gradium TTS** - One-shot Gradium REST API with flagship voice presets
-- **Fish Audio** - S2 Pro one-shot TTS with model/reference selection
+- **Fish Audio** - S2 Pro one-shot TTS with model/reference selection and explicit Drama 3 released/preview choices
 - **Cartesia** - Sonic 3.6 alias/snapshot options with voice-list selection; Sonic 3.5 remains the default
 - **ElevenLabs** - Explicit Eleven v4 option with model-aware voice settings; Flash v2.5 remains the default
 - **Deepgram Flux** - English-only one-shot MP3 output with a fixed Haley preset and optional public catalog lookup
@@ -152,14 +152,18 @@ The built files will be in the `dist/` directory and can be deployed to any stat
 # Vite proxies it to https://api.fish.audio/v1/tts.
 # Enter an API key, fetch the model/voice list, and select a reference ID.
 # S2 Pro is the sample default. The promotional free model is opt-in.
+# Select Drama 3 for the released drama-3 model and single-speaker speech.
 # Drama 3 Preview is opt-in; behavior and availability may change.
-# Select Drama 3 Preview in the model selector for single-speaker speech.
+# Both choices use the existing HTTP route; the default stays S2 Pro.
 # Production hosting must implement equivalent /api/fish-audio routes.
 ```
 
 The Fish Audio sample sends one reference ID and does not map `Talk.style` to
 model-specific direction or configure multi-speaker dialogue. The static build
 does not include a proxy server; keep API keys server-side in production.
+The released `drama-3` ID is documented in the native
+[TTS API](https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech)
+and the [October 13, 2026 announcement](https://fish.audio/blog/fish-audio-drama-3/).
 
 #### ElevenLabs
 Select `eleven_v4` for quality-focused speech. Only Stability and Similarity

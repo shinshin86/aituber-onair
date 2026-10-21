@@ -446,7 +446,7 @@ export const allModels: ProviderModel[] = [
   },
   {
     id: MODEL_DEEPSEEK_FLASH,
-    name: 'DeepSeek V4.1 Flash',
+    name: 'DeepSeek V4.1 Flash 1017',
     provider: 'deepseek',
     default: false,
   },
