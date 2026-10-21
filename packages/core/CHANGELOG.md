@@ -1,8 +1,8 @@
 # @aituber-onair/core
 
-## Unreleased
+## 0.26.24
 
-### Minor Changes
+### Patch Changes
 
 - Add `AITuberOnAirCore.dispose()`. It stops speech playback, disposes the
   active and pending chat services, and removes all event listeners. Use it
