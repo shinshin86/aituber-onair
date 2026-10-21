@@ -1,0 +1,580 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Biim explainer timeline",
+  "description": "One or two speakers, sequential narration, independently timed media and panels. All paths are relative to the script.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1,
+      "description": "$schema setting."
+    },
+    "canvas": {
+      "enum": ["16:9", "4:3"],
+      "description": "Canvas aspect ratio; default 16:9 (1920x1080), 4:3 is 1440x1080."
+    },
+    "fps": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "description": "Frames per second; default 30."
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Deterministic blink/motion seed; default 1."
+    },
+    "output": {
+      "type": "string",
+      "minLength": 1,
+      "description": "$schema setting."
+    },
+    "speakers": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 2,
+      "propertyNames": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "$schema setting."
+          },
+          "image": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "description": "$schema setting."
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mouth_close_eyes_open": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "$schema setting."
+                  },
+                  "mouth_open_eyes_open": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "$schema setting."
+                  },
+                  "mouth_close_eyes_close": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "$schema setting."
+                  },
+                  "mouth_open_eyes_close": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "$schema setting."
+                  }
+                },
+                "required": [
+                  "mouth_close_eyes_open",
+                  "mouth_open_eyes_open",
+                  "mouth_close_eyes_close",
+                  "mouth_open_eyes_close"
+                ]
+              }
+            ],
+            "description": "Script-relative image file or four-state directory/object for a speaker."
+          },
+          "mirror": {
+            "type": "boolean",
+            "description": "Flip avatar horizontally; default false."
+          },
+          "voice": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "engine": {
+                "enum": ["sine", "aituber-voice"],
+                "description": "Sine needs no server; aituber-voice uses Core."
+              },
+              "options": {
+                "type": "object",
+                "description": "Sine settings or existing Core VoiceServiceOptions. Never put shared credentials in scripts."
+              }
+            },
+            "required": ["engine"],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "engine": {
+                      "const": "sine",
+                      "description": "Sine needs no server; aituber-voice uses Core."
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "options": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "secondsPerChar": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "Sine seconds per nonspace character; default 0.08."
+                        },
+                        "frequency": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "Sine seconds per nonspace character; default 0.08."
+                        },
+                        "minDuration": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "Sine seconds per nonspace character; default 0.08."
+                        }
+                      },
+                      "required": [],
+                      "description": "Engine options."
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "engine": {
+                      "const": "aituber-voice",
+                      "description": "Sine needs no server; aituber-voice uses Core."
+                    }
+                  }
+                },
+                "then": {
+                  "required": ["options"],
+                  "properties": {
+                    "options": {
+                      "type": "object",
+                      "required": ["engineType"],
+                      "properties": {
+                        "engineType": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "$schema setting."
+                        }
+                      },
+                      "description": "Engine options."
+                    }
+                  }
+                }
+              }
+            ],
+            "description": "Sine engine or Core VoiceEngineAdapter settings."
+          },
+          "textColor": {
+            "$ref": "#/$defs/color",
+            "description": "Subtitle RGB hex color; default white."
+          },
+          "mouthMode": {
+            "enum": ["flap", "rms"],
+            "description": "Flap (default) or audio RMS."
+          },
+          "flapInterval": {
+            "type": "number",
+            "minimum": 0.03333333333333333,
+            "maximum": 1,
+            "description": "Seconds per open/closed state; default 0.12."
+          },
+          "mouthThreshold": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Normalized audio gate; default 0.08."
+          },
+          "motion": {
+            "enum": ["subtle", "bounce", "none"],
+            "description": "Subtle (default), bounce, or none."
+          }
+        },
+        "required": ["name", "image", "voice"]
+      },
+      "description": "One or two speakers in left-to-right insertion order."
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pauseAfter": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Silence after the line; default defaults.pauseAfter or 0.3."
+        },
+        "mainAudioVolume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Source clip gain below narration; default 0.25."
+        }
+      },
+      "required": [],
+      "description": "Default pauseAfter (0.3s) and mainAudioVolume (0.25)."
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "description": "Unique anchor ID."
+          },
+          "speaker": {
+            "type": "string",
+            "minLength": 1,
+            "description": "$schema setting."
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "$schema setting."
+          },
+          "reading": {
+            "type": "string",
+            "minLength": 1,
+            "description": "$schema setting."
+          },
+          "pauseAfter": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Silence after the line; default defaults.pauseAfter or 0.3."
+          },
+          "at": {
+            "$ref": "#/$defs/time",
+            "description": "Absolute seconds or a line anchor."
+          },
+          "spoken": {
+            "type": "boolean",
+            "description": "Flip avatar horizontally; default false."
+          },
+          "duration": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Sine seconds per nonspace character; default 0.08."
+          },
+          "emotion": {
+            "enum": [
+              "neutral",
+              "happy",
+              "surprised",
+              "sad",
+              "angry",
+              "relaxed"
+            ],
+            "description": "Optional bounce-energy adjustment."
+          }
+        },
+        "required": ["speaker", "text"],
+        "allOf": [
+          {
+            "if": {
+              "required": ["spoken"],
+              "properties": {
+                "spoken": {
+                  "const": false,
+                  "description": "Default true; false requires positive duration."
+                }
+              }
+            },
+            "then": {
+              "required": ["duration"]
+            },
+            "else": {
+              "not": {
+                "required": ["duration"]
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1,
+      "description": "Narration/captions in sequential order; audio determines spoken durations."
+    },
+    "main": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/time",
+            "description": "Absolute seconds or a line anchor."
+          },
+          "until": {
+            "$ref": "#/$defs/time",
+            "description": "Absolute seconds or a line anchor."
+          },
+          "video": {
+            "type": "string",
+            "minLength": 1,
+            "description": "$schema setting."
+          },
+          "image": {
+            "type": "string",
+            "minLength": 1,
+            "description": "$schema setting."
+          },
+          "color": {
+            "$ref": "#/$defs/color",
+            "description": "RGB hex for main content; yellow/white for panel items."
+          },
+          "from": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Silence after the line; default defaults.pauseAfter or 0.3."
+          },
+          "to": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Sine seconds per nonspace character; default 0.08."
+          },
+          "speed": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Sine seconds per nonspace character; default 0.08."
+          },
+          "audio": {
+            "type": "boolean",
+            "description": "Flip avatar horizontally; default false."
+          },
+          "speedBadge": {
+            "type": "boolean",
+            "description": "Flip avatar horizontally; default false."
+          },
+          "fit": {
+            "enum": ["contain", "cover"],
+            "description": "Contain (default) or cover inside the content rectangle."
+          }
+        },
+        "required": ["at"],
+        "oneOf": [
+          {
+            "required": ["video"]
+          },
+          {
+            "required": ["image"]
+          },
+          {
+            "required": ["color"]
+          }
+        ],
+        "allOf": [
+          {
+            "if": {
+              "not": {
+                "required": ["video"]
+              }
+            },
+            "then": {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": ["from"]
+                  },
+                  {
+                    "required": ["to"]
+                  },
+                  {
+                    "required": ["speed"]
+                  },
+                  {
+                    "required": ["audio"]
+                  },
+                  {
+                    "required": ["speedBadge"]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "description": "Chronologically ordered, nonoverlapping main-area slots. Missing until uses next slot or timeline end."
+    },
+    "panels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/time",
+            "description": "Absolute seconds or a line anchor."
+          },
+          "box": {
+            "enum": ["top", "main", "bottom"],
+            "description": "Right column region."
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "$schema setting."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "$schema setting."
+                },
+                "color": {
+                  "enum": ["yellow", "white"],
+                  "description": "RGB hex for main content; yellow/white for panel items."
+                }
+              },
+              "required": ["text"]
+            },
+            "minItems": 1,
+            "description": "Centered panel rows in white or yellow."
+          },
+          "image": {
+            "type": "string",
+            "minLength": 1,
+            "description": "$schema setting."
+          },
+          "clear": {
+            "const": true,
+            "description": "Remove content from this region."
+          }
+        },
+        "required": ["at", "box"],
+        "oneOf": [
+          {
+            "required": ["text"]
+          },
+          {
+            "required": ["items"]
+          },
+          {
+            "required": ["image"]
+          },
+          {
+            "required": ["clear"]
+          }
+        ]
+      },
+      "description": "Updates in chronological order within each box; content persists until replaced."
+    },
+    "timer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/time",
+          "description": "Absolute seconds or a line anchor."
+        },
+        "stop": {
+          "$ref": "#/$defs/time",
+          "description": "Absolute seconds or a line anchor."
+        },
+        "offset": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Silence after the line; default defaults.pauseAfter or 0.3."
+        },
+        "format": {
+          "const": "H:MM:SS.cc",
+          "description": "Supported clock format H:MM:SS.cc."
+        },
+        "position": {
+          "enum": ["main-bottom-right", "right-bottom"],
+          "description": "Clock placement; defaults to main-bottom-right."
+        }
+      },
+      "required": ["start"],
+      "description": "Optional clock, visible from start and frozen at stop."
+    },
+    "counter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "$schema setting."
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/time",
+                "description": "Absolute seconds or a line anchor."
+              },
+              "value": {
+                "type": "number",
+                "description": "Displayed numeric value."
+              }
+            },
+            "required": ["at", "value"]
+          },
+          "minItems": 1,
+          "description": "Chronological counter updates."
+        }
+      },
+      "required": ["label", "events"],
+      "description": "Optional generic bottom-box value display; mutually exclusive with bottom panel and right-bottom timer."
+    },
+    "mouthMode": {
+      "enum": ["flap", "rms"],
+      "description": "Flap (default) or audio RMS."
+    },
+    "flapInterval": {
+      "type": "number",
+      "minimum": 0.03333333333333333,
+      "maximum": 1,
+      "description": "Seconds per open/closed state; default 0.12."
+    },
+    "mouthThreshold": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1,
+      "description": "Normalized audio gate; default 0.08."
+    },
+    "motion": {
+      "enum": ["subtle", "bounce", "none"],
+      "description": "Subtle (default), bounce, or none."
+    }
+  },
+  "required": ["speakers", "lines"],
+  "$defs": {
+    "time": {
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "description": "Silence after the line; default defaults.pauseAfter or 0.3."
+        },
+        {
+          "type": "string",
+          "pattern": "^@[A-Za-z][A-Za-z0-9_-]*(?::end)?(?:[+-][0-9]+(?:\\.[0-9]+)?)?$"
+        }
+      ],
+      "description": "Absolute nonnegative seconds or @line-id[:end][+/-seconds]. Existing exact IDs take precedence over offsets."
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    }
+  }
+}

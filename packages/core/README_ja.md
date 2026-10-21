@@ -1811,6 +1811,10 @@ if (memoryManager) {
 
 ## 応用例
 
+- [biim形式の解説動画（Node）](./examples/node-biim-explainer/README.ja.md)：JSON台本から1〜2人のキャラクター、映像・画像、情報欄を配置したMP4を生成します。
+- [ゆっくり解説動画（Node）](./examples/node-yukkuri-explainer/README.ja.md)：2人の会話台本をMP4に変換します。
+- [実行できるサンプルの一覧](../../docs/examples.ja.md)
+
 ### Vision（画像入力）の処理
 
 ```typescript

@@ -222,6 +222,10 @@ npm run dev
   Node.js pipeline from source text through Core chat and voice to a chaptered
   vertical news video. One folder supports seven avatar types via `--avatar`:
   PNGTuber, Purupuru, Mesh, VRM, Live2D, Inochi2D, and PSD (static or motion).
+- [`packages/core/examples/node-biim-explainer`](../packages/core/examples/node-biim-explainer):
+  Generates biim-style MP4 explainers from a JSON timeline, with one or two characters,
+  timed video/image slots, information panels, and paged subtitles. Includes schema
+  validation, timeline planning, PNG previews, and a server-free sine sample.
 - [`packages/core/examples/node-yukkuri-explainer`](../packages/core/examples/node-yukkuri-explainer):
   Node.js pipeline that renders a two-character "yukkuri" explainer video
   (1920x1080) from a JSON dialogue script. Each speaker has its own voice

@@ -1,0 +1,163 @@
+{
+  "$schema": "../schema/biim-script.schema.json",
+  "canvas": "16:9",
+  "fps": 30,
+  "output": "../work/hello.mp4",
+  "speakers": {
+    "dango": {
+      "name": "だんご",
+      "image": "../assets/yukkuri/dango",
+      "mirror": true,
+      "voice": {
+        "engine": "sine",
+        "options": {
+          "frequency": 440,
+          "secondsPerChar": 0.07
+        }
+      }
+    }
+  },
+  "defaults": {
+    "pauseAfter": 0.3,
+    "mainAudioVolume": 0.25
+  },
+  "lines": [
+    {
+      "id": "intro-1",
+      "speaker": "dango",
+      "text": "このサンプルでは、動画と説明パネルを台本から切り替えます。"
+    },
+    {
+      "id": "intro-2",
+      "speaker": "dango",
+      "text": "右側には要点を並べ、下には字幕を表示しています。"
+    },
+    {
+      "id": "speed",
+      "speaker": "dango",
+      "text": "ここから映像を二倍速にします。再生が終わると最後のコマで止まります。"
+    },
+    {
+      "id": "slide",
+      "speaker": "dango",
+      "text": "画像にも切り替えられます。旅行や操作手順などの解説にも使えます。"
+    }
+  ],
+  "main": [
+    {
+      "at": 0,
+      "color": "#14283d"
+    },
+    {
+      "at": "@intro-2",
+      "video": "../work/demo.mp4",
+      "from": 0,
+      "to": 4,
+      "audio": true
+    },
+    {
+      "at": "@speed",
+      "video": "../work/demo.mp4",
+      "from": 0,
+      "to": 4,
+      "speed": 2,
+      "audio": false
+    },
+    {
+      "at": "@slide",
+      "image": "../work/demo-slide.png",
+      "fit": "contain"
+    }
+  ],
+  "panels": [
+    {
+      "at": 0,
+      "box": "top",
+      "text": "台本から動画を生成"
+    },
+    {
+      "at": 0,
+      "box": "main",
+      "items": [
+        {
+          "text": "映像・画像",
+          "color": "yellow"
+        },
+        {
+          "text": "時刻アンカー",
+          "color": "white"
+        }
+      ]
+    },
+    {
+      "at": "@intro-2+0.2",
+      "box": "main",
+      "items": [
+        {
+          "text": "動画を表示",
+          "color": "yellow"
+        },
+        {
+          "text": "音声は小さく合成",
+          "color": "white"
+        }
+      ]
+    },
+    {
+      "at": "@speed",
+      "box": "main",
+      "items": [
+        {
+          "text": "二倍速",
+          "color": "yellow"
+        },
+        {
+          "text": "最終フレームで停止",
+          "color": "white"
+        }
+      ]
+    },
+    {
+      "at": "@slide",
+      "box": "main",
+      "items": [
+        {
+          "text": "画像も表示可能",
+          "color": "yellow"
+        },
+        {
+          "text": "汎用の解説動画",
+          "color": "white"
+        }
+      ]
+    }
+  ],
+  "timer": {
+    "start": "@intro-1",
+    "stop": "@slide:end",
+    "offset": 0,
+    "format": "H:MM:SS.cc",
+    "position": "main-bottom-right"
+  },
+  "counter": {
+    "label": "表示場面",
+    "events": [
+      {
+        "at": 0,
+        "value": 1
+      },
+      {
+        "at": "@intro-2",
+        "value": 2
+      },
+      {
+        "at": "@speed",
+        "value": 3
+      },
+      {
+        "at": "@slide",
+        "value": 4
+      }
+    ]
+  }
+}
