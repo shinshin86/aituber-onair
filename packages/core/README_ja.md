@@ -1100,6 +1100,7 @@ src/
 - `isMemoryEnabled()` - メモリ機能が有効かどうかの確認
 - `generateOneShotContentFromHistory(prompt, messageHistory)` - システムプロンプトと提供されたメッセージ履歴から新しいコンテンツを生成（一度限り、内部チャット履歴に影響しない）
 - `offAll()` - すべてのイベントリスナーの削除
+- `dispose()` - 音声再生を止め、チャットサービスが持つリソース（Gemini Nano の persistent セッションなど）を解放し、すべてのイベントリスナーを削除。設定変更で Core を作り直すときなど、インスタンスを破棄する前に呼び出す
 
 ### ChatProcessor
 

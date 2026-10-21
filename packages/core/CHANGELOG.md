@@ -1,5 +1,15 @@
 # @aituber-onair/core
 
+## 0.26.24
+
+### Patch Changes
+
+- Add `AITuberOnAirCore.dispose()`. It stops speech playback, disposes the
+  active and pending chat services, and removes all event listeners. Use it
+  before discarding a Core instance so that resources such as persistent
+  Gemini Nano Prompt API sessions are released right away instead of waiting
+  for garbage collection.
+
 ## 0.26.23
 
 ### Patch Changes
