@@ -1205,6 +1205,7 @@ This is the overall integration class, responsible for initializing and coordina
 - `isMemoryEnabled()` – Check if memory functionality is enabled
 - `generateOneShotContentFromHistory(prompt, messageHistory)` – Generate new content from a system prompt and provided message history (one-shot, no impact on internal chat history)
 - `offAll()` – Remove all event listeners
+- `dispose()` – Stop speech, release chat service resources (such as persistent Gemini Nano sessions), and remove all event listeners. Call it before discarding an instance, for example when recreating Core after a settings change
 
 ### ChatProcessor
 
