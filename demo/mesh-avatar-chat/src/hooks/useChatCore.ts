@@ -95,7 +95,7 @@ export function useChatCore({
 
   useEffect(() => {
     if (!canChat) {
-      coreRef.current?.offAll();
+      coreRef.current?.dispose();
       coreRef.current = null;
       return;
     }
@@ -172,7 +172,7 @@ export function useChatCore({
 
     coreRef.current = core;
     return () => {
-      core.offAll();
+      core.dispose();
       if (coreRef.current === core) coreRef.current = null;
     };
   }, [
