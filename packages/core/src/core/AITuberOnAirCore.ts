@@ -201,6 +201,7 @@ export class AITuberOnAirCore extends EventEmitter {
   private providerResponseLength?: ChatProcessorOptions['responseLength'];
   private pendingChatService?: ChatService;
   private activeOneShotRequests = 0;
+  private disposed = false;
   private chatProcessor: ChatProcessor;
   private memoryManager?: MemoryManager;
   private voiceService?: VoiceService;
@@ -1028,6 +1029,25 @@ export class AITuberOnAirCore extends EventEmitter {
    * Remove all event listeners
    */
   offAll(): void {
+    this.removeAllListeners();
+  }
+
+  /**
+   * Release resources held by this instance: stop speech playback, dispose
+   * the active and pending chat services (for example persistent Gemini Nano
+   * sessions), and remove all event listeners. Call this before discarding
+   * the instance. Do not use the instance afterwards. Safe to call more than
+   * once.
+   */
+  dispose(): void {
+    if (this.disposed) return;
+    this.disposed = true;
+    this.voiceService?.stop();
+    if (this.pendingChatService) {
+      this.disposeChatService(this.pendingChatService);
+      this.pendingChatService = undefined;
+    }
+    this.disposeChatService(this.chatService);
     this.removeAllListeners();
   }
 
