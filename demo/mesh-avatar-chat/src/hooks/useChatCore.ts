@@ -36,6 +36,17 @@ interface ResponsePayload {
   screenplay?: { emotion?: string; text?: string };
 }
 
+/**
+ * Few-shot turns for Chrome's built-in model. Gemini Nano follows the reply
+ * length and the leading emotion tag far more reliably when it sees examples.
+ */
+const GEMINI_NANO_EXAMPLES = [
+  { role: 'user', content: '今日はどんな気分？' },
+  { role: 'assistant', content: '[happy] みんなと話せて元気いっぱいだよ！' },
+  { role: 'user', content: '好きな食べ物は？' },
+  { role: 'assistant', content: '[relaxed] 特にサーモンのお寿司が好き！' },
+] as const;
+
 let messageSeq = 0;
 const nextId = () => `${Date.now()}-${++messageSeq}`;
 
@@ -92,7 +103,18 @@ export function useChatCore({
     const core = new AITuberOnAirCore({
       apiKey,
       chatProvider: provider,
-      ...(provider === 'gemini-nano' ? { model: 'gemini-nano' } : {}),
+      ...(provider === 'gemini-nano'
+        ? {
+            model: 'gemini-nano',
+            providerOptions: {
+              // Reuse one Prompt API session instead of rebuilding it per turn.
+              sessionMode: 'persistent' as const,
+              initialPrompts: GEMINI_NANO_EXAMPLES.map((example) => ({
+                ...example,
+              })),
+            },
+          }
+        : {}),
       ...(info.auth === 'endpoint'
         ? {
             model: compatibleModel || 'local-model',
