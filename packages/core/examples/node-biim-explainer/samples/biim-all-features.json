@@ -1,0 +1,254 @@
+{
+  "$schema": "../schema/biim-script.schema.json",
+  "canvas": "4:3",
+  "fps": 12,
+  "seed": 42,
+  "output": "../work/all-features.mp4",
+  "mouthMode": "flap",
+  "flapInterval": 0.15,
+  "mouthThreshold": 0.06,
+  "motion": "none",
+  "speakers": {
+    "dango": {
+      "name": "だんご",
+      "image": "../assets/yukkuri/dango",
+      "mirror": true,
+      "textColor": "#ffffff",
+      "mouthMode": "flap",
+      "flapInterval": 0.12,
+      "mouthThreshold": 0.08,
+      "motion": "subtle",
+      "voice": {
+        "engine": "sine",
+        "options": {
+          "secondsPerChar": 0.08,
+          "frequency": 440,
+          "minDuration": 0.5,
+          "amplitude": 0.18
+        }
+      }
+    },
+    "bob": {
+      "name": "ぼぶ",
+      "image": {
+        "mouth_close_eyes_open": "../assets/yukkuri/bob/mouth_close_eyes_open.png",
+        "mouth_open_eyes_open": "../assets/yukkuri/bob/mouth_open_eyes_open.png",
+        "mouth_close_eyes_close": "../assets/yukkuri/bob/mouth_close_eyes_close.png",
+        "mouth_open_eyes_close": "../assets/yukkuri/bob/mouth_open_eyes_close.png"
+      },
+      "mirror": true,
+      "textColor": "#ffffee",
+      "mouthMode": "rms",
+      "flapInterval": 0.1,
+      "mouthThreshold": 0.05,
+      "motion": "subtle",
+      "voice": {
+        "engine": "sine",
+        "options": {
+          "secondsPerChar": 0.08,
+          "frequency": 660,
+          "minDuration": 0.5,
+          "amplitude": 0.2
+        }
+      }
+    }
+  },
+  "defaults": {
+    "pauseAfter": 0.3,
+    "mainAudioVolume": 0.15
+  },
+  "lines": [
+    {
+      "id": "intro",
+      "speaker": "dango",
+      "text": "台本の各機能を確認します。",
+      "reading": "だいほんのかくきのうをかくにんします。",
+      "at": 0,
+      "spoken": true,
+      "pauseAfter": 0.4,
+      "emotion": "neutral"
+    },
+    {
+      "id": "clip",
+      "speaker": "bob",
+      "text": "映像の一部を二倍速で再生し、最後のコマを保持します。",
+      "at": "@intro:end+0.4",
+      "emotion": "happy"
+    },
+    {
+      "id": "still",
+      "speaker": "dango",
+      "text": "画像を切り替え、右の欄も更新します。",
+      "emotion": "relaxed"
+    },
+    {
+      "id": "caption",
+      "speaker": "bob",
+      "spoken": false,
+      "duration": 8,
+      "pauseAfter": 0.3,
+      "text": "ここは無音字幕です。長い文章は二行ずつのページに分け、文字数に合わせて表示時間を配分します。画像の全体表示と切り抜きを比べられます。右の欄は次の更新まで内容を保持し、clearで文字だけを消します。音声がない間は、キャラクターの口を閉じたままにします。",
+      "at": "@still:end+0.5",
+      "emotion": "sad"
+    },
+    {
+      "id": "outro",
+      "speaker": "dango",
+      "text": "説明の終わりで時計が止まります。映像は半速です。",
+      "pauseAfter": 0.3,
+      "emotion": "surprised"
+    },
+    {
+      "id": "hold",
+      "speaker": "bob",
+      "text": "停止した時計と単色背景を表示しています。",
+      "spoken": false,
+      "duration": 1,
+      "pauseAfter": 0.3,
+      "at": "@outro:end+0.3",
+      "emotion": "angry"
+    }
+  ],
+  "main": [
+    {
+      "at": 0,
+      "until": "@clip",
+      "color": "#14283d"
+    },
+    {
+      "at": "@clip",
+      "until": "@still",
+      "video": "../work/demo.mp4",
+      "from": 1,
+      "to": 3,
+      "speed": 2,
+      "audio": true,
+      "speedBadge": true,
+      "fit": "cover"
+    },
+    {
+      "at": "@still",
+      "until": "@caption+1",
+      "image": "../work/demo-slide.png",
+      "fit": "cover"
+    },
+    {
+      "at": "@caption+1",
+      "until": "@caption:end",
+      "image": "../work/demo-slide.png",
+      "fit": "contain"
+    },
+    {
+      "at": "@outro",
+      "until": "@hold",
+      "video": "../work/demo.mp4",
+      "from": 0,
+      "to": 1,
+      "speed": 0.5,
+      "audio": false,
+      "speedBadge": false,
+      "fit": "contain"
+    },
+    {
+      "at": "@hold",
+      "until": "@hold:end+0.3",
+      "color": "#182a20"
+    }
+  ],
+  "panels": [
+    {
+      "at": 0,
+      "box": "top",
+      "text": "台本の機能一覧"
+    },
+    {
+      "at": 0,
+      "box": "main",
+      "items": [
+        {
+          "text": "アンカーで切替",
+          "color": "yellow"
+        },
+        {
+          "text": "字幕は二行ずつ",
+          "color": "white"
+        }
+      ]
+    },
+    {
+      "at": "@clip",
+      "box": "top",
+      "image": "../work/demo-slide.png"
+    },
+    {
+      "at": "@still-0.1",
+      "box": "main",
+      "image": "../work/demo-slide.png"
+    },
+    {
+      "at": "@caption",
+      "box": "main",
+      "text": "無音字幕を表示中"
+    },
+    {
+      "at": "@caption+1",
+      "box": "main",
+      "clear": true
+    },
+    {
+      "at": "@outro",
+      "box": "top",
+      "clear": true
+    },
+    {
+      "at": "@outro",
+      "box": "main",
+      "items": [
+        {
+          "text": "半速で再生",
+          "color": "yellow"
+        },
+        {
+          "text": "倍率ラベルは非表示"
+        }
+      ]
+    },
+    {
+      "at": "@hold",
+      "box": "top",
+      "text": "確認が終わりました"
+    }
+  ],
+  "timer": {
+    "start": "@clip",
+    "stop": "@outro:end",
+    "offset": 60,
+    "format": "H:MM:SS.cc",
+    "position": "main-bottom-right"
+  },
+  "counter": {
+    "label": "表示場面",
+    "events": [
+      {
+        "at": 0,
+        "value": 0
+      },
+      {
+        "at": "@clip+0.2",
+        "value": 1
+      },
+      {
+        "at": "@still",
+        "value": 2
+      },
+      {
+        "at": "@caption:end+0.1",
+        "value": 3
+      },
+      {
+        "at": "@hold",
+        "value": 4
+      }
+    ]
+  }
+}

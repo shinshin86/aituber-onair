@@ -17,7 +17,9 @@
     "gen": "node dist/gen.js gen",
     "validate": "node dist/gen.js validate",
     "plan": "node dist/gen.js plan",
-    "preview": "node dist/gen.js preview"
+    "preview": "node dist/gen.js preview",
+    "docs:reference": "node scripts/reference.mjs",
+    "docs:reference:check": "node scripts/reference.mjs --check"
   },
   "dependencies": {
     "@aituber-onair/core": "file:../..",

@@ -8,6 +8,11 @@ slides, and gameplay. It does not reproduce a particular creator's dialogue.
 
 [日本語](./README.ja.md)
 
+For agents, start with the [authoring guide](./docs/authoring-guide.md) and
+[generated field reference](./docs/reference.md). The
+[full-feature sine sample](./samples/biim-all-features.json) demonstrates the
+combined timeline; bottom-panel/right-bottom-clock variants cover exclusive choices.
+
 ## Quick start
 
 Requires Node.js 22+, `ffmpeg` and `ffprobe` on PATH, and a Japanese-capable font.
@@ -62,6 +67,9 @@ timeline artifacts. A synthesis failure reports the line index and speaker.
 
 The complete executable [JSON Schema](./schema/biim-script.schema.json) is also
 linked by `$schema` in each sample. Unknown fields are rejected.
+Every field, conditional requirement, default and example is listed in the
+[generated reference](./docs/reference.md). Run `npm run docs:reference` after
+editing the schema; `npm run docs:reference:check` and tests detect stale docs.
 
 | Field | Meaning / default |
 | --- | --- |
@@ -69,7 +77,7 @@ linked by `$schema` in each sample. Unknown fields are rejected.
 | `output` | MP4 path, overridden by `--out`. |
 | `speakers` | Object with 1–2 entries in left-to-right insertion order. Each needs `name`, `image`, `voice`. Optional `mirror`, `textColor` (`#rrggbb`, default white). |
 | `speakers.*.image` | Four-state PNG directory, or object with `mouth_close_eyes_open`, `mouth_open_eyes_open`, `mouth_close_eyes_close`, `mouth_open_eyes_close` file paths. All dimensions must match. |
-| `speakers.*.voice` | `engine: "sine"` or `"aituber-voice"`, plus `options`. Sine: positive `frequency` (440 Hz), `secondsPerChar` (0.08), `minDuration` (0.5s). Core: existing `VoiceServiceOptions`, including required `engineType`. |
+| `speakers.*.voice` | `engine: "sine"` or `"aituber-voice"`, plus `options`. Sine: `frequency` (440 Hz), `secondsPerChar` (0.08), `minDuration` (0.5s), `amplitude` (0.22, 0–1). Core: existing `VoiceServiceOptions`, including required `engineType`. |
 | `mouthMode`, `flapInterval`, `mouthThreshold`, `motion` | Top-level or speaker override: `"flap"`/`"rms"`, 0.12s (1/30–1), 0.08 (>0–1), `"subtle"`/`"bounce"`/`"none"`. Silence/listening closes the mouth. Blink is independent. |
 | `defaults` | `pauseAfter: 0.3`, `mainAudioVolume: 0.25` (0–1). |
 | `lines[]` | Required `speaker`, `text`; optional unique `id`, `reading`, `at`, `pauseAfter`, `emotion`. Silent captions require `spoken: false` and positive `duration`; spoken duration comes from audio. |
@@ -130,14 +138,16 @@ Copy and adapt this prompt:
 
 ```text
 Write a general-purpose explainer JSON for node-biim-explainer about <topic>.
-Read schema/biim-script.schema.json and samples/biim-hello-sine.json first.
+Read schema/biim-script.schema.json, docs/reference.md,
+and docs/authoring-guide.md first. Use samples/biim-all-features.json for recipes.
 Use 1–2 existing speakers, short panel items, natural subtitles, and line IDs.
 Use @id / @id:end anchors for media/panel changes; keep timer/counter optional.
 Use only supplied or original media. Do not imitate a particular creator.
 Save samples/my-script.json and run:
   npm run validate -- samples/my-script.json
   npm run plan -- samples/my-script.json --estimate --json --out work/plan.json
-Fix every error, then preview the start, each panel change and a later page:
+Complete validate and plan successfully before preview. Fix every error.
+Preview the start, each panel change and a later page before running gen:
   npm run preview -- samples/my-script.json --at 0 --at @chosen-id --out work/preview
 Inspect the PNGs for clipping, bubble tails, text and avatar placement.
   npm run gen -- samples/my-script.json --out work/my-video.mp4

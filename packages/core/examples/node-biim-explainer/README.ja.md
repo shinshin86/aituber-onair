@@ -7,6 +7,11 @@ MP4を生成します。黒背景と白い枠で画面を区切る、biimシス�
 
 [English](./README.md)
 
+AIエージェントで作る場合は、[作成ガイド](./docs/authoring-guide.ja.md)と
+[生成リファレンス](./docs/reference.ja.md)を先に読んでください。
+[全機能のsineサンプル](./samples/biim-all-features.json)に時刻指定をまとめています。
+排他関係のある下段パネル・右下時計は別サンプルで示しています。
+
 ## 使い方
 
 Node.js 22以上、PATHにある`ffmpeg`と`ffprobe`、日本語を表示できるフォントが
@@ -62,6 +67,9 @@ plan・preview・genで再利用します。サーバー側のプリセットを
 
 全項目と制約は、実際の検証に使う[JSON Schema](./schema/biim-script.schema.json)
 で確認できます。サンプルの`$schema`からも参照しています。未定義の項目はエラーです。
+全項目の型・条件・既定値・例は[生成リファレンス](./docs/reference.ja.md)に記載しています。
+Schemaを変えたら`npm run docs:reference`で更新してください。
+`npm run docs:reference:check`とテストで資料の更新漏れを検出します。
 
 | 項目 | 内容・既定値 |
 | --- | --- |
@@ -69,7 +77,7 @@ plan・preview・genで再利用します。サーバー側のプリセットを
 | `output` | MP4の保存先。`--out`で上書き。 |
 | `speakers` | 1〜2人。記述順が左からの並び順。`name`, `image`, `voice`は必須。任意の`mirror`で左右反転、`textColor`で字幕色（`#rrggbb`、既定は白）を指定。 |
 | `speakers.*.image` | 4状態のPNGディレクトリ、または`mouth_close_eyes_open`, `mouth_open_eyes_open`, `mouth_close_eyes_close`, `mouth_open_eyes_close`をキーとするパス。全状態の寸法をそろえてください。 |
-| `speakers.*.voice` | `engine: "sine"`または`"aituber-voice"`と`options`。sineは正数の`frequency`（440Hz）、`secondsPerChar`（0.08秒）、`minDuration`（0.5秒）。Coreは必須の`engineType`を含む既存の`VoiceServiceOptions`。 |
+| `speakers.*.voice` | `engine: "sine"`または`"aituber-voice"`と`options`。sineは`frequency`（440Hz）、`secondsPerChar`（0.08秒）、`minDuration`（0.5秒）、`amplitude`（0.22、0〜1）。Coreは必須の`engineType`を含む既存の`VoiceServiceOptions`。 |
 | `mouthMode`, `flapInterval`, `mouthThreshold`, `motion` | 全体または話者別に指定。`"flap"`/`"rms"`、0.12秒（1/30〜1）、0.08（0超〜1）、`"subtle"`/`"bounce"`/`"none"`。無音中と聞き手は口を閉じます。まばたきは独立します。 |
 | `defaults` | `pauseAfter: 0.3`秒、`mainAudioVolume: 0.25`（0〜1）。 |
 | `lines[]` | 必須は`speaker`, `text`。任意で一意の`id`, `reading`, `at`, `pauseAfter`, `emotion`。無音字幕は`spoken: false`と正数の`duration`を指定。発話の長さは音声から決まります。 |
@@ -128,14 +136,16 @@ Coreの`VoiceEngineAdapter`を通し、だんごに`れいむ`、ぼぶに`ま�
 
 ```text
 node-biim-explainerで使う、<話題>の汎用解説台本JSONを作成してください。
-先にschema/biim-script.schema.jsonとsamples/biim-hello-sine.jsonを読んでください。
+先にschema/biim-script.schema.json、docs/reference.ja.md、
+docs/authoring-guide.ja.mdを読んでください。実例はsamples/biim-all-features.jsonを使えます。
 既存の1〜2話者、短い要点、自然な字幕、一意の発話IDを使ってください。
 映像・情報欄の切替は@id / @id:endで指定し、時計・カウンターは必要時だけ使います。
 素材は提供済みか自作のものを使い、特定の制作者の口調を模倣しないでください。
 samples/my-script.jsonへ保存して、次を実行してください。
   npm run validate -- samples/my-script.json
   npm run plan -- samples/my-script.json --estimate --json --out work/plan.json
-エラーを直し、開始・情報欄切替・後半の字幕ページをプレビューしてください。
+validateとplanが成功するまでエラーを直してください。
+genの前に、開始・情報欄切替・後半の字幕ページを必ずプレビューしてください。
   npm run preview -- samples/my-script.json --at 0 --at @chosen-id --out work/preview
 PNGを見て、はみ出し、吹き出しの向き、文字、キャラクターの位置を確認してください。
   npm run gen -- samples/my-script.json --out work/my-video.mp4

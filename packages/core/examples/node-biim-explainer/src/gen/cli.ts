@@ -114,9 +114,15 @@ export async function runCli(args: string[]) {
           throw new Error(
             `--at ${value}: outside timeline [0, ${timeline.duration})`,
           );
-        const frame = await compositor.renderFrame(
-          Math.floor(seconds * timeline.fps),
-        );
+        // An anchor requests the newly active event, which may start between
+        // frame boundaries. Numeric seeks retain ordinary floor semantics.
+        const index = value.startsWith('@')
+          ? Math.min(
+              Math.ceil(timeline.duration * timeline.fps) - 1,
+              Math.ceil(seconds * timeline.fps - 1e-8),
+            )
+          : Math.floor(seconds * timeline.fps);
+        const frame = await compositor.renderFrame(index);
         const file = path.join(
           target,
           `${String(i + 1).padStart(2, '0')}-${seconds.toFixed(3)}.png`,

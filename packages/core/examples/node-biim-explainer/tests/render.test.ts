@@ -95,7 +95,14 @@ describe.skipIf(!hasFfmpeg)('sine MP4 pipeline (requires ffmpeg)', () => {
       script.fps = 5;
       script.lines = [
         { id: 'intro', speaker: 'a', text: 'test' },
-        { speaker: 'b', text: 'caption', spoken: false, duration: 0.8 },
+        {
+          id: 'caption',
+          at: 0.85,
+          speaker: 'b',
+          text: 'caption',
+          spoken: false,
+          duration: 0.8,
+        },
       ];
       script.main = [
         {
@@ -142,6 +149,10 @@ describe.skipIf(!hasFfmpeg)('sine MP4 pipeline (requires ffmpeg)', () => {
         input,
         '--at',
         '@intro',
+        '--at',
+        '@caption',
+        '--at',
+        '0.85',
         '--out',
         path.join(dir, 'frames'),
       ]);
@@ -150,6 +161,20 @@ describe.skipIf(!hasFfmpeg)('sine MP4 pipeline (requires ffmpeg)', () => {
           .subarray(1, 4)
           .toString(),
       ).toBe('PNG');
+      const textPixels = async (filename: string) => {
+        const image = await loadImage(path.join(dir, 'frames', filename));
+        const canvas = createCanvas(image.width, image.height);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        const pixels = ctx.getImageData(310, 915, 700, 100).data;
+        let count = 0;
+        for (let i = 0; i < pixels.length; i += 4)
+          if (pixels[i] > 200 && pixels[i + 1] > 200 && pixels[i + 2] > 200)
+            count++;
+        return count;
+      };
+      expect(await textPixels('02-0.850.png')).toBeGreaterThan(100);
+      expect(await textPixels('03-0.850.png')).toBe(0);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
