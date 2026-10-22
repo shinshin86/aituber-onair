@@ -1,5 +1,9 @@
 # Biim-style Explainer (Node)
 
+| Two speakers | One speaker |
+| --- | --- |
+| ![Two-speaker biim-style frame](./images/biim-duo.png) | ![One-speaker biim-style frame](./images/biim-solo.png) |
+
 Render an MP4 from a JSON timeline with one or two characters, a main video/image,
 right-side information panels, and a two-line speech bubble. This example uses the
 screen arrangement commonly called the biim system: black backgrounds, white
