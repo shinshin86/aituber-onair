@@ -1,0 +1,833 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Biim-style explainer video script",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Editor schema link; the CLI always uses the bundled schema regardless of this value. Relative to the script file.",
+      "x-description-ja": "エディタ用のSchema参照です。台本からの相対パスで指定します。CLIはこの値にかかわらず同梱Schemaを使います。",
+      "examples": ["../schema/biim-script.schema.json"]
+    },
+    "canvas": {
+      "enum": ["16:9", "4:3"],
+      "description": "Output aspect ratio: 16:9 is 1920x1080; 4:3 is 1440x1080.",
+      "x-description-ja": "出力の縦横比です。16:9は1920×1080、4:3は1440×1080です。",
+      "default": "16:9",
+      "examples": ["16:9", "4:3"]
+    },
+    "fps": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60,
+      "description": "Output frames per second, an integer from 1 through 60.",
+      "x-description-ja": "出力の毎秒フレーム数です。1〜60の整数を指定します。",
+      "default": 30,
+      "examples": [30]
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Nonnegative integer seed for reproducible blinking and body motion.",
+      "x-description-ja": "まばたきと体の動きを再現するための0以上の整数シードです。",
+      "default": 1,
+      "examples": [42]
+    },
+    "output": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Default MP4 destination relative to the script file. gen --out overrides it.",
+      "x-description-ja": "台本ファイルからの相対パスで指定するMP4の保存先です。genの--outが優先されます。",
+      "default": "../work/out.mp4",
+      "examples": ["../work/explainer.mp4"]
+    },
+    "speakers": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 2,
+      "propertyNames": {
+        "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Required human-readable speaker name, stored as metadata; no name label is drawn.",
+            "x-description-ja": "必須の話者名です。メタデータとして保持し、画面には名前ラベルを描画しません。",
+            "examples": ["だんご"]
+          },
+          "image": {
+            "oneOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "description": "Directory containing the four named PNG files, relative to the script file.",
+                "x-description-ja": "4つの指定名PNGを置くディレクトリです。台本ファイルからの相対パスです。"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mouth_close_eyes_open": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Image for closed mouth and open eyes, relative to the script file. Reusing one image for all states creates a static avatar.",
+                    "x-description-ja": "口を閉じ、目を開いた状態の画像を、台本ファイルからの相対パスで指定します。全状態に同じ画像を指定すると静止アバターになります。",
+                    "examples": [
+                      "../assets/yukkuri/dango/mouth_close_eyes_open.png"
+                    ]
+                  },
+                  "mouth_open_eyes_open": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Image for open mouth and open eyes, relative to the script file. Reusing one image for all states creates a static avatar.",
+                    "x-description-ja": "口と目を開いた状態の画像を、台本ファイルからの相対パスで指定します。全状態に同じ画像を指定すると静止アバターになります。",
+                    "examples": [
+                      "../assets/yukkuri/dango/mouth_open_eyes_open.png"
+                    ]
+                  },
+                  "mouth_close_eyes_close": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Image for closed mouth and closed eyes, relative to the script file. Reusing one image for all states creates a static avatar.",
+                    "x-description-ja": "口と目を閉じた状態の画像を、台本ファイルからの相対パスで指定します。全状態に同じ画像を指定すると静止アバターになります。",
+                    "examples": [
+                      "../assets/yukkuri/dango/mouth_close_eyes_close.png"
+                    ]
+                  },
+                  "mouth_open_eyes_close": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Image for open mouth and closed eyes, relative to the script file. Reusing one image for all states creates a static avatar.",
+                    "x-description-ja": "口を開き、目を閉じた状態の画像を、台本ファイルからの相対パスで指定します。全状態に同じ画像を指定すると静止アバターになります。",
+                    "examples": [
+                      "../assets/yukkuri/dango/mouth_open_eyes_close.png"
+                    ]
+                  }
+                },
+                "required": [
+                  "mouth_close_eyes_open",
+                  "mouth_open_eyes_open",
+                  "mouth_close_eyes_close",
+                  "mouth_open_eyes_close"
+                ],
+                "description": "Explicit paths for every avatar state; all four images must have equal dimensions.",
+                "x-description-ja": "各アバター状態のパスを指定します。4画像の寸法をそろえてください。"
+              }
+            ],
+            "description": "Four-state avatar directory or four-path object, relative to the script file. A string is always a directory, never a single image path.",
+            "x-description-ja": "台本ファイルからの相対パスで、4状態の画像ディレクトリか4パスのオブジェクトを指定します。文字列は単一画像ではなく常にディレクトリです。",
+            "examples": ["../assets/yukkuri/dango"]
+          },
+          "mirror": {
+            "type": "boolean",
+            "description": "Flip this speaker horizontally; does not change bottom-row position.",
+            "x-description-ja": "この話者の画像を左右反転します。画面下部の配置位置は変わりません。",
+            "default": false,
+            "examples": [true]
+          },
+          "voice": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "engine": {
+                "enum": ["sine", "aituber-voice"],
+                "description": "Speech backend: sine produces gated tones without a server; aituber-voice captures Core VoiceEngineAdapter audio.",
+                "x-description-ja": "sineはサーバー不要の電子音、aituber-voiceはCoreのVoiceEngineAdapterから取得する音声です。",
+                "examples": ["sine", "aituber-voice"]
+              },
+              "options": {
+                "type": "object",
+                "description": "Engine-specific settings. Optional for sine; required with engineType for aituber-voice. Core options are passed through, not provider-validated by this schema.",
+                "x-description-ja": "エンジン固有の設定です。sineでは任意、aituber-voiceではengineTypeを含めて必須です。Coreの設定はそのまま渡し、このSchemaでは提供元固有の検証を行いません。"
+              }
+            },
+            "required": ["engine"],
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "engine": {
+                      "const": "sine",
+                      "description": "Condition selecting the sine options rules; this const is not another input field.",
+                      "x-description-ja": "sineの設定規則を選ぶ条件です。追加の入力項目ではありません。"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "options": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "secondsPerChar": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "Tone seconds per Unicode character after removing whitespace. Actual duration is at least minDuration.",
+                          "x-description-ja": "空白を除いたUnicode文字1文字あたりの電子音の秒数です。全体の長さはminDuration以上になります。",
+                          "default": 0.08,
+                          "examples": [0.07]
+                        },
+                        "frequency": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "Positive sine-wave frequency in hertz, independent of speech duration.",
+                          "x-description-ja": "長さとは独立した、正数の正弦波周波数（Hz）です。",
+                          "default": 440,
+                          "examples": [660]
+                        },
+                        "minDuration": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "description": "Minimum tone duration in seconds; must be positive.",
+                          "x-description-ja": "電子音の最短秒数です。正数で指定します。",
+                          "default": 0.5,
+                          "examples": [0.5]
+                        },
+                        "amplitude": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "description": "Peak tone amplitude before gating/fades, from 0 (silence) to 1. Mixed audio is peak-normalized if needed.",
+                          "x-description-ja": "ゲート・フェード処理前の電子音の振幅です。0（無音）〜1で指定し、合成音声は必要時にピークを正規化します。",
+                          "default": 0.22,
+                          "examples": [0.18]
+                        }
+                      },
+                      "required": [],
+                      "description": "Options when engine is sine; only the documented numeric tone settings are allowed.",
+                      "x-description-ja": "engineがsineのときの設定です。ここにある電子音の数値設定だけを受け付けます。"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "engine": {
+                      "const": "aituber-voice",
+                      "description": "Condition selecting the aituber-voice options rules; this const is not another input field.",
+                      "x-description-ja": "aituber-voiceの設定規則を選ぶ条件です。追加の入力項目ではありません。"
+                    }
+                  }
+                },
+                "then": {
+                  "required": ["options"],
+                  "properties": {
+                    "options": {
+                      "type": "object",
+                      "required": ["engineType"],
+                      "properties": {
+                        "engineType": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Required Core voice engine identifier. Schema checks only a nonempty string; Core selects the engine at synthesis time, and invalid provider settings may fail then.",
+                          "x-description-ja": "必須のCore音声エンジン名です。Schemaは空でない文字列だけを確認します。合成時にCoreがエンジンを選び、提供元の設定によってはその時点で失敗する場合があります。",
+                          "examples": ["openaiCompatible"]
+                        }
+                      },
+                      "description": "Required options when engine is aituber-voice. Additional keys map directly to Core VoiceServiceOptions; onPlay is supplied by the renderer.",
+                      "x-description-ja": "engineがaituber-voiceのときの必須設定です。追加キーはCoreのVoiceServiceOptionsへ直接渡し、onPlayは描画側が設定します。"
+                    }
+                  }
+                }
+              }
+            ],
+            "description": "Speech engine and its options for this speaker. Silent captions bypass speech synthesis.",
+            "x-description-ja": "この話者の音声エンジンと設定です。無音字幕では音声合成を呼びません。"
+          },
+          "textColor": {
+            "$ref": "#/$defs/color",
+            "description": "This speaker's subtitle color as six-digit RGB hex; affects subtitle text only.",
+            "x-description-ja": "この話者の字幕色を6桁のRGBで指定します。字幕の文字だけに適用します。",
+            "default": "#ffffff",
+            "examples": ["#ffffff"]
+          },
+          "mouthMode": {
+            "enum": ["flap", "rms"],
+            "description": "Speaker override. Mouth animation mode: flap alternates open/closed at flapInterval; rms opens above the normalized audio gate. Both close in silence. Omission inherits the top-level mouthMode (fallback flap).",
+            "x-description-ja": "話者別の上書きです。口の動作方式です。flapはflapIntervalごとに開閉し、rmsは音量がしきい値を超えると開きます。どちらも無音では閉じます。 省略時は全体のmouthMode（未指定時flap）を使います。",
+            "examples": ["flap"]
+          },
+          "flapInterval": {
+            "type": "number",
+            "minimum": 0.03333333333333333,
+            "maximum": 1,
+            "description": "Speaker override. Seconds per mouth state in flap mode; between 1/30 and 1 second. Omission inherits the top-level flapInterval (fallback 0.12).",
+            "x-description-ja": "話者別の上書きです。flapで1つの口の状態を保つ秒数です。1/30〜1秒で指定します。 省略時は全体のflapInterval（未指定時0.12）を使います。",
+            "examples": [0.12]
+          },
+          "mouthThreshold": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "description": "Speaker override. Normalized RMS mouth gate, greater than 0 and at most 1. Renderer divides audio RMS by 0.12 and caps it at 1. Omission inherits the top-level mouthThreshold (fallback 0.08).",
+            "x-description-ja": "話者別の上書きです。口を開く正規化RMSのしきい値です。0超〜1を指定し、音声RMSを0.12で割って1を上限にした値と比較します。 省略時は全体のmouthThreshold（未指定時0.08）を使います。",
+            "examples": [0.08]
+          },
+          "motion": {
+            "enum": ["subtle", "bounce", "none"],
+            "description": "Speaker override. Body motion: subtle is a small hop/breath, bounce is larger, none disables body movement but keeps mouth/blink animation. Omission inherits the top-level motion (fallback subtle).",
+            "x-description-ja": "話者別の上書きです。体の動きです。subtleは小さな跳ねと呼吸、bounceは大きめの動き、noneは体だけを止め、口とまばたきは動かします。 省略時は全体のmotion（未指定時subtle）を使います。",
+            "examples": ["subtle"]
+          }
+        },
+        "required": ["name", "image", "voice"]
+      },
+      "description": "One or two speaker entries in left-to-right insertion order. Keys match line speaker values: start with an ASCII letter, then letters, digits, underscores or hyphens.",
+      "x-description-ja": "1〜2人の話者を左から順に記述します。キーはlinesのspeakerから参照します。英字で始め、英数字・下線・ハイフンを使えます。"
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pauseAfter": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Default silence in seconds after each line, including the final line; a line pauseAfter overrides this value.",
+          "x-description-ja": "各行の後（最終行を含む）の無音時間の既定秒数です。行ごとのpauseAfterが優先されます。",
+          "default": 0.3,
+          "examples": [0.3]
+        },
+        "mainAudioVolume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Linear gain (0 to 1) for a source video with audio=true. Not a separate background-music track.",
+          "x-description-ja": "audio=trueの素材動画へ適用する0〜1の線形音量です。独立したBGMトラックではありません。",
+          "default": 0.25,
+          "examples": [0.15]
+        }
+      },
+      "required": [],
+      "description": "Optional defaults for silence between lines and source-video audio gain.",
+      "x-description-ja": "発話間の無音時間と素材動画の音量の既定値を指定します。"
+    },
+    "lines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+            "description": "Optional unique anchor ID: ASCII letter first, then letters, digits, underscores or hyphens.",
+            "x-description-ja": "アンカーに使う任意の一意IDです。英字で始め、英数字・下線・ハイフンを使えます。",
+            "examples": ["intro"]
+          },
+          "speaker": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Key of an existing speakers entry, not its human-readable name.",
+            "x-description-ja": "speakersに存在するキーです。表示名のnameではありません。",
+            "examples": ["dango"]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nonempty displayed subtitle. Automatically wrapped and paged to at most two rows per page.",
+            "x-description-ja": "表示する空でない字幕です。折り返しとページ分割を行い、各ページを2行以内にします。",
+            "examples": ["操作手順を説明します。"]
+          },
+          "reading": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Pronunciation text sent to synthesis instead of text. Omission uses text; subtitles still display text.",
+            "x-description-ja": "textに代えて音声合成へ送る読みです。省略時はtextを使い、字幕は引き続きtextを表示します。",
+            "examples": ["そうさてじゅんをせつめいします。"]
+          },
+          "pauseAfter": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Silence in seconds after this line. Omission inherits defaults.pauseAfter, whose fallback is 0.3 seconds. An explicit next at only needs to follow the audio end.",
+            "x-description-ja": "この行の後の無音秒数です。省略時はdefaults.pauseAfter（未指定時0.3秒）を使います。次の行のatを明示した場合は音声終了以降へ置けます。",
+            "examples": [0.5]
+          },
+          "at": {
+            "$ref": "#/$defs/time",
+            "description": "Line start in seconds or at a line anchor. Omission starts the first line at 0, otherwise after the previous audio/caption plus its pause. Explicit starts must not precede the previous audio/caption end.",
+            "x-description-ja": "発話の開始を秒数かアンカーで指定します。省略時は先頭が0秒、それ以降は直前の音声・字幕と無音時間の後です。明示する場合も直前の音声・字幕終了より前には置けません。",
+            "examples": [
+              12.5,
+              "@intro",
+              "@intro+1.5",
+              "@intro-0.5",
+              "@intro:end",
+              "@intro:end+0.3"
+            ]
+          },
+          "spoken": {
+            "type": "boolean",
+            "description": "Whether to synthesize this line. false requires positive duration and keeps the mouth closed; true forbids duration.",
+            "x-description-ja": "この行を音声合成するかどうかです。falseでは正数のdurationが必須となり口を閉じます。trueではdurationを指定できません。",
+            "default": true,
+            "examples": [false]
+          },
+          "duration": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Silent-caption duration in seconds. Required only for spoken=false; forbidden for spoken=true or omitted spoken.",
+            "x-description-ja": "無音字幕の表示秒数です。spoken=falseのときだけ必須で、spoken=trueまたはspoken省略時は指定できません。",
+            "examples": [2]
+          },
+          "emotion": {
+            "enum": [
+              "neutral",
+              "happy",
+              "surprised",
+              "sad",
+              "angry",
+              "relaxed"
+            ],
+            "description": "Body-motion energy hint: happy/surprised use 1.1, sad/relaxed 0.8, neutral/angry 1. Does not change the avatar set or TTS emotion.",
+            "x-description-ja": "体の動きの強さの指定です。happy・surprisedは1.1、sad・relaxedは0.8、neutral・angryは1です。画像セットやTTSの感情は変えません。",
+            "default": "neutral",
+            "examples": ["happy"]
+          }
+        },
+        "required": ["speaker", "text"],
+        "allOf": [
+          {
+            "if": {
+              "required": ["spoken"],
+              "properties": {
+                "spoken": {
+                  "const": false,
+                  "description": "Condition activating silent-caption duration requirements when spoken is false.",
+                  "x-description-ja": "spokenがfalseのときに無音字幕のdurationを必須にする条件です。"
+                }
+              }
+            },
+            "then": {
+              "required": ["duration"]
+            },
+            "else": {
+              "not": {
+                "required": ["duration"]
+              }
+            }
+          }
+        ]
+      },
+      "minItems": 1,
+      "description": "Nonempty narration/caption sequence. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set.",
+      "x-description-ja": "1件以上の発話・字幕を順に記述します。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。"
+    },
+    "main": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/time",
+            "description": "Main slot start in seconds or at a line anchor; slots must be chronological and nonoverlapping.",
+            "x-description-ja": "メイン素材の開始を秒数かアンカーで指定します。時刻順で、範囲が重複しないように並べます。",
+            "examples": [
+              12.5,
+              "@intro",
+              "@intro+1.5",
+              "@intro-0.5",
+              "@intro:end",
+              "@intro:end+0.3"
+            ]
+          },
+          "until": {
+            "$ref": "#/$defs/time",
+            "description": "Main slot end in seconds or at an anchor; must exceed its start. Omission uses the next main start or the timeline end. Video holds its last frame if playback ends earlier.",
+            "x-description-ja": "メイン素材の終了を秒数かアンカーで指定し、開始より後へ置きます。省略時は次の素材の開始か動画全体の終了です。素材の再生が先に終わる場合は最後のコマを保持します。",
+            "examples": [
+              12.5,
+              "@intro",
+              "@intro+1.5",
+              "@intro-0.5",
+              "@intro:end",
+              "@intro:end+0.3"
+            ]
+          },
+          "video": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Source video path relative to the script file. Must contain a finite-duration video stream readable by ffmpeg/ffprobe.",
+            "x-description-ja": "台本ファイルからの相対パスで指定する動画です。ffmpeg・ffprobeが読める、長さの確定した映像ストリームが必要です。",
+            "examples": ["../work/demo.mp4"]
+          },
+          "image": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Main-area still image path relative to the script file, decoded by @napi-rs/canvas.",
+            "x-description-ja": "台本ファイルからの相対パスで指定するメイン領域の静止画です。@napi-rs/canvasで読み込みます。",
+            "examples": ["../work/demo-slide.png"]
+          },
+          "color": {
+            "$ref": "#/$defs/color",
+            "description": "Solid main-area background as six-digit RGB hex; mutually exclusive with video and image.",
+            "x-description-ja": "メイン領域を塗る6桁のRGBです。video・imageとは同時に指定できません。",
+            "examples": ["#14283d"]
+          },
+          "from": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Video-only source range start in source seconds, before speed adjustment; must be inside the source.",
+            "x-description-ja": "動画専用の範囲開始位置です。速度変更前の素材の秒数で、素材の範囲内に指定します。",
+            "default": 0,
+            "examples": [1]
+          },
+          "to": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Video-only source range end in source seconds; must exceed from and not exceed source duration (0.02s probe tolerance). Omission uses source duration.",
+            "x-description-ja": "動画専用の範囲終了位置です。素材の秒数でfromより後、素材終了以内（計測誤差0.02秒）に指定します。省略時は素材の終了です。",
+            "examples": [3]
+          },
+          "speed": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Video-only positive playback multiplier. 2 is twice as fast; 0.5 is half speed. Source audio follows this speed with pitch preserved.",
+            "x-description-ja": "動画専用の正数の再生倍率です。2は2倍速、0.5は半速です。素材音声もピッチを保って速度を変えます。",
+            "default": 1,
+            "examples": [2, 0.5]
+          },
+          "audio": {
+            "type": "boolean",
+            "description": "Video-only switch to mix the source audio under narration using defaults.mainAudioVolume; a source with no audio remains silent.",
+            "x-description-ja": "動画専用の素材音声を合成するスイッチです。defaults.mainAudioVolumeの音量で発話へ加え、音声のない素材は無音のままです。",
+            "default": false,
+            "examples": [true]
+          },
+          "speedBadge": {
+            "type": "boolean",
+            "description": "Video-only switch showing a small multiplier badge when speed differs from 1.",
+            "x-description-ja": "動画専用の倍率表示です。speedが1以外のときに小さな倍率ラベルを表示します。",
+            "default": true,
+            "examples": [false]
+          },
+          "fit": {
+            "enum": ["contain", "cover"],
+            "description": "Video/image sizing: contain preserves the entire source with black bars; cover fills and crops. Has no effect on a color slot.",
+            "x-description-ja": "映像・画像の配置方法です。containは全体を収めて黒帯を付け、coverは枠を埋めて切り抜きます。colorでは効果がありません。",
+            "default": "contain",
+            "examples": ["contain", "cover"]
+          }
+        },
+        "required": ["at"],
+        "oneOf": [
+          {
+            "required": ["video"]
+          },
+          {
+            "required": ["image"]
+          },
+          {
+            "required": ["color"]
+          }
+        ],
+        "allOf": [
+          {
+            "if": {
+              "not": {
+                "required": ["video"]
+              }
+            },
+            "then": {
+              "not": {
+                "anyOf": [
+                  {
+                    "required": ["from"]
+                  },
+                  {
+                    "required": ["to"]
+                  },
+                  {
+                    "required": ["speed"]
+                  },
+                  {
+                    "required": ["audio"]
+                  },
+                  {
+                    "required": ["speedBadge"]
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "description": "Chronological nonoverlapping main-area slots. Each chooses exactly one video, image or color. Gaps are black. Omitted array leaves the main area black.",
+      "x-description-ja": "メイン領域の素材を時刻順・重複なしで並べます。各項目はvideo・image・colorのいずれか1つです。素材のない時間と配列省略時は黒になります。"
+    },
+    "panels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/time",
+            "description": "Panel update time in seconds or at an anchor; updates must be chronological within the selected box.",
+            "x-description-ja": "パネルの更新時刻を秒数かアンカーで指定します。同じboxの中で時刻順に並べます。",
+            "examples": [
+              12.5,
+              "@intro",
+              "@intro+1.5",
+              "@intro-0.5",
+              "@intro:end",
+              "@intro:end+0.3"
+            ]
+          },
+          "box": {
+            "enum": ["top", "main", "bottom"],
+            "description": "Right-side destination: top header, main information box, or bottom widget box. Updates persist independently per box.",
+            "x-description-ja": "右側の表示先です。topは上段、mainは中央、bottomは下段で、内容は欄ごとに独立して保持します。",
+            "examples": ["top", "main", "bottom"]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Centered plain text in this right-side box; mutually exclusive with items, image and clear.",
+            "x-description-ja": "この情報欄の中央に置く通常の文字列です。items・image・clearとは同時に指定できません。",
+            "examples": ["操作のポイント"]
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Displayed text of this individual panel item; may wrap onto multiple centered rows.",
+                  "x-description-ja": "この情報項目に表示する文字列です。複数の中央揃え行に折り返すことがあります。",
+                  "examples": ["要点を確認"]
+                },
+                "color": {
+                  "enum": ["yellow", "white"],
+                  "description": "Named color of this panel item: yellow (#ffff00) or white (#ffffff), not an arbitrary RGB hex.",
+                  "x-description-ja": "この情報項目の色名です。yellow（#ffff00）かwhite（#ffffff）を選び、任意のRGBは指定できません。",
+                  "default": "white",
+                  "examples": ["yellow"]
+                }
+              },
+              "required": ["text"]
+            },
+            "minItems": 1,
+            "description": "One or more centered text items. Each item wraps as needed and can be white or yellow.",
+            "x-description-ja": "中央に配置する1件以上の項目です。必要に応じて折り返し、白か黄色で表示します。"
+          },
+          "image": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Still image for this panel, relative to the script file. Always contained in the box without cropping.",
+            "x-description-ja": "この情報欄に置く静止画の、台本ファイルからの相対パスです。切り抜かず枠内へ収めます。",
+            "examples": ["../work/demo-slide.png"]
+          },
+          "clear": {
+            "const": true,
+            "description": "Set true to clear this box content from at until the next update; the white window border remains.",
+            "x-description-ja": "trueを指定するとat以降、次の更新までこの欄の内容を消します。白い枠は残ります。",
+            "examples": [true]
+          }
+        },
+        "required": ["at", "box"],
+        "oneOf": [
+          {
+            "required": ["text"]
+          },
+          {
+            "required": ["items"]
+          },
+          {
+            "required": ["image"]
+          },
+          {
+            "required": ["clear"]
+          }
+        ]
+      },
+      "description": "Right-column updates, chronological within each box. Each chooses exactly one text, items, image or clear. Content persists until replaced.",
+      "x-description-ja": "右側の表示内容をboxごとに時刻順で更新します。text・items・image・clearのいずれか1つを指定し、次の更新まで保持します。"
+    },
+    "timer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/time",
+          "description": "Clock visibility and counting start in seconds or at an anchor. Before this time the clock is hidden.",
+          "x-description-ja": "時計の表示と計時を開始する秒数かアンカーです。この時刻より前は非表示です。",
+          "examples": [
+            12.5,
+            "@intro",
+            "@intro+1.5",
+            "@intro-0.5",
+            "@intro:end",
+            "@intro:end+0.3"
+          ]
+        },
+        "stop": {
+          "$ref": "#/$defs/time",
+          "description": "Clock freeze time in seconds or at an anchor; must be at or after start. Omission freezes at the timeline end.",
+          "x-description-ja": "時計を停止する秒数かアンカーです。start以降へ置き、省略時は動画全体の終了で停止します。",
+          "examples": [
+            12.5,
+            "@intro",
+            "@intro+1.5",
+            "@intro-0.5",
+            "@intro:end",
+            "@intro:end+0.3"
+          ]
+        },
+        "offset": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Nonnegative initial displayed clock value in seconds, added to elapsed time since start.",
+          "x-description-ja": "計時開始時に表示する0以上の秒数です。startからの経過時間へ加えます。",
+          "default": 0,
+          "examples": [60]
+        },
+        "format": {
+          "const": "H:MM:SS.cc",
+          "description": "The only supported clock format: hours:minutes:seconds.centiseconds, e.g. 0:01:02.34.",
+          "x-description-ja": "対応する時計形式は時:分:秒.百分の一秒だけです。例は0:01:02.34です。",
+          "default": "H:MM:SS.cc",
+          "examples": ["H:MM:SS.cc"]
+        },
+        "position": {
+          "enum": ["main-bottom-right", "right-bottom"],
+          "description": "Place the clock over the main area or in the right-bottom box. right-bottom cannot coexist with counter or bottom panels.",
+          "x-description-ja": "時計をメイン領域に重ねるか、右下の欄へ置きます。right-bottomはcounter・bottomパネルとは併用できません。",
+          "default": "main-bottom-right",
+          "examples": ["main-bottom-right", "right-bottom"]
+        }
+      },
+      "required": ["start"],
+      "description": "Optional clock widget. Hidden before start, advances until stop, then remains visible and frozen.",
+      "x-description-ja": "任意の時計です。start前は非表示、stopまでは進み、その後は停止した値を表示します。"
+    },
+    "counter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Text preceding the current numeric counter value in the right-bottom box.",
+          "x-description-ja": "右下の欄で現在の数値の前に表示する文字列です。",
+          "examples": ["確認数"]
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "at": {
+                "$ref": "#/$defs/time",
+                "description": "Counter value-change time in seconds or at an anchor; events must be chronological.",
+                "x-description-ja": "カウンター値の更新時刻を秒数かアンカーで指定し、時刻順に並べます。",
+                "examples": [
+                  12.5,
+                  "@intro",
+                  "@intro+1.5",
+                  "@intro-0.5",
+                  "@intro:end",
+                  "@intro:end+0.3"
+                ]
+              },
+              "value": {
+                "type": "number",
+                "description": "Displayed counter number. Negative and fractional values are accepted; it is not restricted to an integer count.",
+                "x-description-ja": "カウンターに表示する数値です。負数・小数も受け付け、整数の回数に限定しません。",
+                "examples": [3]
+              }
+            },
+            "required": ["at", "value"]
+          },
+          "minItems": 1,
+          "description": "Nonempty chronological counter updates. Hidden before the first event; each value persists until the next event or timeline end.",
+          "x-description-ja": "時刻順の1件以上の数値更新です。最初のイベントまでは非表示で、値は次の更新か動画全体の終了まで保持します。"
+        }
+      },
+      "required": ["label", "events"],
+      "description": "Optional numeric widget in the bottom-right box. Cannot coexist with any bottom panel or a right-bottom timer, even at different times.",
+      "x-description-ja": "右下の欄に数値を表示します。表示時刻が異なる場合も、bottomパネルやright-bottom時計とは併用できません。"
+    },
+    "mouthMode": {
+      "enum": ["flap", "rms"],
+      "description": "Global Mouth animation mode: flap alternates open/closed at flapInterval; rms opens above the normalized audio gate. Both close in silence.",
+      "x-description-ja": "全体設定です。口の動作方式です。flapはflapIntervalごとに開閉し、rmsは音量がしきい値を超えると開きます。どちらも無音では閉じます。",
+      "default": "flap",
+      "examples": ["flap"]
+    },
+    "flapInterval": {
+      "type": "number",
+      "minimum": 0.03333333333333333,
+      "maximum": 1,
+      "description": "Global Seconds per mouth state in flap mode; between 1/30 and 1 second.",
+      "x-description-ja": "全体設定です。flapで1つの口の状態を保つ秒数です。1/30〜1秒で指定します。",
+      "default": 0.12,
+      "examples": [0.12]
+    },
+    "mouthThreshold": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1,
+      "description": "Global Normalized RMS mouth gate, greater than 0 and at most 1. Renderer divides audio RMS by 0.12 and caps it at 1.",
+      "x-description-ja": "全体設定です。口を開く正規化RMSのしきい値です。0超〜1を指定し、音声RMSを0.12で割って1を上限にした値と比較します。",
+      "default": 0.08,
+      "examples": [0.08]
+    },
+    "motion": {
+      "enum": ["subtle", "bounce", "none"],
+      "description": "Global Body motion: subtle is a small hop/breath, bounce is larger, none disables body movement but keeps mouth/blink animation.",
+      "x-description-ja": "全体設定です。体の動きです。subtleは小さな跳ねと呼吸、bounceは大きめの動き、noneは体だけを止め、口とまばたきは動かします。",
+      "default": "subtle",
+      "examples": ["subtle"]
+    }
+  },
+  "required": ["speakers", "lines"],
+  "$defs": {
+    "time": {
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "description": "Absolute time in nonnegative seconds from the start of the rendered timeline.",
+          "x-description-ja": "描画する動画の開始から数えた0以上の絶対秒数です。"
+        },
+        {
+          "type": "string",
+          "pattern": "^@[A-Za-z][A-Za-z0-9_-]*(?::end)?(?:[+-][0-9]+(?:\\.[0-9]+)?)?$",
+          "description": "Anchor string referencing a line start or its audio/caption end, optionally offset in seconds.",
+          "x-description-ja": "行の開始、または音声・字幕の終了を参照し、任意で秒数を加減するアンカー文字列です。"
+        }
+      ],
+      "description": "Nonnegative absolute seconds or @line-id[:end][+/-seconds]. Exact existing IDs take precedence over interpreting an offset; unknown IDs and negative resolved times are errors.",
+      "x-description-ja": "0以上の絶対秒数、または@行ID[:end][+/-秒数]です。IDの完全一致をオフセットの解釈より優先します。不明なIDと負の解決時刻はエラーです。",
+      "examples": [
+        12.5,
+        "@intro",
+        "@intro+1.5",
+        "@intro-0.5",
+        "@intro:end",
+        "@intro:end+0.3"
+      ]
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$",
+      "description": "Six-digit RGB hex string prefixed by #; alpha and named colors are not accepted here.",
+      "x-description-ja": "#に続けた6桁のRGB文字列です。ここでは透過値と色名を受け付けません。",
+      "examples": ["#ffffff"]
+    }
+  },
+  "description": "JSON script for the Node offline MP4 renderer: one or two fixed avatar sets, sequential narration/captions, timed video/image/color slots, persistent right-side panels, and optional timer/counter. Asset and output paths are relative to this script file; CLI --out is relative to the working directory. Unknown fields are rejected. Defaults below describe renderer behavior; validation does not insert them.",
+  "x-description-ja": "NodeでMP4を生成する台本です。1〜2人の固定アバター、順番に続く発話・無音字幕、映像・画像・単色の切替、保持される右側の情報欄、任意の時計・カウンターを指定します。素材と出力のパスは台本ファイルからの相対パス、CLIの--outは実行ディレクトリからの相対パスです。未定義の項目はエラーです。defaultは描画時の動作を表し、検証時には値を挿入しません。"
+}

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+work/
+*.mp4
+*.wav
+*.timeline.json
+.env
+.env.*

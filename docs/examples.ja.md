@@ -221,6 +221,10 @@ npm run dev
   ニュース動画を作る Node.js パイプライン。1つのフォルダーで`--avatar`を使い、
   PNGTuber・Purupuru・Mesh・VRM・Live2D・Inochi2D・PSDの7種類を
   切り替えられます。PSDは静止・モーションの両モードに対応します。
+- [`packages/core/examples/node-biim-explainer`](../packages/core/examples/node-biim-explainer):
+  JSON台本から、1〜2人のキャラクター、映像・画像、情報欄、ページ切替字幕を
+  配置したbiim形式のMP4を生成します。Schema検証、時刻表、PNGプレビュー、
+  サーバー不要のsineサンプルを用意しています。
 - [`packages/core/examples/node-yukkuri-explainer`](../packages/core/examples/node-yukkuri-explainer):
   JSON の掛け合い台本から、2キャラクターによる「ゆっくり解説」風の動画
   （1920x1080）を作る Node.js パイプライン。話者ごとに Core 経由の声、

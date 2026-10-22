@@ -1913,6 +1913,10 @@ if (memoryManager) {
 
 ## Examples
 
+- [Biim-style explainer video (Node)](./examples/node-biim-explainer/README.md): JSON timelines with one or two characters, video/image slots, information panels, and MP4 output.
+- [Yukkuri explainer video (Node)](./examples/node-yukkuri-explainer/README.md): two-character JSON conversations rendered to MP4.
+- [All runnable examples](../../docs/examples.md)
+
 ### Vision (Image) Input Processing
 
 ```typescript

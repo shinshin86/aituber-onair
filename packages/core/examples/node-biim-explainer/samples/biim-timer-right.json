@@ -1,0 +1,39 @@
+{
+  "$schema": "../schema/biim-script.schema.json",
+  "speakers": {
+    "dango": {
+      "name": "だんご",
+      "image": {
+        "mouth_close_eyes_open": "../assets/yukkuri/dango/mouth_close_eyes_open.png",
+        "mouth_open_eyes_open": "../assets/yukkuri/dango/mouth_close_eyes_open.png",
+        "mouth_close_eyes_close": "../assets/yukkuri/dango/mouth_close_eyes_open.png",
+        "mouth_open_eyes_close": "../assets/yukkuri/dango/mouth_close_eyes_open.png"
+      },
+      "voice": {
+        "engine": "sine"
+      },
+      "motion": "none"
+    }
+  },
+  "lines": [
+    {
+      "id": "intro",
+      "speaker": "dango",
+      "text": "一枚の画像を全状態に指定した静止アバターです。",
+      "spoken": false,
+      "duration": 3
+    }
+  ],
+  "main": [
+    {
+      "at": 0,
+      "color": "#14283d"
+    }
+  ],
+  "panels": [],
+  "timer": {
+    "start": "@intro",
+    "stop": "@intro:end",
+    "position": "right-bottom"
+  }
+}
