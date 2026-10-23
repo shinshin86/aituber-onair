@@ -1,0 +1,191 @@
+{
+  "$schema": "../schema/biim-script.schema.json",
+  "canvas": "16:9",
+  "fps": 30,
+  "seed": 1,
+  "speakers": {
+    "dango": {
+      "name": "だんご",
+      "image": "../assets/yukkuri/dango",
+      "mirror": true,
+      "voice": {
+        "engine": "sine",
+        "options": {
+          "secondsPerChar": 0.2,
+          "frequency": 440
+        }
+      }
+    }
+  },
+  "defaults": {
+    "pauseAfter": 0.3
+  },
+  "lines": [
+    {
+      "id": "auto-1",
+      "speaker": "dango",
+      "text": "さあ、出発！",
+      "at": 0,
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-2",
+      "speaker": "dango",
+      "text": "あれ、寄り道しないんだ！",
+      "at": "@auto-1:end+10.800",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-3",
+      "speaker": "dango",
+      "text": "迷いがないね！",
+      "at": "@auto-2:end+5.600",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-4",
+      "speaker": "dango",
+      "text": "なんだか嫌な予感がする…",
+      "at": "@auto-3:end+6.600",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-5",
+      "speaker": "dango",
+      "text": "あー！今のは悔しい！",
+      "at": "@auto-4:end+1.600",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-6",
+      "speaker": "dango",
+      "text": "今度こそうまくいきそう！",
+      "at": "@auto-5:end+8.000",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-7",
+      "speaker": "dango",
+      "text": "こっちなら安心できそう！",
+      "at": "@auto-6:end+5.600",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-8",
+      "speaker": "dango",
+      "text": "ここまで来たら応援するしかない！",
+      "at": "@auto-7:end+5.600",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-9",
+      "speaker": "dango",
+      "text": "おっと、危なかった！",
+      "at": "@auto-8:end+2.800",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-10",
+      "speaker": "dango",
+      "text": "やった！お見事！",
+      "at": "@auto-9:end+4.000",
+      "pauseAfter": 0.3
+    }
+  ],
+  "main": [
+    {
+      "at": 0,
+      "until": 75,
+      "video": "../work/dungeon-demo.mp4",
+      "from": 0,
+      "to": 75,
+      "audio": false,
+      "fit": "contain"
+    }
+  ],
+  "panels": [
+    {
+      "at": 0,
+      "box": "top",
+      "text": "第1層 探索"
+    },
+    {
+      "at": 0,
+      "box": "main",
+      "items": [
+        {
+          "text": "鍵は奥の部屋にある",
+          "color": "yellow"
+        }
+      ]
+    },
+    {
+      "at": 12,
+      "box": "main",
+      "items": [
+        {
+          "text": "宝箱の中身は使わない",
+          "color": "yellow"
+        }
+      ]
+    },
+    {
+      "at": 28,
+      "box": "main",
+      "items": [
+        {
+          "text": "罠は点滅の直後に通る",
+          "color": "yellow"
+        }
+      ]
+    },
+    {
+      "at": 30,
+      "box": "top",
+      "text": "第1層 突破"
+    },
+    {
+      "at": 42,
+      "box": "main",
+      "items": [
+        {
+          "text": "遠回りで敵を避ける",
+          "color": "yellow"
+        }
+      ]
+    },
+    {
+      "at": 58,
+      "box": "main",
+      "items": [
+        {
+          "text": "攻撃の後に隙ができる",
+          "color": "yellow"
+        }
+      ]
+    },
+    {
+      "at": 60,
+      "box": "top",
+      "text": "第1層 決戦"
+    }
+  ],
+  "timer": {
+    "start": 0,
+    "stop": 75,
+    "position": "main-bottom-right"
+  },
+  "counter": {
+    "label": "リトライ",
+    "events": [
+      {
+        "at": 0,
+        "value": 0
+      },
+      {
+        "at": 32,
+        "value": 1
+      }
+    ]
+  }
+}

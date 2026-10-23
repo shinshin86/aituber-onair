@@ -35,8 +35,9 @@ npm run preview -- samples/biim-hello-sine.json --at 0 --at @speed --out work/pr
 npm run gen -- samples/biim-hello-sine.json --out work/hello.mp4
 ```
 
-Build generates an original four-second test-pattern video and a shapes image in
-`work/`; no game footage is bundled. The sine sample produces tones rather than
+Build generates an original four-second test-pattern video, a shapes image and
+a 75-second procedural dungeon in `work/`; no binary footage is bundled.
+The sine sample produces tones rather than
 Japanese speech and needs no API key or speech server. Output includes
 `hello.mp4`, `hello.mixed.wav`, and `hello.timeline.json`. `work/` is ignored.
 
@@ -144,6 +145,9 @@ Copy and adapt this prompt:
 Write a general-purpose explainer JSON for node-biim-explainer about <topic>.
 Read schema/biim-script.schema.json, docs/reference.md,
 and docs/authoring-guide.md first. Use samples/biim-all-features.json for recipes.
+For recorded-video commentary, start with autoscript and a supplied memo.
+Keep map (where), textbook (why), scoreboard (numbers) and friend (reactions)
+distinct; never repeat current panels in dialogue. Review the debug sidecar.
 Use 1–2 existing speakers, short panel items, natural subtitles, and line IDs.
 Use @id / @id:end anchors for media/panel changes; keep timer/counter optional.
 Use only supplied or original media. Do not imitate a particular creator.
@@ -157,6 +161,86 @@ Inspect the PNGs for clipping, bubble tails, text and avatar placement.
   npm run gen -- samples/my-script.json --out work/my-video.mp4
 Inspect extracted MP4 frames and listen to the mixed WAV before reporting success.
 ```
+
+## Generate a draft from a recording
+
+`autoscript` samples a recording, observes frames, edits panels, and writes a
+normal biim JSON script plus `*.debug.json`. Review and edit the draft before
+`gen`. From this directory, after `npm run build`, run the offline demo:
+
+```bash
+npm run autoscript -- work/dungeon-demo.mp4 --profile game \
+  --memo samples/dungeon-memo.md --out work/auto.json \
+  --replay fixtures/dungeon-replay
+npm run validate -- work/auto.json
+npm run gen -- work/auto.json --out work/auto.mp4
+```
+
+The dungeon's original canvas artwork shows entry, a skipped chest, key pickup,
+a trap defeat, a wait for its blink, a safe detour, and a boss dodge/counterattack.
+The HUD shows only area names. [The memo](./samples/dungeon-memo.md) supplies
+strategy reasons, and observed defeats update the retry counter. The generated
+[sample](./samples/biim-auto-dungeon.json) uses sine tones; replace `voice` as
+described above for Japanese speech. `--speakers 2` alternates accepted lines
+between the existing characters; it does not generate a second dialogue role.
+
+The shipped replay cache is a **hand-made fixture**, not real LLM output or
+evidence of vision quality. All responses are in `src/autoscript/demo-cache.ts`.
+After editing prompts/art, regenerate the video, exact request-hash/response
+cache and sample with `npm run demo:dungeon` then `npm run demo:cache`.
+Neither command calls an API. Different ffmpeg/canvas versions can change pixels
+and cause cache misses; `demo:cache` rebuilds this fixture for your local video.
+Replay fails closed on a missing/invalid entry and never falls back to network.
+Other videos need their own cache.
+
+For live generation, put `OPENAI_API_KEY=...` in this example's ignored `.env`
+or environment (environment wins). Use `--env-file <file>` for another file.
+Only OpenAI is supported by the live adapter, through Core's ChatServiceFactory;
+no new SDK or model is added. All three roles default to the already-supported,
+vision-capable `gpt-4.1-mini`. Override independently with `--observer-model`,
+`--panels-model`, `--commentary-model` or `BIIM_OBSERVER_MODEL`,
+`BIIM_PANELS_MODEL`, `BIIM_COMMENTARY_MODEL` (CLI wins). Live LLM results have
+not been verified with this demo. Recording makes paid API requests:
+
+```bash
+npm run autoscript -- input.mp4 --profile game --memo memo.md \
+  --out work/recorded.json --record work/my-cache
+npm run autoscript -- input.mp4 --profile game --memo memo.md \
+  --out work/replayed.json --replay work/my-cache
+```
+
+Cache entries store only request hashes and responses, never keys/full request
+bodies. The debug sidecar contains sampled times, observations, candidate text,
+accept/drop reasons, overlap scores and planned times. Treat it as content from
+your video and memo.
+
+| Fixed role | Content | Limits |
+| --- | --- | --- |
+| Map (top) | Broad stage/location/goal | One line, 16 characters, minimum 30 seconds |
+| Textbook (main) | Reasons, tips, context | Two 20-character items, minimum 8 seconds |
+| Scoreboard (bottom) | Configured numeric metric | Plain code from observed metrics |
+| Friend (subtitles) | Reactions, predictions, feelings | 50 characters, no panel paraphrases or number reading |
+
+The clock uses no LLM. Memo facts must cite literal memo excerpts; uncertain
+facts are omitted. Panel items cite a current fact index. Overlong text is
+rewritten once then dropped, never cut mid-word. Commentary receives current
+panels and its last five lines. Trigram overlap of 0.35 or more triggers one
+regeneration then rejection; this heuristic cannot prove semantic uniqueness.
+
+`--interval 2` uses a one-second analysis grid; pixel differences at least
+`--scene-threshold 0.12` also nominate frames. `--max-frames 48` evenly caps
+samples across the video, so brief events may be missed. `--max-vision-calls 48`
+is a hard observer budget including retries; exhaustion stops generation.
+Scene changes, importance-3 events and `--silence 10` trigger speech.
+`--stale 5` drops lines queued too long, in video seconds. Sequential end anchors
+prevent voice overlap; five characters/sec plans queue timing and expiry.
+Actual TTS can shift later lines. Check `plan` with your final voice and retime
+before rendering. All-rejected commentary uses `lines: []` without invented speech.
+
+Use `--profile generic` or `--profile path/to/profile.json` for other footage.
+Copy [profiles/generic.json](./profiles/generic.json), edit the four descriptions,
+persona and metric label/key, and keep the limits above. Absent metrics leave
+the scoreboard hidden. See the [authoring guide](./docs/authoring-guide.md#autoscript-review).
 
 ## Development
 

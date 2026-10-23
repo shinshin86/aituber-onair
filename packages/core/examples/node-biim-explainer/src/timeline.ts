@@ -116,7 +116,9 @@ export function resolveTimeline(
       : time(script.timer.stop, 'timer.stop');
   const last = lines[lines.length - 1];
   const duration = Math.max(
-    last.end + (last.pauseAfter ?? script.defaults?.pauseAfter ?? 0.3),
+    last
+      ? last.end + (last.pauseAfter ?? script.defaults?.pauseAfter ?? 0.3)
+      : 0,
     ...explicitEnds.map((v) => v ?? 0),
     ...mainStarts,
     ...panelStarts,

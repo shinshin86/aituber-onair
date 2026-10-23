@@ -143,6 +143,8 @@ node-biim-explainerで使う、<話題>の汎用解説台本JSONを作成して�
 先にschema/biim-script.schema.json、docs/reference.ja.md、
 docs/authoring-guide.ja.mdを読んでください。実例はsamples/biim-all-features.jsonを使えます。
 既存の1〜2話者、短い要点、自然な字幕、一意の発話IDを使ってください。
+録画の実況には autoscript と入力メモを使い、debug ファイルを確認してください。
+右上は場面、右中は理由、右下は数値、字幕は反応を担当し、同じ事実を繰り返さないでください。
 映像・情報欄の切替は@id / @id:endで指定し、時計・カウンターは必要時だけ使います。
 素材は提供済みか自作のものを使い、特定の制作者の口調を模倣しないでください。
 samples/my-script.jsonへ保存して、次を実行してください。
@@ -155,6 +157,84 @@ PNGを見て、はみ出し、吹き出しの向き、文字、キャラクタ�
   npm run gen -- samples/my-script.json --out work/my-video.mp4
 生成MP4から抽出したフレームと合成WAVを確認してから完了報告してください。
 ```
+
+## 録画から台本を生成する
+
+`autoscript` は録画からフレームを抜き出し、観察、右枠の編集、実況の生成を経て、
+通常の biim JSON 台本と `*.debug.json` を出力します。人が内容を確認・編集してから
+`gen` に渡してください。`npm run build` で75秒の自作ダンジョン動画も生成します。
+
+```bash
+npm run autoscript -- work/dungeon-demo.mp4 --profile game \
+  --memo samples/dungeon-memo.md --out work/auto.json \
+  --replay fixtures/dungeon-replay
+npm run validate -- work/auto.json
+npm run gen -- work/auto.json --out work/auto.mp4
+```
+
+デモでは宝箱を通り過ぎ、鍵を取り、罠で失敗した後、点滅を待って進みます。
+敵を避ける道を通り、ボスの攻撃をかわして出口を開きます。画像はすべて canvas で
+描画し、動画などのバイナリは同梱していません。HUD は場所の名前だけを表示し、
+攻略の理由は[メモ](./samples/dungeon-memo.md)で補います。
+[生成済み台本](./samples/biim-auto-dungeon.json)の音声は sine 音です。
+日本語で話させる場合は、前述の `voice` 設定に差し替えてください。
+`--speakers 2` は採用したセリフをだんご・ぼぶに交互に割り当てます。
+
+同梱キャッシュは**手書きのテスト用応答**で、実 LLM の出力や画像認識精度の検証結果では
+ありません。応答は `src/autoscript/demo-cache.ts` に定義しています。
+`npm run demo:dungeon` と `npm run demo:cache` で、映像、リクエストハッシュに対応する
+キャッシュ、台本を再生成できます。この操作は API を呼びません。
+ffmpeg / canvas の版の違いでピクセルが変わり replay が一致しない場合も、
+`demo:cache` でローカルの映像に合わせて作り直せます。
+キャッシュがない場合はエラーで停止し、ネットワークには接続しません。
+別の動画には専用のキャッシュが必要です。
+
+実 LLM を使う場合は、このサンプルの git 管理外の `.env` に `OPENAI_API_KEY=...` を
+書くか、環境変数に設定します。環境変数が優先されます。`--env-file <file>` で別の
+ファイルも指定できます。接続先は OpenAI のみで、既存の Core / Chat 経由で呼び出します。
+モデルや SDK は追加していません。3役の既定モデルは画像対応の `gpt-4.1-mini` です。
+役ごとに `--observer-model` / `--panels-model` / `--commentary-model`、または
+`BIIM_OBSERVER_MODEL` / `BIIM_PANELS_MODEL` / `BIIM_COMMENTARY_MODEL` で変更できます。
+CLI 指定が優先されます。このデモで実 LLM の応答は未検証です。
+
+```bash
+npm run autoscript -- input.mp4 --profile game --memo memo.md \
+  --out work/recorded.json --record work/my-cache
+npm run autoscript -- input.mp4 --profile game --memo memo.md \
+  --out work/replayed.json --replay work/my-cache
+```
+
+`--record` は有料 API を呼びます。キャッシュはハッシュと応答だけを保存し、キーや
+リクエスト全文は保存しません。debug ファイルには観察、候補文、採否の理由、重複スコア、
+予定時刻が入ります。元の映像やメモを含む資料として取り扱ってください。
+
+| 役割 | 表示内容 | 制約 |
+| --- | --- | --- |
+| 右上 | 広い区間の場面・場所・目標 | 1行16文字以内、最低30秒表示 |
+| 右中 | 理由・コツ・背景 | 20文字以内を2項目まで、最低8秒表示 |
+| 右下 | 指定メトリクスの数値 | 観察結果から通常のコードで更新 |
+| 字幕・キャラ | 反応・予想・感情 | 50文字以内、右枠の言い換えや数字の読み上げを避ける |
+
+時計は LLM を使いません。メモ由来の事実にはメモの引用を求め、不確かなものは除きます。
+右中の項目は事実の番号を参照します。文字数超過は一度だけ書き直し、収まらなければ
+不採用にします。単語の途中では切りません。実況には現在の右枠と直近5行を渡します。
+文字3-gram の重複スコアが0.35以上なら一度だけ再生成し、再び重複すれば不採用にします。
+この方法では意味の重複を完全には検出できません。
+
+`--interval 2` は1秒単位の解析から定期フレームを選びます。
+`--scene-threshold 0.12` 以上の画素差分も候補にします。`--max-frames 48` で全編に
+わたって均等に間引くため、短い出来事を見落とす場合があります。
+`--max-vision-calls 48` は再試行も含む観察呼び出しの上限で、超過時は停止します。
+場面転換、重要度3の出来事、`--silence 10` の沈黙で発話し、`--stale 5` を超えて
+待機したセリフを捨てます。秒数は動画内の時刻です。毎秒5文字で時刻を見積もり、
+発話終了アンカーで音声の重なりを防ぎます。実音声が長いと後の行がずれるため、
+最終的な声で `plan` を実行し、時刻を確認してください。全セリフが不採用なら
+`lines: []` にし、発話を作り足しません。
+
+汎用用途は `--profile generic`、独自設定は `--profile path/to/profile.json` を使います。
+[profiles/generic.json](./profiles/generic.json)をコピーし、4役の説明、口調、数値のキーと
+ラベルを編集してください。文字数の上限は上表以内です。数値がない場合は右下を表示しません。
+確認手順は[執筆ガイド](./docs/authoring-guide.ja.md#autoscript-の確認)にあります。
 
 ## 開発時の確認
 

@@ -1,0 +1,4 @@
+{
+  "hash": "d6cb68f599a78df303369e3d60f1f5a7ee95252311e67f913f8f7beeb2df693d",
+  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"ボス部屋\",\"goal\":\"出口を開く\"},\"facts\":[{\"text\":\"攻撃の後に隙ができる\",\"source\":\"memo\",\"evidence\":\"ボスは攻撃の後に隙ができる。\",\"confidence\":1},{\"text\":\"ボスが槍を振る\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"idle\",\"text\":\"ボスが槍を振る\",\"importance\":1}],\"metrics\":{\"retry\":1}}"
+}

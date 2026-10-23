@@ -41,7 +41,7 @@ NodeでMP4を生成する台本です。1〜2人の固定アバター、順番�
 | `defaults` | object | 任意 | — | 発話間の無音時間と素材動画の音量の既定値を指定します。 |
 | `defaults.pauseAfter` | number | 任意 | `0.3` | 各行の後（最終行を含む）の無音時間の既定秒数です。行ごとのpauseAfterが優先されます。 minimum: 0. 例: `0.3`. |
 | `defaults.mainAudioVolume` | number | 任意 | `0.25` | audio=trueの素材動画へ適用する0〜1の線形音量です。独立したBGMトラックではありません。 minimum: 0; maximum: 1. 例: `0.15`. |
-| `lines` | array<object> | 必須 | — | 1件以上の発話・字幕を順に記述します。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。 minItems: 1. |
+| `lines` | array<object> | 必須 | — | 発話・字幕を順に記述します。実況がない動画では空配列にできます。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。 minItems: 0. |
 | `lines[].id` | string | 任意 | — | アンカーに使う任意の一意IDです。英字で始め、英数字・下線・ハイフンを使えます。 pattern: "^[A-Za-z][A-Za-z0-9_-]*$". 例: `"intro"`. |
 | `lines[].speaker` | string | 必須 | — | speakersに存在するキーです。表示名のnameではありません。 minLength: 1. 例: `"dango"`. |
 | `lines[].text` | string | 必須 | — | 表示する空でない字幕です。折り返しとページ分割を行い、各ページを2行以内にします。 minLength: 1. 例: `"操作手順を説明します。"`. |

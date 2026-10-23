@@ -41,7 +41,7 @@ Voice options are listed separately per engine. sine accepts only its listed key
 | `defaults` | object | no | — | Optional defaults for silence between lines and source-video audio gain. |
 | `defaults.pauseAfter` | number | no | `0.3` | Default silence in seconds after each line, including the final line; a line pauseAfter overrides this value. minimum: 0. Examples: `0.3`. |
 | `defaults.mainAudioVolume` | number | no | `0.25` | Linear gain (0 to 1) for a source video with audio=true. Not a separate background-music track. minimum: 0; maximum: 1. Examples: `0.15`. |
-| `lines` | array<object> | yes | — | Nonempty narration/caption sequence. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set. minItems: 1. |
+| `lines` | array<object> | yes | — | Narration/caption sequence; may be empty for a video with no commentary. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set. minItems: 0. |
 | `lines[].id` | string | no | — | Optional unique anchor ID: ASCII letter first, then letters, digits, underscores or hyphens. pattern: "^[A-Za-z][A-Za-z0-9_-]*$". Examples: `"intro"`. |
 | `lines[].speaker` | string | yes | — | Key of an existing speakers entry, not its human-readable name. minLength: 1. Examples: `"dango"`. |
 | `lines[].text` | string | yes | — | Nonempty displayed subtitle. Automatically wrapped and paged to at most two rows per page. minLength: 1. Examples: `"操作手順を説明します。"`. |

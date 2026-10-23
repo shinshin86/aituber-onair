@@ -1,0 +1,4 @@
+{
+  "hash": "2a0ddd9e71ab16a58cf90b522c086c597a6f3267505c7e584c9ec17887246d64",
+  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"ボス部屋\",\"goal\":\"出口を開く\"},\"facts\":[{\"text\":\"攻撃の後に隙ができる\",\"source\":\"memo\",\"evidence\":\"ボスは攻撃の後に隙ができる。\",\"confidence\":1},{\"text\":\"主人公がボスの攻撃を避ける\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"idle\",\"text\":\"主人公がボスの攻撃を避ける\",\"importance\":1}],\"metrics\":{\"retry\":1}}"
+}

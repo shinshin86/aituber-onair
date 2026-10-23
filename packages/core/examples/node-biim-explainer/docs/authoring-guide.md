@@ -342,3 +342,38 @@ and 3+ speakers are not implemented.
 After editing the schema, run `npm run docs:reference`. Tests fail if either
 generated reference differs from the schema or descriptions are missing,
 placeholders, or reused for fields with different meanings.
+
+## Autoscript review
+
+Use `npm run autoscript -- recording.mp4 --profile game --memo memo.md --out
+work/auto.json --record work/cache` for an initial draft. `--record` makes live
+OpenAI requests; the [README](../README.md#generate-a-draft-from-a-recording)
+describes keys, replay, budgets and models. The dungeon cache is hand-written
+test data, not the result of vision inference. Never present it as a model test.
+
+1. Read `auto.debug.json` alongside the recording. Check every observation and
+   numeric event. Memo facts must cite source text; check that the text supports
+   the claim. Screen observations also require human verification.
+2. Confirm the four regions have different jobs: top tells where/stage, main
+   explains why, bottom counts, subtitle reacts. Remove restatements, including
+   paraphrases that character n-grams cannot catch. Prefer broad top labels so
+   they remain accurate through the 30-second hold; main holds for 8 seconds.
+3. Review dropped candidates. Overlong text gets one rewrite and is dropped if
+   still invalid. Panel overlap gets one regeneration. Do not restore an expired
+   line just because it sounds good; its visible event may already be over.
+4. Configure your final voices. Run `validate`, then `plan --json --out
+   work/plan.json` with actual TTS. End anchors keep lines sequential, but the
+   autoscript queue uses five characters/sec and real speech can shift later
+   lines. Retime them against the recording when necessary.
+5. Preview each scene/panel change and extract frames from the final MP4.
+   Check readability and listen to the mixed WAV. Sine tones test timing and
+   mouth motion only, not pronunciation or speech quality.
+
+To create a profile, copy `profiles/generic.json`. Keep the `map`, `textbook`,
+`scoreboard`, `friend` keys; edit their descriptions and friend instruction,
+and set a short metric key/label (`progress` / `手順`, for example). `maxChars`
+may be lowered, but may not exceed 16/20/50 for map/textbook/friend; textbook
+`maxItems` is 1 or 2. Missing metrics hide the scoreboard. Pass the file with
+`--profile my-profile.json`. Facts not in the image or memo should remain absent.
+An empty `lines` array is valid when no commentary is accepted; use an explicit
+main clip `until` to establish video length.

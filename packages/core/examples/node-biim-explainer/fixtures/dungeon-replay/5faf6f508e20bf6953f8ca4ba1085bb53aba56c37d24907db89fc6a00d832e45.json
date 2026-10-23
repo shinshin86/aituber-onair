@@ -1,0 +1,4 @@
+{
+  "hash": "5faf6f508e20bf6953f8ca4ba1085bb53aba56c37d24907db89fc6a00d832e45",
+  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"罠の通路\",\"goal\":\"罠を越える\"},\"facts\":[{\"text\":\"罠は点滅の直後に通る\",\"source\":\"memo\",\"evidence\":\"罠は点滅の直後に通る。\",\"confidence\":1},{\"text\":\"主人公が入口側で再出発する\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"idle\",\"text\":\"主人公が入口側で再出発する\",\"importance\":1}],\"metrics\":{\"retry\":1}}"
+}

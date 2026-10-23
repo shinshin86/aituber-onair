@@ -415,9 +415,9 @@
           }
         ]
       },
-      "minItems": 1,
-      "description": "Nonempty narration/caption sequence. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set.",
-      "x-description-ja": "1件以上の発話・字幕を順に記述します。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。"
+      "minItems": 0,
+      "description": "Narration/caption sequence; may be empty for a video with no commentary. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set.",
+      "x-description-ja": "発話・字幕を順に記述します。実況がない動画では空配列にできます。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。"
     },
     "main": {
       "type": "array",

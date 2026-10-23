@@ -1,0 +1,17 @@
+{
+  "name": "game",
+  "map": {
+    "description": "Chapter, area or goal. Prefer broad stages that can remain accurate for 30 seconds.",
+    "maxChars": 16
+  },
+  "textbook": {
+    "description": "Strategy reasons, enemy traits or route choice. Use screen observations or the supplied strategy memo.",
+    "maxChars": 20,
+    "maxItems": 2
+  },
+  "scoreboard": { "label": "リトライ", "metric": "retry" },
+  "friend": {
+    "instruction": "Speak natural Japanese as a warm, curious friend. React to play, predict, or sympathize; avoid explaining strategy already in the panels.",
+    "maxChars": 50
+  }
+}

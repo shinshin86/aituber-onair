@@ -1,0 +1,4 @@
+{
+  "hash": "68aa71bf6592cfc3660cb9b140a9e41d08386130cf195467b9243ab532791a76",
+  "response": "{\"sceneChanged\":true,\"context\":{\"phase\":\"第1層\",\"location\":\"入口\",\"goal\":\"鍵を探す\"},\"facts\":[{\"text\":\"鍵は奥の部屋にある\",\"source\":\"memo\",\"evidence\":\"鍵は奥の部屋にある。\",\"confidence\":1},{\"text\":\"主人公が入口から歩く\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"progress\",\"text\":\"主人公が入口から歩く\",\"importance\":3}],\"metrics\":{\"retry\":0}}"
+}
