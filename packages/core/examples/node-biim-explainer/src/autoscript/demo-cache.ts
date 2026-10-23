@@ -1,10 +1,10 @@
-import { mkdtemp, readFile, rename, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, rename, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadProfile } from './contracts.js';
 import { sampleVideo } from './frames.js';
-import { cachedTransport, type Transport } from './llm.js';
+import { cachedTransport, requestHash, type Transport } from './llm.js';
 import { generateScript } from './pipeline.js';
 
 // Deliberately hand-authored fiction, not model output or a vision benchmark.
@@ -21,45 +21,67 @@ export const dungeonFixture: Transport = async (request) => {
     'ボスは攻撃の後に隙ができる。',
   ];
   const facts = [
-    '鍵は奥の部屋にある',
-    '宝箱の中身は使わない',
-    '罠は点滅の直後に通る',
-    '遠回りで敵を避ける',
-    '攻撃の後に隙ができる',
+    '鍵は奥の部屋',
+    '宝箱は使わない',
+    '点滅後に通る',
+    '遠回りで敵回避',
+    '攻撃後に隙あり',
+  ];
+  const secondaryQuotes = [
+    '鍵のある部屋へ直行すれば寄り道を減らせる。',
+    '宝箱を開ける操作は省略できる。',
+    '罠が光っている間は手前で待つ。',
+    '罠が光っている間は手前で待つ。',
+    '予告の帯から横へ外れて攻撃をかわす。',
+  ];
+  const secondaryFacts = [
+    '寄り道を減らす',
+    '開封操作を省く',
+    '光る間は待つ',
+    '手前で点滅を待つ',
+    '予告の外へ移動',
   ];
   const screen =
     at >= 70
       ? 'ボスが消え出口が開く'
       : at >= 64
-        ? '主人公がボスの攻撃を避ける'
-        : at >= 58
-          ? 'ボスが槍を振る'
-          : at >= 50
-            ? '主人公が外周の道を進む'
-            : at >= 42
-              ? '罠が点滅した後で主人公が進む'
-              : at >= 34
-                ? '主人公が入口側で再出発する'
-                : at >= 32
-                  ? '罠に触れ主人公が消える'
-                  : at >= 28
-                    ? '床に尖った罠が見える'
-                    : at >= 20
-                      ? '主人公が鍵に触れ鍵が消える'
-                      : at >= 12
-                        ? '主人公が宝箱の前を通り過ぎる'
-                        : '主人公が入口から歩く';
+        ? '主人公が回復中のボスへ斬りかかる'
+        : at >= 61
+          ? '予告の帯を避け主人公が横へ動く'
+          : at >= 58
+            ? '主人公とボスが向き合う'
+            : at >= 50
+              ? '主人公が外周の道を進む'
+              : at >= 46
+                ? '点滅が終わり主人公が罠を通る'
+                : at >= 42
+                  ? '主人公が罠の手前で待つ'
+                  : at >= 34
+                    ? '主人公が入口側で再出発する'
+                    : at >= 32
+                      ? '罠に触れ主人公が消える'
+                      : at >= 28
+                        ? '床に尖った罠が見える'
+                        : at >= 20
+                          ? '主人公が鍵に触れ鍵が消える'
+                          : at >= 12
+                            ? '主人公が宝箱の前を通り過ぎる'
+                            : '主人公が入口から歩く';
   const moments: Record<number, string> = {
-    0: 'さあ、出発！',
-    12: 'あれ、寄り道しないんだ！',
-    20: '迷いがないね！',
-    28: 'なんだか嫌な予感がする…',
-    32: 'あー！今のは悔しい！',
-    42: '今度こそうまくいきそう！',
-    50: 'こっちなら安心できそう！',
-    58: 'ここまで来たら応援するしかない！',
-    64: 'おっと、危なかった！',
-    70: 'やった！お見事！',
+    0: 'さあ、出発！知らない場所を歩く時の、\nこのわくわくする感じが好きなんだよね。',
+    6: 'この先が気になるなあ。焦らず見ていこう！',
+    12: 'あれ、そっちへ行くんだ！つい寄り道したくなるのに。',
+    18: 'おっ、見えてきた！そのまま近づいて大丈夫かな？',
+    24: 'よし、いい感じ！この調子で先へ進みたいね。',
+    28: 'なんだか嫌な予感…。大丈夫かな？',
+    32: 'あー！今のは悔しい！でも、まだ諦めたくないよね。',
+    38: '今度こそ、落ち着いていこう。応援してるよ！',
+    42: 'ここ、さっきより慎重だね。見ていると息を止めちゃう！',
+    48: 'おっ、動き出した！このまま無事に抜けられるといいな。',
+    54: 'ここまで来たら、もう引き返したくないね！',
+    58: 'ついに来たか…。最後まで目が離せないね、がんばって！',
+    64: 'おっと、危なかった！今の動き、見ててひやっとしたよ。',
+    70: 'やった、お見事！最後まで見守れてよかったね！',
   };
   if (request.role === 'observer') {
     const previous = request.input.previous as {
@@ -79,6 +101,12 @@ export const dungeonFixture: Transport = async (request) => {
           evidence: quotes[index],
           confidence: 1,
         },
+        {
+          text: secondaryFacts[index],
+          source: 'memo',
+          evidence: secondaryQuotes[index],
+          confidence: 1,
+        },
         { text: screen, source: 'screen', confidence: 0.9 },
       ],
       events: [
@@ -92,16 +120,27 @@ export const dungeonFixture: Transport = async (request) => {
                   ? 'progress'
                   : 'idle',
           text: screen,
-          importance: moments[at] ? 3 : 1,
+          importance: [0, 12, 28, 32, 42, 58, 64, 70].includes(at)
+            ? 3
+            : moments[at]
+              ? 2
+              : 1,
         },
       ],
-      metrics: { retry: at >= 32 ? 1 : 0 },
+      metrics: {
+        retry: at >= 32 ? 1 : 0,
+        ...(at >= 12 ? { keys: at >= 20 ? 1 : 0 } : {}),
+        ...(at >= 70 ? { clear: 1 } : {}),
+      },
     });
   }
   if (request.role === 'panels')
     return JSON.stringify({
-      top: at < 30 ? '第1層 探索' : at < 60 ? '第1層 突破' : '第1層 決戦',
-      main: [{ text: facts[index], fact: 0 }],
+      top: `第1層 ${locations[index]}\n目標：${at < 20 ? '鍵を探す' : at < 58 ? '出口へ進む' : '出口を開く'}`,
+      main: [
+        { text: facts[index], fact: 0 },
+        { text: secondaryFacts[index], fact: 1 },
+      ],
     });
   return JSON.stringify({ text: moments[at] ?? null });
 };
@@ -109,6 +148,11 @@ export const dungeonFixture: Transport = async (request) => {
 export async function makeDemoCache() {
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'biim-fixture-'));
   try {
+    const hashes = new Set<string>();
+    const record = cachedTransport(
+      { record: 'fixtures/dungeon-replay' },
+      dungeonFixture,
+    );
     const sampled = await sampleVideo('work/dungeon-demo.mp4', temporary, {
       interval: 2,
       threshold: 0.12,
@@ -120,12 +164,17 @@ export async function makeDemoCache() {
       output: 'samples/biim-auto-dungeon.json',
       profile: await loadProfile('profiles/game.json'),
       memo: await readFile('samples/dungeon-memo.md', 'utf8'),
-      transport: cachedTransport(
-        { record: 'fixtures/dungeon-replay' },
-        dungeonFixture,
-      ),
+      transport: async (request) => {
+        hashes.add(requestHash(request));
+        return record(request);
+      },
     });
     await rename(result.sidecar, 'work/dungeon-fixture.debug.json');
+    // This directory is exclusively the generated hand-made demo fixture.
+    // Leave README/other files intact, and remove obsolete request variants.
+    for (const file of await readdir('fixtures/dungeon-replay'))
+      if (/^[a-f0-9]{64}\.json$/.test(file) && !hashes.has(file.slice(0, -5)))
+        await rm(path.join('fixtures/dungeon-replay', file));
     console.log(
       'Recorded hand-made dungeon fixture and regenerated samples/biim-auto-dungeon.json. No API calls.',
     );

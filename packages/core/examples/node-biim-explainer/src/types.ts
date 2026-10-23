@@ -74,7 +74,10 @@ export interface BiimScript extends PerformanceOptions {
   main?: MainClip[];
   panels?: Panel[];
   timer?: Timer;
-  counter?: { label: string; events: { at: Time; value: number }[] };
+  counter?: {
+    label: string;
+    events: { at: Time; value: number; text?: string }[];
+  };
 }
 export interface TimedLine extends ScriptLine {
   index: number;
@@ -102,7 +105,7 @@ export interface Timeline {
   timer?: Timer & { start: number; stop: number };
   counter?: {
     label: string;
-    events: { at: number; end: number; value: number }[];
+    events: { at: number; end: number; value: number; text?: string }[];
   };
 }
 export interface RenderConfig extends PerformanceOptions, Timeline {

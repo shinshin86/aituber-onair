@@ -83,6 +83,7 @@ NodeでMP4を生成する台本です。1〜2人の固定アバター、順番�
 | `counter.events` | array<object> | 必須 | — | 時刻順の1件以上の数値更新です。最初のイベントまでは非表示で、値は次の更新か動画全体の終了まで保持します。 minItems: 1. |
 | `counter.events[].at` | number or string | 必須 | — | カウンター値の更新時刻を秒数かアンカーで指定し、時刻順に並べます。 例: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
 | `counter.events[].value` | number | 必須 | — | カウンターに表示する数値です。負数・小数も受け付け、整数の回数に限定しません。 例: `3`. |
+| `counter.events[].text` | string | 任意 | — | このイベントでラベルと数値の代わりに表示する全文です。取得数の合計やクリア状態に使えます。数値はタイムラインに保持します。 minLength: 1. 例: `"鍵 1/1"`, `"クリア！"`. |
 | `mouthMode` | "flap" / "rms" | 任意 | `"flap"` | 全体設定です。口の動作方式です。flapはflapIntervalごとに開閉し、rmsは音量がしきい値を超えると開きます。どちらも無音では閉じます。 例: `"flap"`. |
 | `flapInterval` | number | 任意 | `0.12` | 全体設定です。flapで1つの口の状態を保つ秒数です。1/30〜1秒で指定します。 minimum: 0.03333333333333333; maximum: 1. 例: `0.12`. |
 | `mouthThreshold` | number | 任意 | `0.08` | 全体設定です。口を開く正規化RMSのしきい値です。0超〜1を指定し、音声RMSを0.12で割って1を上限にした値と比較します。 exclusiveMinimum: 0; maximum: 1. 例: `0.08`. |

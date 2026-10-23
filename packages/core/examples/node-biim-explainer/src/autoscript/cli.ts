@@ -15,7 +15,7 @@ export async function runAutoscript(
   const [input, ...flags] = args;
   if (!input || input.startsWith('-'))
     throw new Error(
-      'Usage: autoscript <input.mp4> --profile game --memo memo.md --out work/auto.json [--replay dir|--record dir] [--interval 2] [--max-frames 48] [--max-vision-calls 48] [--scene-threshold 0.12] [--speakers 1|2] [--env-file .env] [--observer-model id] [--panels-model id] [--commentary-model id] [--silence 10] [--stale 5]',
+      'Usage: autoscript <input.mp4> --profile game --memo memo.md --out work/auto.json [--replay dir|--record dir] [--interval 2] [--max-frames 48] [--max-vision-calls 48] [--scene-threshold 0.12] [--speakers 1|2] [--env-file .env] [--observer-model id] [--panels-model id] [--commentary-model id] [--silence seconds] [--stale 5]',
     );
   const values: Record<string, string> = {};
   const known = [
@@ -128,7 +128,8 @@ export async function runAutoscript(
       models,
       secrets,
       speakers: speakers as 1 | 2,
-      silence: number('silence', 10, 0),
+      silence:
+        values.silence === undefined ? undefined : number('silence', 4, 0),
       stale: number('stale', 5, 0),
       maxVisionCalls,
       transport: cachedTransport(

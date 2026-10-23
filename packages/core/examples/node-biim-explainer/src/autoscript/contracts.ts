@@ -14,10 +14,24 @@ export interface SceneState {
 }
 export interface Profile {
   name: string;
-  map: { description: string; maxChars: number };
+  map: {
+    description: string;
+    maxChars: number;
+    maxLines: number;
+    minDisplaySeconds: number;
+  };
   textbook: { description: string; maxChars: number; maxItems: number };
-  scoreboard: { label: string; metric: string };
-  friend: { instruction: string; maxChars: number };
+  scoreboard: {
+    label: string;
+    metric: string;
+    rules: { metric: string; min: number; format: string }[];
+  };
+  friend: {
+    instruction: string;
+    maxChars: number;
+    silenceSeconds: number;
+    targetCadenceSeconds: number;
+  };
 }
 export interface PanelCandidate {
   top?: string;
@@ -131,8 +145,17 @@ export function parsePanels(
 ): PanelCandidate {
   const v = object(value);
   const result: PanelCandidate = {};
-  if (v.top !== undefined && v.top !== null)
-    result.top = shortText(v.top, profile.map.maxChars);
+  if (v.top !== undefined && v.top !== null) {
+    if (
+      typeof v.top !== 'string' ||
+      v.top.split('\n').length > profile.map.maxLines
+    )
+      throw new Error(`Map allows at most ${profile.map.maxLines} lines`);
+    result.top = v.top
+      .split('\n')
+      .map((line) => shortText(line, profile.map.maxChars))
+      .join('\n');
+  }
   if (v.main !== undefined && v.main !== null) {
     if (!Array.isArray(v.main) || v.main.length > profile.textbook.maxItems)
       throw new Error('Too many textbook items');
@@ -156,11 +179,22 @@ export function parseCommentary(
   profile: Profile,
 ): CommentaryCandidate {
   const v = object(value);
+  if (v.text === null) return { text: null };
+  if (
+    typeof v.text !== 'string' ||
+    chars(v.text) > profile.friend.maxChars ||
+    v.text.split('\n').length > 2
+  )
+    throw new Error(
+      `Commentary allows at most two lines and ${profile.friend.maxChars} characters total`,
+    );
   return {
     text:
-      v.text === null
-        ? null
-        : shortText(v.text, profile.friend.maxChars) || null,
+      v.text
+        .split('\n')
+        .map((line) => shortText(line, profile.friend.maxChars))
+        .join('\n')
+        .trim() || null,
   };
 }
 
@@ -178,21 +212,47 @@ export function parseProfile(value: unknown): Profile {
   const metric = shortText(scoreboard.metric, 40);
   if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(metric))
     throw new Error('Invalid metric key');
+  function seconds(raw: unknown, fallback: number) {
+    const n = raw ?? fallback;
+    if (typeof n !== 'number' || !Number.isFinite(n) || n <= 0 || n > 120)
+      throw new Error('Profile timing must be >0 and <=120 seconds');
+    return n;
+  }
+  if (scoreboard.rules !== undefined && !Array.isArray(scoreboard.rules))
+    throw new Error('Scoreboard rules must be an array');
+  const rules = ((scoreboard.rules ?? []) as unknown[]).map((raw) => {
+    const rule = object(raw);
+    const metric = shortText(rule.metric, 40);
+    const format = shortText(rule.format, 24);
+    if (
+      !format ||
+      !/^[a-zA-Z][a-zA-Z0-9_]*$/.test(metric) ||
+      /[{}]/.test(format.replaceAll('{value}', ''))
+    )
+      throw new Error('Invalid scoreboard rule metric or format');
+    if (typeof rule.min !== 'number' || !Number.isFinite(rule.min))
+      throw new Error('Scoreboard rule min must be finite');
+    return { metric, format, min: rule.min };
+  });
   return {
     name: shortText(v.name, 80),
     map: {
       description: shortText(map.description, 500),
       maxChars: limit(map.maxChars, 16),
+      maxLines: limit(map.maxLines ?? 1, 2),
+      minDisplaySeconds: seconds(map.minDisplaySeconds, 8),
     },
     textbook: {
       description: shortText(textbook.description, 500),
       maxChars: limit(textbook.maxChars, 20),
       maxItems: limit(textbook.maxItems, 2),
     },
-    scoreboard: { label: shortText(scoreboard.label, 16), metric },
+    scoreboard: { label: shortText(scoreboard.label, 16), metric, rules },
     friend: {
       instruction: shortText(friend.instruction, 1000),
       maxChars: limit(friend.maxChars, 50),
+      silenceSeconds: seconds(friend.silenceSeconds, 4),
+      targetCadenceSeconds: seconds(friend.targetCadenceSeconds, 6),
     },
   };
 }

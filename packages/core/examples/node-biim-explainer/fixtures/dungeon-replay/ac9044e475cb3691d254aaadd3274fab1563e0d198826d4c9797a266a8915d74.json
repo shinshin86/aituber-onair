@@ -1,4 +1,0 @@
-{
-  "hash": "ac9044e475cb3691d254aaadd3274fab1563e0d198826d4c9797a266a8915d74",
-  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"宝物庫\",\"goal\":\"鍵を探す\"},\"facts\":[{\"text\":\"宝箱の中身は使わない\",\"source\":\"memo\",\"evidence\":\"宝箱は無視する。中身は今回の攻略では使わない。\",\"confidence\":1},{\"text\":\"主人公が宝箱の前を通り過ぎる\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"idle\",\"text\":\"主人公が宝箱の前を通り過ぎる\",\"importance\":1}],\"metrics\":{\"retry\":0}}"
-}

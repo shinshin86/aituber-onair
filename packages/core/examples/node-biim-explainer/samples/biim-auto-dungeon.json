@@ -24,72 +24,100 @@
     {
       "id": "auto-1",
       "speaker": "dango",
-      "text": "さあ、出発！",
+      "text": "さあ、出発！知らない場所を歩く時の、\nこのわくわくする感じが好きなんだよね。",
       "at": 0,
       "pauseAfter": 0.3
     },
     {
       "id": "auto-2",
       "speaker": "dango",
-      "text": "あれ、寄り道しないんだ！",
-      "at": "@auto-1:end+10.800",
+      "text": "この先が気になるなあ。焦らず見ていこう！",
+      "at": "@auto-1:end+0.300",
       "pauseAfter": 0.3
     },
     {
       "id": "auto-3",
       "speaker": "dango",
-      "text": "迷いがないね！",
-      "at": "@auto-2:end+5.600",
+      "text": "あれ、そっちへ行くんだ！つい寄り道したくなるのに。",
+      "at": "@auto-2:end+0.300",
       "pauseAfter": 0.3
     },
     {
       "id": "auto-4",
       "speaker": "dango",
-      "text": "なんだか嫌な予感がする…",
-      "at": "@auto-3:end+6.600",
+      "text": "おっ、見えてきた！そのまま近づいて大丈夫かな？",
+      "at": "@auto-3:end+1.000",
       "pauseAfter": 0.3
     },
     {
       "id": "auto-5",
       "speaker": "dango",
-      "text": "あー！今のは悔しい！",
-      "at": "@auto-4:end+1.600",
+      "text": "よし、いい感じ！この調子で先へ進みたいね。",
+      "at": "@auto-4:end+1.400",
       "pauseAfter": 0.3
     },
     {
       "id": "auto-6",
       "speaker": "dango",
-      "text": "今度こそうまくいきそう！",
-      "at": "@auto-5:end+8.000",
+      "text": "なんだか嫌な予感…。大丈夫かな？",
+      "at": "@auto-5:end+0.300",
       "pauseAfter": 0.3
     },
     {
       "id": "auto-7",
       "speaker": "dango",
-      "text": "こっちなら安心できそう！",
-      "at": "@auto-6:end+5.600",
+      "text": "あー！今のは悔しい！でも、まだ諦めたくないよね。",
+      "at": "@auto-6:end+0.300",
       "pauseAfter": 0.3
     },
     {
       "id": "auto-8",
       "speaker": "dango",
-      "text": "ここまで来たら応援するしかない！",
-      "at": "@auto-7:end+5.600",
+      "text": "今度こそ、落ち着いていこう。応援してるよ！",
+      "at": "@auto-7:end+1.200",
       "pauseAfter": 0.3
     },
     {
       "id": "auto-9",
       "speaker": "dango",
-      "text": "おっと、危なかった！",
-      "at": "@auto-8:end+2.800",
+      "text": "ここ、さっきより慎重だね。見ていると息を止めちゃう！",
+      "at": "@auto-8:end+0.300",
       "pauseAfter": 0.3
     },
     {
       "id": "auto-10",
       "speaker": "dango",
-      "text": "やった！お見事！",
-      "at": "@auto-9:end+4.000",
+      "text": "おっ、動き出した！このまま無事に抜けられるといいな。",
+      "at": "@auto-9:end+0.300",
       "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-11",
+      "speaker": "dango",
+      "text": "ここまで来たら、もう引き返したくないね！",
+      "at": "@auto-10:end+0.800",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-12",
+      "speaker": "dango",
+      "text": "ついに来たか…。最後まで目が離せないね、がんばって！",
+      "at": "@auto-11:end+0.300",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-13",
+      "speaker": "dango",
+      "text": "おっと、危なかった！今の動き、見ててひやっとしたよ。",
+      "at": "@auto-12:end+0.500",
+      "pauseAfter": 0.3
+    },
+    {
+      "id": "auto-14",
+      "speaker": "dango",
+      "text": "やった、お見事！最後まで見守れてよかったね！",
+      "at": "@auto-13:end+0.800",
+      "pauseAfter": 0
     }
   ],
   "main": [
@@ -107,67 +135,102 @@
     {
       "at": 0,
       "box": "top",
-      "text": "第1層 探索"
+      "text": "第1層 入口\n目標：鍵を探す"
     },
     {
       "at": 0,
       "box": "main",
       "items": [
         {
-          "text": "鍵は奥の部屋にある",
+          "text": "鍵は奥の部屋",
           "color": "yellow"
+        },
+        {
+          "text": "寄り道を減らす",
+          "color": "white"
         }
       ]
+    },
+    {
+      "at": 12,
+      "box": "top",
+      "text": "第1層 宝物庫\n目標：鍵を探す"
     },
     {
       "at": 12,
       "box": "main",
       "items": [
         {
-          "text": "宝箱の中身は使わない",
+          "text": "宝箱は使わない",
           "color": "yellow"
+        },
+        {
+          "text": "開封操作を省く",
+          "color": "white"
         }
       ]
+    },
+    {
+      "at": 20,
+      "box": "top",
+      "text": "第1層 宝物庫\n目標：出口へ進む"
+    },
+    {
+      "at": 28,
+      "box": "top",
+      "text": "第1層 罠の通路\n目標：出口へ進む"
     },
     {
       "at": 28,
       "box": "main",
       "items": [
         {
-          "text": "罠は点滅の直後に通る",
+          "text": "点滅後に通る",
           "color": "yellow"
+        },
+        {
+          "text": "光る間は待つ",
+          "color": "white"
         }
       ]
     },
     {
-      "at": 30,
+      "at": 42,
       "box": "top",
-      "text": "第1層 突破"
+      "text": "第1層 分かれ道\n目標：出口へ進む"
     },
     {
       "at": 42,
       "box": "main",
       "items": [
         {
-          "text": "遠回りで敵を避ける",
+          "text": "遠回りで敵回避",
           "color": "yellow"
+        },
+        {
+          "text": "手前で点滅を待つ",
+          "color": "white"
         }
       ]
+    },
+    {
+      "at": 58,
+      "box": "top",
+      "text": "第1層 ボス部屋\n目標：出口を開く"
     },
     {
       "at": 58,
       "box": "main",
       "items": [
         {
-          "text": "攻撃の後に隙ができる",
+          "text": "攻撃後に隙あり",
           "color": "yellow"
+        },
+        {
+          "text": "予告の外へ移動",
+          "color": "white"
         }
       ]
-    },
-    {
-      "at": 60,
-      "box": "top",
-      "text": "第1層 決戦"
     }
   ],
   "timer": {
@@ -183,8 +246,24 @@
         "value": 0
       },
       {
+        "at": 12,
+        "value": 0,
+        "text": "鍵 0/1"
+      },
+      {
+        "at": 20,
+        "value": 1,
+        "text": "鍵 1/1"
+      },
+      {
         "at": 32,
-        "value": 1
+        "value": 1,
+        "text": "リトライ 1"
+      },
+      {
+        "at": 70,
+        "value": 1,
+        "text": "クリア！"
       }
     ]
   }

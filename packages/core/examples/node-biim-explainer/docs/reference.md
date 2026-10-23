@@ -83,6 +83,7 @@ Voice options are listed separately per engine. sine accepts only its listed key
 | `counter.events` | array<object> | yes | — | Nonempty chronological counter updates. Hidden before the first event; each value persists until the next event or timeline end. minItems: 1. |
 | `counter.events[].at` | number or string | yes | — | Counter value-change time in seconds or at an anchor; events must be chronological. Examples: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
 | `counter.events[].value` | number | yes | — | Displayed counter number. Negative and fractional values are accepted; it is not restricted to an integer count. Examples: `3`. |
+| `counter.events[].text` | string | no | — | Optional complete scoreboard text for this event, replacing label and value visually while retaining the numeric metric in the timeline. Useful for inventory totals or completion status. minLength: 1. Examples: `"鍵 1/1"`, `"クリア！"`. |
 | `mouthMode` | "flap" / "rms" | no | `"flap"` | Global Mouth animation mode: flap alternates open/closed at flapInterval; rms opens above the normalized audio gate. Both close in silence. Examples: `"flap"`. |
 | `flapInterval` | number | no | `0.12` | Global Seconds per mouth state in flap mode; between 1/30 and 1 second. minimum: 0.03333333333333333; maximum: 1. Examples: `0.12`. |
 | `mouthThreshold` | number | no | `0.08` | Global Normalized RMS mouth gate, greater than 0 and at most 1. Renderer divides audio RMS by 0.12 and caps it at 1. exclusiveMinimum: 0; maximum: 1. Examples: `0.08`. |

@@ -75,7 +75,7 @@ function pathAt(points, t) {
 function player(x, y, t, flash = false) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
-  ctx.scale(3, 3);
+  ctx.scale(4.5, 4.5);
   const step = Math.sin(t * 12) > 0 ? 1 : -1;
   ctx.globalAlpha = 0.3;
   circle(0, 9, 10, '#000000');
@@ -94,20 +94,29 @@ function player(x, y, t, flash = false) {
   ctx.restore();
 }
 function chest(x, y) {
-  rect(x - 28, y - 18, 56, 38, '#392f3a');
-  rect(x - 24, y - 22, 48, 36, '#a76c44');
-  rect(x - 26, y - 9, 52, 7, '#edb86c');
-  rect(x - 4, y - 8, 8, 12, '#ffe6a3');
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1.6, 1.6);
+  rect(-28, -18, 56, 38, '#392f3a');
+  rect(-24, -22, 48, 36, '#a76c44');
+  rect(-26, -9, 52, 7, '#edb86c');
+  rect(-4, -8, 8, 12, '#ffe6a3');
+  ctx.restore();
 }
 function key(x, y, t) {
   const offset = Math.sin(t * 3) * 5;
-  circle(x, y + offset, 12, '#ffdb72');
-  circle(x, y + offset, 5, '#4b4350');
-  rect(x + 10, y - 3 + offset, 28, 6, '#ffdb72');
-  rect(x + 28, y + offset, 6, 13, '#ffdb72');
+  ctx.save();
+  ctx.translate(x, y + offset);
+  ctx.scale(1.6, 1.6);
+  circle(8, 0, 28, '#ffdb7225');
+  circle(0, 0, 12, '#ffdb72');
+  circle(0, 0, 5, '#4b4350');
+  rect(10, -3, 28, 6, '#ffdb72');
+  rect(28, 0, 6, 13, '#ffdb72');
+  ctx.restore();
 }
 function enemy(x, y, t, boss = false) {
-  const s = boss ? 1.8 : 1;
+  const s = boss ? 2.7 : 1.45;
   ctx.save();
   ctx.translate(x, y + Math.sin(t * 3) * 4);
   ctx.scale(s, s);
@@ -171,16 +180,24 @@ function room(t, index) {
   }
 }
 function trap(x, y, active, blink) {
-  rect(x - 30, y - 35, 60, 70, blink ? '#f7b94c' : '#20283c');
-  rect(x - 26, y - 31, 52, 62, active ? '#75344b' : '#3c4657');
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1.4, 1.4);
+  if (blink) {
+    circle(0, 0, 51, '#ffbd4540');
+    rect(-33, -38, 66, 76, '#ffe08b');
+  }
+  rect(-30, -35, 60, 70, blink ? '#ffd274' : '#20283c');
+  rect(-26, -31, 52, 62, active ? '#8c3a53' : '#3c4657');
   for (let i = 0; i < 3; i++) {
     ctx.fillStyle = active ? '#f3929b' : '#74788a';
     ctx.beginPath();
-    ctx.moveTo(x - 20 + i * 16, y + 14);
-    ctx.lineTo(x - 13 + i * 16, y - (active ? 21 : 0));
-    ctx.lineTo(x - 6 + i * 16, y + 14);
+    ctx.moveTo(-20 + i * 16, 14);
+    ctx.lineTo(-13 + i * 16, -(active ? 21 : 0));
+    ctx.lineTo(-6 + i * 16, 14);
     ctx.fill();
   }
+  ctx.restore();
 }
 function render(t) {
   const index = t < 12 ? 0 : t < 28 ? 1 : t < 42 ? 2 : t < 58 ? 3 : 4;
@@ -253,11 +270,11 @@ function render(t) {
       );
   }
   if (index === 3) {
-    enemy(810, 390, t);
-    for (const x of [420, 500])
+    enemy(810, 350, t);
+    for (const x of [410, 520])
       trap(x, 390, t < 46, t >= 44 && t < 46 && Math.floor(t * 5) % 2 === 0);
-    rect(660, 290, 22, 200, '#1b2a3a');
-    rect(950, 290, 22, 200, '#1b2a3a');
+    rect(660, 290, 22, 130, '#1b2a3a');
+    rect(950, 290, 22, 130, '#1b2a3a');
     pos =
       t < 46
         ? [320, 390]
@@ -265,8 +282,8 @@ function render(t) {
             [
               [320, 390],
               [570, 390],
-              [600, 510],
-              [1020, 510],
+              [600, 500],
+              [1020, 500],
               [1120, 390],
             ],
             (t - 46) / 12,
@@ -277,10 +294,13 @@ function render(t) {
     const recovery = t >= 64 && t < 68;
     if (t < 70) enemy(910, 390, t, true);
     if (attack) {
-      rect(400, 365, 430, 50, '#e5676740');
+      rect(400, 350, 500, 80, '#ef6c6870');
+      ctx.strokeStyle = '#ffd279';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(400, 350, 500, 80);
       // Telegraph before the thrust so the sidestep visibly precedes impact.
-      if (t >= 62) rect(530 + (t - 62) * 90, 382, 370, 16, '#e9b899');
-      circle(890, 390, 90 + (t - 61) * 15, '#ffb37520');
+      if (t >= 62) rect(530 + (t - 62) * 90, 378, 370, 24, '#ffdfac');
+      circle(890, 390, 110 + (t - 61) * 20, '#ffb37535');
     }
     pos =
       t < 61
@@ -291,32 +311,39 @@ function render(t) {
             ],
             (t - 58) / 3,
           )
-        : t < 64
+        : t < 61.8
           ? pathAt(
               [
                 [600, 390],
-                [580, 480],
-                [750, 480],
+                [580, 495],
               ],
-              (t - 61) / 3,
+              (t - 61) / 0.8,
             )
-          : t < 70
+          : t < 64
             ? pathAt(
                 [
-                  [750, 480],
-                  [850, 390],
-                  [820, 450],
-                  [890, 390],
+                  [580, 495],
+                  [750, 495],
                 ],
-                (t - 64) / 6,
+                (t - 61.8) / 2.2,
               )
-            : pathAt(
-                [
-                  [890, 390],
-                  [1180, 390],
-                ],
-                (t - 70) / 5,
-              );
+            : t < 70
+              ? pathAt(
+                  [
+                    [750, 495],
+                    [795, 390],
+                    [790, 460],
+                    [800, 390],
+                  ],
+                  (t - 64) / 6,
+                )
+              : pathAt(
+                  [
+                    [800, 390],
+                    [1180, 390],
+                  ],
+                  (t - 70) / 5,
+                );
     if (recovery) {
       ctx.strokeStyle = '#ffe4a0';
       ctx.lineWidth = 8;

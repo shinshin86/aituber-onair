@@ -9,7 +9,8 @@ No keys, request bodies or source images are stored here.
 From the example directory run `npm run build`, then replay using the command in
 the README. To adapt hashes after changing prompts, the demo, or your local
 ffmpeg/canvas version, run `npm run demo:dungeon` then `npm run demo:cache`.
-The latter regenerates the sample JSON too. It is deliberately separate from
+The latter regenerates the sample JSON and prunes obsolete hash entries in
+this fixture directory. It is deliberately separate from
 build; a normal build never silently updates these fixtures.
 
 Use a separate ignored `work/` cache directory for real `--record` output.

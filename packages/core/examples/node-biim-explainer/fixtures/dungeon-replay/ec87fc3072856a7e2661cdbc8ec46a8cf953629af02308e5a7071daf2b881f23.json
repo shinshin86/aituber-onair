@@ -1,4 +1,0 @@
-{
-  "hash": "ec87fc3072856a7e2661cdbc8ec46a8cf953629af02308e5a7071daf2b881f23",
-  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"分かれ道\",\"goal\":\"罠を越える\"},\"facts\":[{\"text\":\"遠回りで敵を避ける\",\"source\":\"memo\",\"evidence\":\"遠回りだが敵を避けられる。\",\"confidence\":1},{\"text\":\"主人公が外周の道を進む\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"idle\",\"text\":\"主人公が外周の道を進む\",\"importance\":1}],\"metrics\":{\"retry\":1}}"
-}

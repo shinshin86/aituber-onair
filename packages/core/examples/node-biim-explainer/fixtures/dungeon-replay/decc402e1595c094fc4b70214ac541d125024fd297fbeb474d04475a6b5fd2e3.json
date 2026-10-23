@@ -1,4 +1,0 @@
-{
-  "hash": "decc402e1595c094fc4b70214ac541d125024fd297fbeb474d04475a6b5fd2e3",
-  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"宝物庫\",\"goal\":\"罠を越える\"},\"facts\":[{\"text\":\"宝箱の中身は使わない\",\"source\":\"memo\",\"evidence\":\"宝箱は無視する。中身は今回の攻略では使わない。\",\"confidence\":1},{\"text\":\"主人公が鍵に触れ鍵が消える\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"idle\",\"text\":\"主人公が鍵に触れ鍵が消える\",\"importance\":1}],\"metrics\":{\"retry\":0}}"
-}

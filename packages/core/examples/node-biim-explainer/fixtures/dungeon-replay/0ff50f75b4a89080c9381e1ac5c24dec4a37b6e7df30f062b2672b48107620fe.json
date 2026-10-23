@@ -1,0 +1,4 @@
+{
+  "hash": "0ff50f75b4a89080c9381e1ac5c24dec4a37b6e7df30f062b2672b48107620fe",
+  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"ボス部屋\",\"goal\":\"出口を開く\"},\"facts\":[{\"text\":\"攻撃後に隙あり\",\"source\":\"memo\",\"evidence\":\"ボスは攻撃の後に隙ができる。\",\"confidence\":1},{\"text\":\"予告の外へ移動\",\"source\":\"memo\",\"evidence\":\"予告の帯から横へ外れて攻撃をかわす。\",\"confidence\":1},{\"text\":\"主人公が回復中のボスへ斬りかかる\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"progress\",\"text\":\"主人公が回復中のボスへ斬りかかる\",\"importance\":3}],\"metrics\":{\"retry\":1,\"keys\":1}}"
+}

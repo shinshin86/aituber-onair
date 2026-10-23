@@ -1,17 +1,41 @@
 {
   "name": "game",
   "map": {
-    "description": "Chapter, area or goal. Prefer broad stages that can remain accurate for 30 seconds.",
-    "maxChars": 16
+    "description": "Current chapter and location. On scene changes name the new place immediately; optionally add a short goal on a second line.",
+    "maxChars": 16,
+    "maxLines": 2,
+    "minDisplaySeconds": 8
   },
   "textbook": {
     "description": "Strategy reasons, enemy traits or route choice. Use screen observations or the supplied strategy memo.",
     "maxChars": 20,
     "maxItems": 2
   },
-  "scoreboard": { "label": "リトライ", "metric": "retry" },
+  "scoreboard": {
+    "label": "リトライ",
+    "metric": "retry",
+    "rules": [
+      {
+        "metric": "clear",
+        "min": 1,
+        "format": "クリア！"
+      },
+      {
+        "metric": "retry",
+        "min": 1,
+        "format": "リトライ {value}"
+      },
+      {
+        "metric": "keys",
+        "min": 0,
+        "format": "鍵 {value}/1"
+      }
+    ]
+  },
   "friend": {
     "instruction": "Speak natural Japanese as a warm, curious friend. React to play, predict, or sympathize; avoid explaining strategy already in the panels.",
-    "maxChars": 50
+    "maxChars": 50,
+    "silenceSeconds": 3,
+    "targetCadenceSeconds": 4
   }
 }

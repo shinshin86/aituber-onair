@@ -91,7 +91,11 @@ editing the schema; `npm run docs:reference:check` and tests detect stale docs.
 | `main[].fit` | `"contain"` (default) or `"cover"` for images/video. |
 | `panels[]` | `at`, `box: "top" / "main" / "bottom"`, exactly one `text`, `items`, `image`, or `clear: true`. Each item has `text` and optional `color: "yellow" / "white"`. Content persists until the next update to that box. |
 | `timer` | Required `start`; optional `stop` (timeline end), nonnegative `offset` (0), `format: "H:MM:SS.cc"`, `position: "main-bottom-right" / "right-bottom"`. Hidden before start and frozen after stop. |
-| `counter` | Optional generic `label` and chronological `events: [{at, value}]`. Uses the bottom-right box. Do not combine it with bottom panels or a right-bottom timer. |
+| `counter` | Optional generic `label` and chronological `events: [{at, value, text?}]`. Event `text` overrides the displayed label/value, e.g. `鍵 1/1` or `クリア！`. Uses the bottom-right box. Do not combine it with bottom panels or a right-bottom timer. |
+
+Short main panels (one or two items) start at 56px; longer lists start at 38px.
+Scoreboard text starts at 38px with 12px vertical padding so the 90px box does
+not force ordinary labels to shrink. All panel text still scales down to fit.
 
 `emotion` is one of `neutral`, `happy`, `surprised`, `sad`, `angry`, `relaxed` and
 only adjusts body-motion energy. The layout has unboxed avatars, normal-weight
@@ -216,10 +220,10 @@ your video and memo.
 
 | Fixed role | Content | Limits |
 | --- | --- | --- |
-| Map (top) | Broad stage/location/goal | One line, 16 characters, minimum 30 seconds |
+| Map (top) | Current place and optional goal | Up to two 16-character lines; location changes update immediately, other edits hold for 8 seconds |
 | Textbook (main) | Reasons, tips, context | Two 20-character items, minimum 8 seconds |
 | Scoreboard (bottom) | Configured numeric metric | Plain code from observed metrics |
-| Friend (subtitles) | Reactions, predictions, feelings | 50 characters, no panel paraphrases or number reading |
+| Friend (subtitles) | Reactions, predictions, feelings | 50 characters total, one or two lines, no panel paraphrases or number reading |
 
 The clock uses no LLM. Memo facts must cite literal memo excerpts; uncertain
 facts are omitted. Panel items cite a current fact index. Overlong text is
@@ -231,7 +235,10 @@ regeneration then rejection; this heuristic cannot prove semantic uniqueness.
 `--scene-threshold 0.12` also nominate frames. `--max-frames 48` evenly caps
 samples across the video, so brief events may be missed. `--max-vision-calls 48`
 is a hard observer budget including retries; exhaustion stops generation.
-Scene changes, importance-3 events and `--silence 10` trigger speech.
+Scene changes and importance-3 events trigger speech immediately. Profiles set
+`friend.targetCadenceSeconds` (game: 4, generic: 6) between planned starts and
+`friend.silenceSeconds` (3) after planned speech ends. Either can trigger a new
+line; `--silence <seconds>` overrides the latter.
 `--stale 5` drops lines queued too long, in video seconds. Sequential end anchors
 prevent voice overlap; five characters/sec plans queue timing and expiry.
 Actual TTS can shift later lines. Check `plan` with your final voice and retime
@@ -239,7 +246,13 @@ before rendering. All-rejected commentary uses `lines: []` without invented spee
 
 Use `--profile generic` or `--profile path/to/profile.json` for other footage.
 Copy [profiles/generic.json](./profiles/generic.json), edit the four descriptions,
-persona and metric label/key, and keep the limits above. Absent metrics leave
+persona and metric label/key, and keep the limits above. `map.maxLines` is 1 or 2;
+`map.minDisplaySeconds` (8) holds rewording at the same place. A `sceneChanged`
+observation with a new location bypasses that hold. `scoreboard.rules` is an
+ordered list of `{metric, min, format}` entries: the first present metric at or
+above `min` wins, and `{value}` in `format` inserts its value. For example, game
+rules show keys, then retries after a defeat, then completion. If none match,
+the base metric/label is used. These are plain-code rules, not LLM panel text. Absent metrics leave
 the scoreboard hidden. See the [authoring guide](./docs/authoring-guide.md#autoscript-review).
 
 ## Development

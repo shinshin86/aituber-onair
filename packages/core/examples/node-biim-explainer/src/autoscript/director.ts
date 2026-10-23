@@ -44,13 +44,26 @@ export class Director {
   };
   private available = 0;
   private lastSpeech = Number.NEGATIVE_INFINITY;
+  private lastLocation: string | undefined;
+  private options: { silence: number; stale: number; overlap: number };
   constructor(
     private profile: Profile,
     private duration: number,
-    private options = { silence: 10, stale: 5, overlap: 0.35 },
-  ) {}
+    options: { silence?: number; stale?: number; overlap?: number } = {},
+  ) {
+    this.options = {
+      silence: options.silence ?? profile.friend.silenceSeconds,
+      stale: options.stale ?? 5,
+      overlap: options.overlap ?? 0.35,
+    };
+  }
 
-  edit(at: number, candidate: PanelCandidate) {
+  edit(at: number, candidate: PanelCandidate, scene?: SceneState) {
+    const newLocation = Boolean(
+      scene?.sceneChanged &&
+        scene.context.location &&
+        scene.context.location !== this.lastLocation,
+    );
     for (const box of ['top', 'main'] as const) {
       const next =
         box === 'top'
@@ -58,10 +71,10 @@ export class Director {
           : candidate.main?.map((item) => item.text);
       if (next === undefined) continue;
       const same = JSON.stringify(next) === JSON.stringify(this.current[box]);
-      const minimum = box === 'top' ? 30 : 8;
+      const minimum = box === 'top' ? this.profile.map.minDisplaySeconds : 8;
       const reason = same
         ? 'unchanged'
-        : at - this.changed[box] < minimum
+        : !(box === 'top' && newLocation) && at - this.changed[box] < minimum
           ? `minimum-display-${minimum}s`
           : 'accepted';
       this.decisions.push({
@@ -74,6 +87,7 @@ export class Director {
       if (reason !== 'accepted') continue;
       this.changed[box] = at;
       if (box === 'top') {
+        this.lastLocation = scene?.context.location ?? this.lastLocation;
         this.current.top = next as string;
         this.panels.push({
           at,
@@ -104,11 +118,26 @@ export class Director {
     return (
       scene.sceneChanged ||
       scene.events.some((e) => e.importance === 3) ||
-      at - this.lastSpeech >= this.options.silence
+      at - this.lastSpeech >= this.profile.friend.targetCadenceSeconds ||
+      at - (this.available - 0.3) >= this.options.silence
     );
   }
   counterValue(scene: SceneState): number | undefined {
     return scene.metrics[this.profile.scoreboard.metric];
+  }
+  counterState(
+    scene: SceneState,
+  ): { value: number; text?: string } | undefined {
+    for (const rule of this.profile.scoreboard.rules) {
+      const value = scene.metrics[rule.metric];
+      if (value !== undefined && value >= rule.min)
+        return {
+          value,
+          text: rule.format.replaceAll('{value}', String(value)),
+        };
+    }
+    const value = this.counterValue(scene);
+    return value === undefined ? undefined : { value };
   }
   commentary(
     at: number,
@@ -120,7 +149,9 @@ export class Director {
     const scheduledAt = Math.max(at, this.available);
     // Reserve conservative speech time for queuing. End anchors in the output
     // also keep real TTS sequential; longer audio can shift later lines.
-    const duration = text ? Math.max(0.5, Array.from(text).length / 5) : 0;
+    const duration = text
+      ? Math.max(0.5, Array.from(text.replace(/\s/g, '')).length / 5)
+      : 0;
     const reason = !text
       ? 'silent'
       : !this.trigger(at, scene)

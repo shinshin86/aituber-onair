@@ -97,6 +97,10 @@ export async function createCompositor(
       return;
     }
     const items = panel.items ?? [{ text: panel.text ?? '', color: 'white' }];
+    const verticalPadding =
+      rect.h <= STYLE.bottomHeight
+        ? STYLE.bottomTextPadding
+        : STYLE.textPadding;
     let fontSize = size;
     let rows: { text: string; color: string }[] = [];
     do {
@@ -110,7 +114,7 @@ export async function createCompositor(
       );
       if (
         rows.length * fontSize * STYLE.lineHeight <=
-          rect.h - STYLE.textPadding * 2 ||
+          rect.h - verticalPadding * 2 ||
         fontSize <= STYLE.minimumPanelSize
       )
         break;
@@ -207,7 +211,14 @@ export async function createCompositor(
           (p) => p.box === region && t >= p.start && t < p.end,
         );
       await panel(current('top'), geometry.top, STYLE.topSize);
-      await panel(current('main'), geometry.middle, STYLE.panelSize);
+      const mainPanel = current('main');
+      await panel(
+        mainPanel,
+        geometry.middle,
+        (mainPanel?.items?.length ?? 1) <= 2
+          ? STYLE.panelSize
+          : STYLE.densePanelSize,
+      );
       if (config.counter) {
         const event = config.counter.events.find((e) => t >= e.at && t < e.end);
         await panel(
@@ -217,7 +228,7 @@ export async function createCompositor(
                 box: 'bottom',
                 start: 0,
                 end: config.duration,
-                text: `${config.counter.label} ${event.value}`,
+                text: event.text ?? `${config.counter.label} ${event.value}`,
               }
             : undefined,
           geometry.bottom,

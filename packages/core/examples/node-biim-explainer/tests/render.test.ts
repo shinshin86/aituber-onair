@@ -8,6 +8,7 @@ import { createCompositor, formatTimer } from '../src/compositor.js';
 import { SAMPLE_RATE } from '../src/gen/audio.js';
 import { runCli } from '../src/gen/cli.js';
 import { buildMotion } from '../src/gen/motion.js';
+import type { Rect } from '../src/layout.js';
 import { resolveTimeline } from '../src/timeline.js';
 import type { BiimScript, RenderConfig } from '../src/types.js';
 
@@ -83,6 +84,78 @@ describe('compositor', () => {
   it('formats clock carry correctly', () => {
     expect(formatTimer(3599.999)).toBe('0:59:59.99');
     expect(formatTimer(3600)).toBe('1:00:00.00');
+  });
+  it('keeps short scoreboard text legible and centered, including status changes', async () => {
+    for (const canvas of ['16:9', '4:3'] as const) {
+      const script = silentScript();
+      script.canvas = canvas;
+      script.counter = {
+        label: 'リトライ',
+        events: [
+          { at: 0, value: 0 },
+          { at: 0.5, value: 1, text: 'クリア！' },
+        ],
+      };
+      const timeline = resolveTimeline(script, [1], false);
+      const renderer = await createCompositor(
+        {
+          ...script,
+          ...timeline,
+          timer: timeline.timer,
+          counter: timeline.counter,
+          seed: 1,
+          audio: '',
+          output: '',
+        },
+        {
+          samples: new Float32Array(SAMPLE_RATE * 2),
+          sampleRate: SAMPLE_RATE,
+          duration: 2,
+        },
+        '.',
+      );
+      async function ink(frame: number, rect: Rect, yellow: boolean) {
+        const png = (await renderer.renderFrame(frame)).png();
+        const image = await loadImage(png);
+        const c = createCanvas(image.width, image.height);
+        const ctx = c.getContext('2d');
+        ctx.drawImage(image, 0, 0);
+        const x = Math.ceil(rect.x + 10);
+        const y = Math.ceil(rect.y + 10);
+        const w = Math.floor(rect.w - 20);
+        const h = Math.floor(rect.h - 20);
+        const data = ctx.getImageData(x, y, w, h).data;
+        const points: number[] = [];
+        for (let py = 0; py < h; py++)
+          for (let px = 0; px < w; px++) {
+            const i = (py * w + px) * 4;
+            if (
+              data[i] > 200 &&
+              data[i + 1] > 200 &&
+              (yellow ? data[i + 2] < 80 : data[i + 2] > 200)
+            )
+              points.push(py + y);
+          }
+        return {
+          height: Math.max(...points) - Math.min(...points) + 1,
+          center: (Math.max(...points) + Math.min(...points)) / 2,
+        };
+      }
+      const main = await ink(0, renderer.geometry.middle, true);
+      const bottom = await ink(0, renderer.geometry.bottom, false);
+      const clear = await ink(6, renderer.geometry.bottom, false);
+      expect(main.height).toBeGreaterThan(40);
+      expect(bottom.height).toBeGreaterThan(26);
+      expect(bottom.height / main.height).toBeGreaterThan(0.55);
+      expect(bottom.height / main.height).toBeLessThan(0.8);
+      expect(
+        Math.abs(
+          bottom.center -
+            (renderer.geometry.bottom.y + renderer.geometry.bottom.h / 2),
+        ),
+      ).toBeLessThan(8);
+      expect(clear.height).toBeGreaterThan(26);
+    }
   });
 });
 

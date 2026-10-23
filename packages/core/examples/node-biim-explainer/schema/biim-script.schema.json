@@ -746,6 +746,13 @@
                 "description": "Displayed counter number. Negative and fractional values are accepted; it is not restricted to an integer count.",
                 "x-description-ja": "カウンターに表示する数値です。負数・小数も受け付け、整数の回数に限定しません。",
                 "examples": [3]
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Optional complete scoreboard text for this event, replacing label and value visually while retaining the numeric metric in the timeline. Useful for inventory totals or completion status.",
+                "x-description-ja": "このイベントでラベルと数値の代わりに表示する全文です。取得数の合計やクリア状態に使えます。数値はタイムラインに保持します。",
+                "examples": ["鍵 1/1", "クリア！"]
               }
             },
             "required": ["at", "value"]

@@ -137,24 +137,91 @@ describe('defensive contracts', () => {
     ).toThrow();
     expect(() => parseCommentary({ text: '長'.repeat(51) }, profile)).toThrow();
     expect(parseCommentary({ text: null }, profile)).toEqual({ text: null });
+    expect(
+      parseCommentary({ text: '楽しみ！\nどうなるかな？' }, profile).text,
+    ).toContain('\n');
+    expect(() => parseCommentary({ text: 'あ\nい\nう' }, profile)).toThrow();
+    expect(
+      parsePanels({ top: '第1層 入口\n目標：鍵を探す' }, profile, scene).top,
+    ).toContain('\n');
+    expect(() =>
+      parsePanels({ top: '場所\n目標\n補足' }, profile, scene),
+    ).toThrow();
+    expect(() =>
+      parseProfile({
+        ...profile,
+        friend: { ...profile.friend, targetCadenceSeconds: 0 },
+      }),
+    ).toThrow();
+    expect(() =>
+      parseProfile({
+        ...profile,
+        scoreboard: {
+          ...profile.scoreboard,
+          rules: [{ metric: 'keys', min: 0, format: '{unknown}' }],
+        },
+      }),
+    ).toThrow();
   });
 });
 describe('director', () => {
-  it('keeps top for 30 seconds and main for 8 seconds', () => {
+  it('holds ordinary edits for the profile duration and main for 8 seconds', () => {
     const d = new Director(profile, 75);
     d.edit(0, { top: '入口', main: [{ text: '鍵を探す', fact: 0 }] });
     d.edit(7, { top: '奥', main: [{ text: '罠に注意', fact: 0 }] });
     d.edit(8, { top: '奥', main: [{ text: '罠に注意', fact: 0 }] });
-    d.edit(30, { top: '奥' });
     expect(d.panels.map((p) => [p.at, p.box])).toEqual([
       [0, 'top'],
       [0, 'main'],
+      [8, 'top'],
       [8, 'main'],
-      [30, 'top'],
     ]);
     expect(
       d.decisions.filter((d) => !d.accepted).map((d) => d.reason),
-    ).toContain('minimum-display-30s');
+    ).toContain('minimum-display-8s');
+  });
+  it('updates a new scene location immediately but holds same-location rewording', () => {
+    const configured = {
+      ...profile,
+      map: { ...profile.map, minDisplaySeconds: 10 },
+    };
+    const d = new Director(configured, 75);
+    const place = (location: string) => ({
+      ...scene,
+      sceneChanged: true,
+      context: { ...scene.context, location },
+    });
+    d.edit(0, { top: '入口' }, place('入口'));
+    d.edit(2, { top: '宝物庫' }, place('宝物庫'));
+    d.edit(3, { top: '宝物庫で探索' }, place('宝物庫'));
+    d.edit(
+      4,
+      { top: '罠の通路' },
+      { ...place('罠の通路'), sceneChanged: false },
+    );
+    d.edit(5, { top: '罠の通路' }, place('罠の通路'));
+    expect(d.panels.map((p) => [p.at, p.text])).toEqual([
+      [0, '入口'],
+      [2, '宝物庫'],
+      [5, '罠の通路'],
+    ]);
+  });
+  it('uses profile cadence and silence since the planned speech end', () => {
+    const configured = {
+      ...profile,
+      friend: { ...profile.friend, targetCadenceSeconds: 8, silenceSeconds: 2 },
+    };
+    const d = new Director(configured, 75);
+    d.commentary(0, '行こう！', scene, 'dango');
+    expect(d.trigger(1, scene)).toBe(false);
+    expect(d.trigger(3, scene)).toBe(true);
+    const cadence = new Director(
+      { ...configured, friend: { ...configured.friend, silenceSeconds: 20 } },
+      75,
+    );
+    cadence.commentary(0, '行こう！', scene, 'dango');
+    expect(cadence.trigger(7, scene)).toBe(false);
+    expect(cadence.trigger(8, scene)).toBe(true);
   });
   it('triggers for importance, silence and scene changes, and schedules sequentially', () => {
     const d = new Director(profile, 75);
@@ -182,7 +249,7 @@ describe('director', () => {
       overlap: 0.35,
     });
     d.commentary(0, '驚いた！'.repeat(10), scene, 'dango');
-    d.commentary(1, 'あっ！', scene, 'dango');
+    d.commentary(1, 'あっ！', { ...scene, sceneChanged: true }, 'dango');
     expect(d.decisions.at(-1)?.reason).toBe('stale');
     const fresh = new Director(profile, 75);
     fresh.edit(0, { main: [{ text: '鍵は奥にある', fact: 0 }] });
@@ -198,6 +265,15 @@ describe('director', () => {
     const d = new Director(profile, 75);
     expect(d.counterValue(scene)).toBe(0);
     expect(
+      d.counterState({ ...scene, metrics: { retry: 0, keys: 1 } }),
+    ).toEqual({ value: 1, text: '鍵 1/1' });
+    expect(
+      d.counterState({ ...scene, metrics: { retry: 1, keys: 1 } }),
+    ).toEqual({ value: 1, text: 'リトライ 1' });
+    expect(
+      d.counterState({ ...scene, metrics: { retry: 1, keys: 1, clear: 1 } }),
+    ).toEqual({ value: 1, text: 'クリア！' });
+    expect(
       d.counterValue({ ...scene, metrics: { progress: 4 } }),
     ).toBeUndefined();
     d.commentary(74, '間に合わないかも！', scene, 'dango');
@@ -205,6 +281,33 @@ describe('director', () => {
   });
 });
 describe('cache and output isolation', () => {
+  it('ends at the source boundary when final speech leaves less than a default pause', async () => {
+    const dir = await temporary();
+    const fake: Transport = async (request) =>
+      JSON.stringify(
+        request.role === 'observer'
+          ? scene
+          : request.role === 'panels'
+            ? {}
+            : { text: 'あ'.repeat(14) },
+      );
+    const result = await generateScript({
+      input: path.resolve('work/demo.mp4'),
+      output: path.join(dir, 'auto.json'),
+      duration: 3,
+      frames: [{ at: 0, difference: 0, reasons: ['interval'], image: 'fake' }],
+      profile,
+      memo: '',
+      transport: fake,
+    });
+    const audio = await synthesizeTimeline(
+      result.script,
+      dir,
+      path.join(dir, 'audio'),
+    );
+    expect(audio.timeline.lines[0].end).toBeCloseTo(2.8, 4);
+    expect(audio.timeline.duration).toBe(3);
+  });
   it('hashes full semantic requests, records hits and fails closed on misses', async () => {
     const dir = await temporary();
     const live = vi.fn(async () => '{"text":null}');

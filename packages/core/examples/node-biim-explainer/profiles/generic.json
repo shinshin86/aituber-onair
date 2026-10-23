@@ -1,17 +1,25 @@
 {
   "name": "generic",
   "map": {
-    "description": "The current broad scene or stage of the activity.",
-    "maxChars": 16
+    "description": "Current place or stage of the activity; update immediately when the location changes.",
+    "maxChars": 16,
+    "maxLines": 1,
+    "minDisplaySeconds": 8
   },
   "textbook": {
     "description": "Background, meaning, tips or cautions needed to understand the scene. No reactions or copied HUD values.",
     "maxChars": 20,
     "maxItems": 2
   },
-  "scoreboard": { "label": "進行", "metric": "progress" },
+  "scoreboard": {
+    "label": "進行",
+    "metric": "progress",
+    "rules": []
+  },
   "friend": {
     "instruction": "Speak natural Japanese as a curious viewer. React, ask a short question or predict what comes next. Stay silent when there is nothing to add.",
-    "maxChars": 50
+    "maxChars": 50,
+    "silenceSeconds": 3,
+    "targetCadenceSeconds": 6
   }
 }

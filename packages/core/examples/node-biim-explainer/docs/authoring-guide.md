@@ -356,8 +356,9 @@ test data, not the result of vision inference. Never present it as a model test.
    the claim. Screen observations also require human verification.
 2. Confirm the four regions have different jobs: top tells where/stage, main
    explains why, bottom counts, subtitle reacts. Remove restatements, including
-   paraphrases that character n-grams cannot catch. Prefer broad top labels so
-   they remain accurate through the 30-second hold; main holds for 8 seconds.
+   paraphrases that character n-grams cannot catch. Name the actual place. A new location with `sceneChanged` updates the top
+   immediately; same-place rewording observes `map.minDisplaySeconds` (8 by
+   default). Main holds for 8 seconds.
 3. Review dropped candidates. Overlong text gets one rewrite and is dropped if
    still invalid. Panel overlap gets one regeneration. Do not restore an expired
    line just because it sounds good; its visible event may already be over.
@@ -373,7 +374,12 @@ To create a profile, copy `profiles/generic.json`. Keep the `map`, `textbook`,
 `scoreboard`, `friend` keys; edit their descriptions and friend instruction,
 and set a short metric key/label (`progress` / `手順`, for example). `maxChars`
 may be lowered, but may not exceed 16/20/50 for map/textbook/friend; textbook
-`maxItems` is 1 or 2. Missing metrics hide the scoreboard. Pass the file with
+`maxItems` is 1 or 2. `map.maxLines` allows one or two map lines, each within
+`maxChars`. Set `friend.targetCadenceSeconds` for regular starts and
+`friend.silenceSeconds` for quiet time after speech ends. Inspect the actual
+plan: queuing may delay a candidate. `scoreboard.rules` can format observed
+metrics using `{value}` or show a completion status; first matching rule wins.
+Missing metrics hide the scoreboard. Pass the file with
 `--profile my-profile.json`. Facts not in the image or memo should remain absent.
 An empty `lines` array is valid when no commentary is accepted; use an explicit
 main clip `until` to establish video length.

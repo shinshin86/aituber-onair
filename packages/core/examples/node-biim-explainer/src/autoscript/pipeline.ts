@@ -40,7 +40,7 @@ export interface PipelineOptions {
 export async function generateScript(options: PipelineOptions) {
   const { profile, transport, frames, duration } = options;
   const director = new Director(profile, duration, {
-    silence: options.silence ?? 10,
+    silence: options.silence,
     stale: options.stale ?? 5,
     overlap: 0.35,
   });
@@ -53,7 +53,7 @@ export async function generateScript(options: PipelineOptions) {
     candidate: string;
     reason: string;
   }[] = [];
-  const events: { at: number; value: number }[] = [];
+  const events: { at: number; value: number; text?: string }[] = [];
   let previous: SceneState | null = null;
   let visionCalls = 0;
   async function ask<T>(
@@ -110,10 +110,14 @@ export async function generateScript(options: PipelineOptions) {
       { at: frame.at, scene, current: director.current },
       (v) => parsePanels(v, profile, scene),
     );
-    if (candidate) director.edit(frame.at, candidate);
-    const counter = director.counterValue(scene);
-    if (counter !== undefined && counter !== events.at(-1)?.value)
-      events.push({ at: frame.at, value: counter });
+    if (candidate) director.edit(frame.at, candidate, scene);
+    const counter = director.counterState(scene);
+    if (
+      counter &&
+      (counter.value !== events.at(-1)?.value ||
+        counter.text !== events.at(-1)?.text)
+    )
+      events.push({ at: frame.at, ...counter });
     const input = {
       at: frame.at,
       scene,
@@ -143,6 +147,10 @@ export async function generateScript(options: PipelineOptions) {
     }
   }
   const base = path.dirname(path.resolve(options.output));
+  // Source video already establishes the tail. A trailing narration pause must
+  // not extend the timeline past it and introduce black frames at the end.
+  const lastLine = director.lines.at(-1);
+  if (lastLine) lastLine.pauseAfter = 0;
   const exampleRoot = fileURLToPath(
     new URL(
       import.meta.url.includes('/src/autoscript/') ? '../../' : '../',

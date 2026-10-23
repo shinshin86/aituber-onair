@@ -1,0 +1,4 @@
+{
+  "hash": "786547720a169487dafa4e297dc90ca74e95f7c0421c15c487c6e74577e02238",
+  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"罠の通路\",\"goal\":\"罠を越える\"},\"facts\":[{\"text\":\"点滅後に通る\",\"source\":\"memo\",\"evidence\":\"罠は点滅の直後に通る。\",\"confidence\":1},{\"text\":\"光る間は待つ\",\"source\":\"memo\",\"evidence\":\"罠が光っている間は手前で待つ。\",\"confidence\":1},{\"text\":\"罠に触れ主人公が消える\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"failure\",\"text\":\"罠に触れ主人公が消える\",\"importance\":3}],\"metrics\":{\"retry\":1,\"keys\":1}}"
+}
