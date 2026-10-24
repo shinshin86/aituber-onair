@@ -62,7 +62,7 @@ JSONだけを標準出力に出す場合は、`node dist/gen.js plan samples/bii
 あるため、発話に合わせる変更には固定秒数よりアンカーを使ってください。
 動画の長さは概算モードでもffprobeで確認します。
 
-音声は、読み上げ文とエンジン設定のハッシュをキーに`work/voice-cache/`へ保存し、
+音声は、読み上げ文とエンジン設定のハッシュをキーに`work/voice-cache/`へ保存し（`--voice-cache dir`で変更可能）、
 plan・preview・genで再利用します。サーバー側のプリセットを変えた場合は、この
 ディレクトリを削除して再生成してください。時刻表には話者の音声設定や認証情報を
 保存しません。合成に失敗した場合は発話番号と話者を表示します。
@@ -84,7 +84,7 @@ Schemaを変えたら`npm run docs:reference`で更新してください。
 | `speakers.*.voice` | `engine: "sine"`または`"aituber-voice"`と`options`。sineは`frequency`（440Hz）、`secondsPerChar`（0.08秒）、`minDuration`（0.5秒）、`amplitude`（0.22、0〜1）。Coreは必須の`engineType`を含む既存の`VoiceServiceOptions`。 |
 | `mouthMode`, `flapInterval`, `mouthThreshold`, `motion` | 全体または話者別に指定。`"flap"`/`"rms"`、0.12秒（1/30〜1）、0.08（0超〜1）、`"subtle"`/`"bounce"`/`"none"`。無音中と聞き手は口を閉じます。まばたきは独立します。 |
 | `defaults` | `pauseAfter: 0.3`秒、`mainAudioVolume: 0.25`（0〜1）。 |
-| `lines[]` | 必須は`speaker`, `text`。任意で一意の`id`, `reading`, `at`, `pauseAfter`, `emotion`。無音字幕は`spoken: false`と正数の`duration`を指定。発話の長さは音声から決まります。 |
+| `lines[]` | 必須は`speaker`, `text`。任意で一意の`id`, `reading`, `at`, `eventAt`, `pauseAfter`, `emotion`。無音字幕は`spoken: false`と正数の`duration`を指定。発話の長さは音声から決まります。 |
 | `main[]` | 時刻順の`at`、任意の`until`、`video`/`image`/`color: "#rrggbb"`のいずれか1つ。`until`省略時は次の素材または動画全体の終わりまで。素材のない時間は黒です。 |
 | `main[].video` | 元映像の秒数で`from`（0）、`to`（素材の終わり）。正数の`speed`（1）、`audio`（false）、`speedBadge`（true）。再生後は最後のコマを保持し、素材音声は繰り返しません。 |
 | `main[].fit` | 映像・画像を枠内に収める`"contain"`（既定）か、枠を埋める`"cover"`。 |
@@ -221,7 +221,9 @@ npm run autoscript -- input.mp4 --profile game --memo memo.md \
 右中の項目は事実の番号を参照します。文字数超過は一度だけ書き直し、収まらなければ
 不採用にします。単語の途中では切りません。実況には現在の右枠と直近5行を渡します。
 文字3-gram の重複スコアが0.35以上なら一度だけ再生成し、再び重複すれば不採用にします。
-この方法では意味の重複を完全には検出できません。
+この方法では意味の重複を完全には検出できません。右中の2項目も重複スコアが0.65以上なら
+不採用です。黄色の要点に、別の内容を白い補足として加えてください。短い語だけが
+最終行へ残る場合は文字を小さくして収めますが、不自然な改行がないか完成画像でも確認してください。
 
 `--interval 2` は1秒単位の解析から定期フレームを選びます。
 `--scene-threshold 0.12` 以上の画素差分も候補にします。`--max-frames 48` で全編に
@@ -230,10 +232,41 @@ npm run autoscript -- input.mp4 --profile game --memo memo.md \
 場面転換と重要度3の出来事では即時に発話を検討します。通常の間隔は
 `friend.targetCadenceSeconds`（game は4秒、generic は6秒）、発話終了後の沈黙は
 `friend.silenceSeconds`（3秒）で設定し、どちらかに達すると次の発話を検討します。
-`--silence <秒数>` は後者を上書きします。`--stale 5` を超えて待機したセリフは捨てます。秒数は動画内の時刻です。毎秒5文字で時刻を見積もり、
-発話終了アンカーで音声の重なりを防ぎます。実音声が長いと後の行がずれるため、
-最終的な声で `plan` を実行し、時刻を確認してください。全セリフが不採用なら
+`--silence <秒数>` は後者を上書きします。`--stale 5` を超えて待機したセリフは捨てます。秒数は動画内の時刻です。
+候補の音声を選択した声で合成し、その長さを測ってから開始時刻を決めます。
+反応はイベント時刻以降に置き、0.25秒を超えて遅れるものは不採用にします。
+次の重要イベントや動画末尾に収まらなければ、候補の `shortText` を試すか不採用にします。
+測った長さ、開始時刻、イベントとの時間差、不採用の理由は debug ファイルに残ります。
+声やサーバー側の設定を変えた場合は、autoscript を再実行し、実音声の `plan` で確認してください。全セリフが不採用なら
 `lines: []` にし、発話を作り足しません。
+
+イベントログと最終的な声を指定する場合は、台本生成からレンダリングまで同じ
+音声キャッシュを使います。`voice.json` は前述の音声設定例にある、話者1人分の
+`voice` オブジェクト（`engine` と任意の `options`）です。
+
+```bash
+npm run autoscript -- input.mp4 --profile game --memo memo.md \
+  --events events.json --voice-file voice.json --voice-cache work/voice-cache \
+  --out work/auto.json --replay work/my-cache
+npm run plan -- work/auto.json --voice-cache work/voice-cache
+npm run gen -- work/auto.json --voice-cache work/voice-cache --out work/auto.mp4
+```
+
+ログは配列、または `{ "events": [...] }` です。各項目に動画内の秒数 `at` と `kind`、
+任意で一意の `id`、`importance`（1〜3）を指定します。ID省略時は `event-1` などを付けます。
+replay を作る際はIDを固定してください。重要度の既定値は `death`・`stage-clear` が3、
+`damage`・`attempt`・`respawn` が2、それ以外が1です。追加情報も観察・実況へ渡します。
+`gem` 以外のイベント時刻は必ずフレームを抽出するため、必要に応じてフレーム数と
+観察呼び出しの上限を増やしてください。実況は既存の `eventId` を参照でき、
+未来のイベントや不明なIDは不採用になります。通常の候補は次の重要度2以上のイベントまで、
+反応は同じ重要度以上の次のイベントまでに収めます。ログがなければ、観察した場面転換と
+重要度3のイベントを使います。
+
+`death` は `ミス` を1増やし、アバターを0.45秒揺らし、次の `respawn`（なければ動画末尾）
+まで灰色にします。同時刻に復帰する場合、灰色の区間はありません。演出対象は先頭の
+`dango` です。別の話者にする場合は `effects[].speaker` を編集してください。
+[演出の記述例](./docs/authoring-guide.ja.md#アバターの演出)も参照してください。
+ログを使った場合も、録画と合っているか確認が必要です。
 
 汎用用途は `--profile generic`、独自設定は `--profile path/to/profile.json` を使います。
 [profiles/generic.json](./profiles/generic.json)をコピーし、4役の説明、口調、数値のキーと

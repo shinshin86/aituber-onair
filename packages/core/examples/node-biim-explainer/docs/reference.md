@@ -51,6 +51,7 @@ Voice options are listed separately per engine. sine accepts only its listed key
 | `lines[].spoken` | boolean | no | `true` | Whether to synthesize this line. false requires positive duration and keeps the mouth closed; true forbids duration. Examples: `false`. |
 | `lines[].duration` | number | conditional | — | Silent-caption duration in seconds. Required only for spoken=false; forbidden for spoken=true or omitted spoken. exclusiveMinimum: 0. Examples: `2`. |
 | `lines[].emotion` | "neutral" / "happy" / "surprised" / "sad" / "angry" / "relaxed" | no | `"neutral"` | Body-motion energy hint: happy/surprised use 1.1, sad/relaxed 0.8, neutral/angry 1. Does not change the avatar set or TTS emotion. Examples: `"happy"`. |
+| `lines[].eventAt` | number or string | no | — | Optional event timestamp bounding the reaction start from below. Set at to this timestamp or later; validation and actual audio planning reject early reactions. Examples: `2`, `"@intro:end"`. |
 | `main` | array<any> | no | — | Chronological nonoverlapping main-area slots. Each chooses exactly one video, image or color. Gaps are black. Omitted array leaves the main area black. |
 | `main[].at` | number or string | yes | — | Main slot start in seconds or at a line anchor; slots must be chronological and nonoverlapping. Examples: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
 | `main[].until` | number or string | no | — | Main slot end in seconds or at an anchor; must exceed its start. Omission uses the next main start or the timeline end. Video holds its last frame if playback ends earlier. Examples: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
@@ -88,6 +89,12 @@ Voice options are listed separately per engine. sine accepts only its listed key
 | `flapInterval` | number | no | `0.12` | Global Seconds per mouth state in flap mode; between 1/30 and 1 second. minimum: 0.03333333333333333; maximum: 1. Examples: `0.12`. |
 | `mouthThreshold` | number | no | `0.08` | Global Normalized RMS mouth gate, greater than 0 and at most 1. Renderer divides audio RMS by 0.12 and caps it at 1. exclusiveMinimum: 0; maximum: 1. Examples: `0.08`. |
 | `motion` | "subtle" / "bounce" / "none" | no | `"subtle"` | Global Body motion: subtle is a small hop/breath, bounce is larger, none disables body movement but keeps mouth/blink animation. Examples: `"subtle"`. |
+| `effects` | array<object> | no | — | Optional timed avatar effects. Empty or omitted means no effects; grayscale ends at respawn when generated from an event log. |
+| `effects[].at` | number or string | yes | — | Inclusive start of the avatar effect, using seconds or a line anchor. Examples: `2`, `"@intro:end"`. |
+| `effects[].until` | number or string | yes | — | Exclusive end of the effect; must resolve after at. Shake effects last at most two seconds. Examples: `3`, `"@clip:end"`. |
+| `effects[].speaker` | string | yes | — | Existing speaker key receiving this effect; other characters and the main video are unchanged. minLength: 1. Examples: `"dango"`. |
+| `effects[].effect` | "grayscale" / "shake" | yes | — | Avatar-only grayscale coloring or a deterministic short screen-space shake. These two effects may overlap. Examples: `"grayscale"`, `"shake"`. |
+| `effects[].amplitude` | number | no | `8` | Shake displacement in output pixels before decay. Allowed only with effect=shake; combined shake offsets are capped at 40 pixels. minimum: 0; maximum: 40. Examples: `10`. |
 
 ## Shared types
 

@@ -7,6 +7,7 @@ import { loadProfile } from './contracts.js';
 import { sampleVideo } from './frames.js';
 import { cachedTransport, openAITransport, redact, type Role } from './llm.js';
 import { generateScript } from './pipeline.js';
+import { parseEvents } from './events.js';
 
 export async function runAutoscript(
   args: string[],
@@ -15,7 +16,7 @@ export async function runAutoscript(
   const [input, ...flags] = args;
   if (!input || input.startsWith('-'))
     throw new Error(
-      'Usage: autoscript <input.mp4> --profile game --memo memo.md --out work/auto.json [--replay dir|--record dir] [--interval 2] [--max-frames 48] [--max-vision-calls 48] [--scene-threshold 0.12] [--speakers 1|2] [--env-file .env] [--observer-model id] [--panels-model id] [--commentary-model id] [--silence seconds] [--stale 5]',
+      'Usage: autoscript <input.mp4> --profile game --memo memo.md --out work/auto.json [--replay dir|--record dir] [--interval 2] [--max-frames 48] [--max-vision-calls 48] [--scene-threshold 0.12] [--speakers 1|2] [--env-file .env] [--observer-model id] [--panels-model id] [--commentary-model id] [--silence seconds] [--stale 5] [--events events.json] [--voice-file voice.json] [--voice-cache dir]',
     );
   const values: Record<string, string> = {};
   const known = [
@@ -35,6 +36,9 @@ export async function runAutoscript(
     'commentary-model',
     'silence',
     'stale',
+    'events',
+    'voice-file',
+    'voice-cache',
   ];
   for (let i = 0; i < flags.length; i++) {
     const name = flags[i].slice(2);
@@ -110,6 +114,12 @@ export async function runAutoscript(
       : profileName,
   );
   const memo = values.memo ? await readFile(values.memo, 'utf8') : '';
+  const events = values.events
+    ? parseEvents(JSON.parse(await readFile(values.events, 'utf8')))
+    : undefined;
+  const voice = values['voice-file']
+    ? JSON.parse(await readFile(values['voice-file'], 'utf8'))
+    : undefined;
   if (!values.replay && !apiKey)
     throw new Error('Set OPENAI_API_KEY or use --replay <cache-dir>');
   const temporary = await mkdtemp(path.join(os.tmpdir(), 'biim-autoscript-'));
@@ -118,6 +128,9 @@ export async function runAutoscript(
       interval,
       threshold,
       cap,
+      ...(events
+        ? { times: events.filter((e) => e.kind !== 'gem').map((e) => e.at) }
+        : {}),
     });
     const result = await generateScript({
       ...sampled,
@@ -132,6 +145,11 @@ export async function runAutoscript(
         values.silence === undefined ? undefined : number('silence', 4, 0),
       stale: number('stale', 5, 0),
       maxVisionCalls,
+      events: events ? parseEvents(events, sampled.duration) : undefined,
+      voice,
+      voiceCache: values['voice-cache']
+        ? path.resolve(values['voice-cache'])
+        : undefined,
       transport: cachedTransport(
         { replay: values.replay, record: values.record, secrets },
         openAITransport(apiKey),

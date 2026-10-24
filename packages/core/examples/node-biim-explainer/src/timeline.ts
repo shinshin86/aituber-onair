@@ -67,6 +67,11 @@ export function resolveTimeline(
           : 0
         : time(source.at, `lines[${i}].at`);
     const end = start + durations[i];
+    if (
+      source.eventAt !== undefined &&
+      start + 1e-8 < time(source.eventAt, `lines[${i}].eventAt`)
+    )
+      issues.push(`lines[${i}].at: reaction must not precede eventAt`);
     const pages = subtitlePages(
       source.text,
       canvasWidth(script.canvas),
@@ -110,6 +115,14 @@ export function resolveTimeline(
     time(item.at, `counter.events[${i}].at`),
   );
   const timerStart = script.timer ? time(script.timer.start, 'timer.start') : 0;
+  const effects = (script.effects ?? []).map((effect, i) => {
+    const start = time(effect.at, `effects[${i}].at`);
+    const end = time(effect.until, `effects[${i}].until`);
+    if (end <= start) issues.push(`effects[${i}].until: must be > at`);
+    if (effect.effect === 'shake' && end - start > 2)
+      issues.push(`effects[${i}]: shake must be at most 2 seconds`);
+    return { ...effect, start, end };
+  });
   const timerStop =
     script.timer?.stop === undefined
       ? undefined
@@ -125,6 +138,7 @@ export function resolveTimeline(
     ...counterStarts,
     timerStart,
     timerStop ?? 0,
+    ...effects.map((e) => e.end),
   );
   const main = (script.main ?? []).map((item, i) => {
     const start = mainStarts[i];
@@ -181,6 +195,7 @@ export function resolveTimeline(
     lines,
     main,
     panels,
+    effects,
     ...(script.timer
       ? {
           timer: {

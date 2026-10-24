@@ -142,7 +142,29 @@ export const dungeonFixture: Transport = async (request) => {
         { text: secondaryFacts[index], fact: 1 },
       ],
     });
-  return JSON.stringify({ text: moments[at] ?? null });
+  return JSON.stringify({
+    text: moments[at] ?? null,
+    ...(moments[at]
+      ? {
+          shortText: {
+            0: 'さあ、出発！',
+            6: '先が気になるね。',
+            12: 'そっちへ行くんだ！',
+            18: '大丈夫かな？',
+            24: 'いい感じ、その調子！',
+            28: '大丈夫かな…？',
+            32: 'ああ、悔しい！',
+            38: '今度こそうまくいって！',
+            42: '息を止めちゃう！',
+            48: '無事に抜けたいね！',
+            54: 'ここまで来たね！',
+            58: '応援してるよ！',
+            64: 'おっと、危なかった！',
+            70: 'やった、お見事！',
+          }[at],
+        }
+      : {}),
+  });
 };
 
 export async function makeDemoCache() {

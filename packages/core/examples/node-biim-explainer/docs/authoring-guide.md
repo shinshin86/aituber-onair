@@ -77,6 +77,7 @@ relative to the current directory; script `output` is relative to the script.
 Without either, gen uses `../work/out.mp4` relative to the script. Voice WAVs
 are cached in `work/voice-cache/` under a hash of text and engine options.
 Delete that directory to refresh audio after changing server-side presets.
+Use `--voice-cache dir` to select another cache.
 No voice options/credentials are written into the timeline JSON.
 
 ## Timing rules
@@ -96,6 +97,8 @@ No voice options/credentials are written into the timeline JSON.
 - An explicit line `at` may shorten the planned pause but must not precede the
   previous audio/caption end. Only actual audio can settle speech-dependent
   overlaps; estimated timing can be too short or too long.
+- Optional `lines[].eventAt` is a reaction lower bound (seconds or an anchor).
+  Validation or actual-audio planning rejects a start before that event.
 - A main slot ends at `until`, otherwise next main `at`, otherwise timeline end.
   Main slots must be ordered and must not overlap; gaps are black. A video range
   lasts `(to - from) / speed`, clipped to the slot. Its final decoded frame is
@@ -105,6 +108,24 @@ No voice options/credentials are written into the timeline JSON.
 - Duration is the maximum of final line+pause, explicit main ends and event
   times (including timer stop). An event exactly at the final endpoint has no
   display time; extend a main `until` or add a silent final line when needed.
+
+## Avatar effects
+
+Optional `effects` apply to one existing speaker on `[at, until)`. Both fields
+accept seconds or line anchors. The main video keeps its color and position.
+
+```json
+"effects": [
+  { "at": 12, "until": 15, "speaker": "dango", "effect": "grayscale" },
+  { "at": 12, "until": 12.45, "speaker": "dango", "effect": "shake", "amplitude": 10 }
+]
+```
+
+This shakes on failure and restores color at the respawn at 15 seconds.
+Grayscale and shake may overlap. Shake lasts at most two seconds; `amplitude`
+is 0–40 output pixels (default 8), decaying toward the end. Combined shake is
+capped at 40 pixels on each axis. Grayscale forbids amplitude. `until` must be
+after `at`; effect ends contribute to total video duration.
 
 ## Recipes
 
@@ -356,16 +377,21 @@ test data, not the result of vision inference. Never present it as a model test.
    the claim. Screen observations also require human verification.
 2. Confirm the four regions have different jobs: top tells where/stage, main
    explains why, bottom counts, subtitle reacts. Remove restatements, including
-   paraphrases that character n-grams cannot catch. Name the actual place. A new location with `sceneChanged` updates the top
+   paraphrases that character n-grams cannot catch. Keep the yellow main point
+   and white supplement distinct; check for short orphan rows. Name the actual place. A new location with `sceneChanged` updates the top
    immediately; same-place rewording observes `map.minDisplaySeconds` (8 by
    default). Main holds for 8 seconds.
 3. Review dropped candidates. Overlong text gets one rewrite and is dropped if
    still invalid. Panel overlap gets one regeneration. Do not restore an expired
    line just because it sounds good; its visible event may already be over.
 4. Configure your final voices. Run `validate`, then `plan --json --out
-   work/plan.json` with actual TTS. End anchors keep lines sequential, but the
-   autoscript queue uses five characters/sec and real speech can shift later
-   lines. Retime them against the recording when necessary.
+   work/plan.json` with actual TTS. Give autoscript `--voice-file voice.json`
+   and `--voice-cache dir` to measure candidate speech before scheduling; give
+   plan/gen that same cache. Rerun autoscript if the voice changes. With
+   `--events events.json`, reactions start at or after `eventAt`; those delayed
+   over 0.25 seconds are dropped. A candidate that cannot finish before the next
+   important event uses its short alternative or is dropped, with a debug reason.
+   The README documents event fields and their effect/counter mappings.
 5. Preview each scene/panel change and extract frames from the final MP4.
    Check readability and listen to the mixed WAV. Sine tones test timing and
    mouth motion only, not pronunciation or speech quality.

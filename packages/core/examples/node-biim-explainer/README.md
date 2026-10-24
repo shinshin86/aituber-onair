@@ -63,7 +63,7 @@ overlap that real audio would avoid, or miss one caused by longer audio. Prefer
 anchors over fixed seconds when timing depends on speech. Video planning probes
 source durations with ffprobe, including in estimate mode.
 
-Audio is cached in `work/voice-cache/` by a hash of engine settings and reading
+Audio is cached in `work/voice-cache/` (override with `--voice-cache dir`) by a hash of engine settings and reading
 text. Preview, plan, and generation reuse it; delete that directory to refresh
 voices after changing server presets. Scripts and credentials are not copied into
 timeline artifacts. A synthesis failure reports the line index and speaker.
@@ -85,7 +85,7 @@ editing the schema; `npm run docs:reference:check` and tests detect stale docs.
 | `speakers.*.voice` | `engine: "sine"` or `"aituber-voice"`, plus `options`. Sine: `frequency` (440 Hz), `secondsPerChar` (0.08), `minDuration` (0.5s), `amplitude` (0.22, 0–1). Core: existing `VoiceServiceOptions`, including required `engineType`. |
 | `mouthMode`, `flapInterval`, `mouthThreshold`, `motion` | Top-level or speaker override: `"flap"`/`"rms"`, 0.12s (1/30–1), 0.08 (>0–1), `"subtle"`/`"bounce"`/`"none"`. Silence/listening closes the mouth. Blink is independent. |
 | `defaults` | `pauseAfter: 0.3`, `mainAudioVolume: 0.25` (0–1). |
-| `lines[]` | Required `speaker`, `text`; optional unique `id`, `reading`, `at`, `pauseAfter`, `emotion`. Silent captions require `spoken: false` and positive `duration`; spoken duration comes from audio. |
+| `lines[]` | Required `speaker`, `text`; optional unique `id`, `reading`, `at`, `eventAt`, `pauseAfter`, `emotion`. Silent captions require `spoken: false` and positive `duration`; spoken duration comes from audio. |
 | `main[]` | Chronological `at`, optional `until`, exactly one `video`, `image`, or `color: "#rrggbb"`. Uncovered time is black. Missing `until` uses the next slot or timeline end. |
 | `main[].video` | Optional `from` (0), `to` (source end), positive `speed` (1), `audio` (false), `speedBadge` (true). Range is in source seconds. Hold the last frame after playback ends. Clip audio ends there; it is not repeated. |
 | `main[].fit` | `"contain"` (default) or `"cover"` for images/video. |
@@ -229,7 +229,10 @@ The clock uses no LLM. Memo facts must cite literal memo excerpts; uncertain
 facts are omitted. Panel items cite a current fact index. Overlong text is
 rewritten once then dropped, never cut mid-word. Commentary receives current
 panels and its last five lines. Trigram overlap of 0.35 or more triggers one
-regeneration then rejection; this heuristic cannot prove semantic uniqueness.
+regeneration then rejection; this heuristic cannot prove semantic uniqueness. Main items also reject
+near-duplicate wording (overlap ≥ 0.65). Write a distinct supplement, rather than
+restating the yellow key point. Text fitting reduces the font to avoid short
+orphan rows where possible; inspect the final frames for awkward breaks.
 
 `--interval 2` uses a one-second analysis grid; pixel differences at least
 `--scene-threshold 0.12` also nominate frames. `--max-frames 48` evenly caps
@@ -239,10 +242,43 @@ Scene changes and importance-3 events trigger speech immediately. Profiles set
 `friend.targetCadenceSeconds` (game: 4, generic: 6) between planned starts and
 `friend.silenceSeconds` (3) after planned speech ends. Either can trigger a new
 line; `--silence <seconds>` overrides the latter.
-`--stale 5` drops lines queued too long, in video seconds. Sequential end anchors
-prevent voice overlap; five characters/sec plans queue timing and expiry.
-Actual TTS can shift later lines. Check `plan` with your final voice and retime
-before rendering. All-rejected commentary uses `lines: []` without invented speech.
+`--stale 5` drops lines queued too long, in video seconds. Autoscript synthesizes each candidate with the selected voice before scheduling
+and reuses the cached audio during rendering. Numeric starts keep reactions at
+or after their event. A reaction delayed more than 0.25 seconds is dropped;
+candidates that cross the next important event or video end use an optional
+`shortText` alternative, or are dropped. The debug file includes measured audio
+lengths, scheduled starts, event deltas and drop reasons. If you change the voice
+or its server-side preset, rerun autoscript and check an actual-audio `plan`. All-rejected commentary uses `lines: []` without invented speech.
+
+For an exact event log and final speech, pass the same voice and cache through
+scheduling and rendering. `voice.json` is one speaker's `voice` object
+(`engine` and optional `options`), as shown in the voice examples above:
+
+```bash
+npm run autoscript -- input.mp4 --profile game --memo memo.md \
+  --events events.json --voice-file voice.json --voice-cache work/voice-cache \
+  --out work/auto.json --replay work/my-cache
+npm run plan -- work/auto.json --voice-cache work/voice-cache
+npm run gen -- work/auto.json --voice-cache work/voice-cache --out work/auto.mp4
+```
+
+The event log is an array or `{ "events": [...] }`. Each entry has numeric
+`at` (source seconds), `kind`, optional unique `id` and `importance` (1–3).
+Missing IDs become `event-1`, etc. Keep them stable when authoring replay data.
+Defaults are 3 for `death`/`stage-clear`, 2 for `damage`/`attempt`/`respawn`,
+and 1 otherwise. Arbitrary event metadata is passed to the observer/commentator.
+All non-`gem` event times are mandatory sample times; raise both frame/vision
+budgets when needed. Commentary can reference an existing, already reached
+`eventId`. Future or unknown events are rejected. Other candidates reserve time
+before the next event of importance 2 or 3; reactions reserve time before the
+next event at least as important. Without a log, observed scene changes and
+importance-3 events supply the deadlines.
+
+`death` increments the `ミス` counter, shakes the avatar for 0.45 seconds, and
+turns it grayscale until the next `respawn` (or video end). A same-time respawn
+has no grayscale interval. Effects apply to the first character (`dango`); edit
+`effects[].speaker` for another character. See the [effect recipe](./docs/authoring-guide.md#avatar-effects).
+This log does not replace review of the actual recording.
 
 Use `--profile generic` or `--profile path/to/profile.json` for other footage.
 Copy [profiles/generic.json](./profiles/generic.json), edit the four descriptions,

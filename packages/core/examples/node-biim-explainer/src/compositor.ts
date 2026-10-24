@@ -8,6 +8,7 @@ import {
 import { loadAvatarStates, resolveImagePaths } from './gen/avatarStates.js';
 import type { DecodedAudio } from './gen/audio.js';
 import { activeLine, buildMotion } from './gen/motion.js';
+import { effectPose } from './gen/effects.js';
 import { STYLE, inner, layout, type Rect } from './layout.js';
 import type { PreparedVideo } from './media.js';
 import { FONT, initializeFonts, wrapText } from './subtitles.js';
@@ -44,6 +45,54 @@ export function formatTimer(seconds: number): string {
   return `${Math.floor(ticks / 360000)}:${String(Math.floor(ticks / 6000) % 60).padStart(2, '0')}:${String(Math.floor(ticks / 100) % 60).padStart(2, '0')}.${String(ticks % 100).padStart(2, '0')}`;
 }
 
+export function fitPanelText(
+  items: { text: string; color?: string }[],
+  width: number,
+  height: number,
+  size: number,
+) {
+  const measure = createCanvas(1, 1).getContext('2d');
+  let fontSize = size;
+  let rows: { text: string; color: string }[] = [];
+  do {
+    measure.font = `${fontSize}px ${FONT}`;
+    let orphan = false;
+    rows = items.flatMap((item) => {
+      const paragraphs = item.text.split('\n').map((text) => ({
+        text,
+        rows: wrapText(text, width, fontSize),
+      }));
+      // Deliberate newlines (for example a short place name below a stage)
+      // are not orphaned soft wraps.
+      if (
+        paragraphs.some(({ text, rows }) => {
+          const last = rows.at(-1) ?? '';
+          return (
+            rows.length > 1 &&
+            Array.from(text).length >= 7 &&
+            (Array.from(last.replace(/[\p{P}\s]/gu, '')).length <= 3 ||
+              measure.measureText(last).width < width * 0.28)
+          );
+        })
+      )
+        orphan = true;
+      return paragraphs
+        .flatMap(({ rows }) => rows)
+        .map((text) => ({
+          text,
+          color: item.color === 'yellow' ? '#ffff00' : '#ffffff',
+        }));
+    });
+    if (
+      (rows.length * fontSize * STYLE.lineHeight <= height && !orphan) ||
+      fontSize <= STYLE.minimumPanelSize
+    )
+      break;
+    fontSize -= STYLE.panelSizeStep;
+  } while (fontSize > 0);
+  return { fontSize, rows };
+}
+
 export async function createCompositor(
   config: RenderConfig,
   narration: DecodedAudio,
@@ -66,13 +115,37 @@ export async function createCompositor(
   const avatars: Record<string, Record<AvatarState, Image>> = Object.create(
     null,
   );
+  const grayAvatars: Record<string, Record<AvatarState, Image>> = Object.create(
+    null,
+  );
   for (const id of ids)
     avatars[id] = await loadAvatarStates(
       resolveImagePaths(config.speakers[id].image, baseDir),
       id,
     );
+  for (const id of ids) {
+    grayAvatars[id] = Object.create(null);
+    for (const state of Object.keys(avatars[id]) as AvatarState[]) {
+      const original = avatars[id][state];
+      const c = createCanvas(original.width, original.height);
+      const g = c.getContext('2d');
+      g.drawImage(original, 0, 0);
+      const pixels = g.getImageData(0, 0, c.width, c.height);
+      for (let i = 0; i < pixels.data.length; i += 4) {
+        const level = Math.round(
+          pixels.data[i] * 0.2126 +
+            pixels.data[i + 1] * 0.7152 +
+            pixels.data[i + 2] * 0.0722,
+        );
+        pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = level;
+      }
+      g.putImageData(pixels, 0, 0);
+      grayAvatars[id][state] = await loadImage(c.toBuffer('image/png'));
+    }
+  }
   const motion = buildMotion(config, narration);
   const images = new Map<string, Image>();
+  const textLayouts = new Map<string, ReturnType<typeof fitPanelText>>();
   async function image(file: string) {
     const resolved = path.resolve(baseDir, file);
     let value = images.get(resolved);
@@ -101,25 +174,18 @@ export async function createCompositor(
       rect.h <= STYLE.bottomHeight
         ? STYLE.bottomTextPadding
         : STYLE.textPadding;
-    let fontSize = size;
-    let rows: { text: string; color: string }[] = [];
-    do {
-      rows = items.flatMap((item) =>
-        wrapText(item.text, rect.w - STYLE.textPadding * 2, fontSize).map(
-          (text) => ({
-            text,
-            color: item.color === 'yellow' ? '#ffff00' : '#ffffff',
-          }),
-        ),
+    const key = JSON.stringify([items, rect.w, rect.h, size]);
+    let fitted = textLayouts.get(key);
+    if (!fitted) {
+      fitted = fitPanelText(
+        items,
+        rect.w - STYLE.textPadding * 2,
+        rect.h - verticalPadding * 2,
+        size,
       );
-      if (
-        rows.length * fontSize * STYLE.lineHeight <=
-          rect.h - verticalPadding * 2 ||
-        fontSize <= STYLE.minimumPanelSize
-      )
-        break;
-      fontSize -= STYLE.panelSizeStep;
-    } while (fontSize > 0);
+      textLayouts.set(key, fitted);
+    }
+    const { fontSize, rows } = fitted;
     ctx.save();
     ctx.beginPath();
     ctx.rect(
@@ -314,14 +380,17 @@ export async function createCompositor(
       }
       ids.forEach((id, index) => {
         const pose = motion[id][frame];
-        const avatar = avatars[id][pose.state];
+        const effect = effectPose(config.effects, id, t);
+        const avatar = (effect.grayscale ? grayAvatars : avatars)[id][
+          pose.state
+        ];
         const size = STYLE.avatar;
         const scale = Math.min(size / avatar.width, size / avatar.height);
         const x = index === 1 ? config.width - size : 0;
         ctx.save();
         ctx.translate(
-          x + size / 2,
-          config.height + STYLE.avatarOverhang - size / 2 + pose.y,
+          x + size / 2 + effect.x,
+          config.height + STYLE.avatarOverhang - size / 2 + pose.y + effect.y,
         );
         ctx.rotate(pose.rotation);
         ctx.scale(

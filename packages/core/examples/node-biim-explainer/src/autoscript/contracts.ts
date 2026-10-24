@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { overlapScore } from './text.js';
 
 export interface SceneState {
   sceneChanged: boolean;
@@ -39,6 +40,8 @@ export interface PanelCandidate {
 }
 export interface CommentaryCandidate {
   text: string | null;
+  shortText?: string;
+  eventId?: string;
 }
 
 export function object(value: unknown): Record<string, unknown> {
@@ -171,6 +174,13 @@ export function parsePanels(
         fact: item.fact as number,
       };
     });
+    if (
+      result.main.length === 2 &&
+      overlapScore(result.main[0].text, result.main[1].text) >= 0.65
+    )
+      throw new Error(
+        'Textbook items restate each other; supply a distinct supporting fact',
+      );
   }
   return result;
 }
@@ -188,7 +198,7 @@ export function parseCommentary(
     throw new Error(
       `Commentary allows at most two lines and ${profile.friend.maxChars} characters total`,
     );
-  return {
+  const result: CommentaryCandidate = {
     text:
       v.text
         .split('\n')
@@ -196,6 +206,11 @@ export function parseCommentary(
         .join('\n')
         .trim() || null,
   };
+  if (v.shortText !== undefined)
+    result.shortText = shortText(v.shortText, profile.friend.maxChars);
+  if (v.eventId !== undefined && v.eventId !== null)
+    result.eventId = shortText(v.eventId, 80);
+  return result;
 }
 
 export function parseProfile(value: unknown): Profile {

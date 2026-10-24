@@ -1,3 +1,5 @@
+import { overlapScore } from './text.js';
+export { overlapScore } from './text.js';
 import type { Panel, ScriptLine } from '../types.js';
 import type { PanelCandidate, Profile, SceneState } from './contracts.js';
 
@@ -9,28 +11,8 @@ export interface Decision {
   reason: string;
   overlap?: number;
   scheduledAt?: number;
-}
-export function overlapScore(text: string, panels: string, n = 3): number {
-  const normalize = (s: string) =>
-    Array.from(
-      s
-        .normalize('NFKC')
-        .toLowerCase()
-        .replace(/[\p{P}\p{Z}\s]/gu, ''),
-    );
-  const a = normalize(text);
-  const b = normalize(panels);
-  if (!a.length || !b.length) return 0;
-  const size = Math.min(n, a.length, b.length);
-  const grams = (s: string[]) =>
-    new Set(
-      Array.from({ length: Math.max(0, s.length - size + 1) }, (_, i) =>
-        s.slice(i, i + size).join(''),
-      ),
-    );
-  const ag = grams(a);
-  const bg = grams(b);
-  return [...ag].filter((g) => bg.has(g)).length / Math.min(ag.size, bg.size);
+  audioDuration?: number;
+  eventAt?: number;
 }
 
 export class Director {
@@ -46,6 +28,9 @@ export class Director {
   private lastSpeech = Number.NEGATIVE_INFINITY;
   private lastLocation: string | undefined;
   private options: { silence: number; stale: number; overlap: number };
+  get nextAvailable() {
+    return this.available;
+  }
   constructor(
     private profile: Profile,
     private duration: number,
@@ -144,17 +129,30 @@ export class Director {
     text: string | null,
     scene: SceneState,
     speaker: string,
+    timing?: {
+      duration: number;
+      eventAt?: number;
+      start?: number;
+      shortened?: boolean;
+    },
   ): 'retry' | 'done' {
     const overlap = text ? overlapScore(text, this.panelText()) : 0;
-    const scheduledAt = Math.max(at, this.available);
-    // Reserve conservative speech time for queuing. End anchors in the output
-    // also keep real TTS sequential; longer audio can shift later lines.
-    const duration = text
-      ? Math.max(0.5, Array.from(text.replace(/\s/g, '')).length / 5)
-      : 0;
+    const scheduledAt = Math.max(
+      at,
+      this.available,
+      timing?.eventAt ?? at,
+      timing?.start ?? at,
+    );
+    // The pipeline supplies measured speech. Direct callers without timing
+    // retain the conservative legacy estimate and sequential anchors.
+    const duration =
+      timing?.duration ??
+      (text
+        ? Math.max(0.5, Array.from(text.replace(/\s/g, '')).length / 5)
+        : 0);
     const reason = !text
       ? 'silent'
-      : !this.trigger(at, scene)
+      : !this.trigger(at, scene) && timing?.eventAt === undefined
         ? 'no-trigger'
         : scheduledAt - at > this.options.stale
           ? 'stale'
@@ -183,9 +181,12 @@ export class Director {
       id: `auto-${this.lines.length + 1}`,
       speaker,
       text: text as string,
-      at: previous
-        ? `@${previous.id}:end+${Math.max(0.3, scheduledAt - this.available + 0.3).toFixed(3)}`
-        : scheduledAt,
+      at: timing
+        ? scheduledAt
+        : previous
+          ? `@${previous.id}:end+${Math.max(0.3, scheduledAt - this.available + 0.3).toFixed(3)}`
+          : scheduledAt,
+      ...(timing?.eventAt !== undefined ? { eventAt: timing.eventAt } : {}),
       pauseAfter: 0.3,
     });
     this.available = scheduledAt + duration + 0.3;

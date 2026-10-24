@@ -117,30 +117,96 @@ async function scan(filename: string): Promise<number[]> {
 export async function sampleVideo(
   filename: string,
   directory: string,
-  settings: { interval: number; threshold: number; cap: number },
+  settings: {
+    interval: number;
+    threshold: number;
+    cap: number;
+    times?: number[];
+  },
 ) {
   const duration = await probeDuration(filename);
-  const samples = selectFrames(
+  let samples = selectFrames(
     await scan(filename),
     settings.interval,
     settings.threshold,
     settings.cap,
   ).filter((f) => f.at < duration);
+  if (settings.times) {
+    const times = [...new Set(settings.times)].sort((a, b) => a - b);
+    if (times.some((at) => !Number.isFinite(at) || at < 0 || at >= duration))
+      throw new Error('External event time is outside the source video');
+    if (times.length > settings.cap)
+      throw new Error(
+        'Event frames exceed --max-frames; increase the cap to retain exact event times',
+      );
+    const regular = samples.filter(
+      (f) => !times.some((at) => Math.abs(at - f.at) < 1e-6),
+    );
+    const budget = settings.cap - times.length;
+    const chosen =
+      regular.length <= budget
+        ? regular
+        : budget <= 0
+          ? []
+          : Array.from(
+              { length: budget },
+              (_, i) =>
+                regular[
+                  Math.min(
+                    regular.length - 1,
+                    Math.floor((i * regular.length) / budget),
+                  )
+                ],
+            );
+    samples = [
+      ...chosen,
+      ...times.map((at) => ({
+        at,
+        difference: 0,
+        reasons: ['external-event'],
+      })),
+    ].sort((a, b) => a.at - b.at);
+  }
   if (!samples.length) throw new Error('No video frames could be sampled');
   await mkdir(directory, { recursive: true });
-  const select = samples.map((s) => `eq(n\\,${s.at})`).join('+');
-  await runCommand('ffmpeg', [
-    '-y',
-    '-v',
-    'error',
-    '-i',
-    filename,
-    '-vf',
-    `fps=1:start_time=0,select=${select},scale=640:-2`,
-    '-fps_mode',
-    'vfr',
-    path.join(directory, '%04d.png'),
-  ]);
+  if (settings.times) {
+    let next = 0;
+    await Promise.all(
+      Array.from({ length: 3 }, async () => {
+        while (next < samples.length) {
+          const i = next++;
+          await runCommand('ffmpeg', [
+            '-y',
+            '-v',
+            'error',
+            '-ss',
+            String(samples[i].at),
+            '-i',
+            filename,
+            '-vf',
+            'scale=640:-2',
+            '-frames:v',
+            '1',
+            path.join(directory, `${String(i + 1).padStart(4, '0')}.png`),
+          ]);
+        }
+      }),
+    );
+  } else {
+    const select = samples.map((s) => `eq(n\\,${s.at})`).join('+');
+    await runCommand('ffmpeg', [
+      '-y',
+      '-v',
+      'error',
+      '-i',
+      filename,
+      '-vf',
+      `fps=1:start_time=0,select=${select},scale=640:-2`,
+      '-fps_mode',
+      'vfr',
+      path.join(directory, '%04d.png'),
+    ]);
+  }
   const frames = await Promise.all(
     samples.map(async (sample, i) => ({
       ...sample,

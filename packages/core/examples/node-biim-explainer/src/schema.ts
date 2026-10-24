@@ -55,6 +55,8 @@ export async function validateScript(
     if (!Object.hasOwn(script.speakers, line.speaker))
       issues.push(`lines[${i}].speaker: unknown speaker ${line.speaker}`);
     if (line.at !== undefined) times.push([line.at, `lines[${i}].at`, i]);
+    if (line.eventAt !== undefined)
+      times.push([line.eventAt, `lines[${i}].eventAt`, i]);
   });
   for (const [id, speaker] of Object.entries(script.speakers)) {
     for (const [state, file] of Object.entries(
@@ -73,6 +75,14 @@ export async function validateScript(
   script.panels?.forEach((panel, i) => {
     times.push([panel.at, `panels[${i}].at`]);
     if (panel.image) files.push([panel.image, `panels[${i}].image`]);
+  });
+  script.effects?.forEach((effect, i) => {
+    times.push(
+      [effect.at, `effects[${i}].at`],
+      [effect.until, `effects[${i}].until`],
+    );
+    if (!Object.hasOwn(script.speakers, effect.speaker))
+      issues.push(`effects[${i}].speaker: unknown speaker ${effect.speaker}`);
   });
   if (script.timer) {
     times.push([script.timer.start, 'timer.start']);
@@ -156,6 +166,14 @@ export async function validateScript(
   }
   script.lines.forEach((_, i) => {
     const current = knownLine(i);
+    const event = script.lines[i].eventAt;
+    const eventAt = event === undefined ? undefined : knownTime(event);
+    if (
+      current.start !== undefined &&
+      eventAt !== undefined &&
+      current.start < eventAt
+    )
+      issues.push(`lines[${i}].at: reaction must not precede eventAt`);
     const previous = i ? knownLine(i - 1) : undefined;
     if (
       current.start !== undefined &&
@@ -165,6 +183,15 @@ export async function validateScript(
       issues.push(
         `lines[${i}].at: must be >= previous line end (${previous.end}s)`,
       );
+  });
+  script.effects?.forEach((effect, i) => {
+    const start = knownTime(effect.at);
+    const end = knownTime(effect.until);
+    if (start !== undefined && end !== undefined) {
+      if (end <= start) issues.push(`effects[${i}].until: must be > at`);
+      if (effect.effect === 'shake' && end - start > 2)
+        issues.push(`effects[${i}]: shake must be at most 2 seconds`);
+    }
   });
   script.main?.forEach((clip, i, clips) => {
     const start = knownTime(clip.at);
