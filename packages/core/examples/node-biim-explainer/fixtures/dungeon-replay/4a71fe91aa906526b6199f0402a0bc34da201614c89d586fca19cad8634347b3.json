@@ -1,4 +1,0 @@
-{
-  "hash": "4a71fe91aa906526b6199f0402a0bc34da201614c89d586fca19cad8634347b3",
-  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"罠の通路\",\"goal\":\"罠を越える\"},\"facts\":[{\"text\":\"点滅後に通る\",\"source\":\"memo\",\"evidence\":\"罠は点滅の直後に通る。\",\"confidence\":1},{\"text\":\"光る間は待つ\",\"source\":\"memo\",\"evidence\":\"罠が光っている間は手前で待つ。\",\"confidence\":1},{\"text\":\"主人公が入口側で再出発する\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"idle\",\"text\":\"主人公が入口側で再出発する\",\"importance\":1}],\"metrics\":{\"retry\":1,\"keys\":1}}"
-}

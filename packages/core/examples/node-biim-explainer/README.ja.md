@@ -145,8 +145,6 @@ node-biim-explainerで使う、<話題>の汎用解説台本JSONを作成して�
 先にschema/biim-script.schema.json、docs/reference.ja.md、
 docs/authoring-guide.ja.mdを読んでください。実例はsamples/biim-all-features.jsonを使えます。
 既存の1〜2話者、短い要点、自然な字幕、一意の発話IDを使ってください。
-録画の実況には autoscript と入力メモを使い、debug ファイルを確認してください。
-右上は場面、右中は理由、右下は数値、字幕は反応を担当し、同じ事実を繰り返さないでください。
 映像・情報欄の切替は@id / @id:endで指定し、時計・カウンターは必要時だけ使います。
 素材は提供済みか自作のものを使い、特定の制作者の口調を模倣しないでください。
 samples/my-script.jsonへ保存して、次を実行してください。
@@ -160,123 +158,24 @@ PNGを見て、はみ出し、吹き出しの向き、文字、キャラクタ�
 生成MP4から抽出したフレームと合成WAVを確認してから完了報告してください。
 ```
 
-## 録画から台本を生成する
+## 自分の録画に実況を付ける
 
-`autoscript` は録画からフレームを抜き出し、観察、右枠の編集、実況の生成を経て、
-通常の biim JSON 台本と `*.debug.json` を出力します。人が内容を確認・編集してから
-`gen` に渡してください。`npm run build` で75秒の自作ダンジョン動画も生成します。
+自分のゲームプレイや画面録画から biim 形式の動画を作るときは、Claude Code や
+Codex などの AI エージェントに録画を見せ、台本を直接書かせます。録画に加えて、
+出来事のログ(失敗・クリア・場面転換の時刻)があればそれを、画面に出ない情報は
+メモにして渡します。手順と各枠の決まりは
+[執筆ガイド](./docs/authoring-guide.ja.md#録画に実況を付ける)にあります。
 
-```bash
-npm run autoscript -- work/dungeon-demo.mp4 --profile game \
-  --memo samples/dungeon-memo.md --out work/auto.json \
-  --replay fixtures/dungeon-replay
-npm run validate -- work/auto.json
-npm run gen -- work/auto.json --out work/auto.mp4
+```text
+node-biim-explainerで、work/local/play.mp4に実況を付けたbiim形式の動画を作ってください。
+先にdocs/authoring-guide.ja.md(特に「録画に実況を付ける」)、
+schema/biim-script.schema.json、docs/reference.ja.mdを読んでください。
+出来事のログ: work/local/events.json(秒)。メモ: work/local/memo.md。
+書く前に、数秒ごとと各出来事の前後でフレームを抜き出して見てください。
+右上=場所、右中=理由、右下=数値、字幕=反応とし、右枠の内容をセリフで繰り返さないでください。
+反応にはeventAtを付け、失敗にはeffectsを使ってください。
+最終的な声でplanを確認し、出来事ごとにプレビューしてからgenし、フレームを確認してください。
 ```
-
-デモでは宝箱を通り過ぎ、鍵を取り、罠で失敗した後、点滅を待って進みます。
-敵を避ける道を通り、ボスの攻撃をかわして出口を開きます。画像はすべて canvas で
-描画し、動画などのバイナリは同梱していません。HUD は場所の名前だけを表示し、
-攻略の理由は[メモ](./samples/dungeon-memo.md)で補います。
-[生成済み台本](./samples/biim-auto-dungeon.json)の音声は sine 音です。
-日本語で話させる場合は、前述の `voice` 設定に差し替えてください。
-`--speakers 2` は採用したセリフをだんご・ぼぶに交互に割り当てます。
-
-同梱キャッシュは**手書きのテスト用応答**で、実 LLM の出力や画像認識精度の検証結果では
-ありません。応答は `src/autoscript/demo-cache.ts` に定義しています。
-`npm run demo:dungeon` と `npm run demo:cache` で、映像、リクエストハッシュに対応する
-キャッシュ、台本を再生成できます。この操作は API を呼びません。
-ffmpeg / canvas の版の違いでピクセルが変わり replay が一致しない場合も、
-`demo:cache` でローカルの映像に合わせて作り直せます。
-キャッシュがない場合はエラーで停止し、ネットワークには接続しません。
-別の動画には専用のキャッシュが必要です。
-
-実 LLM を使う場合は、このサンプルの git 管理外の `.env` に `OPENAI_API_KEY=...` を
-書くか、環境変数に設定します。環境変数が優先されます。`--env-file <file>` で別の
-ファイルも指定できます。接続先は OpenAI のみで、既存の Core / Chat 経由で呼び出します。
-モデルや SDK は追加していません。3役の既定モデルは画像対応の `gpt-4.1-mini` です。
-役ごとに `--observer-model` / `--panels-model` / `--commentary-model`、または
-`BIIM_OBSERVER_MODEL` / `BIIM_PANELS_MODEL` / `BIIM_COMMENTARY_MODEL` で変更できます。
-CLI 指定が優先されます。このデモで実 LLM の応答は未検証です。
-
-```bash
-npm run autoscript -- input.mp4 --profile game --memo memo.md \
-  --out work/recorded.json --record work/my-cache
-npm run autoscript -- input.mp4 --profile game --memo memo.md \
-  --out work/replayed.json --replay work/my-cache
-```
-
-`--record` は有料 API を呼びます。キャッシュはハッシュと応答だけを保存し、キーや
-リクエスト全文は保存しません。debug ファイルには観察、候補文、採否の理由、重複スコア、
-予定時刻が入ります。元の映像やメモを含む資料として取り扱ってください。
-
-| 役割 | 表示内容 | 制約 |
-| --- | --- | --- |
-| 右上 | 現在の場所と任意の目標 | 各行16文字以内、2行まで。場所変更は即時、それ以外の変更は8秒待つ |
-| 右中 | 理由・コツ・背景 | 20文字以内を2項目まで、最低8秒表示 |
-| 右下 | 指定メトリクスの数値 | 観察結果から通常のコードで更新 |
-| 字幕・キャラ | 反応・予想・感情 | 計50文字以内、2行まで。右枠の言い換えや数字の読み上げを避ける |
-
-時計は LLM を使いません。メモ由来の事実にはメモの引用を求め、不確かなものは除きます。
-右中の項目は事実の番号を参照します。文字数超過は一度だけ書き直し、収まらなければ
-不採用にします。単語の途中では切りません。実況には現在の右枠と直近5行を渡します。
-文字3-gram の重複スコアが0.35以上なら一度だけ再生成し、再び重複すれば不採用にします。
-この方法では意味の重複を完全には検出できません。右中の2項目も重複スコアが0.65以上なら
-不採用です。黄色の要点に、別の内容を白い補足として加えてください。短い語だけが
-最終行へ残る場合は文字を小さくして収めますが、不自然な改行がないか完成画像でも確認してください。
-
-`--interval 2` は1秒単位の解析から定期フレームを選びます。
-`--scene-threshold 0.12` 以上の画素差分も候補にします。`--max-frames 48` で全編に
-わたって均等に間引くため、短い出来事を見落とす場合があります。
-`--max-vision-calls 48` は再試行も含む観察呼び出しの上限で、超過時は停止します。
-場面転換と重要度3の出来事では即時に発話を検討します。通常の間隔は
-`friend.targetCadenceSeconds`（game は4秒、generic は6秒）、発話終了後の沈黙は
-`friend.silenceSeconds`（3秒）で設定し、どちらかに達すると次の発話を検討します。
-`--silence <秒数>` は後者を上書きします。`--stale 5` を超えて待機したセリフは捨てます。秒数は動画内の時刻です。
-候補の音声を選択した声で合成し、その長さを測ってから開始時刻を決めます。
-反応はイベント時刻以降に置き、0.25秒を超えて遅れるものは不採用にします。
-次の重要イベントや動画末尾に収まらなければ、候補の `shortText` を試すか不採用にします。
-測った長さ、開始時刻、イベントとの時間差、不採用の理由は debug ファイルに残ります。
-声やサーバー側の設定を変えた場合は、autoscript を再実行し、実音声の `plan` で確認してください。全セリフが不採用なら
-`lines: []` にし、発話を作り足しません。
-
-イベントログと最終的な声を指定する場合は、台本生成からレンダリングまで同じ
-音声キャッシュを使います。`voice.json` は前述の音声設定例にある、話者1人分の
-`voice` オブジェクト（`engine` と任意の `options`）です。
-
-```bash
-npm run autoscript -- input.mp4 --profile game --memo memo.md \
-  --events events.json --voice-file voice.json --voice-cache work/voice-cache \
-  --out work/auto.json --replay work/my-cache
-npm run plan -- work/auto.json --voice-cache work/voice-cache
-npm run gen -- work/auto.json --voice-cache work/voice-cache --out work/auto.mp4
-```
-
-ログは配列、または `{ "events": [...] }` です。各項目に動画内の秒数 `at` と `kind`、
-任意で一意の `id`、`importance`（1〜3）を指定します。ID省略時は `event-1` などを付けます。
-replay を作る際はIDを固定してください。重要度の既定値は `death`・`stage-clear` が3、
-`damage`・`attempt`・`respawn` が2、それ以外が1です。追加情報も観察・実況へ渡します。
-`gem` 以外のイベント時刻は必ずフレームを抽出するため、必要に応じてフレーム数と
-観察呼び出しの上限を増やしてください。実況は既存の `eventId` を参照でき、
-未来のイベントや不明なIDは不採用になります。通常の候補は次の重要度2以上のイベントまで、
-反応は同じ重要度以上の次のイベントまでに収めます。ログがなければ、観察した場面転換と
-重要度3のイベントを使います。
-
-`death` は `ミス` を1増やし、アバターを0.45秒揺らし、次の `respawn`（なければ動画末尾）
-まで灰色にします。同時刻に復帰する場合、灰色の区間はありません。演出対象は先頭の
-`dango` です。別の話者にする場合は `effects[].speaker` を編集してください。
-[演出の記述例](./docs/authoring-guide.ja.md#アバターの演出)も参照してください。
-ログを使った場合も、録画と合っているか確認が必要です。
-
-汎用用途は `--profile generic`、独自設定は `--profile path/to/profile.json` を使います。
-[profiles/generic.json](./profiles/generic.json)をコピーし、4役の説明、口調、数値のキーと
-ラベルを編集してください。文字数の上限は上表以内です。`map.maxLines` は1か2、`map.minDisplaySeconds` は
-通常の書き換えを待つ秒数（8秒）です。`sceneChanged` が新しい場所を示した場合は即時更新します。
-`scoreboard.rules` は `{metric, min, format}` の優先順リストです。存在する数値が `min`
-以上の最初のルールを使い、`format` の `{value}` を数値へ置き換えます。game は鍵、失敗後の
-リトライ、クリアの順に表示を切り替えます。合うルールがなければ基本のキーとラベルを使い、
-数値がない場合は右下を表示しません。右下の更新に LLM は使いません。
-確認手順は[執筆ガイド](./docs/authoring-guide.ja.md#autoscript-の確認)にあります。
 
 ## 開発時の確認
 

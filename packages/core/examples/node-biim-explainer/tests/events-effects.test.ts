@@ -1,17 +1,10 @@
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import path from 'node:path';
-import os from 'node:os';
 import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { describe, it, expect } from 'vitest';
 import { validateScript } from '../src/schema.js';
 import { resolveTimeline } from '../src/timeline.js';
 import { createCompositor, fitPanelText } from '../src/compositor.js';
 import { effectPose } from '../src/gen/effects.js';
-import { eventWidgets, parseEvents } from '../src/autoscript/events.js';
-import { loadProfile, parsePanels } from '../src/autoscript/contracts.js';
-import { generateScript } from '../src/autoscript/pipeline.js';
-import { sampleVideo } from '../src/autoscript/frames.js';
-import { synthesizeTimeline } from '../src/synthesis.js';
 import type { BiimScript, RenderConfig } from '../src/types.js';
 
 const script: BiimScript = {
@@ -114,157 +107,8 @@ describe('avatar effects and event bounds', () => {
     expect(runs[0][84].x).toBe(0);
   });
 });
-describe('external events and measured scheduling', () => {
-  it('preserves exact times and maps real instant respawns without fake gray duration', () => {
-    const events = parseEvents(
-      {
-        events: [
-          { id: 'fall', at: 1, kind: 'death' },
-          { id: 'instant', at: 1, kind: 'respawn' },
-          { id: 'dead', at: 2, kind: 'death' },
-          { id: 'retry', at: 3, kind: 'respawn' },
-        ],
-      },
-      4,
-    );
-    const result = eventWidgets(events, 'dango', 4);
-    expect(result.effects.filter((e) => e.effect === 'grayscale')).toEqual([
-      { at: 2, until: 3, speaker: 'dango', effect: 'grayscale' },
-    ]);
-    expect(result.counter.events).toEqual([
-      { at: 0, value: 0 },
-      { at: 1, value: 1 },
-      { at: 2, value: 2 },
-    ]);
-    expect(() =>
-      parseEvents(
-        [
-          { id: 'a', at: 0, kind: 'death' },
-          { id: 'a', at: 1, kind: 'death' },
-        ],
-        4,
-      ),
-    ).toThrow();
-    expect(() => parseEvents([{ at: 4, kind: 'death' }], 4)).toThrow();
-  });
-  it('uses real audio length to reject intervening speech and never anticipates an event', async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'biim-event-test-'));
-    try {
-      const events = parseEvents(
-        [
-          { id: 'fall', at: 1, kind: 'death' },
-          { id: 'back', at: 3, kind: 'respawn' },
-          { id: 'clear', at: 3.5, kind: 'stage-clear' },
-        ],
-        4,
-      );
-      const profile = await loadProfile('profiles/game.json');
-      const scene = {
-        sceneChanged: false,
-        context: { phase: 'test', location: 'test', goal: '' },
-        facts: [],
-        events: [],
-        metrics: {},
-      };
-      const result = await generateScript({
-        input: path.resolve('work/demo.mp4'),
-        output: path.join(dir, 'auto.json'),
-        duration: 4,
-        frames: [0, 1, 3.5].map((at) => ({
-          at,
-          difference: 0,
-          reasons: ['external-event'],
-          image: 'fixture',
-        })),
-        events,
-        profile,
-        memo: '',
-        voice: { engine: 'sine', options: { secondsPerChar: 0.25 } },
-        voiceCache: path.join(dir, 'cache'),
-        transport: async (r) =>
-          JSON.stringify(
-            r.role === 'observer'
-              ? scene
-              : r.role === 'panels'
-                ? {}
-                : r.input.at === 0
-                  ? { text: 'あ'.repeat(14) }
-                  : r.input.at === 1
-                    ? { text: '落ちた、悔しい…', eventId: 'fall' }
-                    : { text: 'よし', eventId: 'clear' },
-          ),
-      });
-      expect(
-        result.debug.decisions.some(
-          (d) => d.reason === 'audio-does-not-fit-before-event' && !d.accepted,
-        ),
-      ).toBe(true);
-      const audio = await synthesizeTimeline(
-        result.script,
-        dir,
-        path.join(dir, 'cache'),
-      );
-      expect(audio.timeline.lines).toHaveLength(2);
-      expect(audio.timeline.lines[0].start).toBe(1);
-      expect(audio.timeline.lines[1].start).toBe(3.5);
-      expect(
-        audio.timeline.lines.every((l) => l.start >= Number(l.eventAt)),
-      ).toBe(true);
-    } finally {
-      await rm(dir, { recursive: true, force: true });
-    }
-  }, 30000);
-  it('extracts an event frame outside the normal interval and rejects insufficient frame caps', async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'biim-event-frame-'));
-    try {
-      const result = await sampleVideo('work/demo.mp4', dir, {
-        interval: 2,
-        threshold: 0.12,
-        cap: 4,
-        times: [1.1],
-      });
-      expect(
-        result.frames.some(
-          (f) => f.at === 1.1 && f.reasons.includes('external-event'),
-        ),
-      ).toBe(true);
-      await expect(
-        sampleVideo('work/demo.mp4', dir, {
-          interval: 2,
-          threshold: 0.12,
-          cap: 1,
-          times: [1.1, 2.3],
-        }),
-      ).rejects.toThrow('increase the cap');
-    } finally {
-      await rm(dir, { recursive: true, force: true });
-    }
-  }, 30000);
-});
-describe('panel writing and wrapping', () => {
-  it('rejects repeated items and shrinks text to avoid a short isolated final word', async () => {
-    const profile = await loadProfile('profiles/game.json');
-    const scene = {
-      sceneChanged: false,
-      context: { phase: '', location: '', goal: '' },
-      facts: [
-        { text: '鍵は奥にある', source: 'screen' as const, confidence: 1 },
-      ],
-      events: [],
-      metrics: {},
-    };
-    expect(() =>
-      parsePanels(
-        {
-          main: [
-            { text: '鍵は奥にある', fact: 0 },
-            { text: '鍵は奥にあるよ', fact: 0 },
-          ],
-        },
-        profile,
-        scene,
-      ),
-    ).toThrow('restate');
+describe('panel wrapping', () => {
+  it('shrinks text to avoid a short isolated final word', () => {
     expect(
       fitPanelText([{ text: '4回目の挑戦\n門' }], 400, 160, 46).fontSize,
     ).toBe(46);

@@ -364,48 +364,61 @@ After editing the schema, run `npm run docs:reference`. Tests fail if either
 generated reference differs from the schema or descriptions are missing,
 placeholders, or reused for fields with different meanings.
 
-## Autoscript review
+## Commentary for a recording
 
-Use `npm run autoscript -- recording.mp4 --profile game --memo memo.md --out
-work/auto.json --record work/cache` for an initial draft. `--record` makes live
-OpenAI requests; the [README](../README.md#generate-a-draft-from-a-recording)
-describes keys, replay, budgets and models. The dungeon cache is hand-written
-test data, not the result of vision inference. Never present it as a model test.
+Use this when the main video is your own recording (gameplay, a screen capture,
+travel footage) and you, the agent, write the commentary. Watch the footage
+yourself before writing; do not guess what happens.
 
-1. Read `auto.debug.json` alongside the recording. Check every observation and
-   numeric event. Memo facts must cite source text; check that the text supports
-   the claim. Screen observations also require human verification.
-2. Confirm the four regions have different jobs: top tells where/stage, main
-   explains why, bottom counts, subtitle reacts. Remove restatements, including
-   paraphrases that character n-grams cannot catch. Keep the yellow main point
-   and white supplement distinct; check for short orphan rows. Name the actual place. A new location with `sceneChanged` updates the top
-   immediately; same-place rewording observes `map.minDisplaySeconds` (8 by
-   default). Main holds for 8 seconds.
-3. Review dropped candidates. Overlong text gets one rewrite and is dropped if
-   still invalid. Panel overlap gets one regeneration. Do not restore an expired
-   line just because it sounds good; its visible event may already be over.
-4. Configure your final voices. Run `validate`, then `plan --json --out
-   work/plan.json` with actual TTS. Give autoscript `--voice-file voice.json`
-   and `--voice-cache dir` to measure candidate speech before scheduling; give
-   plan/gen that same cache. Rerun autoscript if the voice changes. With
-   `--events events.json`, reactions start at or after `eventAt`; those delayed
-   over 0.25 seconds are dropped. A candidate that cannot finish before the next
-   important event uses its short alternative or is dropped, with a debug reason.
-   The README documents event fields and their effect/counter mappings.
-5. Preview each scene/panel change and extract frames from the final MP4.
-   Check readability and listen to the mixed WAV. Sine tones test timing and
-   mouth motion only, not pronunciation or speech quality.
+1. **Look at the recording.** Get the duration with `ffprobe`, then extract
+   frames every few seconds and around each moment you care about:
 
-To create a profile, copy `profiles/generic.json`. Keep the `map`, `textbook`,
-`scoreboard`, `friend` keys; edit their descriptions and friend instruction,
-and set a short metric key/label (`progress` / `手順`, for example). `maxChars`
-may be lowered, but may not exceed 16/20/50 for map/textbook/friend; textbook
-`maxItems` is 1 or 2. `map.maxLines` allows one or two map lines, each within
-`maxChars`. Set `friend.targetCadenceSeconds` for regular starts and
-`friend.silenceSeconds` for quiet time after speech ends. Inspect the actual
-plan: queuing may delay a candidate. `scoreboard.rules` can format observed
-metrics using `{value}` or show a completion status; first matching rule wins.
-Missing metrics hide the scoreboard. Pass the file with
-`--profile my-profile.json`. Facts not in the image or memo should remain absent.
-An empty `lines` array is valid when no commentary is accepted; use an explicit
-main clip `until` to establish video length.
+   ```bash
+   mkdir -p work/frames
+   ffmpeg -i work/local/play.mp4 -vf fps=1/2,scale=640:-1 work/frames/f-%04d.png
+   ffmpeg -ss 23.4 -i work/local/play.mp4 -frames:v 1 work/frames/death-1.png
+   ```
+
+   Frame `f-0001.png` is at 0 s, `f-0002.png` at 2 s, and so on.
+2. **List the events with times.** An exact log from the game or the recorder
+   is best, for example `[{ "at": 23.4, "kind": "death" }]`. Otherwise write
+   down only the times you confirmed in frames. Facts that are not on screen
+   may come only from a memo the user supplied.
+3. **Give each region one job.**
+
+   | Region | Answers | Content | Limits |
+   | --- | --- | --- | --- |
+   | Top panel (map) | Where / which stage? | Place, attempt, goal | 1–2 lines of up to 16 characters; change at a scene change |
+   | Main panel (textbook) | What do I need to know? | Reason, tip, caution | 1–2 items of up to 20 characters; yellow key point, white supplement; keep at least 8 s |
+   | Bottom box (scoreboard) | How many? | `counter` label and number | No sentences |
+   | Subtitles (friend) | How does it feel? What next? | Reactions, predictions, questions, bridges | Up to 50 characters, 1–2 lines |
+
+   - Show one fact in one region at a time. While the main panel says why a
+     jump fails, the character reacts ("again…?") instead of repeating it.
+   - Numbers belong to the bottom box. Dialogue reacts to the change, not the
+     number. Panels carry no feelings; dialogue carries no lists of facts.
+4. **Place reactions on their events.** Give each reaction `at` at or just
+   after the event and `eventAt` set to the event time. Validation and an
+   actual-audio `plan` reject a reaction that starts before its event. Between
+   events, keep a line roughly every 4–8 seconds (predictions, small hopes
+   before a retry, bridges). Shorten or drop a line that would still be
+   speaking when the next important event happens.
+5. **Show failures on the avatar.** For example, a death at 23.4 s and a
+   respawn at 25.1 s:
+
+   ```json
+   "effects": [
+     { "at": 23.4, "until": 23.85, "speaker": "dango", "effect": "shake", "amplitude": 10 },
+     { "at": 23.4, "until": 25.1, "speaker": "dango", "effect": "grayscale" }
+   ],
+   "counter": { "label": "ミス", "events": [{ "at": 0, "value": 0 }, { "at": 23.4, "value": 1 }] }
+   ```
+
+   A respawn at the same moment as the death needs only the shake.
+6. **Check timing with the final voice.** Configure the real voice, then run
+   `validate` and `plan --json --out work/plan.json` without `--estimate`.
+   Pass the same `--voice-cache dir` to `plan` and `gen` so both use the same
+   audio. Confirm every reaction starts at or after its event and no lines
+   overlap.
+7. **Preview each event**, run `gen`, extract frames from the MP4 around each
+   event, and listen to the mixed WAV before reporting success.

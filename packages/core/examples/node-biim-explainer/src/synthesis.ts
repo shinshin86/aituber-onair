@@ -8,7 +8,7 @@ import { mixAt } from './media.js';
 import { resolveTimeline } from './timeline.js';
 import type { BiimScript, ScriptLine, ScriptSpeaker } from './types.js';
 
-export async function synthesizeLine(
+async function synthesizeLine(
   line: ScriptLine,
   speaker: ScriptSpeaker,
   workDir: string,

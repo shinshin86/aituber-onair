@@ -1,4 +1,0 @@
-{
-  "hash": "8d8a53ff8bd32e52d120f68472124b88f5328c24cea8baad6060df906eba9012",
-  "response": "{\"sceneChanged\":true,\"context\":{\"phase\":\"第1層\",\"location\":\"罠の通路\",\"goal\":\"罠を越える\"},\"facts\":[{\"text\":\"点滅後に通る\",\"source\":\"memo\",\"evidence\":\"罠は点滅の直後に通る。\",\"confidence\":1},{\"text\":\"光る間は待つ\",\"source\":\"memo\",\"evidence\":\"罠が光っている間は手前で待つ。\",\"confidence\":1},{\"text\":\"床に尖った罠が見える\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"progress\",\"text\":\"床に尖った罠が見える\",\"importance\":3}],\"metrics\":{\"retry\":0,\"keys\":1}}"
-}

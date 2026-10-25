@@ -1,4 +1,0 @@
-{
-  "hash": "67d7af1064a1610fc4c2ee27b1369f3dccc14f049168a235ce0d9501d2b6b0f6",
-  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"分かれ道\",\"goal\":\"罠を越える\"},\"facts\":[{\"text\":\"遠回りで敵回避\",\"source\":\"memo\",\"evidence\":\"遠回りだが敵を避けられる。\",\"confidence\":1},{\"text\":\"手前で点滅を待つ\",\"source\":\"memo\",\"evidence\":\"罠が光っている間は手前で待つ。\",\"confidence\":1},{\"text\":\"主人公が外周の道を進む\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"progress\",\"text\":\"主人公が外周の道を進む\",\"importance\":2}],\"metrics\":{\"retry\":1,\"keys\":1}}"
-}

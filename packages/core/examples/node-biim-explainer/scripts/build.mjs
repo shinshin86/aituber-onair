@@ -3,11 +3,7 @@ import { build } from 'esbuild';
 // Bundle @aituber-onair/core: its dist uses extensionless ESM imports that
 // Node cannot resolve directly. Keep only the native canvas module external.
 await build({
-  entryPoints: {
-    gen: 'src/gen/cli.ts',
-    autoscript: 'src/autoscript/cli.ts',
-    'demo-cache': 'src/autoscript/demo-cache.ts',
-  },
+  entryPoints: { gen: 'src/gen/cli.ts' },
   outdir: 'dist',
   bundle: true,
   splitting: true,
@@ -23,4 +19,3 @@ await build({
 });
 
 await import('./demo.mjs');
-await import('./dungeon-demo.mjs');

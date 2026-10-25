@@ -35,9 +35,8 @@ npm run preview -- samples/biim-hello-sine.json --at 0 --at @speed --out work/pr
 npm run gen -- samples/biim-hello-sine.json --out work/hello.mp4
 ```
 
-Build generates an original four-second test-pattern video, a shapes image and
-a 75-second procedural dungeon in `work/`; no binary footage is bundled.
-The sine sample produces tones rather than
+Build generates an original four-second test-pattern video and a shapes image in
+`work/`; no game footage is bundled. The sine sample produces tones rather than
 Japanese speech and needs no API key or speech server. Output includes
 `hello.mp4`, `hello.mixed.wav`, and `hello.timeline.json`. `work/` is ignored.
 
@@ -149,9 +148,6 @@ Copy and adapt this prompt:
 Write a general-purpose explainer JSON for node-biim-explainer about <topic>.
 Read schema/biim-script.schema.json, docs/reference.md,
 and docs/authoring-guide.md first. Use samples/biim-all-features.json for recipes.
-For recorded-video commentary, start with autoscript and a supplied memo.
-Keep map (where), textbook (why), scoreboard (numbers) and friend (reactions)
-distinct; never repeat current panels in dialogue. Review the debug sidecar.
 Use 1–2 existing speakers, short panel items, natural subtitles, and line IDs.
 Use @id / @id:end anchors for media/panel changes; keep timer/counter optional.
 Use only supplied or original media. Do not imitate a particular creator.
@@ -166,130 +162,25 @@ Inspect the PNGs for clipping, bubble tails, text and avatar placement.
 Inspect extracted MP4 frames and listen to the mixed WAV before reporting success.
 ```
 
-## Generate a draft from a recording
+## Commentary for your own recording
 
-`autoscript` samples a recording, observes frames, edits panels, and writes a
-normal biim JSON script plus `*.debug.json`. Review and edit the draft before
-`gen`. From this directory, after `npm run build`, run the offline demo:
+To turn your own gameplay or screen recording into a biim video, ask an AI
+agent such as Claude Code or Codex to watch it and write the script directly.
+Give it the recording, an event log if you have one (times of failures, clears,
+scene changes), and a memo with facts that are not visible on screen. The
+[authoring guide](./docs/authoring-guide.md#commentary-for-a-recording)
+describes the workflow and the rules for each region.
 
-```bash
-npm run autoscript -- work/dungeon-demo.mp4 --profile game \
-  --memo samples/dungeon-memo.md --out work/auto.json \
-  --replay fixtures/dungeon-replay
-npm run validate -- work/auto.json
-npm run gen -- work/auto.json --out work/auto.mp4
+```text
+Make a biim commentary video with node-biim-explainer from work/local/play.mp4.
+Read docs/authoring-guide.md (especially "Commentary for a recording"),
+schema/biim-script.schema.json and docs/reference.md first.
+Events: work/local/events.json (seconds). Memo: work/local/memo.md.
+Extract and look at frames every few seconds and around each event before writing.
+Top = where, main = why, bottom = numbers, subtitles = reactions; never repeat
+the panels in dialogue. Set eventAt on reactions and use effects for failures.
+Use the final voice for plan, preview each event, then gen and check the frames.
 ```
-
-The dungeon's original canvas artwork shows entry, a skipped chest, key pickup,
-a trap defeat, a wait for its blink, a safe detour, and a boss dodge/counterattack.
-The HUD shows only area names. [The memo](./samples/dungeon-memo.md) supplies
-strategy reasons, and observed defeats update the retry counter. The generated
-[sample](./samples/biim-auto-dungeon.json) uses sine tones; replace `voice` as
-described above for Japanese speech. `--speakers 2` alternates accepted lines
-between the existing characters; it does not generate a second dialogue role.
-
-The shipped replay cache is a **hand-made fixture**, not real LLM output or
-evidence of vision quality. All responses are in `src/autoscript/demo-cache.ts`.
-After editing prompts/art, regenerate the video, exact request-hash/response
-cache and sample with `npm run demo:dungeon` then `npm run demo:cache`.
-Neither command calls an API. Different ffmpeg/canvas versions can change pixels
-and cause cache misses; `demo:cache` rebuilds this fixture for your local video.
-Replay fails closed on a missing/invalid entry and never falls back to network.
-Other videos need their own cache.
-
-For live generation, put `OPENAI_API_KEY=...` in this example's ignored `.env`
-or environment (environment wins). Use `--env-file <file>` for another file.
-Only OpenAI is supported by the live adapter, through Core's ChatServiceFactory;
-no new SDK or model is added. All three roles default to the already-supported,
-vision-capable `gpt-4.1-mini`. Override independently with `--observer-model`,
-`--panels-model`, `--commentary-model` or `BIIM_OBSERVER_MODEL`,
-`BIIM_PANELS_MODEL`, `BIIM_COMMENTARY_MODEL` (CLI wins). Live LLM results have
-not been verified with this demo. Recording makes paid API requests:
-
-```bash
-npm run autoscript -- input.mp4 --profile game --memo memo.md \
-  --out work/recorded.json --record work/my-cache
-npm run autoscript -- input.mp4 --profile game --memo memo.md \
-  --out work/replayed.json --replay work/my-cache
-```
-
-Cache entries store only request hashes and responses, never keys/full request
-bodies. The debug sidecar contains sampled times, observations, candidate text,
-accept/drop reasons, overlap scores and planned times. Treat it as content from
-your video and memo.
-
-| Fixed role | Content | Limits |
-| --- | --- | --- |
-| Map (top) | Current place and optional goal | Up to two 16-character lines; location changes update immediately, other edits hold for 8 seconds |
-| Textbook (main) | Reasons, tips, context | Two 20-character items, minimum 8 seconds |
-| Scoreboard (bottom) | Configured numeric metric | Plain code from observed metrics |
-| Friend (subtitles) | Reactions, predictions, feelings | 50 characters total, one or two lines, no panel paraphrases or number reading |
-
-The clock uses no LLM. Memo facts must cite literal memo excerpts; uncertain
-facts are omitted. Panel items cite a current fact index. Overlong text is
-rewritten once then dropped, never cut mid-word. Commentary receives current
-panels and its last five lines. Trigram overlap of 0.35 or more triggers one
-regeneration then rejection; this heuristic cannot prove semantic uniqueness. Main items also reject
-near-duplicate wording (overlap ≥ 0.65). Write a distinct supplement, rather than
-restating the yellow key point. Text fitting reduces the font to avoid short
-orphan rows where possible; inspect the final frames for awkward breaks.
-
-`--interval 2` uses a one-second analysis grid; pixel differences at least
-`--scene-threshold 0.12` also nominate frames. `--max-frames 48` evenly caps
-samples across the video, so brief events may be missed. `--max-vision-calls 48`
-is a hard observer budget including retries; exhaustion stops generation.
-Scene changes and importance-3 events trigger speech immediately. Profiles set
-`friend.targetCadenceSeconds` (game: 4, generic: 6) between planned starts and
-`friend.silenceSeconds` (3) after planned speech ends. Either can trigger a new
-line; `--silence <seconds>` overrides the latter.
-`--stale 5` drops lines queued too long, in video seconds. Autoscript synthesizes each candidate with the selected voice before scheduling
-and reuses the cached audio during rendering. Numeric starts keep reactions at
-or after their event. A reaction delayed more than 0.25 seconds is dropped;
-candidates that cross the next important event or video end use an optional
-`shortText` alternative, or are dropped. The debug file includes measured audio
-lengths, scheduled starts, event deltas and drop reasons. If you change the voice
-or its server-side preset, rerun autoscript and check an actual-audio `plan`. All-rejected commentary uses `lines: []` without invented speech.
-
-For an exact event log and final speech, pass the same voice and cache through
-scheduling and rendering. `voice.json` is one speaker's `voice` object
-(`engine` and optional `options`), as shown in the voice examples above:
-
-```bash
-npm run autoscript -- input.mp4 --profile game --memo memo.md \
-  --events events.json --voice-file voice.json --voice-cache work/voice-cache \
-  --out work/auto.json --replay work/my-cache
-npm run plan -- work/auto.json --voice-cache work/voice-cache
-npm run gen -- work/auto.json --voice-cache work/voice-cache --out work/auto.mp4
-```
-
-The event log is an array or `{ "events": [...] }`. Each entry has numeric
-`at` (source seconds), `kind`, optional unique `id` and `importance` (1–3).
-Missing IDs become `event-1`, etc. Keep them stable when authoring replay data.
-Defaults are 3 for `death`/`stage-clear`, 2 for `damage`/`attempt`/`respawn`,
-and 1 otherwise. Arbitrary event metadata is passed to the observer/commentator.
-All non-`gem` event times are mandatory sample times; raise both frame/vision
-budgets when needed. Commentary can reference an existing, already reached
-`eventId`. Future or unknown events are rejected. Other candidates reserve time
-before the next event of importance 2 or 3; reactions reserve time before the
-next event at least as important. Without a log, observed scene changes and
-importance-3 events supply the deadlines.
-
-`death` increments the `ミス` counter, shakes the avatar for 0.45 seconds, and
-turns it grayscale until the next `respawn` (or video end). A same-time respawn
-has no grayscale interval. Effects apply to the first character (`dango`); edit
-`effects[].speaker` for another character. See the [effect recipe](./docs/authoring-guide.md#avatar-effects).
-This log does not replace review of the actual recording.
-
-Use `--profile generic` or `--profile path/to/profile.json` for other footage.
-Copy [profiles/generic.json](./profiles/generic.json), edit the four descriptions,
-persona and metric label/key, and keep the limits above. `map.maxLines` is 1 or 2;
-`map.minDisplaySeconds` (8) holds rewording at the same place. A `sceneChanged`
-observation with a new location bypasses that hold. `scoreboard.rules` is an
-ordered list of `{metric, min, format}` entries: the first present metric at or
-above `min` wins, and `{value}` in `format` inserts its value. For example, game
-rules show keys, then retries after a defeat, then completion. If none match,
-the base metric/label is used. These are plain-code rules, not LLM panel text. Absent metrics leave
-the scoreboard hidden. See the [authoring guide](./docs/authoring-guide.md#autoscript-review).
 
 ## Development
 

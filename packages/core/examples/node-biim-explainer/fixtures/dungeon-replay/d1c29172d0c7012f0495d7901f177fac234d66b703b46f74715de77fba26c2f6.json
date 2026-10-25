@@ -1,4 +1,0 @@
-{
-  "hash": "d1c29172d0c7012f0495d7901f177fac234d66b703b46f74715de77fba26c2f6",
-  "response": "{\"sceneChanged\":false,\"context\":{\"phase\":\"第1層\",\"location\":\"入口\",\"goal\":\"鍵を探す\"},\"facts\":[{\"text\":\"鍵は奥の部屋\",\"source\":\"memo\",\"evidence\":\"鍵は奥の部屋にある。\",\"confidence\":1},{\"text\":\"寄り道を減らす\",\"source\":\"memo\",\"evidence\":\"鍵のある部屋へ直行すれば寄り道を減らせる。\",\"confidence\":1},{\"text\":\"主人公が入口から歩く\",\"source\":\"screen\",\"confidence\":0.9}],\"events\":[{\"kind\":\"idle\",\"text\":\"主人公が入口から歩く\",\"importance\":1}],\"metrics\":{\"retry\":0}}"
-}

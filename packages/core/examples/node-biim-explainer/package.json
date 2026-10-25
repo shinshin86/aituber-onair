@@ -18,9 +18,6 @@
     "validate": "node dist/gen.js validate",
     "plan": "node dist/gen.js plan",
     "preview": "node dist/gen.js preview",
-    "autoscript": "node dist/autoscript.js",
-    "demo:dungeon": "node scripts/dungeon-demo.mjs",
-    "demo:cache": "node dist/demo-cache.js",
     "docs:reference": "node scripts/reference.mjs",
     "docs:reference:check": "node scripts/reference.mjs --check"
   },
