@@ -41,7 +41,7 @@ Voice options are listed separately per engine. sine accepts only its listed key
 | `defaults` | object | no | — | Optional defaults for silence between lines and source-video audio gain. |
 | `defaults.pauseAfter` | number | no | `0.3` | Default silence in seconds after each line, including the final line; a line pauseAfter overrides this value. minimum: 0. Examples: `0.3`. |
 | `defaults.mainAudioVolume` | number | no | `0.25` | Linear gain (0 to 1) for a source video with audio=true. Not a separate background-music track. minimum: 0; maximum: 1. Examples: `0.15`. |
-| `lines` | array<object> | yes | — | Nonempty narration/caption sequence. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set. minItems: 1. |
+| `lines` | array<object> | yes | — | Narration/caption sequence; may be empty for a video with no commentary. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set. minItems: 0. |
 | `lines[].id` | string | no | — | Optional unique anchor ID: ASCII letter first, then letters, digits, underscores or hyphens. pattern: "^[A-Za-z][A-Za-z0-9_-]*$". Examples: `"intro"`. |
 | `lines[].speaker` | string | yes | — | Key of an existing speakers entry, not its human-readable name. minLength: 1. Examples: `"dango"`. |
 | `lines[].text` | string | yes | — | Nonempty displayed subtitle. Automatically wrapped and paged to at most two rows per page. minLength: 1. Examples: `"操作手順を説明します。"`. |
@@ -51,6 +51,7 @@ Voice options are listed separately per engine. sine accepts only its listed key
 | `lines[].spoken` | boolean | no | `true` | Whether to synthesize this line. false requires positive duration and keeps the mouth closed; true forbids duration. Examples: `false`. |
 | `lines[].duration` | number | conditional | — | Silent-caption duration in seconds. Required only for spoken=false; forbidden for spoken=true or omitted spoken. exclusiveMinimum: 0. Examples: `2`. |
 | `lines[].emotion` | "neutral" / "happy" / "surprised" / "sad" / "angry" / "relaxed" | no | `"neutral"` | Body-motion energy hint: happy/surprised use 1.1, sad/relaxed 0.8, neutral/angry 1. Does not change the avatar set or TTS emotion. Examples: `"happy"`. |
+| `lines[].eventAt` | number or string | no | — | Optional event timestamp bounding the reaction start from below. Set at to this timestamp or later; validation and actual audio planning reject early reactions. Examples: `2`, `"@intro:end"`. |
 | `main` | array<any> | no | — | Chronological nonoverlapping main-area slots. Each chooses exactly one video, image or color. Gaps are black. Omitted array leaves the main area black. |
 | `main[].at` | number or string | yes | — | Main slot start in seconds or at a line anchor; slots must be chronological and nonoverlapping. Examples: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
 | `main[].until` | number or string | no | — | Main slot end in seconds or at an anchor; must exceed its start. Omission uses the next main start or the timeline end. Video holds its last frame if playback ends earlier. Examples: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
@@ -83,10 +84,17 @@ Voice options are listed separately per engine. sine accepts only its listed key
 | `counter.events` | array<object> | yes | — | Nonempty chronological counter updates. Hidden before the first event; each value persists until the next event or timeline end. minItems: 1. |
 | `counter.events[].at` | number or string | yes | — | Counter value-change time in seconds or at an anchor; events must be chronological. Examples: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
 | `counter.events[].value` | number | yes | — | Displayed counter number. Negative and fractional values are accepted; it is not restricted to an integer count. Examples: `3`. |
+| `counter.events[].text` | string | no | — | Optional complete scoreboard text for this event, replacing label and value visually while retaining the numeric metric in the timeline. Useful for inventory totals or completion status. minLength: 1. Examples: `"鍵 1/1"`, `"クリア！"`. |
 | `mouthMode` | "flap" / "rms" | no | `"flap"` | Global Mouth animation mode: flap alternates open/closed at flapInterval; rms opens above the normalized audio gate. Both close in silence. Examples: `"flap"`. |
 | `flapInterval` | number | no | `0.12` | Global Seconds per mouth state in flap mode; between 1/30 and 1 second. minimum: 0.03333333333333333; maximum: 1. Examples: `0.12`. |
 | `mouthThreshold` | number | no | `0.08` | Global Normalized RMS mouth gate, greater than 0 and at most 1. Renderer divides audio RMS by 0.12 and caps it at 1. exclusiveMinimum: 0; maximum: 1. Examples: `0.08`. |
 | `motion` | "subtle" / "bounce" / "none" | no | `"subtle"` | Global Body motion: subtle is a small hop/breath, bounce is larger, none disables body movement but keeps mouth/blink animation. Examples: `"subtle"`. |
+| `effects` | array<object> | no | — | Optional timed avatar effects. Empty or omitted means no effects; grayscale ends at respawn when generated from an event log. |
+| `effects[].at` | number or string | yes | — | Inclusive start of the avatar effect, using seconds or a line anchor. Examples: `2`, `"@intro:end"`. |
+| `effects[].until` | number or string | yes | — | Exclusive end of the effect; must resolve after at. Shake effects last at most two seconds. Examples: `3`, `"@clip:end"`. |
+| `effects[].speaker` | string | yes | — | Existing speaker key receiving this effect; other characters and the main video are unchanged. minLength: 1. Examples: `"dango"`. |
+| `effects[].effect` | "grayscale" / "shake" | yes | — | Avatar-only grayscale coloring or a deterministic short screen-space shake. These two effects may overlap. Examples: `"grayscale"`, `"shake"`. |
+| `effects[].amplitude` | number | no | `8` | Shake displacement in output pixels before decay. Allowed only with effect=shake; combined shake offsets are capped at 40 pixels. minimum: 0; maximum: 40. Examples: `10`. |
 
 ## Shared types
 

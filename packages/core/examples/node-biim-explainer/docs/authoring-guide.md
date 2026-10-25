@@ -77,6 +77,7 @@ relative to the current directory; script `output` is relative to the script.
 Without either, gen uses `../work/out.mp4` relative to the script. Voice WAVs
 are cached in `work/voice-cache/` under a hash of text and engine options.
 Delete that directory to refresh audio after changing server-side presets.
+Use `--voice-cache dir` to select another cache.
 No voice options/credentials are written into the timeline JSON.
 
 ## Timing rules
@@ -96,6 +97,8 @@ No voice options/credentials are written into the timeline JSON.
 - An explicit line `at` may shorten the planned pause but must not precede the
   previous audio/caption end. Only actual audio can settle speech-dependent
   overlaps; estimated timing can be too short or too long.
+- Optional `lines[].eventAt` is a reaction lower bound (seconds or an anchor).
+  Validation or actual-audio planning rejects a start before that event.
 - A main slot ends at `until`, otherwise next main `at`, otherwise timeline end.
   Main slots must be ordered and must not overlap; gaps are black. A video range
   lasts `(to - from) / speed`, clipped to the slot. Its final decoded frame is
@@ -105,6 +108,24 @@ No voice options/credentials are written into the timeline JSON.
 - Duration is the maximum of final line+pause, explicit main ends and event
   times (including timer stop). An event exactly at the final endpoint has no
   display time; extend a main `until` or add a silent final line when needed.
+
+## Avatar effects
+
+Optional `effects` apply to one existing speaker on `[at, until)`. Both fields
+accept seconds or line anchors. The main video keeps its color and position.
+
+```json
+"effects": [
+  { "at": 12, "until": 15, "speaker": "dango", "effect": "grayscale" },
+  { "at": 12, "until": 12.45, "speaker": "dango", "effect": "shake", "amplitude": 10 }
+]
+```
+
+This shakes on failure and restores color at the respawn at 15 seconds.
+Grayscale and shake may overlap. Shake lasts at most two seconds; `amplitude`
+is 0–40 output pixels (default 8), decaying toward the end. Combined shake is
+capped at 40 pixels on each axis. Grayscale forbids amplitude. `until` must be
+after `at`; effect ends contribute to total video duration.
 
 ## Recipes
 
@@ -342,3 +363,62 @@ and 3+ speakers are not implemented.
 After editing the schema, run `npm run docs:reference`. Tests fail if either
 generated reference differs from the schema or descriptions are missing,
 placeholders, or reused for fields with different meanings.
+
+## Commentary for a recording
+
+Use this when the main video is your own recording (gameplay, a screen capture,
+travel footage) and you, the agent, write the commentary. Watch the footage
+yourself before writing; do not guess what happens.
+
+1. **Look at the recording.** Get the duration with `ffprobe`, then extract
+   frames every few seconds and around each moment you care about:
+
+   ```bash
+   mkdir -p work/frames
+   ffmpeg -i work/local/play.mp4 -vf fps=1/2,scale=640:-1 work/frames/f-%04d.png
+   ffmpeg -ss 23.4 -i work/local/play.mp4 -frames:v 1 work/frames/death-1.png
+   ```
+
+   Frame `f-0001.png` is at 0 s, `f-0002.png` at 2 s, and so on.
+2. **List the events with times.** An exact log from the game or the recorder
+   is best, for example `[{ "at": 23.4, "kind": "death" }]`. Otherwise write
+   down only the times you confirmed in frames. Facts that are not on screen
+   may come only from a memo the user supplied.
+3. **Give each region one job.**
+
+   | Region | Answers | Content | Limits |
+   | --- | --- | --- | --- |
+   | Top panel (map) | Where / which stage? | Place, attempt, goal | 1–2 lines of up to 16 characters; change at a scene change |
+   | Main panel (textbook) | What do I need to know? | Reason, tip, caution | 1–2 items of up to 20 characters; yellow key point, white supplement; keep at least 8 s |
+   | Bottom box (scoreboard) | How many? | `counter` label and number | No sentences |
+   | Subtitles (friend) | How does it feel? What next? | Reactions, predictions, questions, bridges | Up to 50 characters, 1–2 lines |
+
+   - Show one fact in one region at a time. While the main panel says why a
+     jump fails, the character reacts ("again…?") instead of repeating it.
+   - Numbers belong to the bottom box. Dialogue reacts to the change, not the
+     number. Panels carry no feelings; dialogue carries no lists of facts.
+4. **Place reactions on their events.** Give each reaction `at` at or just
+   after the event and `eventAt` set to the event time. Validation and an
+   actual-audio `plan` reject a reaction that starts before its event. Between
+   events, keep a line roughly every 4–8 seconds (predictions, small hopes
+   before a retry, bridges). Shorten or drop a line that would still be
+   speaking when the next important event happens.
+5. **Show failures on the avatar.** For example, a death at 23.4 s and a
+   respawn at 25.1 s:
+
+   ```json
+   "effects": [
+     { "at": 23.4, "until": 23.85, "speaker": "dango", "effect": "shake", "amplitude": 10 },
+     { "at": 23.4, "until": 25.1, "speaker": "dango", "effect": "grayscale" }
+   ],
+   "counter": { "label": "ミス", "events": [{ "at": 0, "value": 0 }, { "at": 23.4, "value": 1 }] }
+   ```
+
+   A respawn at the same moment as the death needs only the shake.
+6. **Check timing with the final voice.** Configure the real voice, then run
+   `validate` and `plan --json --out work/plan.json` without `--estimate`.
+   Pass the same `--voice-cache dir` to `plan` and `gen` so both use the same
+   audio. Confirm every reaction starts at or after its event and no lines
+   overlap.
+7. **Preview each event**, run `gen`, extract frames from the MP4 around each
+   event, and listen to the mixed WAV before reporting success.

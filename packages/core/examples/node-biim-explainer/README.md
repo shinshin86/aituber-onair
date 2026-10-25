@@ -62,7 +62,7 @@ overlap that real audio would avoid, or miss one caused by longer audio. Prefer
 anchors over fixed seconds when timing depends on speech. Video planning probes
 source durations with ffprobe, including in estimate mode.
 
-Audio is cached in `work/voice-cache/` by a hash of engine settings and reading
+Audio is cached in `work/voice-cache/` (override with `--voice-cache dir`) by a hash of engine settings and reading
 text. Preview, plan, and generation reuse it; delete that directory to refresh
 voices after changing server presets. Scripts and credentials are not copied into
 timeline artifacts. A synthesis failure reports the line index and speaker.
@@ -84,13 +84,17 @@ editing the schema; `npm run docs:reference:check` and tests detect stale docs.
 | `speakers.*.voice` | `engine: "sine"` or `"aituber-voice"`, plus `options`. Sine: `frequency` (440 Hz), `secondsPerChar` (0.08), `minDuration` (0.5s), `amplitude` (0.22, 0–1). Core: existing `VoiceServiceOptions`, including required `engineType`. |
 | `mouthMode`, `flapInterval`, `mouthThreshold`, `motion` | Top-level or speaker override: `"flap"`/`"rms"`, 0.12s (1/30–1), 0.08 (>0–1), `"subtle"`/`"bounce"`/`"none"`. Silence/listening closes the mouth. Blink is independent. |
 | `defaults` | `pauseAfter: 0.3`, `mainAudioVolume: 0.25` (0–1). |
-| `lines[]` | Required `speaker`, `text`; optional unique `id`, `reading`, `at`, `pauseAfter`, `emotion`. Silent captions require `spoken: false` and positive `duration`; spoken duration comes from audio. |
+| `lines[]` | Required `speaker`, `text`; optional unique `id`, `reading`, `at`, `eventAt`, `pauseAfter`, `emotion`. Silent captions require `spoken: false` and positive `duration`; spoken duration comes from audio. |
 | `main[]` | Chronological `at`, optional `until`, exactly one `video`, `image`, or `color: "#rrggbb"`. Uncovered time is black. Missing `until` uses the next slot or timeline end. |
 | `main[].video` | Optional `from` (0), `to` (source end), positive `speed` (1), `audio` (false), `speedBadge` (true). Range is in source seconds. Hold the last frame after playback ends. Clip audio ends there; it is not repeated. |
 | `main[].fit` | `"contain"` (default) or `"cover"` for images/video. |
 | `panels[]` | `at`, `box: "top" / "main" / "bottom"`, exactly one `text`, `items`, `image`, or `clear: true`. Each item has `text` and optional `color: "yellow" / "white"`. Content persists until the next update to that box. |
 | `timer` | Required `start`; optional `stop` (timeline end), nonnegative `offset` (0), `format: "H:MM:SS.cc"`, `position: "main-bottom-right" / "right-bottom"`. Hidden before start and frozen after stop. |
-| `counter` | Optional generic `label` and chronological `events: [{at, value}]`. Uses the bottom-right box. Do not combine it with bottom panels or a right-bottom timer. |
+| `counter` | Optional generic `label` and chronological `events: [{at, value, text?}]`. Event `text` overrides the displayed label/value, e.g. `鍵 1/1` or `クリア！`. Uses the bottom-right box. Do not combine it with bottom panels or a right-bottom timer. |
+
+Short main panels (one or two items) start at 56px; longer lists start at 38px.
+Scoreboard text starts at 38px with 12px vertical padding so the 90px box does
+not force ordinary labels to shrink. All panel text still scales down to fit.
 
 `emotion` is one of `neutral`, `happy`, `surprised`, `sad`, `angry`, `relaxed` and
 only adjusts body-motion energy. The layout has unboxed avatars, normal-weight
@@ -156,6 +160,26 @@ Preview the start, each panel change and a later page before running gen:
 Inspect the PNGs for clipping, bubble tails, text and avatar placement.
   npm run gen -- samples/my-script.json --out work/my-video.mp4
 Inspect extracted MP4 frames and listen to the mixed WAV before reporting success.
+```
+
+## Commentary for your own recording
+
+To turn your own gameplay or screen recording into a biim video, ask an AI
+agent such as Claude Code or Codex to watch it and write the script directly.
+Give it the recording, an event log if you have one (times of failures, clears,
+scene changes), and a memo with facts that are not visible on screen. The
+[authoring guide](./docs/authoring-guide.md#commentary-for-a-recording)
+describes the workflow and the rules for each region.
+
+```text
+Make a biim commentary video with node-biim-explainer from work/local/play.mp4.
+Read docs/authoring-guide.md (especially "Commentary for a recording"),
+schema/biim-script.schema.json and docs/reference.md first.
+Events: work/local/events.json (seconds). Memo: work/local/memo.md.
+Extract and look at frames every few seconds and around each event before writing.
+Top = where, main = why, bottom = numbers, subtitles = reactions; never repeat
+the panels in dialogue. Set eventAt on reactions and use effects for failures.
+Use the final voice for plan, preview each event, then gen and check the frames.
 ```
 
 ## Development

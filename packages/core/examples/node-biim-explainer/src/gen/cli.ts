@@ -19,9 +19,10 @@ export async function runCli(args: string[]) {
     filename.startsWith('-')
   )
     throw new Error(
-      'Usage: gen.js validate|plan|preview|gen script.json [--out path] [--at seconds|@id] [--estimate] [--json] [--chars-per-second 8]',
+      'Usage: gen.js validate|plan|preview|gen script.json [--out path] [--at seconds|@id] [--estimate] [--json] [--chars-per-second 8] [--voice-cache dir]',
     );
   let output: string | undefined;
+  let voiceCache = 'work/voice-cache';
   let estimate = false;
   let json = false;
   let charsPerSecond = 8;
@@ -30,11 +31,14 @@ export async function runCli(args: string[]) {
     const flag = flags[i];
     if (flag === '--estimate') estimate = true;
     else if (flag === '--json') json = true;
-    else if (['--out', '--at', '--chars-per-second'].includes(flag)) {
+    else if (
+      ['--out', '--at', '--chars-per-second', '--voice-cache'].includes(flag)
+    ) {
       const value = flags[++i];
       if (!value || value.startsWith('--'))
         throw new Error(`${flag}: missing value`);
       if (flag === '--out') output = value;
+      else if (flag === '--voice-cache') voiceCache = value;
       else if (flag === '--at') at.push(value);
       else charsPerSecond = Number(value);
     } else throw new Error(`Unknown option ${flag}`);
@@ -59,11 +63,7 @@ export async function runCli(args: string[]) {
     if (!estimate) await assertFfmpeg();
     const prepared = estimate
       ? undefined
-      : await synthesizeTimeline(
-          script,
-          temporary,
-          path.resolve('work/voice-cache'),
-        );
+      : await synthesizeTimeline(script, temporary, path.resolve(voiceCache));
     const timeline =
       prepared?.timeline ??
       resolveTimeline(script, estimateDurations(script, charsPerSecond), true);
@@ -180,6 +180,10 @@ function printPlan(timeline: Timeline) {
   for (const item of timeline.panels)
     console.log(
       `panel.${item.box}: ${item.start.toFixed(3)}–${item.end.toFixed(3)}s`,
+    );
+  for (const effect of timeline.effects)
+    console.log(
+      `effect.${effect.effect} (${effect.speaker}): ${effect.start.toFixed(3)}–${effect.end.toFixed(3)}s`,
     );
   if (timeline.timer)
     console.log(

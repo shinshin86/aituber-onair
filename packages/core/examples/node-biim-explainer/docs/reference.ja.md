@@ -41,7 +41,7 @@ NodeでMP4を生成する台本です。1〜2人の固定アバター、順番�
 | `defaults` | object | 任意 | — | 発話間の無音時間と素材動画の音量の既定値を指定します。 |
 | `defaults.pauseAfter` | number | 任意 | `0.3` | 各行の後（最終行を含む）の無音時間の既定秒数です。行ごとのpauseAfterが優先されます。 minimum: 0. 例: `0.3`. |
 | `defaults.mainAudioVolume` | number | 任意 | `0.25` | audio=trueの素材動画へ適用する0〜1の線形音量です。独立したBGMトラックではありません。 minimum: 0; maximum: 1. 例: `0.15`. |
-| `lines` | array<object> | 必須 | — | 1件以上の発話・字幕を順に記述します。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。 minItems: 1. |
+| `lines` | array<object> | 必須 | — | 発話・字幕を順に記述します。実況がない動画では空配列にできます。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。 minItems: 0. |
 | `lines[].id` | string | 任意 | — | アンカーに使う任意の一意IDです。英字で始め、英数字・下線・ハイフンを使えます。 pattern: "^[A-Za-z][A-Za-z0-9_-]*$". 例: `"intro"`. |
 | `lines[].speaker` | string | 必須 | — | speakersに存在するキーです。表示名のnameではありません。 minLength: 1. 例: `"dango"`. |
 | `lines[].text` | string | 必須 | — | 表示する空でない字幕です。折り返しとページ分割を行い、各ページを2行以内にします。 minLength: 1. 例: `"操作手順を説明します。"`. |
@@ -51,6 +51,7 @@ NodeでMP4を生成する台本です。1〜2人の固定アバター、順番�
 | `lines[].spoken` | boolean | 任意 | `true` | この行を音声合成するかどうかです。falseでは正数のdurationが必須となり口を閉じます。trueではdurationを指定できません。 例: `false`. |
 | `lines[].duration` | number | 条件付き | — | 無音字幕の表示秒数です。spoken=falseのときだけ必須で、spoken=trueまたはspoken省略時は指定できません。 exclusiveMinimum: 0. 例: `2`. |
 | `lines[].emotion` | "neutral" / "happy" / "surprised" / "sad" / "angry" / "relaxed" | 任意 | `"neutral"` | 体の動きの強さの指定です。happy・surprisedは1.1、sad・relaxedは0.8、neutral・angryは1です。画像セットやTTSの感情は変えません。 例: `"happy"`. |
+| `lines[].eventAt` | number or string | 任意 | — | 反応の開始を制限するイベント時刻です。atはこの時刻以降に指定します。検証と実音声の計画で早すぎる反応を拒否します。 例: `2`, `"@intro:end"`. |
 | `main` | array<any> | 任意 | — | メイン領域の素材を時刻順・重複なしで並べます。各項目はvideo・image・colorのいずれか1つです。素材のない時間と配列省略時は黒になります。 |
 | `main[].at` | number or string | 必須 | — | メイン素材の開始を秒数かアンカーで指定します。時刻順で、範囲が重複しないように並べます。 例: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
 | `main[].until` | number or string | 任意 | — | メイン素材の終了を秒数かアンカーで指定し、開始より後へ置きます。省略時は次の素材の開始か動画全体の終了です。素材の再生が先に終わる場合は最後のコマを保持します。 例: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
@@ -83,10 +84,17 @@ NodeでMP4を生成する台本です。1〜2人の固定アバター、順番�
 | `counter.events` | array<object> | 必須 | — | 時刻順の1件以上の数値更新です。最初のイベントまでは非表示で、値は次の更新か動画全体の終了まで保持します。 minItems: 1. |
 | `counter.events[].at` | number or string | 必須 | — | カウンター値の更新時刻を秒数かアンカーで指定し、時刻順に並べます。 例: `12.5`, `"@intro"`, `"@intro+1.5"`, `"@intro-0.5"`, `"@intro:end"`, `"@intro:end+0.3"`. |
 | `counter.events[].value` | number | 必須 | — | カウンターに表示する数値です。負数・小数も受け付け、整数の回数に限定しません。 例: `3`. |
+| `counter.events[].text` | string | 任意 | — | このイベントでラベルと数値の代わりに表示する全文です。取得数の合計やクリア状態に使えます。数値はタイムラインに保持します。 minLength: 1. 例: `"鍵 1/1"`, `"クリア！"`. |
 | `mouthMode` | "flap" / "rms" | 任意 | `"flap"` | 全体設定です。口の動作方式です。flapはflapIntervalごとに開閉し、rmsは音量がしきい値を超えると開きます。どちらも無音では閉じます。 例: `"flap"`. |
 | `flapInterval` | number | 任意 | `0.12` | 全体設定です。flapで1つの口の状態を保つ秒数です。1/30〜1秒で指定します。 minimum: 0.03333333333333333; maximum: 1. 例: `0.12`. |
 | `mouthThreshold` | number | 任意 | `0.08` | 全体設定です。口を開く正規化RMSのしきい値です。0超〜1を指定し、音声RMSを0.12で割って1を上限にした値と比較します。 exclusiveMinimum: 0; maximum: 1. 例: `0.08`. |
 | `motion` | "subtle" / "bounce" / "none" | 任意 | `"subtle"` | 全体設定です。体の動きです。subtleは小さな跳ねと呼吸、bounceは大きめの動き、noneは体だけを止め、口とまばたきは動かします。 例: `"subtle"`. |
+| `effects` | array<object> | 任意 | — | 任意のアバター演出の時刻表です。省略または空配列なら演出はありません。イベントログから生成した灰色演出は復帰時に終了します。 |
+| `effects[].at` | number or string | 必須 | — | アバター演出を開始する時刻です。秒数か発話アンカーで指定し、開始フレームを含みます。 例: `2`, `"@intro:end"`. |
+| `effects[].until` | number or string | 必須 | — | 演出の終了時刻です。このフレームは含まず、atより後に指定します。shakeは2秒以内です。 例: `3`, `"@clip:end"`. |
+| `effects[].speaker` | string | 必須 | — | 演出する既存の話者キーです。他のキャラクターやメイン映像には適用しません。 minLength: 1. 例: `"dango"`. |
+| `effects[].effect` | "grayscale" / "shake" | 必須 | — | アバターだけを灰色にするgrayscale、または短く一定の動きで揺らすshakeを選びます。2種類は併用できます。 例: `"grayscale"`, `"shake"`. |
+| `effects[].amplitude` | number | 任意 | `8` | 減衰前の揺れ幅を出力ピクセルで指定します。shakeだけで使えます。複数の揺れを合わせた変位は40pxが上限です。 minimum: 0; maximum: 40. 例: `10`. |
 
 ## 共有型
 

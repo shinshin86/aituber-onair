@@ -66,7 +66,8 @@
       "at": 0,
       "spoken": true,
       "pauseAfter": 0.4,
-      "emotion": "neutral"
+      "emotion": "neutral",
+      "eventAt": 0
     },
     {
       "id": "clip",
@@ -247,8 +248,24 @@
       },
       {
         "at": "@hold",
-        "value": 4
+        "value": 4,
+        "text": "確認完了"
       }
     ]
-  }
+  },
+  "effects": [
+    {
+      "at": "@intro:end",
+      "until": "@clip:end",
+      "speaker": "dango",
+      "effect": "grayscale"
+    },
+    {
+      "at": "@clip",
+      "until": "@clip+0.5",
+      "speaker": "bob",
+      "effect": "shake",
+      "amplitude": 10
+    }
+  ]
 }

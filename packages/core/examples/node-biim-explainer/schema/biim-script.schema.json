@@ -389,6 +389,12 @@
             "x-description-ja": "体の動きの強さの指定です。happy・surprisedは1.1、sad・relaxedは0.8、neutral・angryは1です。画像セットやTTSの感情は変えません。",
             "default": "neutral",
             "examples": ["happy"]
+          },
+          "eventAt": {
+            "$ref": "#/$defs/time",
+            "description": "Optional event timestamp bounding the reaction start from below. Set at to this timestamp or later; validation and actual audio planning reject early reactions.",
+            "x-description-ja": "反応の開始を制限するイベント時刻です。atはこの時刻以降に指定します。検証と実音声の計画で早すぎる反応を拒否します。",
+            "examples": [2, "@intro:end"]
           }
         },
         "required": ["speaker", "text"],
@@ -415,9 +421,9 @@
           }
         ]
       },
-      "minItems": 1,
-      "description": "Nonempty narration/caption sequence. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set.",
-      "x-description-ja": "1件以上の発話・字幕を順に記述します。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。"
+      "minItems": 0,
+      "description": "Narration/caption sequence; may be empty for a video with no commentary. Spoken duration comes from audio; silent duration is explicit. Starts are sequential unless at is set.",
+      "x-description-ja": "発話・字幕を順に記述します。実況がない動画では空配列にできます。発話の長さは音声、無音字幕の長さはdurationで決まります。at省略時は直前の行に続きます。"
     },
     "main": {
       "type": "array",
@@ -746,6 +752,13 @@
                 "description": "Displayed counter number. Negative and fractional values are accepted; it is not restricted to an integer count.",
                 "x-description-ja": "カウンターに表示する数値です。負数・小数も受け付け、整数の回数に限定しません。",
                 "examples": [3]
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Optional complete scoreboard text for this event, replacing label and value visually while retaining the numeric metric in the timeline. Useful for inventory totals or completion status.",
+                "x-description-ja": "このイベントでラベルと数値の代わりに表示する全文です。取得数の合計やクリア状態に使えます。数値はタイムラインに保持します。",
+                "examples": ["鍵 1/1", "クリア！"]
               }
             },
             "required": ["at", "value"]
@@ -790,6 +803,70 @@
       "x-description-ja": "全体設定です。体の動きです。subtleは小さな跳ねと呼吸、bounceは大きめの動き、noneは体だけを止め、口とまばたきは動かします。",
       "default": "subtle",
       "examples": ["subtle"]
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["at", "until", "speaker", "effect"],
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/time",
+            "description": "Inclusive start of the avatar effect, using seconds or a line anchor.",
+            "x-description-ja": "アバター演出を開始する時刻です。秒数か発話アンカーで指定し、開始フレームを含みます。",
+            "examples": [2, "@intro:end"]
+          },
+          "until": {
+            "$ref": "#/$defs/time",
+            "description": "Exclusive end of the effect; must resolve after at. Shake effects last at most two seconds.",
+            "x-description-ja": "演出の終了時刻です。このフレームは含まず、atより後に指定します。shakeは2秒以内です。",
+            "examples": [3, "@clip:end"]
+          },
+          "speaker": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Existing speaker key receiving this effect; other characters and the main video are unchanged.",
+            "x-description-ja": "演出する既存の話者キーです。他のキャラクターやメイン映像には適用しません。",
+            "examples": ["dango"]
+          },
+          "effect": {
+            "enum": ["grayscale", "shake"],
+            "description": "Avatar-only grayscale coloring or a deterministic short screen-space shake. These two effects may overlap.",
+            "x-description-ja": "アバターだけを灰色にするgrayscale、または短く一定の動きで揺らすshakeを選びます。2種類は併用できます。",
+            "examples": ["grayscale", "shake"]
+          },
+          "amplitude": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 40,
+            "default": 8,
+            "description": "Shake displacement in output pixels before decay. Allowed only with effect=shake; combined shake offsets are capped at 40 pixels.",
+            "x-description-ja": "減衰前の揺れ幅を出力ピクセルで指定します。shakeだけで使えます。複数の揺れを合わせた変位は40pxが上限です。",
+            "examples": [10]
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "effect": {
+                  "const": "grayscale",
+                  "description": "Selects the grayscale branch that forbids a shake amplitude.",
+                  "x-description-ja": "揺れ幅を指定できないgrayscaleの検証条件です。"
+                }
+              }
+            },
+            "then": {
+              "not": {
+                "required": ["amplitude"]
+              }
+            }
+          }
+        ]
+      },
+      "description": "Optional timed avatar effects. Empty or omitted means no effects; grayscale ends at respawn when generated from an event log.",
+      "x-description-ja": "任意のアバター演出の時刻表です。省略または空配列なら演出はありません。イベントログから生成した灰色演出は復帰時に終了します。"
     }
   },
   "required": ["speakers", "lines"],

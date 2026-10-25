@@ -29,6 +29,7 @@ export interface ScriptLine {
   text: string;
   reading?: string;
   at?: Time;
+  eventAt?: Time;
   spoken?: boolean;
   duration?: number;
   pauseAfter?: number;
@@ -62,6 +63,13 @@ export interface Timer {
   format?: 'H:MM:SS.cc';
   position?: 'main-bottom-right' | 'right-bottom';
 }
+export interface AvatarEffect {
+  at: Time;
+  until: Time;
+  speaker: string;
+  effect: 'grayscale' | 'shake';
+  amplitude?: number;
+}
 export interface BiimScript extends PerformanceOptions {
   $schema?: string;
   canvas?: '16:9' | '4:3';
@@ -73,8 +81,12 @@ export interface BiimScript extends PerformanceOptions {
   lines: ScriptLine[];
   main?: MainClip[];
   panels?: Panel[];
+  effects?: AvatarEffect[];
   timer?: Timer;
-  counter?: { label: string; events: { at: Time; value: number }[] };
+  counter?: {
+    label: string;
+    events: { at: Time; value: number; text?: string }[];
+  };
 }
 export interface TimedLine extends ScriptLine {
   index: number;
@@ -99,10 +111,11 @@ export interface Timeline {
   lines: TimedLine[];
   main: TimedMain[];
   panels: TimedPanel[];
+  effects: (AvatarEffect & { start: number; end: number })[];
   timer?: Timer & { start: number; stop: number };
   counter?: {
     label: string;
-    events: { at: number; end: number; value: number }[];
+    events: { at: number; end: number; value: number; text?: string }[];
   };
 }
 export interface RenderConfig extends PerformanceOptions, Timeline {

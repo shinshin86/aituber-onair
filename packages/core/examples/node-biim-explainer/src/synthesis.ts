@@ -6,7 +6,35 @@ import { synthesize as sine } from './gen/engines/sine.js';
 import { synthesize as voice } from './gen/engines/aituberVoice.js';
 import { mixAt } from './media.js';
 import { resolveTimeline } from './timeline.js';
-import type { BiimScript } from './types.js';
+import type { BiimScript, ScriptLine, ScriptSpeaker } from './types.js';
+
+async function synthesizeLine(
+  line: ScriptLine,
+  speaker: ScriptSpeaker,
+  workDir: string,
+  cacheDir: string,
+): Promise<DecodedAudio> {
+  await mkdir(cacheDir, { recursive: true });
+  const settings = speaker.voice;
+  const text = line.reading ?? line.text;
+  const hash = createHash('sha256')
+    .update(JSON.stringify({ text, ...settings }))
+    .digest('hex');
+  const cached = path.join(cacheDir, `${hash}.wav`);
+  try {
+    return await decodeWav(cached);
+  } catch {
+    await mkdir(workDir, { recursive: true });
+    const result = await (settings.engine === 'sine' ? sine : voice)(
+      text,
+      settings.options ?? {},
+      workDir,
+    );
+    const audio = await decodeWav(result.wavPath);
+    await copyFile(result.wavPath, cached);
+    return audio;
+  }
+}
 
 /** Cache audio by text + engine settings. No credentials or render configs are serialized. */
 export async function synthesizeTimeline(
@@ -22,30 +50,17 @@ export async function synthesizeTimeline(
       durations[i] = line.duration as number;
       continue;
     }
-    const settings = script.speakers[line.speaker].voice;
-    const text = line.reading ?? line.text;
-    const hash = createHash('sha256')
-      .update(JSON.stringify({ text, ...settings }))
-      .digest('hex');
-    const cached = path.join(cacheDir, `${hash}.wav`);
     try {
-      audio[i] = await decodeWav(cached);
-    } catch {
-      try {
-        const directory = path.join(workDir, `line-${i}`);
-        await mkdir(directory, { recursive: true });
-        const result = await (settings.engine === 'sine' ? sine : voice)(
-          text,
-          settings.options ?? {},
-          directory,
-        );
-        audio[i] = await decodeWav(result.wavPath);
-        await copyFile(result.wavPath, cached);
-      } catch (error) {
-        throw new Error(
-          `lines[${i}] (speaker ${line.speaker}): ${(error as Error).message}`,
-        );
-      }
+      audio[i] = await synthesizeLine(
+        line,
+        script.speakers[line.speaker],
+        path.join(workDir, `line-${i}`),
+        cacheDir,
+      );
+    } catch (error) {
+      throw new Error(
+        `lines[${i}] (speaker ${line.speaker}): ${(error as Error).message}`,
+      );
     }
     durations[i] = (audio[i] as DecodedAudio).duration;
   }

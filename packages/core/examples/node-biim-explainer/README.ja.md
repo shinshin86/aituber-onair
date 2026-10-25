@@ -62,7 +62,7 @@ JSONだけを標準出力に出す場合は、`node dist/gen.js plan samples/bii
 あるため、発話に合わせる変更には固定秒数よりアンカーを使ってください。
 動画の長さは概算モードでもffprobeで確認します。
 
-音声は、読み上げ文とエンジン設定のハッシュをキーに`work/voice-cache/`へ保存し、
+音声は、読み上げ文とエンジン設定のハッシュをキーに`work/voice-cache/`へ保存し（`--voice-cache dir`で変更可能）、
 plan・preview・genで再利用します。サーバー側のプリセットを変えた場合は、この
 ディレクトリを削除して再生成してください。時刻表には話者の音声設定や認証情報を
 保存しません。合成に失敗した場合は発話番号と話者を表示します。
@@ -84,16 +84,18 @@ Schemaを変えたら`npm run docs:reference`で更新してください。
 | `speakers.*.voice` | `engine: "sine"`または`"aituber-voice"`と`options`。sineは`frequency`（440Hz）、`secondsPerChar`（0.08秒）、`minDuration`（0.5秒）、`amplitude`（0.22、0〜1）。Coreは必須の`engineType`を含む既存の`VoiceServiceOptions`。 |
 | `mouthMode`, `flapInterval`, `mouthThreshold`, `motion` | 全体または話者別に指定。`"flap"`/`"rms"`、0.12秒（1/30〜1）、0.08（0超〜1）、`"subtle"`/`"bounce"`/`"none"`。無音中と聞き手は口を閉じます。まばたきは独立します。 |
 | `defaults` | `pauseAfter: 0.3`秒、`mainAudioVolume: 0.25`（0〜1）。 |
-| `lines[]` | 必須は`speaker`, `text`。任意で一意の`id`, `reading`, `at`, `pauseAfter`, `emotion`。無音字幕は`spoken: false`と正数の`duration`を指定。発話の長さは音声から決まります。 |
+| `lines[]` | 必須は`speaker`, `text`。任意で一意の`id`, `reading`, `at`, `eventAt`, `pauseAfter`, `emotion`。無音字幕は`spoken: false`と正数の`duration`を指定。発話の長さは音声から決まります。 |
 | `main[]` | 時刻順の`at`、任意の`until`、`video`/`image`/`color: "#rrggbb"`のいずれか1つ。`until`省略時は次の素材または動画全体の終わりまで。素材のない時間は黒です。 |
 | `main[].video` | 元映像の秒数で`from`（0）、`to`（素材の終わり）。正数の`speed`（1）、`audio`（false）、`speedBadge`（true）。再生後は最後のコマを保持し、素材音声は繰り返しません。 |
 | `main[].fit` | 映像・画像を枠内に収める`"contain"`（既定）か、枠を埋める`"cover"`。 |
 | `panels[]` | `at`, `box: "top" / "main" / "bottom"`と、`text`/`items`/`image`/`clear: true`のいずれか1つ。itemsは`text`と任意の`color: "yellow" / "white"`。同じ欄の次の更新まで保持。 |
 | `timer` | 必須の`start`、任意の`stop`（動画の終わり）、0以上の`offset`（0）、`format: "H:MM:SS.cc"`、`position: "main-bottom-right" / "right-bottom"`。開始前は非表示、stop以降は停止。 |
-| `counter` | 任意の`label`と時刻順の`events: [{at, value}]`。右下の欄を使うため、bottomパネルやright-bottom時計とは併用できません。 |
+| `counter` | 任意の`label`と時刻順の`events: [{at, value, text?}]`。`text`で「鍵 1/1」「クリア！」などの表示に差し替えられます。右下の欄を使うため、bottomパネルやright-bottom時計とは併用できません。 |
 
 `emotion`は`neutral`, `happy`, `surprised`, `sad`, `angry`, `relaxed`から選び、
-体の動きの強さだけに使います。キャラクターには枠を付けません。字幕は通常の
+体の動きの強さだけに使います。右中は1〜2項目なら56px、長いリストは38pxを基準にします。
+右下は38pxと上下12pxの余白を使い、通常のラベルが小さく縮まないようにしています。
+長い文字列は欄に収まるまで縮小します。キャラクターには枠を付けません。字幕は通常の
 太さの42pxで、1ページ2行まで。長い字幕は文字数に応じて表示時間を配分します。
 日本語の単語境界を優先し、枠に収まらない長い語は分割します。情報欄は文字数に
 応じて縮小するので、読みやすさのため短く書いてください。
@@ -154,6 +156,25 @@ genの前に、開始・情報欄切替・後半の字幕ページを必ずプ�
 PNGを見て、はみ出し、吹き出しの向き、文字、キャラクターの位置を確認してください。
   npm run gen -- samples/my-script.json --out work/my-video.mp4
 生成MP4から抽出したフレームと合成WAVを確認してから完了報告してください。
+```
+
+## 自分の録画に実況を付ける
+
+自分のゲームプレイや画面録画から biim 形式の動画を作るときは、Claude Code や
+Codex などの AI エージェントに録画を見せ、台本を直接書かせます。録画に加えて、
+出来事のログ(失敗・クリア・場面転換の時刻)があればそれを、画面に出ない情報は
+メモにして渡します。手順と各枠の決まりは
+[執筆ガイド](./docs/authoring-guide.ja.md#録画に実況を付ける)にあります。
+
+```text
+node-biim-explainerで、work/local/play.mp4に実況を付けたbiim形式の動画を作ってください。
+先にdocs/authoring-guide.ja.md(特に「録画に実況を付ける」)、
+schema/biim-script.schema.json、docs/reference.ja.mdを読んでください。
+出来事のログ: work/local/events.json(秒)。メモ: work/local/memo.md。
+書く前に、数秒ごとと各出来事の前後でフレームを抜き出して見てください。
+右上=場所、右中=理由、右下=数値、字幕=反応とし、右枠の内容をセリフで繰り返さないでください。
+反応にはeventAtを付け、失敗にはeffectsを使ってください。
+最終的な声でplanを確認し、出来事ごとにプレビューしてからgenし、フレームを確認してください。
 ```
 
 ## 開発時の確認
