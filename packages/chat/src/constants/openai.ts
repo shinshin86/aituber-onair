@@ -9,9 +9,13 @@ export const MODEL_GPT_6_SOL = 'gpt-6-sol';
 export const MODEL_GPT_6_LUNA = 'gpt-6-luna';
 
 // gpt model
+/** @deprecated OpenAI shuts it down on December 11, 2026. Use MODEL_GPT_5_6_LUNA. */
 export const MODEL_GPT_5_NANO = 'gpt-5-nano';
+/** @deprecated OpenAI shuts it down on December 11, 2026. Use MODEL_GPT_5_6_TERRA. */
 export const MODEL_GPT_5_MINI = 'gpt-5-mini';
+/** @deprecated OpenAI shuts it down on December 11, 2026. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_GPT_5 = 'gpt-5';
+/** @deprecated OpenAI shuts it down on April 1, 2027. Use MODEL_GPT_6_SOL. */
 export const MODEL_GPT_5_1 = 'gpt-5.1';
 export const MODEL_GPT_5_4 = 'gpt-5.4';
 export const MODEL_GPT_5_5 = 'gpt-5.5';
@@ -20,6 +24,7 @@ export const MODEL_GPT_5_6_SOL = 'gpt-5.6-sol';
 export const MODEL_GPT_5_6_TERRA = 'gpt-5.6-terra';
 export const MODEL_GPT_5_6_LUNA = 'gpt-5.6-luna';
 export const MODEL_GPT_5_4_MINI = 'gpt-5.4-mini';
+/** @deprecated OpenAI shuts it down on April 1, 2027. Use MODEL_GPT_6_LUNA. */
 export const MODEL_GPT_5_4_NANO = 'gpt-5.4-nano';
 export const MODEL_GPT_5_4_PRO = 'gpt-5.4-pro';
 // GPT-5.5 Pro is intentionally not listed because OpenAI documents it as
@@ -27,14 +32,32 @@ export const MODEL_GPT_5_4_PRO = 'gpt-5.4-pro';
 
 export const MODEL_GPT_4_1 = 'gpt-4.1';
 export const MODEL_GPT_4_1_MINI = 'gpt-4.1-mini';
+/** @deprecated Shut down by OpenAI on October 23, 2026. Use MODEL_GPT_5_6_LUNA. */
 export const MODEL_GPT_4_1_NANO = 'gpt-4.1-nano';
 
 export const MODEL_GPT_4O_MINI = 'gpt-4o-mini';
 export const MODEL_GPT_4O = 'gpt-4o';
+/** @deprecated Shut down by OpenAI on October 23, 2026. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_O3_MINI = 'o3-mini';
 
+/** @deprecated Shut down by OpenAI in 2025. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_O1_MINI = 'o1-mini';
+/** @deprecated Shut down by OpenAI on October 23, 2026. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_O1 = 'o1';
+
+// Deprecated or shut-down ids remain exported so existing imports continue to
+// compile, but are omitted from the supported model list.
+export const OPENAI_DEPRECATED_MODELS = [
+  MODEL_GPT_5_NANO,
+  MODEL_GPT_5_MINI,
+  MODEL_GPT_5,
+  MODEL_GPT_5_1,
+  MODEL_GPT_5_4_NANO,
+  MODEL_GPT_4_1_NANO,
+  MODEL_O3_MINI,
+  MODEL_O1_MINI,
+  MODEL_O1,
+];
 
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [

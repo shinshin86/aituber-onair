@@ -85,6 +85,9 @@ import {
   MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_QWEN_QWEN_3_8_FLASH,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
+  OPENROUTER_DEPRECATED_MODELS,
 } from '../../src/constants/openrouter';
 
 const recentOpenRouterVisionModels = [
@@ -137,8 +140,8 @@ describe('OpenRouterChatServiceProvider', () => {
   });
 
   describe('getDefaultModel', () => {
-    it('should return gpt-oss-20b:free as default model', () => {
-      expect(provider.getDefaultModel()).toBe(MODEL_GPT_OSS_20B_FREE);
+    it('should return gemma-4-31b-it:free as default model', () => {
+      expect(provider.getDefaultModel()).toBe(MODEL_GOOGLE_GEMMA_4_31B_IT_FREE);
     });
   });
 
@@ -151,7 +154,6 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_UPSTAGE_SOLAR_PRO4,
         MODEL_UPSTAGE_SOLAR_MINI4,
         MODEL_XIAOMI_MIMO_V2_6_FLASH,
-        MODEL_APODEX_1_1_MINI_FREE,
         MODEL_OPENAI_GPT_6_1_SOL,
         MODEL_OPENAI_GPT_6_SOL,
         MODEL_OPENAI_GPT_6_LUNA,
@@ -164,10 +166,7 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
         MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
         MODEL_GOOGLE_GEMINI_3_8_FLASH,
-        MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
         MODEL_INCEPTION_MERCURY_2_5,
-        MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
-        MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
         MODEL_QWEN_QWEN_3_8_MAX_0902,
         MODEL_META_MUSE_SPARK_1_3,
         MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
@@ -177,8 +176,6 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_OPENROUTER_AUTO,
         MODEL_OPENROUTER_AUTO_BETA,
         MODEL_OPENROUTER_FUSION,
-        MODEL_GPT_OSS_20B_FREE,
-        MODEL_OPENAI_GPT_LATEST,
         MODEL_OPENAI_GPT_MINI_LATEST,
         MODEL_OPENAI_GPT_5_6_SOL,
         MODEL_OPENAI_GPT_5_6_TERRA,
@@ -197,8 +194,6 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_ANTHROPIC_CLAUDE_SONNET_5,
         MODEL_ANTHROPIC_CLAUDE_OPUS_5,
         MODEL_ANTHROPIC_CLAUDE_OPUS_4_8,
-        MODEL_ANTHROPIC_CLAUDE_OPUS_4,
-        MODEL_ANTHROPIC_CLAUDE_SONNET_4,
         MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
         MODEL_GOOGLE_GEMINI_PRO_LATEST,
         MODEL_GOOGLE_GEMINI_FLASH_LATEST,
@@ -207,7 +202,6 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
         MODEL_GOOGLE_GEMINI_2_5_PRO,
         MODEL_GOOGLE_GEMINI_2_5_FLASH,
-        MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
         MODEL_ZAI_GLM_5_3,
         MODEL_ZAI_GLM_5_3_FLASH,
         MODEL_ZAI_GLM_5_3_FLASHX,
@@ -227,12 +221,18 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_MOONSHOTAI_KIMI_K2_7_CODE,
         MODEL_MOONSHOTAI_KIMI_K2_6,
         MODEL_MOONSHOTAI_KIMI_K2_5,
-        MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
-        MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
-        MODEL_UNBIASED_PARETO_26_10_PREVIEW,
         MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
         MODEL_UNBIASED_PARETO_26_9,
+        MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+        MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
       ]);
+    });
+
+    it('omits ids removed from the OpenRouter catalog', () => {
+      const models = provider.getSupportedModels();
+      for (const model of OPENROUTER_DEPRECATED_MODELS) {
+        expect(models).not.toContain(model);
+      }
     });
   });
 
@@ -295,11 +295,8 @@ describe('OpenRouterChatServiceProvider', () => {
       const freeModels = provider.getFreeModels();
       expect(Array.isArray(freeModels)).toBe(true);
       expect(freeModels).toEqual([
-        MODEL_APODEX_1_1_MINI_FREE,
-        MODEL_GPT_OSS_20B_FREE,
-        MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
-        MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
-        MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+        MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+        MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
       ]);
     });
   });
@@ -327,17 +324,18 @@ describe('OpenRouterChatServiceProvider', () => {
       });
 
       expect(service).toBeInstanceOf(OpenRouterChatService);
-      expect(service.getModel()).toBe(MODEL_GPT_OSS_20B_FREE);
+      expect(service.getModel()).toBe(MODEL_GOOGLE_GEMMA_4_31B_IT_FREE);
+      expect(service.getVisionModel()).toBe(MODEL_GOOGLE_GEMMA_4_31B_IT_FREE);
     });
 
     it('should create service with the default model', () => {
       const service = provider.createChatService({
         apiKey: 'test-api-key',
-        model: MODEL_GPT_OSS_20B_FREE,
+        model: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
       });
 
       expect(service).toBeInstanceOf(OpenRouterChatService);
-      expect(service.getModel()).toBe(MODEL_GPT_OSS_20B_FREE);
+      expect(service.getModel()).toBe(MODEL_GOOGLE_GEMMA_4_31B_IT_FREE);
     });
 
     it('should use default model for vision since gpt-oss-20b does not support vision', () => {

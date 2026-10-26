@@ -45,9 +45,7 @@ describe('GeminiChatServiceProvider', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
         MODEL_GEMINI_3_8_FLASH,
-        MODEL_GEMINI_3_7_FLASH,
         MODEL_GEMINI_3_6_FLASH,
-        MODEL_GEMINI_3_5_FLASH,
         MODEL_GEMINI_3_5_FLASH_LITE,
         MODEL_GEMINI_3_1_FLASH_LITE,
         MODEL_GEMINI_3_1_PRO_PREVIEW,
@@ -65,6 +63,8 @@ describe('GeminiChatServiceProvider', () => {
       expect(models).not.toContain(MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW);
       expect(models).not.toContain(MODEL_GEMINI_3_PRO_PREVIEW);
       expect(models).not.toContain(MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17);
+      expect(models).not.toContain(MODEL_GEMINI_3_7_FLASH);
+      expect(models).not.toContain(MODEL_GEMINI_3_5_FLASH);
     });
   });
 

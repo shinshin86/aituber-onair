@@ -449,9 +449,9 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     expect(container.querySelectorAll('.message.assistant')).toHaveLength(2);
   });
 
-  it('Pareto 26.10 Preview streams repeated replies and recovers from HTTP errors without unsupported settings', async () => {
+  it('Pareto 26.9 streams repeated replies and recovers from HTTP errors without unsupported settings', async () => {
     await chooseButton('.provider-item', 'OpenRouter');
-    await chooseButton('.model-item', 'Pareto 26.10 Preview');
+    await chooseButton('.model-item', 'Pareto 26.9');
     await change('#api-key', FAKE_KEY);
     expect(container.querySelector('#openrouter-reasoning-effort')).toBeNull();
     expect(
@@ -485,7 +485,7 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     expect(requests).toHaveLength(3);
     for (const { url, body } of requests) {
       expect(url).toBe(OPENROUTER);
-      expect(body.model).toBe('unbiased/pareto-26.10-preview');
+      expect(body.model).toBe('unbiased/pareto-26.9');
       expect(body.stream).toBe(true);
       expect(body.reasoning).toBeUndefined();
       expect(body.reasoning_effort).toBeUndefined();
@@ -499,16 +499,12 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     expect(container.querySelectorAll('.message.assistant')).toHaveLength(2);
   });
 
-  it('switches stable Pareto and preview without leaking inherited reasoning settings', async () => {
+  it('switches to stable Pareto without leaking inherited reasoning settings', async () => {
     await selectModel(modelCases[2]);
     await change('#api-key', FAKE_KEY);
     await change('#openrouter-reasoning-effort', 'high');
     await change('#openrouter-reasoning-max-tokens', '1024');
-    for (const [label, model] of [
-      ['Pareto 26.10 Preview', 'unbiased/pareto-26.10-preview'],
-      ['Pareto 26.9', 'unbiased/pareto-26.9'],
-      ['Pareto 26.10 Preview', 'unbiased/pareto-26.10-preview'],
-    ]) {
+    for (const [label, model] of [['Pareto 26.9', 'unbiased/pareto-26.9']]) {
       await chooseButton('.model-item', label);
       expect(
         container.querySelector('#openrouter-reasoning-effort'),

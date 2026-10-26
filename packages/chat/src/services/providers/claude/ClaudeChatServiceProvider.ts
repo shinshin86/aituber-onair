@@ -1,5 +1,4 @@
 import {
-  MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_6_SONNET,
@@ -89,7 +88,6 @@ export class ClaudeChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
-      MODEL_CLAUDE_4_5_SONNET,
       MODEL_CLAUDE_4_5_HAIKU,
       MODEL_CLAUDE_4_5_OPUS,
       MODEL_CLAUDE_4_6_SONNET,

@@ -40,6 +40,9 @@ export const MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING =
   'nvidia/nemotron-3.5-lightning';
 export const MODEL_QWEN_QWEN_3_8_27B = 'qwen/qwen3.8-27b';
 export const MODEL_QWEN_QWEN_3_8_OMNI_FLASH = 'qwen/qwen3.8-omni-flash';
+export const MODEL_GOOGLE_GEMMA_4_31B_IT_FREE = 'google/gemma-4-31b-it:free';
+export const MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE =
+  'nvidia/nemotron-3.5-super-vl:free';
 
 // These catalog entries do not document a reasoning token-budget control.
 export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
@@ -54,6 +57,8 @@ export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_UNBIASED_PARETO_26_9,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
 ];
 
 // OpenRouter models
@@ -133,6 +138,18 @@ export const OPENROUTER_DEPRECATED_MODELS = [
   MODEL_ANTHROPIC_CLAUDE_3_7_SONNET,
   MODEL_ANTHROPIC_CLAUDE_3_5_SONNET,
   MODEL_ZAI_GLM_4_5_AIR_FREE,
+  MODEL_OPENAI_GPT_LATEST,
+  MODEL_ANTHROPIC_CLAUDE_OPUS_4,
+  MODEL_ANTHROPIC_CLAUDE_SONNET_4,
+  MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
+  MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
+  MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
+  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  MODEL_APODEX_1_1_MINI_FREE,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
+  MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
+  MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+  MODEL_GPT_OSS_20B_FREE,
 ];
 
 export type OpenRouterReasoningEffort =
@@ -226,6 +243,11 @@ const OPENROUTER_MODEL_REASONING: Record<
   },
   [MODEL_QWEN_QWEN_3_8_27B]: { efforts: [], defaultEffort: undefined },
   [MODEL_QWEN_QWEN_3_8_OMNI_FLASH]: { efforts: [], defaultEffort: undefined },
+  [MODEL_GOOGLE_GEMMA_4_31B_IT_FREE]: { efforts: [], defaultEffort: undefined },
+  [MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE]: {
+    efforts: [],
+    defaultEffort: undefined,
+  },
 
   // Chat-oriented defaults avoid disabling mandatory reasoning and favor latency.
   [MODEL_OPENAI_GPT_6_1_SOL]: {
@@ -300,11 +322,8 @@ const OPENROUTER_MODEL_REASONING: Record<
 
 // Free tier models
 export const OPENROUTER_FREE_MODELS = [
-  MODEL_APODEX_1_1_MINI_FREE,
-  MODEL_GPT_OSS_20B_FREE,
-  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
-  MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
-  MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
 ];
 
 // Vision supported models on OpenRouter
@@ -375,6 +394,8 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_UNBIASED_PARETO_26_9,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
 ];
 
 // Rate limits for free tier

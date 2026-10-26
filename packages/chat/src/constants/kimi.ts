@@ -6,7 +6,10 @@ export const MODEL_KIMI_K3 = 'kimi-k3';
 export const MODEL_KIMI_K2_7_CODE = 'kimi-k2.7-code';
 export const MODEL_KIMI_K2_7_CODE_HIGHSPEED = 'kimi-k2.7-code-highspeed';
 export const MODEL_KIMI_K2_6 = 'kimi-k2.6';
+/** @deprecated Discontinued by Kimi on August 31, 2026. Use MODEL_KIMI_K2_6. */
 export const MODEL_KIMI_K2_5 = 'kimi-k2.5';
+
+export const KIMI_DEPRECATED_MODELS = [MODEL_KIMI_K2_5];
 
 export type KimiReasoningEffort = 'low' | 'high' | 'max';
 

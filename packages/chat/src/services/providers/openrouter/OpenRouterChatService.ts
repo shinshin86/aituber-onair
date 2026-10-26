@@ -8,6 +8,7 @@ import {
   ENDPOINT_OPENROUTER_API,
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   MODEL_GPT_OSS_20B_FREE,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_ZAI_GLM_5_3,
@@ -102,8 +103,8 @@ export class OpenRouterChatService implements ChatService {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_GPT_OSS_20B_FREE,
-    visionModel: string = MODEL_GPT_OSS_20B_FREE,
+    model: string = MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    visionModel: string = MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_OPENROUTER_API,
     responseLength?: ChatResponseLength,

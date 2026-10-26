@@ -1,10 +1,6 @@
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
-  MODEL_GPT_5_NANO,
-  MODEL_GPT_5_MINI,
-  MODEL_GPT_5,
-  MODEL_GPT_5_1,
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
@@ -16,16 +12,11 @@ import {
   MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
-  MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1_NANO,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
-  MODEL_O3_MINI,
-  MODEL_O1_MINI,
-  MODEL_O1,
   VISION_SUPPORTED_MODELS,
   isOpenAIReasoningModel,
   isResponsesOnlyGPT5Model,
@@ -155,10 +146,6 @@ export class OpenAIChatServiceProvider
    */
   getSupportedModels(): string[] {
     return [
-      MODEL_GPT_5_NANO,
-      MODEL_GPT_5_MINI,
-      MODEL_GPT_5,
-      MODEL_GPT_5_1,
       MODEL_GPT_5_4,
       MODEL_GPT_5_5,
       MODEL_GPT_5_6,
@@ -170,16 +157,11 @@ export class OpenAIChatServiceProvider
       MODEL_GPT_5_6_TERRA,
       MODEL_GPT_5_6_LUNA,
       MODEL_GPT_5_4_MINI,
-      MODEL_GPT_5_4_NANO,
       MODEL_GPT_5_4_PRO,
       MODEL_GPT_4_1,
       MODEL_GPT_4_1_MINI,
-      MODEL_GPT_4_1_NANO,
       MODEL_GPT_4O_MINI,
       MODEL_GPT_4O,
-      MODEL_O3_MINI,
-      MODEL_O1_MINI,
-      MODEL_O1,
     ];
   }
 
@@ -188,7 +170,7 @@ export class OpenAIChatServiceProvider
    * @returns Default model name
    */
   getDefaultModel(): string {
-    return MODEL_GPT_5_NANO;
+    return MODEL_GPT_5_6_LUNA;
   }
 
   /**

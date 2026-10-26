@@ -4,7 +4,6 @@ import {
   MODEL_KIMI_K2_7_CODE,
   MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
-  MODEL_KIMI_K2_5,
   getDefaultKimiReasoningEffort,
   getKimiSupportedReasoningEfforts,
   isKimiReasoningEffortModel,
@@ -81,7 +80,6 @@ export class KimiChatServiceProvider
       MODEL_KIMI_K2_7_CODE,
       MODEL_KIMI_K2_7_CODE_HIGHSPEED,
       MODEL_KIMI_K2_6,
-      MODEL_KIMI_K2_5,
     ];
   }
 

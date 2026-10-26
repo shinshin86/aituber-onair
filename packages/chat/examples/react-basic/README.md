@@ -125,10 +125,11 @@ built-in model status is `available`.
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.1, GPT-5 (Standard), GPT-5 Mini, GPT-5 Nano, GPT-4.1, GPT-4, GPT-3.5
+- Models: GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-4.1, GPT-4.1 Mini, GPT-4o, GPT-4o Mini
+- Default: GPT-5.6 Luna. Models that OpenAI has deprecated or shut down (GPT-5, GPT-5 Mini/Nano, GPT-5.1, GPT-5.4 Nano, GPT-4.1 Nano, o1, o1-mini, o3-mini) are no longer selectable.
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
-- Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), GPT-5.1 supports None/Low/Medium/High, and GPT-5.0 models support Minimal/Low/Medium/High
+- Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), and GPT-5.6 supports None/Low/Medium/High/XHigh/Max
 
 **OpenAI-Compatible (Local/Self-Hosted)**
 - Endpoint: server origin, API base URL, or full Chat Completions URL
@@ -137,7 +138,7 @@ built-in model status is `available`.
 - Best for: local LLMs (Ollama/LM Studio/vLLM-compatible endpoints)
 
 **Claude**
-- Models: Claude Haiku 5.5, Claude Opus 5.5, Claude Sonnet 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Sonnet, Haiku)
+- Models: Claude Haiku 5.5, Claude Opus 5.5, Claude Sonnet 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Haiku). Claude Sonnet 4.5 is deprecated (retires 2026-11-30) and is no longer selectable
 - Vision: All listed Claude models
 - Haiku 5.5 is an explicit option appended to the Claude selector; Haiku 4.5
   remains the default. Selecting Haiku 5.5 starts at `low` effort for chat;
@@ -162,8 +163,8 @@ built-in model status is `available`.
 - Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
-- Models: Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash/Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
-- Vision: Supported for all listed Gemini models. Deprecated lifecycle models remain selectable with a deprecated label for explicit compatibility.
+- Models: Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
+- Vision: Supported for all listed Gemini models. Deprecated lifecycle models, including Gemini 3.7 Flash and Gemini 3.5 Flash, remain selectable with a deprecated label for explicit compatibility.
 - Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
 
@@ -173,7 +174,7 @@ built-in model status is `available`.
 - Reasoning Effort: The intersection of catalog-advertised and SDK-supported values. Controls stay disabled when the catalog does not publish the required metadata.
 - Best for: Flexible model routing and unified API usage
 - Auto Beta: Selects a model per request and charges the selected model's rate
-- Coding models: KAT-Coder-Air/Pro V2.5 are explicit text-only options, not defaults
+- Default: Gemma 4 31B IT (Free) (`google/gemma-4-31b-it:free`). Nemotron 3.5 Super VL (Free) is also listed. IDs removed from the OpenRouter catalog, such as GPT OSS 20B (Free), Apodex 1.1 Mini (Free), Pareto 26.10 Preview, and KAT-Coder V2.5, are no longer in the curated fallback list.
 - Fusion Cost: `openrouter/fusion` bills the combined underlying model calls and any enabled web search/fetch usage
 - Catalog discovery: Automatic anonymous GET, with search and published-price filters; refreshing never generates a completion
 - Persistence: A separate versioned catalog cache retains last-good metadata. Legacy dynamic-model IDs remain unverified fallback choices. API keys are not stored in the catalog cache.
@@ -192,7 +193,7 @@ built-in model status is `available`.
 - Grok 4.3 is the package and sample default.
 
 **Kimi**
-- Models: Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6, Kimi K2.5
+- Models: Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6 (Kimi K2.5 was discontinued on 2026-08-31)
 - Vision: Supported
 - Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K3 is an explicit reasoning option, and Kimi K2.7 Code models are coding-oriented.
 - Kimi K3 reasoning: selectable `low`, `high`, or `max`, with `max` as the API default. Reasoning cannot be disabled.
@@ -361,8 +362,7 @@ models, it always thinks and defaults to low reasoning.
 
 OpenRouter also offers GPT-6.1 Sol, GPT-6 Sol/Luna, Claude Sonnet/Opus 5.5,
 Grok 4.7, and GLM-5.3 FlashX, alongside Astra/Pro, Fable 5.1, DeepSeek V4.1
-Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini/Pro (free),
-Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
+Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
 capabilities. The new OpenRouter models default to low reasoning, except Sol/Luna
 which default to none; tools use OpenRouter Chat Completions. Claude 5.5 tool
 selection stays automatic. Mercury 2.5 is text-only. Provider defaults are
@@ -375,13 +375,11 @@ OpenRouter includes Nemotron 3.5 Lightning (`nvidia/nemotron-3.5-lightning`, tex
 ### Additional OpenRouter chat options
 
 Select OpenRouter, enter your API key, and choose Solar Mini4
-(`upstage/solar-mini4`), MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`), or
-Apodex 1.1 Mini (Free) (`apodex/apodex-1.1-mini:free`). Existing defaults stay
-unchanged. Only MiMo in this group accepts image input. Solar provides effort
-levels from `none` through `max`, including `minimal`, and starts at `none`.
-All three omit reasoning token budgets; MiMo and Apodex also omit effort fields
-and use the provider's reasoning defaults. Apodex uses OpenRouter's free-tier
-limits. These choices use the direct `https://openrouter.ai/api/v1/chat/completions`
+(`upstage/solar-mini4`) or MiMo V2.6 Flash (`xiaomi/mimo-v2.6-flash`).
+Existing defaults stay unchanged. Only MiMo in this group accepts image input.
+Solar provides effort levels from `none` through `max`, including `minimal`, and
+starts at `none`. Both omit reasoning token budgets; MiMo also omits effort
+fields and uses the provider's reasoning defaults. These choices use the direct `https://openrouter.ai/api/v1/chat/completions`
 endpoint without a provider proxy.
 
 ### Ling 3.1 Flash on OpenRouter
@@ -422,21 +420,6 @@ model and API route. The [browser authentication guide](https://openrouter.ai/do
 documents direct browser requests; no proxy is added. Mock transport and DOM
 integration tests cover package behavior, not live inference or authenticated CORS.
 No rendered-browser verification, live generation, or CORS probe was run.
-
-### Pareto 26.10 Preview on OpenRouter
-
-Select **OpenRouter → Pareto 26.10 Preview** and enter your OpenRouter API key.
-This explicit preview accepts text and images and may change without notice;
-existing defaults stay unchanged. Requests go directly to
-`https://openrouter.ai/api/v1/chat/completions` with Bearer authentication.
-The sample parses SSE text deltas. Effort and reasoning-token-budget controls
-are hidden, and inherited values are omitted. No proxy configuration is needed.
-The package supports automatic tool selection, but the sample chat UI does not
-configure tools. File/audio/video input and enforced structured output are not
-supported. Mocked rendered-DOM tests cover requests, repeated streaming replies,
-image input, and HTTP recovery; these do not prove live inference or authenticated
-browser CORS. See the [model API example](https://openrouter.ai/unbiased/pareto-26.10-preview?view=api)
-and [package usage](../../README.md#openrouter).
 
 ### Solar Pro 4 on OpenRouter
 

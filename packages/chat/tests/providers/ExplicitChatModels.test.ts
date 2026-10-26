@@ -8,6 +8,8 @@ import {
   MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
@@ -415,10 +417,12 @@ describe('Ling 3.1 Flash response constraints', () => {
   });
 });
 
-it('keeps Pareto preview explicit with vision and no reasoning controls', () => {
+it('keeps the retired Pareto preview exported without advertising it', () => {
   const model = MODEL_UNBIASED_PARETO_26_10_PREVIEW;
   expect(model).toBe('unbiased/pareto-26.10-preview');
-  expect(ChatServiceFactory.getSupportedModels('openrouter')).toContain(model);
+  expect(ChatServiceFactory.getSupportedModels('openrouter')).not.toContain(
+    model,
+  );
   expect(
     ChatServiceFactory.getProviderCapabilities('openrouter')?.defaultModel,
   ).not.toBe(model);
@@ -539,9 +543,10 @@ it.each(
 it('keeps Mistral Large 4 explicit and exposes only documented effort values', () => {
   const model = MODEL_OPENROUTER_MISTRAL_LARGE_4_0;
   expect(model).toBe('mistralai/mistral-large-4-0');
-  expect(
-    ChatServiceFactory.getSupportedModels('openrouter').slice(-3, -1),
-  ).toEqual([MODEL_UNBIASED_PARETO_26_10_PREVIEW, model]);
+  const models = ChatServiceFactory.getSupportedModels('openrouter');
+  expect(models.indexOf(MODEL_UNBIASED_PARETO_26_9)).toBe(
+    models.indexOf(model) + 1,
+  );
   expect(
     ChatServiceFactory.getProviderCapabilities('openrouter')?.defaultModel,
   ).not.toBe(model);
@@ -591,10 +596,11 @@ it.each([
 
 it('appends stable Pareto without changing prior model order or defaults', () => {
   const models = ChatServiceFactory.getSupportedModels('openrouter');
-  expect(models.slice(-3)).toEqual([
-    MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  expect(models.slice(-4)).toEqual([
     MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
     MODEL_UNBIASED_PARETO_26_9,
+    MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
   ]);
   expect(
     models.filter((model) => model === MODEL_UNBIASED_PARETO_26_9),

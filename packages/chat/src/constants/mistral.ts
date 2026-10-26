@@ -10,7 +10,7 @@ export const MODEL_MINISTRAL_14B_2512 = 'ministral-14b-2512';
 export const MODEL_MISTRAL_SMALL_LATEST = 'mistral-small-latest';
 export const MODEL_MISTRAL_SMALL_2603 = 'mistral-small-2603';
 export const MODEL_MISTRAL_MEDIUM_3_5 = 'mistral-medium-3-5';
-/** @deprecated Retired by Mistral on May 22, 2026. */
+/** @deprecated Deprecated on May 22, 2026 and retired by Mistral on August 31, 2026. */
 export const MODEL_MISTRAL_MEDIUM_2508 = 'mistral-medium-2508';
 export const MODEL_MISTRAL_LARGE_LATEST = 'mistral-large-latest';
 export const MODEL_MISTRAL_LARGE_2512 = 'mistral-large-2512';

@@ -44,7 +44,6 @@ describe('ClaudeChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
-        MODEL_CLAUDE_4_5_SONNET,
         MODEL_CLAUDE_4_5_HAIKU,
         MODEL_CLAUDE_4_5_OPUS,
         MODEL_CLAUDE_4_6_SONNET,
@@ -59,6 +58,12 @@ describe('ClaudeChatServiceProvider', () => {
         MODEL_CLAUDE_5_5_SONNET,
         MODEL_CLAUDE_5_5_HAIKU,
       ]);
+    });
+
+    it('should not advertise deprecated models', () => {
+      expect(provider.getSupportedModels()).not.toContain(
+        MODEL_CLAUDE_4_5_SONNET,
+      );
     });
   });
 

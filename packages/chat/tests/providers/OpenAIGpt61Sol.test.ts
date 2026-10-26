@@ -3,6 +3,7 @@ import {
   ChatServiceFactory,
   MODEL_GPT_6_1_SOL,
   MODEL_GPT_5_NANO,
+  MODEL_GPT_5_6_LUNA,
   MODEL_GPT_4O_MINI,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
@@ -59,7 +60,7 @@ describe('GPT-6.1 Sol compatibility', () => {
     const provider = new OpenAIChatServiceProvider();
     expect(MODEL_GPT_6_1_SOL).toBe('gpt-6.1-sol');
     expect(provider.getSupportedModels()).toContain(MODEL_GPT_6_1_SOL);
-    expect(provider.getDefaultModel()).toBe(MODEL_GPT_5_NANO);
+    expect(provider.getDefaultModel()).toBe(MODEL_GPT_5_6_LUNA);
     expect(provider.supportsVisionForModel(MODEL_GPT_6_1_SOL)).toBe(true);
     expect(isGPT5Model(MODEL_GPT_6_1_SOL)).toBe(false);
     expect(isOpenAIReasoningModel(MODEL_GPT_6_1_SOL)).toBe(true);
