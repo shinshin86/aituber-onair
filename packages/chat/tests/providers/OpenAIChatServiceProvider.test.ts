@@ -11,6 +11,7 @@ import {
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
   MODEL_GPT_6_1_SOL,
+  MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -71,6 +72,7 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_4_1_MINI,
         MODEL_GPT_4O_MINI,
         MODEL_GPT_4O,
+        MODEL_GPT_6_1_TERRA,
       ]);
     });
 

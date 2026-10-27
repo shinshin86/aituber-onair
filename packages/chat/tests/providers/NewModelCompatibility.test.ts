@@ -39,6 +39,7 @@ const jsonResponse = (data: unknown) =>
 const dataEvent = (data: unknown) => `data: ${JSON.stringify(data)}\n\n`;
 
 const routerModels = [
+  models.MODEL_OPENAI_GPT_6_1_TERRA,
   models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
   models.MODEL_INCEPTION_MERCURY_3,
   models.MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
@@ -660,6 +661,11 @@ describe('October explicit OpenRouter reasoning profiles', () => {
   beforeEach(() => vi.restoreAllMocks());
 
   const profiles = [
+    {
+      model: models.MODEL_OPENAI_GPT_6_1_TERRA,
+      efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+      defaultEffort: 'none',
+    },
     {
       model: models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
       efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],

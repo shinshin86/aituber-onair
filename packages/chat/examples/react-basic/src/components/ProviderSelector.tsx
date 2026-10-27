@@ -18,6 +18,8 @@ import {
   MODEL_NEX_AGI_NEX_N2_5_PRO,
   MODEL_KIMI_K3_1_PRO,
   MODEL_KIMI_K3_1_PRO_HIGHSPEED,
+  MODEL_GPT_6_1_TERRA,
+  MODEL_OPENAI_GPT_6_1_TERRA,
   ChatServiceFactory,
   type ChatResponseLength,
   type GPT5PresetKey,
@@ -1419,6 +1421,18 @@ export const allModels: ProviderModel[] = [
     provider: 'kimi',
     default: false,
   },
+  {
+    id: MODEL_GPT_6_1_TERRA,
+    name: 'GPT-6.1 Terra',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_1_TERRA,
+    name: 'GPT-6.1 Terra (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
 ];
 
 export const getProviderForModel = (
@@ -1522,6 +1536,7 @@ export default function ProviderSelector({
   const isResponsesPreferredModel =
     isResponsesOnlyModel ||
     selectedModel === MODEL_GPT_6_1_SOL ||
+    selectedModel === MODEL_GPT_6_1_TERRA ||
     selectedModel === MODEL_GPT_6_SOL ||
     selectedModel === MODEL_GPT_6_LUNA;
   const effectiveOpenAIEndpoint = isResponsesOnlyModel
@@ -2008,7 +2023,8 @@ export default function ProviderSelector({
                     This model uses Responses API for full tool support.
                   </span>
                 )}
-                {selectedModel === MODEL_GPT_6_1_SOL && (
+                {(selectedModel === MODEL_GPT_6_1_SOL ||
+                  selectedModel === MODEL_GPT_6_1_TERRA) && (
                   <span className="helper-text">
                     Responses API is the default and is required for tools.
                     Tool-free Chat Completions supports all reasoning levels.

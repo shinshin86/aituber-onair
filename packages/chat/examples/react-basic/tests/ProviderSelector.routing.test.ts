@@ -279,6 +279,7 @@ describe('ProviderSelector rendered configuration for recent models', () => {
               'Pareto 26.10',
               'Ling 3.0 Flash VL',
               'Nex N2.5 Pro',
+              'GPT-6.1 Terra (OpenRouter)',
             ].includes(label ?? ''),
         )
         .slice(-2),
@@ -299,7 +300,7 @@ describe('ProviderSelector rendered configuration for recent models', () => {
     const curatedLabels = allModels
       .filter((model) => model.provider === 'openrouter')
       .map((model) => model.name);
-    expect(curatedLabels.slice(-10, -8)).toEqual([
+    expect(curatedLabels.slice(-11, -9)).toEqual([
       'Mistral Large 4',
       'Pareto 26.9',
     ]);

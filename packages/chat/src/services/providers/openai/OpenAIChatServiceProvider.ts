@@ -5,6 +5,7 @@ import {
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
   MODEL_GPT_6_1_SOL,
+  MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -94,9 +95,11 @@ export class OpenAIChatServiceProvider
       shouldUseResponsesAPI = true;
     } else if (
       modelName === MODEL_GPT_6_1_SOL ||
-      visionModel === MODEL_GPT_6_1_SOL
+      visionModel === MODEL_GPT_6_1_SOL ||
+      modelName === MODEL_GPT_6_1_TERRA ||
+      visionModel === MODEL_GPT_6_1_TERRA
     ) {
-      // GPT-6.1 Sol supports Chat Completions only without tools.
+      // These GPT-6.1 models require Responses for tools; text-only calls may use Chat Completions.
       const preference = optimizedOptions.gpt5EndpointPreference || 'responses';
       shouldUseResponsesAPI = (tools?.length ?? 0) > 0 || preference !== 'chat';
     } else if (isOpenAIReasoningModel(modelName)) {
@@ -162,6 +165,7 @@ export class OpenAIChatServiceProvider
       MODEL_GPT_4_1_MINI,
       MODEL_GPT_4O_MINI,
       MODEL_GPT_4O,
+      MODEL_GPT_6_1_TERRA,
     ];
   }
 

@@ -15,6 +15,7 @@ export const MODEL_UPSTAGE_SOLAR_MINI4 = 'upstage/solar-mini4';
 export const MODEL_XIAOMI_MIMO_V2_6_FLASH = 'xiaomi/mimo-v2.6-flash';
 export const MODEL_APODEX_1_1_MINI_FREE = 'apodex/apodex-1.1-mini:free';
 
+export const MODEL_OPENAI_GPT_6_1_TERRA = 'openai/gpt-6.1-terra';
 export const MODEL_OPENAI_GPT_6_1_SOL = 'openai/gpt-6.1-sol';
 export const MODEL_OPENAI_GPT_6_SOL = 'openai/gpt-6-sol';
 export const MODEL_OPENAI_GPT_6_LUNA = 'openai/gpt-6-luna';
@@ -230,6 +231,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     defaultEffort?: OpenRouterReasoningEffort;
   }
 > = {
+  [MODEL_OPENAI_GPT_6_1_TERRA]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
   [MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5]: {
     efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
     defaultEffort: 'low',
@@ -446,6 +451,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_UNBIASED_PARETO_26_9,
   MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
+  MODEL_OPENAI_GPT_6_1_TERRA,
 ];
 
 // Rate limits for free tier

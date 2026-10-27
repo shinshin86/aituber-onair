@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_OPENAI_GPT_6_1_TERRA,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
   MODEL_INCEPTION_MERCURY_3,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
@@ -241,6 +242,7 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_UNBIASED_PARETO_26_10,
         MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
         MODEL_NEX_AGI_NEX_N2_5_PRO,
+        MODEL_OPENAI_GPT_6_1_TERRA,
       ]);
     });
 

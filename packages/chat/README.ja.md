@@ -297,6 +297,12 @@ Chat Completions形式を維持し、認証情報を別URLへ転送せず、こ�
 [Model API reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol)、
 [API guide](https://developers.openai.com/api/docs/guides/latest-model)。
 
+画像入力・ストリーミングに対応し、ツール利用にResponses APIが必要なモデルは、既定でResponsesを使います。`gpt-6.1-terra`（`MODEL_GPT_6_1_TERRA`）もこのグループの明示選択モデルです。`reasoning_effort`は `none`、`low`、`medium`、`high`、`xhigh`、`max` に対応します。API既定は `medium`、パッケージ既定は `low` です。ツールを使わない場合はChat Completionsも選べます。標準エンドポイントでのツール・MCP利用はResponsesへ切り替え、カスタムエンドポイントでのツール利用は送信前にエラーにします。
+
+このパッケージは `temperature`、`top_p`、`logprobs` などのサンプリング項目を送信しません。OpenRouter版の `openai/gpt-6.1-terra` はChat Completionsを使い、推論設定のパッケージ既定は `none` です。プロバイダーの既定モデルは変更しません。
+
+[公式Terraモデル仕様](https://developers.openai.com/api/docs/models/gpt-6.1-terra)、[APIパラメーターの移行ガイド](https://developers.openai.com/api/docs/guides/latest-model#gpt-6-astra-update-api-and-model-parameters)、[OpenRouterモデルカタログ](https://openrouter.ai/api/v1/models)で対応範囲を確認できます。
+
 `gpt-6-astra`（`MODEL_GPT_6_ASTRA`）を明示選択できます。ツール呼び出しに必要なResponses APIへ自動ルーティングし、画像入力とストリーミングに対応します。推論レベルは`low`（package既定）、`medium`、`high`、`xhigh`、`max`です。`none`/`minimal`は`low`へ補正します。既存の`gpt5Preset`と`gpt5EndpointPreference`は互換性のため名前を維持しますが、Astraの標準エンドポイントはResponsesに固定されます。 [API guide](https://developers.openai.com/api/docs/guides/latest-model).
 
 `gpt-6-sol`（`MODEL_GPT_6_SOL`）も画像入力とストリーミングに対応します。
@@ -804,6 +810,7 @@ hidden thinking が使い切るリスクを抑えます。Gemini 2.5 は
 | `inclusionai/ling-3.0-flash-vl` | 推論レベル選択なし。推論トークン予算なし |
 | `nex-agi/nex-n2.5-pro` | none, medium, high (none) |
 | `openai/gpt-6.1-sol` | max, xhigh, high, medium, low (low) |
+| `openai/gpt-6.1-terra` | none, low, medium, high, xhigh, max (none) |
 | `openai/gpt-6-sol` | max, xhigh, high, medium, low, none (none) |
 | `openai/gpt-6-luna` | max, xhigh, high, medium, low, none (none) |
 | `anthropic/claude-sonnet-5.5` | max, xhigh, high, medium, low (low) |
@@ -1620,11 +1627,11 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-6.1 Sol (`gpt-6.1-sol`, ツールはResponses経由)、GPT-6 Astra (`gpt-6-astra`)、GPT-6 Sol (`gpt-6-sol`)、GPT-6 Luna (`gpt-6-luna`, 既定でResponses API); GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
+- **OpenAI**: GPT-6.1 Terra (`gpt-6.1-terra`, 明示選択、ツールはResponses経由), GPT-6.1 Sol (`gpt-6.1-sol`, ツールはResponses経由)、GPT-6 Astra (`gpt-6-astra`)、GPT-6 Sol (`gpt-6-sol`)、GPT-6 Luna (`gpt-6-luna`, 既定でResponses API); GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Mini、GPT-5.4 Nano、GPT-5.1、GPT-5（Nano/Mini/Standard）、GPT-4.1(miniとnanoを含む), GPT-4, GPT-4o-mini, O3-mini, o1, o1-miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 3.8 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3 はチャット用途向けに利用可能な最小の thinking を既定値にします。`minimal` 非対応の Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3 Pro は `low`、その他の Gemini 3 Flash は `minimal` を使います。Gemini 3.7 Flash、Gemini 3.5 Flash、Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Haiku 5.5 (`claude-haiku-5-5`、明示選択)、Claude Opus 5.5 (`claude-opus-5-5`)、Claude Sonnet 5.5 (`claude-sonnet-5-5`)、Claude Fable 5.1 (`claude-fable-5-1`); Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Haiku 4.5 をサポート。調整可能な`reasoning_effort`は対応モデルに限り`output_config.effort`として送信し、refusal metadataは終端completionとして保持します
-- **OpenRouter**: Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, 明示選択の公開プレビュー), Ling 3.1 Flash（テキスト専用・明示選択）、Solar Mini4、Solar Pro 4、MiMo V2.6 Flash、GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max, Muse Spark 1.3; OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwenのキュレーション済み一覧をサポート。GLM-5.3/FlashX、Qwen3.8 Flash、DeepSeek V4 Flash Vision Exp、Claude Sonnet 5/Opus 4.8、Kimi K2.6も含みます。 明示選択として`nvidia/nemotron-3.5-lightning`（テキスト専用）、`qwen/qwen3.8-27b`と`qwen/qwen3.8-omni-flash`（画像入力対応）も利用できます。デフォルトは`google/gemma-4-31b-it:free`で、`nvidia/nemotron-3.5-super-vl:free`も無料モデルとして掲載しています。 追加モデル: `anthropic/claude-haiku-5.5`, `inception/mercury-3`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`.
+- **OpenRouter**: Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, 明示選択の公開プレビュー), Ling 3.1 Flash（テキスト専用・明示選択）、Solar Mini4、Solar Pro 4、MiMo V2.6 Flash、GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max, Muse Spark 1.3; OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwenのキュレーション済み一覧をサポート。GLM-5.3/FlashX、Qwen3.8 Flash、DeepSeek V4 Flash Vision Exp、Claude Sonnet 5/Opus 4.8、Kimi K2.6も含みます。 明示選択として`nvidia/nemotron-3.5-lightning`（テキスト専用）、`qwen/qwen3.8-27b`と`qwen/qwen3.8-omni-flash`（画像入力対応）も利用できます。デフォルトは`google/gemma-4-31b-it:free`で、`nvidia/nemotron-3.5-super-vl:free`も無料モデルとして掲載しています。 追加モデル: `anthropic/claude-haiku-5.5`, `inception/mercury-3`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`. `openai/gpt-6.1-terra`も明示選択で利用できます。
 - **Z.ai**: GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-TurboとGLM-4.7/4.6のテキストモデル、GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V系のビジョンモデルをサポート。GLM-5.3はthinking必須で`low`、GLM-5.2は`none`を既定値にします
 - **xAI**: Grok 4.7、Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 Reasoning/Non-Reasoningをvision対応でサポート。Grok 4.7/4.6/4.5のpackage既定は低遅延向けの`reasoning_effort: 'low'`、Grok 4.3は`none`です
 - **Kimi**: Kimi K3.1 Pro（`kimi-k3.1-pro`）とHighspeed（`kimi-k3.1-pro-highspeed`）を明示選択で利用できます。画像・ツール・ストリーミングに対応し、推論設定はK3と共通です。Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト、いずれもビジョン対応）をサポート

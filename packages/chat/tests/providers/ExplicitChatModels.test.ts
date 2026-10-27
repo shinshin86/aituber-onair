@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  MODEL_OPENAI_GPT_6_1_TERRA,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
   MODEL_INCEPTION_MERCURY_3,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
@@ -33,6 +34,12 @@ import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import type { Message, MessageWithVision } from '../../src/types';
 
 const candidates = [
+  {
+    provider: 'openrouter',
+    model: MODEL_OPENAI_GPT_6_1_TERRA,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
   {
     provider: 'openrouter',
     model: MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
@@ -246,6 +253,7 @@ describe.each(candidates)(
                 MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
                 MODEL_MINIMAX_M3_1_FLASH,
                 MODEL_NEX_AGI_NEX_N2_5_PRO,
+                MODEL_OPENAI_GPT_6_1_TERRA,
               ].includes(model)
             ? 'high'
             : undefined,
@@ -374,6 +382,7 @@ describe.each(candidates)(
             MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
             MODEL_MINIMAX_M3_1_FLASH,
             MODEL_NEX_AGI_NEX_N2_5_PRO,
+            MODEL_OPENAI_GPT_6_1_TERRA,
             MODEL_UPSTAGE_SOLAR_MINI4,
             MODEL_UPSTAGE_SOLAR_PRO4,
             MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
@@ -389,6 +398,7 @@ describe.each(candidates)(
             MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
             MODEL_MINIMAX_M3_1_FLASH,
             MODEL_NEX_AGI_NEX_N2_5_PRO,
+            MODEL_OPENAI_GPT_6_1_TERRA,
           ].includes(model)
             ? 2048
             : undefined,
@@ -679,7 +689,7 @@ it.each([
 
 it('appends stable Pareto without changing prior model order or defaults', () => {
   const models = ChatServiceFactory.getSupportedModels('openrouter');
-  expect(models.slice(-12, -8)).toEqual([
+  expect(models.slice(-13, -9)).toEqual([
     MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
     MODEL_UNBIASED_PARETO_26_9,
     MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,

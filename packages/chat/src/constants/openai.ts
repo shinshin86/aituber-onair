@@ -4,6 +4,7 @@ export const ENDPOINT_OPENAI_RESPONSES_API =
   'https://api.openai.com/v1/responses';
 
 export const MODEL_GPT_6_1_SOL = 'gpt-6.1-sol';
+export const MODEL_GPT_6_1_TERRA = 'gpt-6.1-terra';
 export const MODEL_GPT_6_ASTRA = 'gpt-6-astra';
 export const MODEL_GPT_6_SOL = 'gpt-6-sol';
 export const MODEL_GPT_6_LUNA = 'gpt-6-luna';
@@ -84,6 +85,7 @@ export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
   MODEL_O1,
+  MODEL_GPT_6_1_TERRA,
   // MODEL_O3_MINI and MODEL_O1_MINI are not included as they don't support vision
 ];
 
@@ -126,6 +128,7 @@ export function isGPT5Model(model: string): boolean {
 export function isOpenAIReasoningModel(model: string): boolean {
   return (
     model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_ASTRA ||
     model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_6_LUNA ||
@@ -146,6 +149,7 @@ export function isResponsesOnlyGPT5Model(model: string): boolean {
 export function allowsReasoningXHigh(model: string): boolean {
   return (
     model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_ASTRA ||
     model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_6_LUNA ||
@@ -167,6 +171,7 @@ export function allowsReasoningXHigh(model: string): boolean {
 export function allowsReasoningMax(model: string): boolean {
   return (
     model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_ASTRA ||
     model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_6_LUNA ||
@@ -179,11 +184,12 @@ export function allowsReasoningMax(model: string): boolean {
 
 /**
  * Check if the provided model allows the reasoning_effort 'none' shortcut.
- * Supported by GPT-6 Sol/Luna and GPT-5.1, GPT-5.4, GPT-5.5, and GPT-5.6
+ * Supported by GPT-6.1 Terra, GPT-6 Sol/Luna and GPT-5.1, GPT-5.4, GPT-5.5, and GPT-5.6
  * family models, except Pro.
  */
 export function allowsReasoningNone(model: string): boolean {
   return (
+    model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_6_LUNA ||
     model === MODEL_GPT_5_6 ||
@@ -241,7 +247,9 @@ export function getDefaultReasoningEffortForGPT5Model(
 export function getDefaultReasoningEffortForOpenAIModel(
   model: string,
 ): 'none' | 'minimal' | 'low' | 'medium' {
-  return model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_ASTRA
+  return model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_1_TERRA ||
+    model === MODEL_GPT_6_ASTRA
     ? 'low'
     : model === MODEL_GPT_6_SOL
       ? 'medium'

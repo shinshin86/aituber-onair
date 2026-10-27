@@ -125,7 +125,7 @@ built-in model status is `available`.
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-4.1, GPT-4.1 Mini, GPT-4o, GPT-4o Mini
+- Models: GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-4.1, GPT-4.1 Mini, GPT-4o, GPT-4o Mini
 - Default: GPT-5.6 Luna. Models that OpenAI has deprecated or shut down (GPT-5, GPT-5 Mini/Nano, GPT-5.1, GPT-5.4 Nano, GPT-4.1 Nano, o1, o1-mini, o3-mini) are no longer selectable.
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
@@ -172,6 +172,8 @@ built-in model status is `available`.
 
 Additional explicit options (provider default unchanged):
 
+- `openai/gpt-6.1-terra`: GPT-6.1 Terra; image input, tools and streaming; none/low/medium/high/xhigh/max reasoning (package default `none`).
+
 - `anthropic/claude-haiku-5.5`: Claude Haiku 5.5 (OpenRouter); image input; none, low, medium, high, xhigh, max (default `low`).
 - `inception/mercury-3`: Mercury 3; text-only; none, low, medium, high (default `none`).
 - `deepseek/deepseek-v4.1-flash-1017`: DeepSeek V4.1 Flash 1017 (OpenRouter); image input; none, low, high, max (default `none`).
@@ -181,7 +183,7 @@ Additional explicit options (provider default unchanged):
 - `inclusionai/ling-3.0-flash-vl`: Ling 3.0 Flash VL; image input; no reasoning effort or token budget.
 - `nex-agi/nex-n2.5-pro`: Nex N2.5 Pro; image input; none, medium, high (default `none`).
 
-All eight support tools and streaming. MiniMax reasoning cannot be disabled; Pareto sends no reasoning fields. Ling and Nex Pro are paid IDs.
+These additions support tools and streaming. MiniMax reasoning cannot be disabled; Pareto sends no reasoning fields. Ling and Nex Pro are paid IDs.
 
 - Models: Current text-chat candidates from the public catalog, with unverified curated fallback IDs when discovery is unavailable
 - Vision: Requires both catalog image-input metadata and exact SDK model support
@@ -360,11 +362,19 @@ Common extensions:
 
 ### Additional model options
 
-The model selector includes GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
+The model selector includes GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
 OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash 1017 (`deepseek-flash`). Astra
 uses Responses and starts at low reasoning; Luna uses Responses and defaults to
 low reasoning for responsive chat. Fable 5.1 always thinks and uses automatic
 tool selection. DeepSeek tools require reasoning to be set to none.
+
+GPT-6.1 Terra is an explicit native option with image input, streaming, and
+None/Low/Medium/High/XHigh/Max reasoning. Its package effort default is Low
+(API default Medium). Responses is the default; tool-free Chat Completions is
+available at every supported effort. Tools and MCP require Responses at the
+standard endpoint, and custom endpoints reject tools before sending. Sampling
+fields are not sent. The OpenRouter variant defaults to None effort and uses
+Chat Completions. Existing provider defaults are preserved.
 
 GPT-6.1 Sol defaults to low reasoning and Responses. Its tools require Responses;
 Chat Completions is available only without tools. Unsupported none/minimal

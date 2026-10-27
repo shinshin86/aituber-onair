@@ -136,6 +136,24 @@ const modelCases = [
     efforts: ['low', 'high', 'max'],
     initialEffort: 'max',
   })),
+  {
+    provider: 'OpenAI',
+    label: 'GPT-6.1 Terra',
+    model: 'gpt-6.1-terra',
+    endpoint: OPENAI_RESPONSES,
+    control: '#reasoning-effort',
+    efforts: ['none', ...mandatoryEfforts],
+    initialEffort: 'low',
+  },
+  {
+    provider: 'OpenRouter',
+    label: 'GPT-6.1 Terra (OpenRouter)',
+    model: 'openai/gpt-6.1-terra',
+    endpoint: OPENROUTER,
+    control: '#openrouter-reasoning-effort',
+    efforts: ['none', ...mandatoryEfforts],
+    initialEffort: 'none',
+  },
 ];
 
 type ModelCase = (typeof modelCases)[number];
