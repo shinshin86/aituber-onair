@@ -51,7 +51,7 @@ export type CartesiaLanguage =
 /** Cartesia synchronous byte-response text-to-speech engine. */
 export class CartesiaEngine implements VoiceEngine {
   private apiEndpoint = CARTESIA_TTS_API_URL;
-  private model = 'sonic-3.5';
+  private model = 'sonic-3.6';
   private language: CartesiaLanguage = 'ja';
   private outputContainer: CartesiaOutputContainer = 'wav';
   private sampleRate = 44100;
@@ -62,7 +62,7 @@ export class CartesiaEngine implements VoiceEngine {
   }
 
   setModel(model?: string): void {
-    this.model = model?.trim() || 'sonic-3.5';
+    this.model = model?.trim() || 'sonic-3.6';
   }
 
   setLanguage(language?: CartesiaLanguage): void {

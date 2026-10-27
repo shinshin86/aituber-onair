@@ -3,6 +3,7 @@ import type { Talk } from '../types/voice';
 import { createPcm16Wav } from '../utils/wavHeader';
 import {
   isOpenRouterVoice,
+  OPENROUTER_AUDIO_FORMATS,
   requireOpenRouterModel,
   resolveOpenRouterUrl,
   type OpenRouterTtsModel,
@@ -17,7 +18,7 @@ import { VoiceEngineError } from './VoiceEngineError';
 
 export type { OpenRouterTtsModel } from './internal/openRouter';
 
-/** One-shot PCM speech wrapped as WAV for the existing audio players. Both MAI models are public-preview, explicit opt-ins. */
+/** One-shot speech with explicit model selection: MAI PCM as WAV, ElevenLabs MP3. */
 export class OpenRouterEngine implements VoiceEngine {
   private apiEndpoint = OPENROUTER_TTS_API_URL;
   private model?: OpenRouterTtsModel;
@@ -27,7 +28,7 @@ export class OpenRouterEngine implements VoiceEngine {
   }
 
   setModel(model?: OpenRouterTtsModel): void {
-    // Never fall back to a preview model, including after an option reset.
+    // Never select a model automatically, including after an option reset.
     this.model = model;
   }
 
@@ -46,6 +47,7 @@ export class OpenRouterEngine implements VoiceEngine {
         'OpenRouter speaker must be a full voice ID for the selected model; select a voice from its supported_voices list',
       );
     }
+    const format = OPENROUTER_AUDIO_FORMATS[model];
     const text = input.message.trim();
     if (!text) {
       throw createConfigurationError('Input text is empty');
@@ -62,7 +64,7 @@ export class OpenRouterEngine implements VoiceEngine {
         model,
         input: text,
         voice,
-        response_format: 'pcm',
+        response_format: format,
       }),
     });
 
@@ -74,11 +76,14 @@ export class OpenRouterEngine implements VoiceEngine {
       ?.split(';')[0]
       .trim()
       .toLowerCase();
-    if (contentType !== 'audio/pcm') {
-      throw new VoiceEngineError('OpenRouter returned a non-PCM response', {
-        kind: 'api',
-        statusCode: response.status,
-      });
+    if (contentType !== (format === 'mp3' ? 'audio/mpeg' : 'audio/pcm')) {
+      throw new VoiceEngineError(
+        `OpenRouter returned a non-${format.toUpperCase()} response`,
+        {
+          kind: 'api',
+          statusCode: response.status,
+        },
+      );
     }
     const audio = await response.arrayBuffer();
     if (audio.byteLength === 0) {
@@ -87,6 +92,7 @@ export class OpenRouterEngine implements VoiceEngine {
         statusCode: response.status,
       });
     }
+    if (format === 'mp3') return audio;
     if (audio.byteLength % 2 !== 0) {
       throw new VoiceEngineError('OpenRouter returned incomplete PCM samples', {
         kind: 'api',
@@ -97,6 +103,6 @@ export class OpenRouterEngine implements VoiceEngine {
   }
 
   getTestMessage(testVoiceText?: string): string {
-    return testVoiceText || 'Hello! This is MAI Voice on OpenRouter.';
+    return testVoiceText || 'Hello! This is speech on OpenRouter.';
   }
 }

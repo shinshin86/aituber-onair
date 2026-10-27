@@ -4,7 +4,10 @@ import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
 /**
- * OpenAI TTS voice synthesis engine
+ * OpenAI Speech API voice synthesis engine.
+ * tts-1, tts-1-hd and gpt-4o-mini-tts are deprecated and shut down on
+ * 2027-01-06. Their successor requires the Realtime API, which this engine
+ * does not implement.
  */
 export class OpenAiEngine implements VoiceEngine {
   private speed: number = 1.0;

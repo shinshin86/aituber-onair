@@ -134,7 +134,10 @@ describe('Gradium model selection in the React example', () => {
       ]),
     ).toEqual([
       ['default', 'default — Production (default)'],
-      ['gradium-tts-beta', 'gradium-tts-beta — Beta (opt-in)'],
+      [
+        'gradium-tts-beta',
+        'gradium-tts-beta — currently default alias, tracks future betas (opt-in)',
+      ],
     ]);
     expect(model.closest('[aria-hidden]')?.getAttribute('aria-hidden')).toBe(
       'false',

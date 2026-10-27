@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "@aituber-onair/chat": "^0.66.0",
-    "@aituber-onair/voice": "^0.28.0"
+    "@aituber-onair/voice": "^0.29.0"
   },
   "peerDependencies": {
     "@pixiv/three-vrm": "^1.0.9"

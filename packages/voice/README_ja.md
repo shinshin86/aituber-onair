@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## 主な機能
 
 - **複数のTTSエンジン対応**  
-  VOICEVOX、VoicePeak、OpenAI TTS、OpenRouter TTS（プレビュー・明示選択）、xAI TTS、Unreal Speech、ElevenLabs、Fish Audio、Cartesia、Deepgram Flux、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
+  VOICEVOX、VoicePeak、OpenAI TTS、OpenRouter TTS（明示選択）、xAI TTS、Unreal Speech、ElevenLabs、Fish Audio、Cartesia、Deepgram Flux、Inworld、Gradium、Gemini TTS、MiniMax、AivisSpeech、Aivis Cloud、Web Speech APIなどに対応
 - **統一インターフェース**  
   すべての対応TTSエンジンに単一のAPI
 - **感情表現対応の合成**  
@@ -165,7 +165,18 @@ const weightedVoiceService = new VoiceService({
 - `undefined` は override なしなので、従来どおり `Talk.style` が単一タグにマップされます。
 
 ### OpenAI TTS
-複数の音声オプションを持つOpenAIのテキスト読み上げAPI。
+複数の音声に対応した OpenAI のテキスト読み上げ API です。
+
+Speech API の `tts-1`、`tts-1-hd`、`gpt-4o-mini-tts` は非推奨で、
+**2027-01-06** に提供を終了します。後継の `gpt-realtime-2.1-mini` は
+Realtime API 専用のため、このエンジンの `/v1/audio/speech` では使えません。
+[公式の移行案内](https://developers.openai.com/api/docs/guides/text-to-speech)を参照してください。
+
+音声カタログは組み込み音声13種を含みます。`tts-1` と `tts-1-hd` で使えるのは
+alloy、ash、coral、echo、fable、onyx、nova、sage、shimmer です。
+`gpt-4o-mini-tts` では ballad、verse、marin、cedar も使えます。
+追加音声を使う場合は `openAiModel` を指定してください。React サンプルはモデルごとに
+音声を絞り込み、モデル変更後に使えない音声は alloy に戻します。
 
 ```typescript
 const voiceService = new VoiceService({
@@ -175,9 +186,16 @@ const voiceService = new VoiceService({
 });
 ```
 
-### OpenRouter TTS（パブリックプレビュー・明示選択）
+### OpenRouter TTS（明示選択）
 
-プレビューモデルは明示的に選択する必要があり、既定値にはしません。この専用
+すべてのモデルと音声を明示的に選択します。自動選択はしません。
+`elevenlabs/eleven-v4` と `elevenlabs/eleven-v4-turbo` は MP3 生成に対応し、
+モデル別の `supported_voices` 一覧から `george` などの音声 ID を選びます。
+[専用の speech API と MP3 応答仕様](https://openrouter.ai/docs/guides/overview/multimodal/tts)
+に従い、`audio/mpeg` のバイナリーをそのまま再生に渡します。
+直接接続する ElevenLabs エンジンの対応モデルとは区別してください。
+
+互換性のために残しているプレビューモデルも明示選択が必要です。この専用
 エンジンは `microsoft/mai-voice-2.1` と
 `microsoft/mai-voice-2.1-flash` を OpenRouter の
 [`POST /api/v1/audio/speech`](https://openrouter.ai/docs/api/api-reference/tts/create-speech)
@@ -217,7 +235,7 @@ const voiceService = new VoiceEngineAdapter({
 await voiceService.speakText('Hello! Welcome to the show.');
 ```
 
-Bearer 認証と JSON `{ model, input, voice, response_format: 'pcm' }` を送ります。
+MAI モデルでは Bearer 認証と JSON `{ model, input, voice, response_format: 'pcm' }` を送ります。
 音声 API の `audio/pcm` は 16-bit little-endian、MAI ルートは 24 kHz モノラルです。
 既存の PCM ヘルパーで WAV ヘッダーを付け、ブラウザ / Node 音声プレイヤーと
 `onPlay` コールバックに完全な WAV バッファーを渡します。MP3 やヘッダーなし PCM を
@@ -236,9 +254,10 @@ API キーを指定すると設定した送信先に送られるため、信頼�
 
 実行中にモデルを変える場合は、新モデルの一覧から音声を選び、`openRouterModel` と
 `speaker` を同時に更新してください。モデルだけの更新では以前の音声をクリアします。
-音声 ID の末尾は `:MAI-Voice-2.1` または `:MAI-Voice-2.1-Flash` です。
-モデルに合わない末尾は自動変換せず拒否します。React サンプルも初期状態では
-プレビューモデル・音声を選択せず、モデル別音声一覧、API キー、生成 / 一覧 URL を指定できます。
+MAI の音声 ID の末尾は `:MAI-Voice-2.1` または `:MAI-Voice-2.1-Flash` です。
+モデルに合わない末尾は自動変換せず拒否します。ElevenLabs は MAI の末尾を付けず、
+一覧の音声 ID を使います。React サンプルも初期状態ではモデル・音声を選択せず、
+モデル別音声一覧、API キー、生成 / 一覧 URL を指定できます。
 
 サンプルは OpenRouter に直接リクエストします。ブラウザのキーはページから
 見えるため、共有アプリでは共通の秘密をクライアントに埋め込まず、キーを保護する
@@ -368,6 +387,12 @@ Drama 3 Preview は `fishAudioModel: 'drama-3-preview'` で指定できます。
 より多くの結果が必要な場合は `limit` と、必要に応じて `pageSize` を指定すると、
 その上限内でページングします。
 
+`s2.1-pro-free` の無料提供は **2026-11-30** までです。非推奨の `s1` は
+**2026-12-31** に提供を終了し、その後のリクエストは `s2.1-pro` に転送されます。
+移行時は `(parenthesis)` 形式の感情タグを `[bracket]` 形式に変更してください。
+このエンジンはタグを自動変換しません。
+[Fish Audio の変更履歴](https://docs.fish.audio/developer-guide/getting-started/changelog)を参照してください。
+
 ### Cartesia
 
 Cartesia の同期 TTS は `POST /tts/bytes` を使用し、音声バイト列を直接返します。
@@ -377,7 +402,7 @@ const voiceService = new VoiceService({
   engineType: 'cartesia',
   speaker: 'your-cartesia-voice-id',
   apiKey: 'your-cartesia-api-key',
-  cartesiaModel: 'sonic-3.5',
+  cartesiaModel: 'sonic-3.6',
   cartesiaLanguage: 'ja',
   cartesiaOutputContainer: 'wav',
   cartesiaSampleRate: 44100,
@@ -387,8 +412,8 @@ const voiceService = new VoiceService({
 `getVoiceEngineVoiceList('cartesia', { apiKey, language: 'ja' })` で
 voice 一覧を取得できます。エンジンは公式仕様の
 `Cartesia-Version: 2026-03-01` ヘッダーと `voice: { id }` の形式を維持します。
-新モデルは `cartesiaModel: 'sonic-3.6'`、固定スナップショットは
-`'sonic-3.6-2026-08-27'` を明示指定できます。既定値は `sonic-3.5` のままです。
+既定値は安定版の `sonic-3.6` です。固定スナップショットの
+`'sonic-3.6-2026-08-27'` や、従来の `sonic-3.5` も明示指定できます。
 公式の [`POST /tts/bytes`](https://docs.cartesia.ai/api-reference/tts/bytes) と
 [変更履歴](https://docs.cartesia.ai/changelog/2026) で Sonic 3.6 対応と固定 API
 バージョンの後方互換性が説明されています。既存 voice ID と WAV/MP3 出力を
@@ -465,13 +490,14 @@ Gradium の one-shot REST TTS を SDK なしの直接 `fetch` で利用する
 クラウド TTS です。raw audio response mode（`only_audio: true`）を
 使用します。
 
-本番モデルが引き続き既定です。実験的なモデルは明示的に選択した場合のみ
-利用されます。公開ベータを試すには `gradiumModel: 'gradium-tts-beta'` を
-指定してください。`gradiumModel: 'default'` または省略時は本番モデルです。
-ベータは明示的な選択肢として対応しており、推奨の既定モデルではありません。
-React デモでも両方を選択できます。既存のアダプターは
-`updateOptions({ gradiumModel: 'default' })` で本番モデルに戻せます。
-`undefined` を指定するとモデル指定を解除します。
+`gradiumModel: 'default'` または省略時は、本番モデルを使います。
+[2026年9月30日の公式リリースノート](https://docs.gradium.ai/guides/release-notes)によると、
+`gradium-tts-beta` は現在の本番モデルと同じモデルを指し、今後は新しいベータ版に追従します。
+将来のベータ更新を受け取りたい場合のみ、明示的に選択してください。
+React サンプルでも両方を選択できます。
+`updateOptions({ gradiumModel: 'default' })` で安定版に戻せます。
+`undefined` はモデル指定を解除します。`cfg_coef` は非推奨で、現在のモデルでは
+無視されるため、新しい設定では `gradiumVoiceSimilarity` を省略してください。
 
 `gradiumModel` は REST JSON 本文のトップレベルの `model_name` に送信され、
 `json_config` とは別の項目です。公式の
@@ -487,7 +513,6 @@ const voiceService = new VoiceService({
   apiKey: process.env.GRADIUM_API_KEY,
   gradiumOutputFormat: 'wav',
   gradiumTemperature: 0.7,
-  gradiumVoiceSimilarity: 2,
   gradiumPaddingBonus: 0,
   gradiumRewriteRules: 'en',
 });
@@ -655,14 +680,18 @@ model UUID を使う形を維持しています。
 ### Gemini TTS
 `gemini-3.8-flash-lite-tts` と `gemini-3.8-flash-tts` に対応しています。
 3.8 の2モデルは Interactions API で音声を生成し、WAV を返します。
-従来の preview モデルも引き続き `generateContent` 経由で利用できます。
+既定値は `gemini-3.8-flash-tts` です。従来の `gemini-3.1-flash-tts-preview`、
+`gemini-2.5-flash-preview-tts`、`gemini-2.5-pro-preview-tts` は非推奨です。
+互換性のため `generateContent` 経由で選択できますが、最短で **2026-11-17** に
+提供を終了する予定です。3.8 のどちらかに移行してください。
+[公式の提供終了予定](https://ai.google.dev/gemini-api/docs/deprecations)を参照してください。
 
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'geminiTts',
   speaker: 'Zephyr',
   apiKey: 'your-google-api-key',
-  geminiTtsModel: 'gemini-3.8-flash-lite-tts',
+  geminiTtsModel: 'gemini-3.8-flash-tts',
   geminiTtsPrompt: '明るく親しみやすい話し方', // オプション：3.8 では speech_metadata.style に設定
   geminiTtsApiUrl:
     'https://generativelanguage.googleapis.com/v1beta', // オプション：Gemini API のベース URL
@@ -839,7 +868,6 @@ const voiceService = new VoiceService({
   inworldSampleRateHertz: 48000,
   gradiumOutputFormat: 'wav',
   gradiumTemperature: 0.7,
-  gradiumVoiceSimilarity: 2,
   voicevoxSpeedScale: 1.05,
   voicevoxPitchScale: 0.02,
   voicevoxQueryParameters: {
@@ -873,10 +901,10 @@ const voiceService = new VoiceService({
   - `openAiCompatibleInstructions`
   - `openAiCompatibleResponseFormat`
 
-- **OpenRouter TTS（パブリックプレビュー）**
+- **OpenRouter TTS（明示選択）**
   - 必須モデル: `openRouterModel`（既定値なし）
-  - 音声: 対応するモデルの末尾を含む `speaker`
-  - 生成先: `openRouterApiUrl`、PCM 応答を 24 kHz モノラル WAV に変換
+  - 音声: `speaker`（MAI はモデルの末尾を含む完全な ID、ElevenLabs は一覧の音声 ID）
+  - 生成先: `openRouterApiUrl`（MAI の PCM は 24 kHz モノラル WAV に変換、ElevenLabs の MP3 は直接返す）
   - 一覧取得オプション: `openRouterModel`、任意の `openRouterModelsApiUrl`
 
 - **xAI TTS**
@@ -918,7 +946,8 @@ const voiceService = new VoiceService({
 - **Gradium**
   - エンドポイント: `gradiumApiUrl`
   - 識別子・出力: `speaker`, `gradiumModel`, `gradiumOutputFormat`
-  - 音声調整: `gradiumTemperature`, `gradiumVoiceSimilarity`, `gradiumPaddingBonus`, `gradiumRewriteRules`
+  - 音声調整: `gradiumTemperature`, `gradiumPaddingBonus`, `gradiumRewriteRules`
+  - 互換用の非推奨オプション: `gradiumVoiceSimilarity`（`cfg_coef`）。現在の TTS モデルでは無視されます
 
 - **VOICEVOX**
   - エンドポイント: `voicevoxApiUrl`
@@ -1026,7 +1055,7 @@ try {
 ### Gradium の機能
 - `x-api-key` 認証のクラウド TTS エンドポイント
 - 指定した `speaker` をそのまま `voice_id` として送信
-- output format と、temperature / voice similarity / speed / rewrite rules 用の `json_config` 調整に対応
+- output format と、temperature / speed / rewrite rules 用の `json_config` 調整に対応
 - flagship voice プリセットの読みやすい音声名を Speaker セレクターに表示
 - provider が直接 CORS アクセスをブロックする場合、browser app での動的な voice list 取得には backend proxy が必要
 

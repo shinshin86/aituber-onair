@@ -1,5 +1,30 @@
 # @aituber-onair/voice
 
+## 0.29.0
+
+### Minor Changes
+
+- Add explicit OpenRouter `elevenlabs/eleven-v4` and
+  `elevenlabs/eleven-v4-turbo` support through the speech endpoint, with
+  model-scoped voice discovery and binary MP3 playback. Keep model and voice
+  selection explicit and preserve existing MAI preview PCM/WAV handling.
+- Include all 13 OpenAI Speech API voices and add model selection to the React
+  example, filtering voices and resetting incompatible selections on model changes.
+- Default Gemini TTS to stable `gemini-3.8-flash-tts` via the Interactions API.
+  Retain legacy preview model selection with earliest-shutdown notices for
+  2026-11-17. Cover language control state and request routing in the example.
+- Default Cartesia to stable `sonic-3.6` and retain `sonic-3.5` as an explicit option.
+
+### Patch Changes
+
+- Document OpenAI Speech API shutdown on 2027-01-06, Fish Audio S1 retirement
+  on 2026-12-31, and the S2.1 Pro Free promotion ending on 2026-11-30.
+- Clarify that Gradium's beta alias currently matches the production model
+  and will track future beta releases; retain the stable default.
+- Mark Gradium's legacy `gradiumVoiceSimilarity` / `cfg_coef` option as
+  deprecated and remove it from README samples because the current model
+  ignores it. Preserve explicit values for compatibility.
+
 ## 0.28.0
 
 ### Minor Changes

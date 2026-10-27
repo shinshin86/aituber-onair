@@ -54,6 +54,37 @@ describe('GeminiTtsEngine', () => {
     globalThis.fetch = originalFetch;
   });
 
+  it.each([false, true])(
+    'uses the stable Interactions default (reset=%s)',
+    async (reset) => {
+      const engine = new GeminiTtsEngine();
+      if (reset) {
+        engine.setModel('gemini-2.5-pro-preview-tts');
+        engine.setModel('');
+      }
+      const bytes = Uint8Array.of(82, 73, 70, 70);
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(createInteractionAudioResponse(bytes));
+      globalThis.fetch = fetchMock as typeof fetch;
+      const result = await engine.fetchAudio(
+        { message: 'こんにちは', style: 'neutral' },
+        'Zephyr',
+        'key',
+      );
+      expect(new Uint8Array(result)).toEqual(bytes);
+      expect(fetchMock.mock.calls[0][0]).toBe(
+        'https://generativelanguage.googleapis.com/v1beta/interactions',
+      );
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe('gemini-3.8-flash-tts');
+      expect(body.generation_config).toEqual({
+        speech_config: [{ voice: 'Zephyr' }],
+      });
+      expect(body.input[0].content[0].text).toBe('こんにちは');
+    },
+  );
+
   it('should update configuration through setter methods', () => {
     const engine = new GeminiTtsEngine();
 
@@ -81,13 +112,14 @@ describe('GeminiTtsEngine', () => {
     expect((engine as any).baseUrl).toBe(
       'https://generativelanguage.googleapis.com/v1beta',
     );
-    expect((engine as any).model).toBe('gemini-3.1-flash-tts-preview');
+    expect((engine as any).model).toBe('gemini-3.8-flash-tts');
     expect((engine as any).languageCode).toBe('ja-JP');
     expect((engine as any).prompt).toBeUndefined();
   });
 
-  it('should send a valid Gemini API request with API key auth', async () => {
+  it('should retain the legacy generateContent path with API key auth', async () => {
     const engine = new GeminiTtsEngine();
+    engine.setModel('gemini-3.1-flash-tts-preview');
     const fetchMock = vi.fn().mockResolvedValue(createAudioResponse());
     globalThis.fetch = fetchMock as typeof fetch;
 
@@ -132,8 +164,9 @@ describe('GeminiTtsEngine', () => {
     });
   });
 
-  it('should wrap PCM response in WAV container', async () => {
+  it('should wrap legacy PCM response in WAV container', async () => {
     const engine = new GeminiTtsEngine();
+    engine.setModel('gemini-2.5-flash-preview-tts');
     const pcmBytes = Uint8Array.from([0x01, 0x02, 0x03, 0x04]);
     const base64Pcm = btoa(String.fromCharCode(...pcmBytes));
 
@@ -330,6 +363,7 @@ describe('GeminiTtsEngine', () => {
     globalThis.fetch = fetchMock as typeof fetch;
 
     engine.setApiEndpoint('https://example.googleapis.com/custom/');
+    engine.setModel('gemini-3.1-flash-tts-preview');
 
     await engine.fetchAudio(
       { message: 'Custom endpoint test', style: 'neutral' } as any,

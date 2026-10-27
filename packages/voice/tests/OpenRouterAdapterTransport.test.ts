@@ -96,6 +96,41 @@ describe('OpenRouter adapter transport', () => {
     }
   });
 
+  it('switches from MAI WAV to ElevenLabs MP3 through updateOptions and onPlay', async () => {
+    const { audio, fetchMock } = mockAudio();
+    const onPlay = vi.fn();
+    const adapter = new VoiceEngineAdapter({
+      engineType: 'openRouter',
+      openRouterModel: model,
+      speaker: voice,
+      apiKey: 'key',
+      onPlay,
+    });
+    await adapter.speakText('MAI speech');
+    expectWavPayload(onPlay.mock.calls[0][0], audio);
+    const mp3 = Uint8Array.of(73, 68, 51, 1, 2).buffer;
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'audio/mpeg' }),
+      arrayBuffer: async () => mp3,
+    } as Response);
+    adapter.updateOptions({
+      openRouterModel: 'elevenlabs/eleven-v4',
+      speaker: 'george',
+    });
+    await adapter.speakText('Eleven speech');
+    expect(JSON.parse(fetchMock.mock.calls[1][1]?.body as string)).toEqual({
+      model: 'elevenlabs/eleven-v4',
+      voice: 'george',
+      input: 'Eleven speech',
+      response_format: 'mp3',
+    });
+    expect(onPlay.mock.calls[1][0]).toBe(mp3);
+    adapter.updateOptions({ openRouterModel: 'elevenlabs/eleven-v4-turbo' });
+    expect(adapter.getOptions().speaker).toBe('');
+  });
+
   it('clears stale voices on model-only updates and requires reselection', async () => {
     const { fetchMock } = mockAudio();
     vi.spyOn(console, 'error').mockImplementation(() => {});

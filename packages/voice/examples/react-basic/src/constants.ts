@@ -95,7 +95,7 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'Your Cartesia API key',
     speaker: '',
-    defaultModel: 'sonic-3.5',
+    defaultModel: 'sonic-3.6',
     defaultLanguage: 'ja' as CartesiaLanguage,
     defaultOutputContainer: 'wav' as CartesiaOutputContainer,
     defaultSampleRate: '44100',
@@ -129,7 +129,7 @@ export const ENGINE_DEFAULTS = {
     acceptsApiKey: true,
     placeholder: 'Your Google API key',
     speaker: 'Zephyr',
-    defaultModel: 'gemini-3.1-flash-tts-preview' as GeminiTtsModel,
+    defaultModel: 'gemini-3.8-flash-tts' as GeminiTtsModel,
     defaultLanguageCode: 'ja-JP',
   },
   openaiCompatible: {
@@ -252,22 +252,40 @@ export const GEMINI_TTS_MODELS: Record<string, string> = {
     '3.8 Flash-Lite TTS — Fast, cost-efficient speech',
   'gemini-3.8-flash-tts': '3.8 Flash TTS — Expressive, high-fidelity speech',
   'gemini-3.1-flash-tts-preview':
-    '3.1 Flash TTS Preview — Expressive speech with audio-tag control',
-  'gemini-2.5-flash-preview-tts': 'Flash Preview TTS — Optimized for latency',
-  'gemini-2.5-pro-preview-tts': 'Pro Preview TTS — Highest quality control',
+    '3.1 Flash TTS Preview — Deprecated, earliest shutdown 2026-11-17',
+  'gemini-2.5-flash-preview-tts':
+    'Flash Preview TTS — Deprecated, earliest shutdown 2026-11-17',
+  'gemini-2.5-pro-preview-tts':
+    'Pro Preview TTS — Deprecated, earliest shutdown 2026-11-17',
 };
+
+export const OPENAI_MODELS = ['tts-1', 'tts-1-hd', 'gpt-4o-mini-tts'] as const;
+export type OpenAIModel = (typeof OPENAI_MODELS)[number];
 
 export const OPENAI_VOICES: Record<string, string> = {
   alloy: 'Alloy',
   ash: 'Ash',
+  ballad: 'Ballad',
   coral: 'Coral',
   echo: 'Echo',
   fable: 'Fable',
-  onyx: 'Onyx',
   nova: 'Nova',
+  onyx: 'Onyx',
   sage: 'Sage',
   shimmer: 'Shimmer',
+  verse: 'Verse',
+  marin: 'Marin',
+  cedar: 'Cedar',
 };
+
+export function getOpenAIVoices(model: OpenAIModel): Record<string, string> {
+  const miniOnly = new Set(['ballad', 'verse', 'marin', 'cedar']);
+  return Object.fromEntries(
+    Object.entries(OPENAI_VOICES).filter(
+      ([id]) => model === 'gpt-4o-mini-tts' || !miniOnly.has(id),
+    ),
+  );
+}
 
 export const XAI_VOICES: Record<string, string> = {
   ara: 'Ara',
@@ -299,9 +317,9 @@ export const ELEVENLABS_MODELS: Record<string, string> = {
 
 export const FISH_AUDIO_MODELS: Record<FishAudioModel, string> = {
   's2.1-pro': 'S2.1 Pro — production model',
-  's2.1-pro-free': 'S2.1 Pro Free — promotional tier without an SLA',
+  's2.1-pro-free': 'S2.1 Pro Free — free through 2026-11-30, no SLA',
   's2-pro': 'S2 Pro — production model',
-  s1: 'S1 — previous generation',
+  s1: 'S1 — deprecated, retires 2026-12-31; migrate tags to brackets',
   'drama-3-preview': 'Drama 3 Preview — behavior and availability may change',
   'drama-3': 'Drama 3 — released model for directed voice performances',
 };
@@ -323,7 +341,7 @@ export const CARTESIA_MODELS: Record<string, string> = {
   'sonic-3.6':
     'Sonic 3.6 — multilingual quality and pronunciation improvements',
   'sonic-3.6-2026-08-27': 'Sonic 3.6 — pinned August 27, 2026 snapshot',
-  'sonic-3.5': 'Sonic 3.5 — existing default',
+  'sonic-3.5': 'Sonic 3.5 — previous stable model',
 };
 
 export const CARTESIA_LANGUAGES: Partial<Record<CartesiaLanguage, string>> = {
@@ -406,7 +424,8 @@ export const GRADIUM_VOICE_OPTIONS = Object.entries(GRADIUM_VOICES).map(
 
 export const GRADIUM_MODELS: Record<GradiumModel, string> = {
   default: 'default — Production (default)',
-  'gradium-tts-beta': 'gradium-tts-beta — Beta (opt-in)',
+  'gradium-tts-beta':
+    'gradium-tts-beta — currently default alias, tracks future betas (opt-in)',
 };
 
 export const GRADIUM_OUTPUT_FORMATS: Record<GradiumOutputFormat, string> = {

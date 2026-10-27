@@ -6,7 +6,7 @@ import { Talk } from '../types/voice';
 import { clampNumber, fetchWithTimeout } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
-/** Production model or explicitly selected public beta. */
+/** Production or opt-in beta alias, currently matching default and tracking future betas. */
 export type GradiumModel = 'default' | 'gradium-tts-beta';
 
 export type GradiumOutputFormat =
@@ -87,7 +87,8 @@ export class GradiumEngine implements VoiceEngine {
   }
 
   /**
-   * Set voice similarity / cfg_coef (1.0-4.0).
+   * Set the legacy voice similarity / cfg_coef value (1.0-4.0).
+   * @deprecated Gradium's current TTS model ignores cfg_coef. Omit it for new integrations.
    */
   setVoiceSimilarity(value?: number): void {
     this.voiceSimilarity = clampNumber(value, 1, 4);

@@ -154,6 +154,135 @@ async function configureElevenLabs() {
   await click(listButton('ElevenLabs'));
 }
 
+describe('Provider maintenance flows with offline fixtures', () => {
+  it('filters OpenAI voices by model, preserves valid voices, and resets incompatible ones', async () => {
+    const options = () =>
+      Array.from((field('speaker') as HTMLSelectElement).options).map(
+        (option) => option.value,
+      );
+    expect(field('openaiModel').value).toBe('tts-1');
+    expect(options()).toHaveLength(9);
+    expect(options()).not.toContain('marin');
+    expect(container.textContent).toContain('2027-01-06');
+    await change('openaiModel', 'gpt-4o-mini-tts');
+    expect(options()).toHaveLength(13);
+    expect(options()).toEqual(
+      expect.arrayContaining(['ballad', 'verse', 'marin', 'cedar']),
+    );
+    await change('speaker', 'marin');
+    await change('apiKey', 'fake-key');
+    routes.set('POST https://api.openai.com/v1/audio/speech', (init) => {
+      expect(JSON.parse(init.body as string)).toMatchObject({
+        model: 'gpt-4o-mini-tts',
+        voice: 'marin',
+      });
+      return audioResponse();
+    });
+    await click(speakButton);
+    await change('openaiModel', 'tts-1-hd');
+    expect(field('speaker').value).toBe('alloy');
+    expect(options()).toHaveLength(9);
+    await change('speaker', 'sage');
+    await change('openaiModel', 'tts-1');
+    expect(field('speaker').value).toBe('sage');
+    routes.set('POST https://api.openai.com/v1/audio/speech', (init) => {
+      expect(JSON.parse(init.body as string)).toMatchObject({
+        model: 'tts-1',
+        voice: 'sage',
+      });
+      return audioResponse();
+    });
+    await click(speakButton);
+  });
+
+  it('uses the Gemini 3.8 default, retains preview-only language settings, and resets on engine changes', async () => {
+    await change('engine', 'geminiTts');
+    expect(field('geminiTtsModel').value).toBe('gemini-3.8-flash-tts');
+    expect(field('geminiTtsLanguageCode').disabled).toBe(true);
+    await change('apiKey', 'fake-gemini-key');
+    await change('geminiTtsPrompt', 'cheerful');
+    routes.set(
+      'POST https://generativelanguage.googleapis.com/v1beta/interactions',
+      (init) => {
+        const body = JSON.parse(init.body as string);
+        expect(body.model).toBe('gemini-3.8-flash-tts');
+        expect(body.generation_config).toEqual({
+          speech_config: [{ voice: 'Zephyr' }],
+        });
+        expect(body.input[0].content[0].annotations).toEqual([
+          { type: 'speech_metadata', style: 'cheerful' },
+        ]);
+        return jsonResponse({
+          steps: [
+            {
+              type: 'model_output',
+              content: [{ type: 'audio', data: btoa('RIFFtest') }],
+            },
+          ],
+        });
+      },
+    );
+    await click(speakButton);
+    await change('geminiTtsModel', 'gemini-2.5-pro-preview-tts');
+    expect(field('geminiTtsLanguageCode').disabled).toBe(false);
+    await change('geminiTtsLanguageCode', 'en-US');
+    await change('geminiTtsModel', 'gemini-3.8-flash-tts');
+    expect(field('geminiTtsLanguageCode').disabled).toBe(true);
+    await change('geminiTtsModel', 'gemini-2.5-pro-preview-tts');
+    expect(field('geminiTtsLanguageCode').value).toBe('en-US');
+    expect(container.textContent).toContain('earliest shutdown 2026-11-17');
+    await change('engine', 'openai');
+    await change('engine', 'geminiTts');
+    expect(field('geminiTtsModel').value).toBe('gemini-3.8-flash-tts');
+    expect(field('geminiTtsLanguageCode').value).toBe('ja-JP');
+    expect(field('geminiTtsLanguageCode').disabled).toBe(true);
+  });
+
+  it('selects stable Sonic 3.6 by default and retains the previous model option', async () => {
+    await change('engine', 'cartesia');
+    expect(field('cartesiaModel').value).toBe('sonic-3.6');
+    await change('cartesiaModel', 'sonic-3.5');
+    expect(field('cartesiaModel').value).toBe('sonic-3.5');
+  });
+
+  it.each(['elevenlabs/eleven-v4', 'elevenlabs/eleven-v4-turbo'])(
+    'plays %s MP3 only after explicit catalog voice selection and clears stale voices',
+    async (model) => {
+      await change('engine', 'openRouter');
+      await change('apiKey', 'fake-key');
+      await change('openRouterModel', model);
+      expect(field('speaker').value).toBe('');
+      expect(button(speakButton).disabled).toBe(true);
+      routes.set(
+        'GET https://openrouter.ai/api/v1/models?output_modalities=speech',
+        () =>
+          jsonResponse({
+            data: [
+              { id: model, supported_voices: ['new-catalog-voice', 'sarah'] },
+            ],
+          }),
+      );
+      await click('button[aria-label="Fetch OpenRouter model voices"]');
+      expect(field('speaker').value).toBe('');
+      await change('speaker', 'new-catalog-voice');
+      routes.set('POST https://openrouter.ai/api/v1/audio/speech', (init) => {
+        expect(JSON.parse(init.body as string)).toEqual({
+          model,
+          voice: 'new-catalog-voice',
+          input: field('text').value,
+          response_format: 'mp3',
+        });
+        return audioResponse();
+      });
+      await click(speakButton);
+      expect(audio.played).toHaveBeenCalledWith(mp3Bytes);
+      await change('openRouterModel', 'microsoft/mai-voice-2.1');
+      expect(field('speaker').value).toBe('');
+      expect(button(speakButton).disabled).toBe(true);
+    },
+  );
+});
+
 describe('Voice sample DOM flow with fake network and audio', () => {
   it('routes Eleven v4 through HTTP and restores retained settings when switching back', async () => {
     await configureElevenLabs();
@@ -804,7 +933,13 @@ describe('OpenRouter public-preview model flow with offline fixtures', () => {
       Array.from((field('openRouterModel') as HTMLSelectElement).options).map(
         (option) => option.value,
       ),
-    ).toEqual(['', maiModel, flashModel]);
+    ).toEqual([
+      '',
+      maiModel,
+      flashModel,
+      'elevenlabs/eleven-v4',
+      'elevenlabs/eleven-v4-turbo',
+    ]);
 
     await change('apiKey', 'fake-openrouter-key');
     expect(button(openRouterListButton).disabled).toBe(true);

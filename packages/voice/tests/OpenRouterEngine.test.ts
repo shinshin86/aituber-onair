@@ -88,6 +88,66 @@ describe('OpenRouterEngine', () => {
     },
   );
 
+  it.each(['elevenlabs/eleven-v4', 'elevenlabs/eleven-v4-turbo'] as const)(
+    'sends %s as MP3 and returns compressed audio unchanged',
+    async (model) => {
+      const mp3 = Uint8Array.of(73, 68, 51, 1, 2).buffer;
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'audio/mpeg' }),
+        arrayBuffer: async () => mp3,
+      } as Response);
+      for (const voice of ['george', 'new-catalog-voice']) {
+        fetchMock.mockClear();
+        const result = await createEngine(model).fetchAudio(talk, voice, 'key');
+        expect(result).toBe(mp3);
+        expect(fetchMock.mock.calls[0][0]).toBe(OPENROUTER_TTS_API_URL);
+        expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
+          model,
+          input: 'Hello there!',
+          voice,
+          response_format: 'mp3',
+        });
+      }
+      expect(getVoiceEngineCapabilities('openRouter').supportsEmotion).toBe(
+        false,
+      );
+    },
+  );
+
+  it.each(['elevenlabs/eleven-v4', 'elevenlabs/eleven-v4-turbo'] as const)(
+    'rejects empty or suffixed voices before sending %s',
+    async (model) => {
+      const { fetchMock } = mockAudioResponse();
+      for (const voice of ['', '   ', cases[0][1], 'george:unsupported']) {
+        await expect(
+          createEngine(model).fetchAudio(talk, voice, 'key'),
+        ).rejects.toMatchObject({ kind: 'configuration' });
+      }
+      expect(fetchMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([
+    ['audio/pcm', new ArrayBuffer(4)],
+    ['audio/mpeg', new ArrayBuffer(0)],
+    ['application/json', new ArrayBuffer(4)],
+  ])(
+    'rejects unexpected or empty ElevenLabs responses (%s)',
+    async (contentType, bytes) => {
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': contentType }),
+        arrayBuffer: async () => bytes,
+      } as Response);
+      await expect(
+        createEngine('elevenlabs/eleven-v4').fetchAudio(talk, 'george', 'key'),
+      ).rejects.toMatchObject({ kind: 'api' });
+    },
+  );
+
   it('requires model opt-in and never restores an implicit preview model', async () => {
     const { fetchMock } = mockAudioResponse();
     const engine = new OpenRouterEngine();
