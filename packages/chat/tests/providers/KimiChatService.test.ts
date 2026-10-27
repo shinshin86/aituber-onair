@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  MODEL_KIMI_K3_1_PRO,
+  MODEL_KIMI_K3_1_PRO_HIGHSPEED,
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   MODEL_KIMI_K3,
   MODEL_KIMI_K2_6,
@@ -7,7 +9,12 @@ import {
 } from '../../src/constants';
 import { KimiChatService } from '../../src/services/providers/kimi/KimiChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
-import type { Message, ToolDefinition } from '../../src/types';
+import { buildToolContinuationMessages } from '../../src/backend';
+import type {
+  Message,
+  MessageWithVision,
+  ToolDefinition,
+} from '../../src/types';
 
 const messages: Message[] = [{ role: 'user', content: 'hello' }];
 
@@ -52,7 +59,11 @@ const createStreamResponse = (chunks: string[]): Response => {
   return { body } as Response;
 };
 
-describe('KimiChatService request body', () => {
+describe.each([
+  MODEL_KIMI_K3,
+  MODEL_KIMI_K3_1_PRO,
+  MODEL_KIMI_K3_1_PRO_HIGHSPEED,
+])('%s compatibility', (k3Model) => {
   beforeEach(() => {
     vi.restoreAllMocks();
     global.TextDecoder = class {
@@ -75,8 +86,8 @@ describe('KimiChatService request body', () => {
       );
       const service = new KimiChatService(
         'test-key',
-        MODEL_KIMI_K3,
-        MODEL_KIMI_K3,
+        k3Model,
+        k3Model,
         undefined,
         ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
         'short',
@@ -90,7 +101,7 @@ describe('KimiChatService request body', () => {
       expect(postSpy).toHaveBeenCalledWith(
         ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
         expect.objectContaining({
-          model: MODEL_KIMI_K3,
+          model: k3Model,
           stream: false,
           messages,
           reasoning_effort: reasoningEffort,
@@ -121,8 +132,8 @@ describe('KimiChatService request body', () => {
     );
     const service = new KimiChatService(
       'test-key',
-      MODEL_KIMI_K3,
-      MODEL_KIMI_K3,
+      k3Model,
+      k3Model,
       undefined,
       ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
       undefined,
@@ -144,6 +155,81 @@ describe('KimiChatService request body', () => {
         },
       }),
     );
+  });
+
+  it('preserves image input, reasoning and tool calls across turns', async () => {
+    const imageMessages: MessageWithVision[] = [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Weather here?' },
+          {
+            type: 'image_url',
+            image_url: { url: 'https://example.com/image.png' },
+          },
+        ],
+      },
+    ];
+    const assistant = {
+      role: 'assistant',
+      content: '',
+      reasoning_content: 'Check location',
+      tool_calls: [
+        {
+          id: 'weather-1',
+          type: 'function',
+          function: { name: 'lookupWeather', arguments: '{"city":"Tokyo"}' },
+        },
+      ],
+    };
+    const post = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValueOnce(createOneShotResponse(assistant))
+      .mockResolvedValueOnce(
+        createStreamResponse([
+          'data: {"choices":[{"delta":{"reasoning_content":"Use weather"}}]}\n\n',
+          'data: {"choices":[{"delta":{"content":"Sunny"},"finish_reason":"stop"}]}\n\n',
+          'data: [DONE]\n\n',
+        ]),
+      );
+    const service = new KimiChatService('test-key', k3Model, k3Model, tools);
+    const first = await service.visionChatOnce(imageMessages, false);
+    expect(post.mock.calls[0][0]).toBe(ENDPOINT_KIMI_CHAT_COMPLETIONS_API);
+    expect(post.mock.calls[0][1]).toMatchObject({
+      model: k3Model,
+      messages: imageMessages,
+      reasoning_effort: 'max',
+      tools: [{ type: 'function', function: { name: 'lookupWeather' } }],
+    });
+    expect(post.mock.calls[0][1]).not.toHaveProperty('thinking');
+    expect(first.assistant_message).toEqual(assistant);
+    expect(first.blocks).toContainEqual({
+      type: 'tool_use',
+      id: 'weather-1',
+      name: 'lookupWeather',
+      input: { city: 'Tokyo' },
+    });
+    const continuation = buildToolContinuationMessages({
+      provider: 'kimi',
+      messages,
+      completion: first,
+      toolResults: [
+        { type: 'tool_result', tool_use_id: 'weather-1', content: 'Sunny' },
+      ],
+    });
+    const partial = vi.fn();
+    const second = await service.chatOnce(continuation, true, partial);
+    expect(post.mock.calls[1][1].messages).toContainEqual(assistant);
+    expect(post.mock.calls[1][1]).toMatchObject({
+      model: k3Model,
+      stream: true,
+      reasoning_effort: 'max',
+    });
+    expect(second.assistant_message).toMatchObject({
+      content: 'Sunny',
+      reasoning_content: 'Use weather',
+    });
+    expect(partial).toHaveBeenCalledWith('Sunny');
   });
 
   it('keeps thinking enabled for Kimi K2.7 Code when tools are provided', () => {

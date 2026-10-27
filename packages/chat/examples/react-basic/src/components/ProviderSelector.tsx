@@ -8,6 +8,16 @@ import {
 import { Provider } from '../App';
 import LocalLlmSetup from './LocalLlmSetup';
 import {
+  MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+  MODEL_INCEPTION_MERCURY_3,
+  MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+  MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+  MODEL_MINIMAX_M3_1_FLASH,
+  MODEL_UNBIASED_PARETO_26_10,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
+  MODEL_NEX_AGI_NEX_N2_5_PRO,
+  MODEL_KIMI_K3_1_PRO,
+  MODEL_KIMI_K3_1_PRO_HIGHSPEED,
   ChatServiceFactory,
   type ChatResponseLength,
   type GPT5PresetKey,
@@ -1349,6 +1359,66 @@ export const allModels: ProviderModel[] = [
     provider: 'gemini-nano',
     default: true,
   },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+    name: 'Claude Haiku 5.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_INCEPTION_MERCURY_3,
+    name: 'Mercury 3',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+    name: 'DeepSeek V4.1 Flash 1017 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+    name: 'Kimi K3.1 Pro (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_MINIMAX_M3_1_FLASH,
+    name: 'MiniMax M3.1 Flash',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_UNBIASED_PARETO_26_10,
+    name: 'Pareto 26.10',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
+    name: 'Ling 3.0 Flash VL',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_NEX_AGI_NEX_N2_5_PRO,
+    name: 'Nex N2.5 Pro',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_KIMI_K3_1_PRO,
+    name: 'Kimi K3.1 Pro',
+    provider: 'kimi',
+    default: false,
+  },
+  {
+    id: MODEL_KIMI_K3_1_PRO_HIGHSPEED,
+    name: 'Kimi K3.1 Pro Highspeed',
+    provider: 'kimi',
+    default: false,
+  },
 ];
 
 export const getProviderForModel = (
@@ -2387,8 +2457,8 @@ export default function ProviderSelector({
                     <option value="max">Max (default)</option>
                   </select>
                   <span className="helper-text">
-                    Kimi K3 always reasons. Use Low for shorter reasoning or Max
-                    for the API default.
+                    Kimi K3 and K3.1 Pro always reason. Use Low for shorter
+                    reasoning or Max for the API default.
                   </span>
                 </div>
               ) : (

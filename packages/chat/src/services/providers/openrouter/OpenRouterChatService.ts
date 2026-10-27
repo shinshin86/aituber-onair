@@ -3,6 +3,7 @@ import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   MODEL_UNBIASED_PARETO_26_9,
+  MODEL_UNBIASED_PARETO_26_10,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   ENDPOINT_OPENROUTER_API,
@@ -384,6 +385,7 @@ export class OpenRouterChatService implements ChatService {
       ![
         MODEL_UNBIASED_PARETO_26_10_PREVIEW,
         MODEL_UNBIASED_PARETO_26_9,
+        MODEL_UNBIASED_PARETO_26_10,
       ].includes(model.trim())
     ) {
       // Add OpenRouter reasoning control

@@ -6,6 +6,8 @@ import { act, createElement } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  MODEL_UNBIASED_PARETO_26_10,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
   ChatServiceFactory,
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENROUTER_API,
@@ -30,6 +32,19 @@ import ProviderSelector, {
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  ...[
+    [MODEL_UNBIASED_PARETO_26_10, 'Pareto 26.10'],
+    [MODEL_INCLUSIONAI_LING_3_0_FLASH_VL, 'Ling 3.0 Flash VL'],
+  ].map(([model, label]) => ({
+    provider: 'openrouter' as const,
+    providerLabel: 'OpenRouter',
+    model,
+    label,
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  })),
   {
     provider: 'openrouter',
     providerLabel: 'OpenRouter',
@@ -251,7 +266,23 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       container.querySelectorAll('.model-item .model-name'),
       (node) => node.textContent?.trim(),
     );
-    expect(labels.slice(-2)).toEqual(['Mistral Large 4', 'Pareto 26.9']);
+    expect(
+      labels
+        .filter(
+          (label) =>
+            ![
+              'Claude Haiku 5.5 (OpenRouter)',
+              'Mercury 3',
+              'DeepSeek V4.1 Flash 1017 (OpenRouter)',
+              'Kimi K3.1 Pro (OpenRouter)',
+              'MiniMax M3.1 Flash',
+              'Pareto 26.10',
+              'Ling 3.0 Flash VL',
+              'Nex N2.5 Pro',
+            ].includes(label ?? ''),
+        )
+        .slice(-2),
+    ).toEqual(['Mistral Large 4', 'Pareto 26.9']);
     expect(
       button('Gemma 4 31B IT (Free)', 'model').getAttribute('aria-pressed'),
     ).toBe('true');
@@ -268,7 +299,10 @@ describe('ProviderSelector rendered configuration for recent models', () => {
     const curatedLabels = allModels
       .filter((model) => model.provider === 'openrouter')
       .map((model) => model.name);
-    expect(curatedLabels.slice(-2)).toEqual(['Mistral Large 4', 'Pareto 26.9']);
+    expect(curatedLabels.slice(-10, -8)).toEqual([
+      'Mistral Large 4',
+      'Pareto 26.9',
+    ]);
 
     await renderApp();
     await click(button('OpenRouter', 'provider'));
@@ -493,7 +527,11 @@ describe('ProviderSelector rendered configuration for recent models', () => {
         element<HTMLInputElement>('#openrouter-include-reasoning').checked,
       ).toBe(true);
       await sendMessage();
-      if (addition.model === MODEL_UNBIASED_PARETO_26_9) {
+      if (
+        [MODEL_UNBIASED_PARETO_26_9, MODEL_UNBIASED_PARETO_26_10].includes(
+          addition.model,
+        )
+      ) {
         expect(requestBody().reasoning).toBeUndefined();
       } else {
         expect(requestBody().reasoning).not.toHaveProperty('effort');

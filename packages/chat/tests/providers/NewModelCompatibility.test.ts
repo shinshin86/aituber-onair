@@ -39,6 +39,15 @@ const jsonResponse = (data: unknown) =>
 const dataEvent = (data: unknown) => `data: ${JSON.stringify(data)}\n\n`;
 
 const routerModels = [
+  models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+  models.MODEL_INCEPTION_MERCURY_3,
+  models.MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+  models.MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+  models.MODEL_MINIMAX_M3_1_FLASH,
+  models.MODEL_UNBIASED_PARETO_26_10,
+  models.MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
+  models.MODEL_NEX_AGI_NEX_N2_5_PRO,
+
   models.MODEL_OPENAI_GPT_6_ASTRA,
   models.MODEL_OPENAI_GPT_6_ASTRA_PRO,
   models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
@@ -608,7 +617,10 @@ describe('New model endpoint compatibility', () => {
         ]),
       );
       const provider = new OpenRouterChatServiceProvider();
-      const vision = model !== models.MODEL_INCEPTION_MERCURY_2_5;
+      const vision = ![
+        models.MODEL_INCEPTION_MERCURY_2_5,
+        models.MODEL_INCEPTION_MERCURY_3,
+      ].includes(model);
       expect(provider.getSupportedModels()).toContain(model);
       expect(provider.supportsVisionForModel(model)).toBe(vision);
       if (model.endsWith(':free'))
@@ -637,9 +649,97 @@ describe('New model endpoint compatibility', () => {
       });
       const allowed = models.getOpenRouterSupportedReasoningEfforts(model);
       if (allowed.length) expect(allowed).toContain(body.reasoning.effort);
-      else expect(body.reasoning.effort).toBeUndefined();
+      else expect(body.reasoning?.effort).toBeUndefined();
       if (model === models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1)
         expect(body.tool_choice).toBeUndefined();
+    },
+  );
+});
+
+describe('October explicit OpenRouter reasoning profiles', () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  const profiles = [
+    {
+      model: models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+      efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+      defaultEffort: 'low',
+    },
+    {
+      model: models.MODEL_INCEPTION_MERCURY_3,
+      efforts: ['none', 'low', 'medium', 'high'],
+      defaultEffort: 'none',
+    },
+    {
+      model: models.MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+      efforts: ['none', 'low', 'high', 'max'],
+      defaultEffort: 'none',
+    },
+    {
+      model: models.MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+      efforts: ['none', 'low', 'high', 'max'],
+      defaultEffort: 'none',
+    },
+    {
+      model: models.MODEL_MINIMAX_M3_1_FLASH,
+      efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+      defaultEffort: 'low',
+    },
+    {
+      model: models.MODEL_UNBIASED_PARETO_26_10,
+      efforts: [],
+      defaultEffort: undefined,
+    },
+    {
+      model: models.MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
+      efforts: [],
+      defaultEffort: undefined,
+    },
+    {
+      model: models.MODEL_NEX_AGI_NEX_N2_5_PRO,
+      efforts: ['none', 'medium', 'high'],
+      defaultEffort: 'none',
+    },
+  ] as const;
+
+  it.each(profiles)(
+    '$model sends only catalog effort values',
+    async ({ model, efforts, defaultEffort }) => {
+      expect(models.getOpenRouterSupportedReasoningEfforts(model)).toEqual(
+        efforts,
+      );
+      expect(models.getDefaultOpenRouterReasoningEffort(model)).toBe(
+        defaultEffort,
+      );
+      const post = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockImplementation(async () =>
+          jsonResponse({ choices: [{ message: { content: 'ok' } }] }),
+        );
+      for (const requested of [
+        undefined,
+        'none',
+        'minimal',
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ] as const) {
+        const service = new OpenRouterChatServiceProvider().createChatService({
+          apiKey: 'test-key',
+          model,
+          reasoning_effort: requested,
+        });
+        await service.chatOnce!(messages, false);
+        const body = post.mock.calls.at(-1)![1];
+        const allowed: readonly string[] = efforts;
+        expect(body.reasoning?.effort).toBe(
+          requested && allowed.includes(requested) ? requested : defaultEffort,
+        );
+        if (model === models.MODEL_UNBIASED_PARETO_26_10)
+          expect(body.reasoning).toBeUndefined();
+      }
     },
   );
 });

@@ -169,6 +169,20 @@ built-in model status is `available`.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
 
 **OpenRouter**
+
+Additional explicit options (provider default unchanged):
+
+- `anthropic/claude-haiku-5.5`: Claude Haiku 5.5 (OpenRouter); image input; none, low, medium, high, xhigh, max (default `low`).
+- `inception/mercury-3`: Mercury 3; text-only; none, low, medium, high (default `none`).
+- `deepseek/deepseek-v4.1-flash-1017`: DeepSeek V4.1 Flash 1017 (OpenRouter); image input; none, low, high, max (default `none`).
+- `moonshotai/kimi-k3.1-pro`: Kimi K3.1 Pro (OpenRouter); image input; none, low, high, max (default `none`).
+- `minimax/minimax-m3.1-flash`: MiniMax M3.1 Flash; image input; low, medium, high, xhigh, max (default `low`).
+- `unbiased/pareto-26.10`: Pareto 26.10; image input; no reasoning effort or token budget.
+- `inclusionai/ling-3.0-flash-vl`: Ling 3.0 Flash VL; image input; no reasoning effort or token budget.
+- `nex-agi/nex-n2.5-pro`: Nex N2.5 Pro; image input; none, medium, high (default `none`).
+
+All eight support tools and streaming. MiniMax reasoning cannot be disabled; Pareto sends no reasoning fields. Ling and Nex Pro are paid IDs.
+
 - Models: Current text-chat candidates from the public catalog, with unverified curated fallback IDs when discovery is unavailable
 - Vision: Requires both catalog image-input metadata and exact SDK model support
 - Reasoning Effort: The intersection of catalog-advertised and SDK-supported values. Controls stay disabled when the catalog does not publish the required metadata.
@@ -193,10 +207,10 @@ built-in model status is `available`.
 - Grok 4.3 is the package and sample default.
 
 **Kimi**
-- Models: Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6 (Kimi K2.5 was discontinued on 2026-08-31)
+- Models: Kimi K3.1 Pro (`kimi-k3.1-pro`), Kimi K3.1 Pro Highspeed (`kimi-k3.1-pro-highspeed`), Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6 (Kimi K2.5 was discontinued on 2026-08-31)
 - Vision: Supported
 - Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K3 is an explicit reasoning option, and Kimi K2.7 Code models are coding-oriented.
-- Kimi K3 reasoning: selectable `low`, `high`, or `max`, with `max` as the API default. Reasoning cannot be disabled.
+- Kimi K3 and K3.1 Pro reasoning: selectable `low`, `high`, or `max`, with `max` as the API default. Reasoning cannot be disabled.
 
 **DeepSeek**
 - Models: DeepSeek V4.1 Flash 1017 (`deepseek-flash`), V4 Pro, and legacy Flash aliases. The existing `deepseek-v4-flash` package default is preserved.
