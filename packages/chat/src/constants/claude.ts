@@ -9,6 +9,7 @@ export const MODEL_CLAUDE_3_5_SONNET = 'claude-3-5-sonnet-20241022';
 export const MODEL_CLAUDE_3_7_SONNET = 'claude-3-7-sonnet-20250219';
 export const MODEL_CLAUDE_4_SONNET = 'claude-sonnet-4-20250514';
 export const MODEL_CLAUDE_4_OPUS = 'claude-opus-4-20250514';
+/** @deprecated Anthropic retires it on November 30, 2026. Use MODEL_CLAUDE_5_5_SONNET. */
 export const MODEL_CLAUDE_4_5_SONNET = 'claude-sonnet-4-5-20250929';
 export const MODEL_CLAUDE_4_5_HAIKU = 'claude-haiku-4-5-20251001';
 export const MODEL_CLAUDE_4_5_OPUS = 'claude-opus-4-5-20251101';
@@ -23,8 +24,10 @@ export const MODEL_CLAUDE_5_5_OPUS = 'claude-opus-5-5';
 export const MODEL_CLAUDE_5_5_SONNET = 'claude-sonnet-5-5';
 export const MODEL_CLAUDE_5_5_HAIKU = 'claude-haiku-5-5';
 
-// Retired model ids remain exported so existing imports continue to compile.
+// Deprecated and retired model ids remain exported so existing imports
+// continue to compile.
 export const CLAUDE_DEPRECATED_MODELS = [
+  MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_3_HAIKU,
   MODEL_CLAUDE_3_5_HAIKU,
   MODEL_CLAUDE_3_5_SONNET,

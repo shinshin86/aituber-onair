@@ -1,5 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  MODEL_OPENAI_GPT_6_1_TERRA,
+  MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+  MODEL_INCEPTION_MERCURY_3,
+  MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+  MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+  MODEL_MINIMAX_M3_1_FLASH,
+  MODEL_UNBIASED_PARETO_26_10,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
+  MODEL_NEX_AGI_NEX_N2_5_PRO,
   getDefaultOpenRouterReasoningEffort,
   getOpenRouterSupportedReasoningEfforts,
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
@@ -8,6 +17,8 @@ import {
   MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
@@ -23,6 +34,61 @@ import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import type { Message, MessageWithVision } from '../../src/types';
 
 const candidates = [
+  {
+    provider: 'openrouter',
+    model: MODEL_OPENAI_GPT_6_1_TERRA,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_INCEPTION_MERCURY_3,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: false,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_MINIMAX_M3_1_FLASH,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_UNBIASED_PARETO_26_10,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    model: MODEL_NEX_AGI_NEX_N2_5_PRO,
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+
   {
     provider: 'openrouter',
     model: MODEL_UNBIASED_PARETO_26_9,
@@ -179,7 +245,16 @@ describe.each(candidates)(
         model === MODEL_UPSTAGE_SOLAR_PRO4
           ? 'none'
           : model === MODEL_UPSTAGE_SOLAR_MINI4 ||
-              model === MODEL_OPENROUTER_MISTRAL_LARGE_4_0
+              model === MODEL_OPENROUTER_MISTRAL_LARGE_4_0 ||
+              [
+                MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+                MODEL_INCEPTION_MERCURY_3,
+                MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+                MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+                MODEL_MINIMAX_M3_1_FLASH,
+                MODEL_NEX_AGI_NEX_N2_5_PRO,
+                MODEL_OPENAI_GPT_6_1_TERRA,
+              ].includes(model)
             ? 'high'
             : undefined,
       );
@@ -301,6 +376,13 @@ describe.each(candidates)(
         expect(body.reasoning_effort).toBeUndefined();
         expect(body.reasoning?.effort).toBe(
           [
+            MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+            MODEL_INCEPTION_MERCURY_3,
+            MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+            MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+            MODEL_MINIMAX_M3_1_FLASH,
+            MODEL_NEX_AGI_NEX_N2_5_PRO,
+            MODEL_OPENAI_GPT_6_1_TERRA,
             MODEL_UPSTAGE_SOLAR_MINI4,
             MODEL_UPSTAGE_SOLAR_PRO4,
             MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
@@ -308,11 +390,24 @@ describe.each(candidates)(
             ? 'high'
             : undefined,
         );
-        expect(body.reasoning?.max_tokens).toBeUndefined();
+        expect(body.reasoning?.max_tokens).toBe(
+          [
+            MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+            MODEL_INCEPTION_MERCURY_3,
+            MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+            MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+            MODEL_MINIMAX_M3_1_FLASH,
+            MODEL_NEX_AGI_NEX_N2_5_PRO,
+            MODEL_OPENAI_GPT_6_1_TERRA,
+          ].includes(model)
+            ? 2048
+            : undefined,
+        );
         if (
           [
             MODEL_UNBIASED_PARETO_26_10_PREVIEW,
             MODEL_UNBIASED_PARETO_26_9,
+            MODEL_UNBIASED_PARETO_26_10,
           ].includes(model)
         ) {
           expect(body.reasoning).toBeUndefined();
@@ -415,10 +510,12 @@ describe('Ling 3.1 Flash response constraints', () => {
   });
 });
 
-it('keeps Pareto preview explicit with vision and no reasoning controls', () => {
+it('keeps the retired Pareto preview exported without advertising it', () => {
   const model = MODEL_UNBIASED_PARETO_26_10_PREVIEW;
   expect(model).toBe('unbiased/pareto-26.10-preview');
-  expect(ChatServiceFactory.getSupportedModels('openrouter')).toContain(model);
+  expect(ChatServiceFactory.getSupportedModels('openrouter')).not.toContain(
+    model,
+  );
   expect(
     ChatServiceFactory.getProviderCapabilities('openrouter')?.defaultModel,
   ).not.toBe(model);
@@ -539,9 +636,10 @@ it.each(
 it('keeps Mistral Large 4 explicit and exposes only documented effort values', () => {
   const model = MODEL_OPENROUTER_MISTRAL_LARGE_4_0;
   expect(model).toBe('mistralai/mistral-large-4-0');
-  expect(
-    ChatServiceFactory.getSupportedModels('openrouter').slice(-3, -1),
-  ).toEqual([MODEL_UNBIASED_PARETO_26_10_PREVIEW, model]);
+  const models = ChatServiceFactory.getSupportedModels('openrouter');
+  expect(models.indexOf(MODEL_UNBIASED_PARETO_26_9)).toBe(
+    models.indexOf(model) + 1,
+  );
   expect(
     ChatServiceFactory.getProviderCapabilities('openrouter')?.defaultModel,
   ).not.toBe(model);
@@ -591,10 +689,11 @@ it.each([
 
 it('appends stable Pareto without changing prior model order or defaults', () => {
   const models = ChatServiceFactory.getSupportedModels('openrouter');
-  expect(models.slice(-3)).toEqual([
-    MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+  expect(models.slice(-13, -9)).toEqual([
     MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
     MODEL_UNBIASED_PARETO_26_9,
+    MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
   ]);
   expect(
     models.filter((model) => model === MODEL_UNBIASED_PARETO_26_9),

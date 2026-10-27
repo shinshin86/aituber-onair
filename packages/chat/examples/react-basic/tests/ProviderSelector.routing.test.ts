@@ -6,17 +6,17 @@ import { act, createElement } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  MODEL_UNBIASED_PARETO_26_10,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
   ChatServiceFactory,
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENROUTER_API,
-  MODEL_GPT_OSS_20B_FREE,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_ZAI_GLM_5_3,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_UNBIASED_PARETO_26_9,
-  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
-  MODEL_APODEX_1_1_MINI_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
@@ -32,23 +32,26 @@ import ProviderSelector, {
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  ...[
+    [MODEL_UNBIASED_PARETO_26_10, 'Pareto 26.10'],
+    [MODEL_INCLUSIONAI_LING_3_0_FLASH_VL, 'Ling 3.0 Flash VL'],
+  ].map(([model, label]) => ({
+    provider: 'openrouter' as const,
+    providerLabel: 'OpenRouter',
+    model,
+    label,
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  })),
   {
     provider: 'openrouter',
     providerLabel: 'OpenRouter',
     model: MODEL_UNBIASED_PARETO_26_9,
     label: 'Pareto 26.9',
-    defaultModel: MODEL_GPT_OSS_20B_FREE,
-    defaultLabel: 'GPT OSS 20B (Free)',
-    endpoint: ENDPOINT_OPENROUTER_API,
-    vision: true,
-  },
-  {
-    provider: 'openrouter',
-    providerLabel: 'OpenRouter',
-    model: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-    label: 'Pareto 26.10 Preview',
-    defaultModel: MODEL_GPT_OSS_20B_FREE,
-    defaultLabel: 'GPT OSS 20B (Free)',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
     endpoint: ENDPOINT_OPENROUTER_API,
     vision: true,
   },
@@ -57,8 +60,8 @@ const additions = [
     providerLabel: 'OpenRouter',
     model: MODEL_INCLUSIONAI_LING_3_1_FLASH,
     label: 'Ling 3.1 Flash',
-    defaultModel: MODEL_GPT_OSS_20B_FREE,
-    defaultLabel: 'GPT OSS 20B (Free)',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
     endpoint: ENDPOINT_OPENROUTER_API,
     vision: false,
   },
@@ -77,8 +80,8 @@ const additions = [
     providerLabel: 'OpenRouter',
     model: MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
     label: 'Nemotron 3.5 Lightning',
-    defaultModel: MODEL_GPT_OSS_20B_FREE,
-    defaultLabel: 'GPT OSS 20B (Free)',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
     endpoint: ENDPOINT_OPENROUTER_API,
     vision: false,
   },
@@ -87,8 +90,8 @@ const additions = [
     providerLabel: 'OpenRouter',
     model: MODEL_QWEN_QWEN_3_8_27B,
     label: 'Qwen3.8 27B',
-    defaultModel: MODEL_GPT_OSS_20B_FREE,
-    defaultLabel: 'GPT OSS 20B (Free)',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
     endpoint: ENDPOINT_OPENROUTER_API,
     vision: true,
   },
@@ -97,8 +100,8 @@ const additions = [
     providerLabel: 'OpenRouter',
     model: MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
     label: 'Qwen3.8 Omni Flash',
-    defaultModel: MODEL_GPT_OSS_20B_FREE,
-    defaultLabel: 'GPT OSS 20B (Free)',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
     endpoint: ENDPOINT_OPENROUTER_API,
     vision: true,
   },
@@ -109,18 +112,8 @@ const additions = [
     vision: true,
     providerLabel: 'OpenRouter',
     label: 'MiMo V2.6 Flash',
-    defaultModel: MODEL_GPT_OSS_20B_FREE,
-    defaultLabel: 'GPT OSS 20B (Free)',
-  },
-  {
-    provider: 'openrouter',
-    model: MODEL_APODEX_1_1_MINI_FREE,
-    endpoint: ENDPOINT_OPENROUTER_API,
-    vision: false,
-    providerLabel: 'OpenRouter',
-    label: 'Apodex 1.1 Mini (Free)',
-    defaultModel: MODEL_GPT_OSS_20B_FREE,
-    defaultLabel: 'GPT OSS 20B (Free)',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
   },
 ] as const;
 
@@ -273,13 +266,26 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       container.querySelectorAll('.model-item .model-name'),
       (node) => node.textContent?.trim(),
     );
-    expect(labels.slice(-3)).toEqual([
-      'Pareto 26.10 Preview',
-      'Mistral Large 4',
-      'Pareto 26.9',
-    ]);
     expect(
-      button('GPT OSS 20B (Free)', 'model').getAttribute('aria-pressed'),
+      labels
+        .filter(
+          (label) =>
+            ![
+              'Claude Haiku 5.5 (OpenRouter)',
+              'Mercury 3',
+              'DeepSeek V4.1 Flash 1017 (OpenRouter)',
+              'Kimi K3.1 Pro (OpenRouter)',
+              'MiniMax M3.1 Flash',
+              'Pareto 26.10',
+              'Ling 3.0 Flash VL',
+              'Nex N2.5 Pro',
+              'GPT-6.1 Terra (OpenRouter)',
+            ].includes(label ?? ''),
+        )
+        .slice(-2),
+    ).toEqual(['Mistral Large 4', 'Pareto 26.9']);
+    expect(
+      button('Gemma 4 31B IT (Free)', 'model').getAttribute('aria-pressed'),
     ).toBe('true');
     await click(button('Pareto 26.9', 'model'));
     expect(button('Pareto 26.9', 'model').getAttribute('aria-pressed')).toBe(
@@ -294,9 +300,7 @@ describe('ProviderSelector rendered configuration for recent models', () => {
     const curatedLabels = allModels
       .filter((model) => model.provider === 'openrouter')
       .map((model) => model.name);
-    expect(curatedLabels.slice(-4)).toEqual([
-      'KAT-Coder-Pro V2.5 (OpenRouter)',
-      'Pareto 26.10 Preview',
+    expect(curatedLabels.slice(-11, -9)).toEqual([
       'Mistral Large 4',
       'Pareto 26.9',
     ]);
@@ -308,24 +312,22 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       container.querySelectorAll('.model-item .model-name'),
       (element) => element.textContent?.trim(),
     );
+    expect(labels.filter((label) => label === 'Pareto 26.9')).toHaveLength(1);
     expect(
-      labels.filter((label) => label === 'Pareto 26.10 Preview'),
-    ).toHaveLength(1);
-    expect(
-      button('GPT OSS 20B (Free)', 'model').getAttribute('aria-pressed'),
+      button('Gemma 4 31B IT (Free)', 'model').getAttribute('aria-pressed'),
     ).toBe('true');
-    expect(
-      button('Pareto 26.10 Preview', 'model').getAttribute('aria-pressed'),
-    ).toBe('false');
+    expect(button('Pareto 26.9', 'model').getAttribute('aria-pressed')).toBe(
+      'false',
+    );
 
     expect(
       button('Mistral Large 4', 'model').getAttribute('aria-pressed'),
     ).toBe('false');
 
-    await click(button('Pareto 26.10 Preview', 'model'));
-    expect(
-      button('Pareto 26.10 Preview', 'model').getAttribute('aria-pressed'),
-    ).toBe('true');
+    await click(button('Pareto 26.9', 'model'));
+    expect(button('Pareto 26.9', 'model').getAttribute('aria-pressed')).toBe(
+      'true',
+    );
   });
 
   it.each(additions)(
@@ -504,18 +506,6 @@ describe('ProviderSelector rendered configuration for recent models', () => {
     },
   );
 
-  it('preserves existing controls for other unsupported-effort models', async () => {
-    await renderApp();
-    await click(button('OpenRouter', 'provider'));
-    await click(button('Ling 3.0 Flash VL (Free)', 'model'));
-    expect(
-      element<HTMLSelectElement>('#openrouter-reasoning-effort').disabled,
-    ).toBe(true);
-    expect(
-      element<HTMLInputElement>('#openrouter-reasoning-max-tokens'),
-    ).toBeDefined();
-  });
-
   it.each(additions.filter((addition) => addition.provider === 'openrouter'))(
     '$label does not inherit an unavailable effort or budget from another model',
     async (addition) => {
@@ -523,6 +513,8 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       await renderApp();
       await click(button('OpenRouter', 'provider'));
       await changeInput('#api-key', 'test-ui-key');
+      // Start from a model that exposes effort and budget controls.
+      await click(button('Kimi K2.6 (OpenRouter)', 'model'));
       await changeSelect('#openrouter-reasoning-effort', 'high');
       await changeInput('#openrouter-reasoning-max-tokens', '128');
       await click(element<HTMLInputElement>('#openrouter-include-reasoning'));
@@ -537,10 +529,9 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       ).toBe(true);
       await sendMessage();
       if (
-        [
-          MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-          MODEL_UNBIASED_PARETO_26_9,
-        ].includes(addition.model)
+        [MODEL_UNBIASED_PARETO_26_9, MODEL_UNBIASED_PARETO_26_10].includes(
+          addition.model,
+        )
       ) {
         expect(requestBody().reasoning).toBeUndefined();
       } else {

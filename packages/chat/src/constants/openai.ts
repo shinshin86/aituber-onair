@@ -4,14 +4,19 @@ export const ENDPOINT_OPENAI_RESPONSES_API =
   'https://api.openai.com/v1/responses';
 
 export const MODEL_GPT_6_1_SOL = 'gpt-6.1-sol';
+export const MODEL_GPT_6_1_TERRA = 'gpt-6.1-terra';
 export const MODEL_GPT_6_ASTRA = 'gpt-6-astra';
 export const MODEL_GPT_6_SOL = 'gpt-6-sol';
 export const MODEL_GPT_6_LUNA = 'gpt-6-luna';
 
 // gpt model
+/** @deprecated OpenAI shuts it down on December 11, 2026. Use MODEL_GPT_5_6_LUNA. */
 export const MODEL_GPT_5_NANO = 'gpt-5-nano';
+/** @deprecated OpenAI shuts it down on December 11, 2026. Use MODEL_GPT_5_6_TERRA. */
 export const MODEL_GPT_5_MINI = 'gpt-5-mini';
+/** @deprecated OpenAI shuts it down on December 11, 2026. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_GPT_5 = 'gpt-5';
+/** @deprecated OpenAI shuts it down on April 1, 2027. Use MODEL_GPT_6_SOL. */
 export const MODEL_GPT_5_1 = 'gpt-5.1';
 export const MODEL_GPT_5_4 = 'gpt-5.4';
 export const MODEL_GPT_5_5 = 'gpt-5.5';
@@ -20,6 +25,7 @@ export const MODEL_GPT_5_6_SOL = 'gpt-5.6-sol';
 export const MODEL_GPT_5_6_TERRA = 'gpt-5.6-terra';
 export const MODEL_GPT_5_6_LUNA = 'gpt-5.6-luna';
 export const MODEL_GPT_5_4_MINI = 'gpt-5.4-mini';
+/** @deprecated OpenAI shuts it down on April 1, 2027. Use MODEL_GPT_6_LUNA. */
 export const MODEL_GPT_5_4_NANO = 'gpt-5.4-nano';
 export const MODEL_GPT_5_4_PRO = 'gpt-5.4-pro';
 // GPT-5.5 Pro is intentionally not listed because OpenAI documents it as
@@ -27,14 +33,32 @@ export const MODEL_GPT_5_4_PRO = 'gpt-5.4-pro';
 
 export const MODEL_GPT_4_1 = 'gpt-4.1';
 export const MODEL_GPT_4_1_MINI = 'gpt-4.1-mini';
+/** @deprecated Shut down by OpenAI on October 23, 2026. Use MODEL_GPT_5_6_LUNA. */
 export const MODEL_GPT_4_1_NANO = 'gpt-4.1-nano';
 
 export const MODEL_GPT_4O_MINI = 'gpt-4o-mini';
 export const MODEL_GPT_4O = 'gpt-4o';
+/** @deprecated Shut down by OpenAI on October 23, 2026. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_O3_MINI = 'o3-mini';
 
+/** @deprecated Shut down by OpenAI in 2025. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_O1_MINI = 'o1-mini';
+/** @deprecated Shut down by OpenAI on October 23, 2026. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_O1 = 'o1';
+
+// Deprecated or shut-down ids remain exported so existing imports continue to
+// compile, but are omitted from the supported model list.
+export const OPENAI_DEPRECATED_MODELS = [
+  MODEL_GPT_5_NANO,
+  MODEL_GPT_5_MINI,
+  MODEL_GPT_5,
+  MODEL_GPT_5_1,
+  MODEL_GPT_5_4_NANO,
+  MODEL_GPT_4_1_NANO,
+  MODEL_O3_MINI,
+  MODEL_O1_MINI,
+  MODEL_O1,
+];
 
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [
@@ -61,6 +85,7 @@ export const VISION_SUPPORTED_MODELS = [
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
   MODEL_O1,
+  MODEL_GPT_6_1_TERRA,
   // MODEL_O3_MINI and MODEL_O1_MINI are not included as they don't support vision
 ];
 
@@ -103,6 +128,7 @@ export function isGPT5Model(model: string): boolean {
 export function isOpenAIReasoningModel(model: string): boolean {
   return (
     model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_ASTRA ||
     model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_6_LUNA ||
@@ -123,6 +149,7 @@ export function isResponsesOnlyGPT5Model(model: string): boolean {
 export function allowsReasoningXHigh(model: string): boolean {
   return (
     model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_ASTRA ||
     model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_6_LUNA ||
@@ -144,6 +171,7 @@ export function allowsReasoningXHigh(model: string): boolean {
 export function allowsReasoningMax(model: string): boolean {
   return (
     model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_ASTRA ||
     model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_6_LUNA ||
@@ -156,11 +184,12 @@ export function allowsReasoningMax(model: string): boolean {
 
 /**
  * Check if the provided model allows the reasoning_effort 'none' shortcut.
- * Supported by GPT-6 Sol/Luna and GPT-5.1, GPT-5.4, GPT-5.5, and GPT-5.6
+ * Supported by GPT-6.1 Terra, GPT-6 Sol/Luna and GPT-5.1, GPT-5.4, GPT-5.5, and GPT-5.6
  * family models, except Pro.
  */
 export function allowsReasoningNone(model: string): boolean {
   return (
+    model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_SOL ||
     model === MODEL_GPT_6_LUNA ||
     model === MODEL_GPT_5_6 ||
@@ -218,7 +247,9 @@ export function getDefaultReasoningEffortForGPT5Model(
 export function getDefaultReasoningEffortForOpenAIModel(
   model: string,
 ): 'none' | 'minimal' | 'low' | 'medium' {
-  return model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_ASTRA
+  return model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_1_TERRA ||
+    model === MODEL_GPT_6_ASTRA
     ? 'low'
     : model === MODEL_GPT_6_SOL
       ? 'medium'

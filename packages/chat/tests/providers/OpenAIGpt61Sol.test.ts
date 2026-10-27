@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ChatServiceFactory,
   MODEL_GPT_6_1_SOL,
+  MODEL_GPT_6_1_TERRA,
   MODEL_GPT_5_NANO,
+  MODEL_GPT_5_6_LUNA,
   MODEL_GPT_4O_MINI,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
@@ -20,7 +22,12 @@ import { OpenAIChatServiceProvider } from '../../src/services/providers/openai/O
 import { OpenAICompatibleChatServiceProvider } from '../../src/services/providers/openaiCompatible/OpenAICompatibleChatServiceProvider';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import { createSseResponse } from '../helpers/sse';
-import type { Message, MessageWithVision, ToolDefinition } from '../../src';
+import type {
+  OpenAIReasoningEffort,
+  Message,
+  MessageWithVision,
+  ToolDefinition,
+} from '../../src';
 
 const messages: Message[] = [{ role: 'user', content: 'Hello' }];
 const images: MessageWithVision[] = [
@@ -52,32 +59,57 @@ const textOutput = [
 ];
 
 // Mocked transports only: no provider API requests are made by these tests.
-describe('GPT-6.1 Sol compatibility', () => {
+describe.each([
+  {
+    model: MODEL_GPT_6_1_SOL,
+    id: 'gpt-6.1-sol',
+    label: 'GPT-6.1 Sol',
+    none: false,
+  },
+  {
+    model: MODEL_GPT_6_1_TERRA,
+    id: 'gpt-6.1-terra',
+    label: 'GPT-6.1 Terra',
+    none: true,
+  },
+])('$label compatibility', ({ model, id, label, none }) => {
+  const normalized = (effort?: OpenAIReasoningEffort) => {
+    if (effort === undefined) return 'low';
+    if (effort === 'minimal') return none ? 'none' : 'low';
+    if (effort === 'none' && !none) return 'low';
+    return effort;
+  };
+
   beforeEach(() => vi.restoreAllMocks());
 
   it('exports an explicit vision/reasoning option without changing the provider default', () => {
     const provider = new OpenAIChatServiceProvider();
-    expect(MODEL_GPT_6_1_SOL).toBe('gpt-6.1-sol');
-    expect(provider.getSupportedModels()).toContain(MODEL_GPT_6_1_SOL);
-    expect(provider.getDefaultModel()).toBe(MODEL_GPT_5_NANO);
-    expect(provider.supportsVisionForModel(MODEL_GPT_6_1_SOL)).toBe(true);
-    expect(isGPT5Model(MODEL_GPT_6_1_SOL)).toBe(false);
-    expect(isOpenAIReasoningModel(MODEL_GPT_6_1_SOL)).toBe(true);
-    expect(allowsReasoningNone(MODEL_GPT_6_1_SOL)).toBe(false);
-    expect(allowsReasoningMinimal(MODEL_GPT_6_1_SOL)).toBe(false);
-    expect(allowsReasoningLow(MODEL_GPT_6_1_SOL)).toBe(true);
-    expect(allowsReasoningXHigh(MODEL_GPT_6_1_SOL)).toBe(true);
-    expect(allowsReasoningMax(MODEL_GPT_6_1_SOL)).toBe(true);
-    expect(getDefaultReasoningEffortForOpenAIModel(MODEL_GPT_6_1_SOL)).toBe(
-      'low',
-    );
+    expect(model).toBe(id);
+    expect(provider.getSupportedModels()).toContain(model);
+    expect(provider.getDefaultModel()).toBe(MODEL_GPT_5_6_LUNA);
+    expect(provider.supportsVisionForModel(model)).toBe(true);
+    expect(isGPT5Model(model)).toBe(false);
+    expect(isOpenAIReasoningModel(model)).toBe(true);
+    expect(allowsReasoningNone(model)).toBe(none);
+    expect(allowsReasoningMinimal(model)).toBe(false);
+    expect(allowsReasoningLow(model)).toBe(true);
+    expect(allowsReasoningXHigh(model)).toBe(true);
+    expect(allowsReasoningMax(model)).toBe(true);
+    expect(getDefaultReasoningEffortForOpenAIModel(model)).toBe('low');
     expect(
-      ChatServiceFactory.getProviderCapabilities('openai', MODEL_GPT_6_1_SOL),
+      ChatServiceFactory.getProviderCapabilities('openai', model),
     ).toMatchObject({
       vision: 'supported',
       streaming: true,
       tools: true,
-      reasoningEffort: ['low', 'medium', 'high', 'xhigh', 'max'],
+      reasoningEffort: [
+        ...(none ? ['none'] : []),
+        'low',
+        'medium',
+        'high',
+        'xhigh',
+        'max',
+      ],
     });
   });
 
@@ -98,7 +130,7 @@ describe('GPT-6.1 Sol compatibility', () => {
         .mockResolvedValue(jsonResponse({ output: textOutput }));
       const service = new OpenAIChatServiceProvider().createChatService({
         apiKey: 'test-key',
-        model: MODEL_GPT_6_1_SOL,
+        model,
         reasoning_effort: effort,
         responseLength: 'short',
       });
@@ -106,17 +138,16 @@ describe('GPT-6.1 Sol compatibility', () => {
       const body = post.mock.calls[0][1];
       expect(post.mock.calls[0][0]).toBe(ENDPOINT_OPENAI_RESPONSES_API);
       expect(body).toMatchObject({
-        model: MODEL_GPT_6_1_SOL,
+        model,
         input: messages,
         stream: false,
         reasoning: {
-          effort:
-            !effort || effort === 'none' || effort === 'minimal'
-              ? 'low'
-              : effort,
+          effort: normalized(effort),
         },
       });
-      expect(body.max_output_tokens).toBeGreaterThanOrEqual(2500);
+      expect(body.max_output_tokens).toBeGreaterThanOrEqual(
+        normalized(effort) === 'none' ? 1200 : 2500,
+      );
       for (const key of [
         'temperature',
         'top_p',
@@ -137,15 +168,17 @@ describe('GPT-6.1 Sol compatibility', () => {
       .mockResolvedValue(jsonResponse({ output: textOutput }));
     const options = {
       apiKey: 'test-key',
-      model: MODEL_GPT_6_1_SOL,
+      model,
       gpt5Preset: 'casual' as const,
     };
     const service = new OpenAIChatServiceProvider().createChatService(options);
     await service.chatOnce!(messages, false);
-    expect(post.mock.calls[0][1].reasoning).toEqual({ effort: 'low' });
+    expect(post.mock.calls[0][1].reasoning).toEqual({
+      effort: normalized('none'),
+    });
     expect(options).toEqual({
       apiKey: 'test-key',
-      model: MODEL_GPT_6_1_SOL,
+      model,
       gpt5Preset: 'casual',
     });
   });
@@ -162,7 +195,7 @@ describe('GPT-6.1 Sol compatibility', () => {
       .mockResolvedValueOnce(response());
     const service = new OpenAIChatServiceProvider().createChatService({
       apiKey: 'test-key',
-      model: MODEL_GPT_6_1_SOL,
+      model,
     });
     const partial = vi.fn();
     const complete = vi.fn(async () => {});
@@ -193,20 +226,50 @@ describe('GPT-6.1 Sol compatibility', () => {
       );
       const service = new OpenAIChatServiceProvider().createChatService({
         apiKey: 'test-key',
-        model: MODEL_GPT_6_1_SOL,
+        model,
         gpt5EndpointPreference: 'chat',
         reasoning_effort: 'max',
       });
       const result = await service.visionChatOnce!(images, stream);
       expect(post.mock.calls[0][0]).toBe(ENDPOINT_OPENAI_CHAT_COMPLETIONS_API);
       expect(post.mock.calls[0][1]).toMatchObject({
-        model: MODEL_GPT_6_1_SOL,
+        model,
         messages: images,
         reasoning_effort: 'max',
         stream,
       });
       expect(post.mock.calls[0][1].tools).toBeUndefined();
       expect(result.blocks).toEqual([{ type: 'text', text: 'Hello' }]);
+    },
+  );
+
+  it.each(['none', 'low', 'medium', 'high', 'xhigh', 'max'] as const)(
+    'uses tool-free Chat Completions with %s and no sampling fields',
+    async (effort) => {
+      const post = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(
+          jsonResponse({ choices: [{ message: { content: 'Hello' } }] }),
+        );
+      const service = new OpenAIChatServiceProvider().createChatService({
+        apiKey: 'test-key',
+        model,
+        gpt5EndpointPreference: 'chat',
+        reasoning_effort: effort,
+      });
+      await service.chatOnce!(messages, false);
+      expect(post.mock.calls[0][0]).toBe(ENDPOINT_OPENAI_CHAT_COMPLETIONS_API);
+      const body = post.mock.calls[0][1];
+      expect(body.reasoning_effort).toBe(normalized(effort));
+      for (const key of [
+        'temperature',
+        'top_p',
+        'top_logprobs',
+        'logprobs',
+        'tools',
+      ]) {
+        expect(body[key]).toBeUndefined();
+      }
     },
   );
 
@@ -225,7 +288,7 @@ describe('GPT-6.1 Sol compatibility', () => {
         .mockResolvedValue(jsonResponse({ output: textOutput }));
       const service = new OpenAIChatServiceProvider().createChatService({
         apiKey: 'test-key',
-        model: MODEL_GPT_6_1_SOL,
+        model,
         tools,
         gpt5EndpointPreference: preference,
         endpoint,
@@ -270,7 +333,7 @@ describe('GPT-6.1 Sol compatibility', () => {
       .mockResolvedValueOnce(jsonResponse({ output: textOutput }));
     const service = new OpenAIChatServiceProvider().createChatService({
       apiKey: 'test-key',
-      model: MODEL_GPT_6_1_SOL,
+      model,
       tools,
     });
     const first = await service.chatOnce!(messages, true);
@@ -307,8 +370,8 @@ describe('GPT-6.1 Sol compatibility', () => {
         .mockResolvedValue(jsonResponse({ output: textOutput }));
       const service = new OpenAIChatService(
         'test-key',
-        MODEL_GPT_6_1_SOL,
-        MODEL_GPT_6_1_SOL,
+        model,
+        model,
         tools,
         undefined,
         [],
@@ -318,18 +381,20 @@ describe('GPT-6.1 Sol compatibility', () => {
       );
       await service.chatOnce(messages, false);
       expect(post.mock.calls[0][0]).toBe(ENDPOINT_OPENAI_RESPONSES_API);
-      expect(post.mock.calls[0][1].reasoning).toEqual({ effort: 'low' });
+      expect(post.mock.calls[0][1].reasoning).toEqual({
+        effort: normalized(effort),
+      });
     },
   );
 
-  it('normalizes and routes a different GPT-6.1 Sol vision model', async () => {
+  it('normalizes and routes a different Responses-tool vision model', async () => {
     const post = vi
       .spyOn(ChatServiceHttpClient, 'post')
       .mockResolvedValue(jsonResponse({ output: textOutput }));
     const service = new OpenAIChatServiceProvider().createChatService({
       apiKey: 'test-key',
       model: MODEL_GPT_5_NANO,
-      visionModel: MODEL_GPT_6_1_SOL,
+      visionModel: model,
       tools,
       reasoning_effort: 'minimal',
       gpt5EndpointPreference: 'chat',
@@ -337,8 +402,8 @@ describe('GPT-6.1 Sol compatibility', () => {
     await service.visionChatOnce!(images, false);
     expect(post.mock.calls[0][0]).toBe(ENDPOINT_OPENAI_RESPONSES_API);
     expect(post.mock.calls[0][1]).toMatchObject({
-      model: MODEL_GPT_6_1_SOL,
-      reasoning: { effort: 'low' },
+      model,
+      reasoning: { effort: normalized('minimal') },
     });
   });
 
@@ -348,7 +413,7 @@ describe('GPT-6.1 Sol compatibility', () => {
       .mockResolvedValue(jsonResponse({ output: textOutput }));
     const service = new OpenAIChatService(
       'test-key',
-      MODEL_GPT_6_1_SOL,
+      model,
       MODEL_GPT_4O_MINI,
       undefined,
       undefined,
@@ -369,13 +434,13 @@ describe('GPT-6.1 Sol compatibility', () => {
       const post = vi.spyOn(ChatServiceHttpClient, 'post');
       const service = new OpenAIChatServiceProvider().createChatService({
         apiKey: 'test-key',
-        model: MODEL_GPT_6_1_SOL,
+        model,
         endpoint: 'https://example.com/v1/chat/completions',
         tools: useTools ? tools : undefined,
         mcpServers: useTools ? undefined : mcpServers,
       });
       await expect(service.chatOnce!(messages, false)).rejects.toThrow(
-        'GPT-6.1 Sol tool calling requires',
+        `${label} tool calling requires`,
       );
       expect(post).not.toHaveBeenCalled();
     },
@@ -390,14 +455,14 @@ describe('GPT-6.1 Sol compatibility', () => {
     const endpoint = 'https://example.com/v1/chat/completions';
     const service = new OpenAIChatServiceProvider().createChatService({
       apiKey: 'test-key',
-      model: MODEL_GPT_6_1_SOL,
+      model,
       endpoint,
     });
     await service.chatOnce!(messages, false);
     expect(post).toHaveBeenCalledWith(
       endpoint,
       expect.objectContaining({
-        model: MODEL_GPT_6_1_SOL,
+        model,
         messages,
         reasoning_effort: 'low',
       }),
@@ -413,7 +478,7 @@ describe('GPT-6.1 Sol compatibility', () => {
       );
     const endpoint = 'https://example.com/v1/chat/completions';
     const service = new OpenAICompatibleChatServiceProvider().createChatService(
-      { apiKey: 'test-key', model: MODEL_GPT_6_1_SOL, endpoint, tools },
+      { apiKey: 'test-key', model, endpoint, tools },
     );
     await service.chatOnce!(messages, false);
     expect(post.mock.calls[0][0]).toBe(endpoint);

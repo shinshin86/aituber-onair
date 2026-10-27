@@ -303,6 +303,12 @@ rather than the API's `medium` default. The provider's default model is unchange
 [Model API reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol),
 [API guide](https://developers.openai.com/api/docs/guides/latest-model).
 
+Models with image input and streaming whose tools require Responses use Responses by default. `gpt-6.1-terra` (`MODEL_GPT_6_1_TERRA`) is an explicit option in this group. It supports `none`, `low`, `medium`, `high`, `xhigh`, and `max` reasoning effort. The API default is `medium`; the package default is `low`. Tool-free requests may use Chat Completions. Tools and MCP at the standard endpoint always use Responses, while custom endpoints with tools are rejected before sending.
+
+This package does not send sampling fields such as `temperature`, `top_p`, or `logprobs`. The OpenRouter variant, `openai/gpt-6.1-terra`, uses Chat Completions with package-default reasoning effort `none`. Provider default models are unchanged.
+
+See the [official Terra model specification](https://developers.openai.com/api/docs/models/gpt-6.1-terra), [API parameter migration guide](https://developers.openai.com/api/docs/guides/latest-model#gpt-6-astra-update-api-and-model-parameters), and [OpenRouter model catalog](https://openrouter.ai/api/v1/models).
+
 `gpt-6-astra` (`MODEL_GPT_6_ASTRA`) is an explicit option with image input and streaming. The package routes it to Responses, which is required for tool calling. Reasoning supports `low` (package default), `medium`, `high`, `xhigh`, and `max`; `none`/`minimal` normalize to `low`. Existing `gpt5Preset` and `gpt5EndpointPreference` option names remain for compatibility, but Astra uses Responses at the standard endpoint. [API guide](https://developers.openai.com/api/docs/guides/latest-model).
 
 `gpt-6-sol` (`MODEL_GPT_6_SOL`) is also available with image input and
@@ -613,7 +619,7 @@ time-to-first-token matters more than deep reasoning:
 ```typescript
 const aituberChatService = ChatServiceFactory.createChatService('openai', {
   apiKey: process.env.OPENAI_API_KEY,
-  model: 'gpt-5.4-nano',
+  model: 'gpt-5.6-luna',
   gpt5Preset: 'casual', // resolves to reasoning_effort 'none' on this model
   responseLength: 'veryShort', // or 'short' for slightly longer replies
 });
@@ -636,11 +642,23 @@ Caveats:
 - `gpt-5.4-pro` – Highest-tier GPT-5.4 model. Use with Responses API only.
 - `gpt-5.4` – Previous GPT-5 generation model optimized for stronger coding, instruction following, and long-context agentic work.
 - `gpt-5.4-mini` – Faster GPT-5.4-class small model for coding, tool use, and multimodal workloads.
-- `gpt-5.4-nano` – Lowest-cost GPT-5.4-class model for simpler high-volume tasks and lightweight subagents.
-- `gpt-5.1` – Complex reasoning, broad world knowledge, and code-heavy or multi-step agentic workflows.
-- `gpt-5` – Previous flagship, still available for backward compatibility but superseded by GPT-5.1.
-- `gpt-5-mini` – Cost-optimized reasoning/chat model that balances speed, cost, and capability.
-- `gpt-5-nano` – High-throughput option best suited for simple instruction-following or classification runs.
+
+The provider default is `gpt-5.6-luna`, which OpenAI names as the replacement
+for `gpt-5-nano`. It defaults to `reasoning_effort: 'none'` for responsive chat.
+
+Models that OpenAI has deprecated or shut down remain exported for source
+compatibility (`OPENAI_DEPRECATED_MODELS`), but are no longer in the supported
+model list. Requests to shut-down models fail at the OpenAI API.
+
+| Model | Status | Replacement |
+| --- | --- | --- |
+| `o1`, `o3-mini` | Shut down on 2026-10-23 | `gpt-5.6-sol` |
+| `gpt-4.1-nano` | Shut down on 2026-10-23 | `gpt-5.6-luna` |
+| `o1-mini` | Shut down in 2025 | `gpt-5.6-sol` |
+| `gpt-5`, `gpt-5-mini`, `gpt-5-nano` | Scheduled shutdown on 2026-12-11 | `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna` |
+| `gpt-5.1`, `gpt-5.4-nano` | Scheduled shutdown on 2027-04-01 | `gpt-6-sol`, `gpt-6-luna` |
+
+See [OpenAI deprecations](https://developers.openai.com/api/docs/deprecations).
 
 `gpt-5.5-pro` is not included in the supported model list because OpenAI
 documents it as non-streaming, while this package's standard chat flow expects
@@ -751,6 +769,11 @@ Claude refusals are terminal completions rather than tool errors. The returned
 completion preserves `finish_reason: 'refusal'` and Anthropic `stop_details`
 when supplied, including in streaming `processChat` callbacks.
 
+`claude-sonnet-4-5-20250929` is deprecated by Anthropic and retires on
+2026-11-30. It remains exported in `CLAUDE_DEPRECATED_MODELS`, but is no longer
+in the supported model list; use `claude-sonnet-5-5` instead.
+[Model deprecations](https://platform.claude.com/docs/en/about-claude/model-deprecations).
+
 #### Google Gemini
 
 ```typescript
@@ -765,13 +788,15 @@ const geminiService = ChatServiceFactory.createChatService('gemini', {
 `gemini-3.5-flash-lite` is available as the latest stable, low-latency
 Flash-Lite option. `gemini-3.8-flash` is available as the newest explicit stable
 Flash option for low-latency coding, agentic, and multimodal tasks.
-`gemini-3.7-flash` and `gemini-3.6-flash` remain available for compatibility.
+`gemini-3.6-flash` remains available. Google deprecated `gemini-3.7-flash` and
+`gemini-3.5-flash` on 2026-10-08 and routes their requests to
+`gemini-3.8-flash` and `gemini-3.6-flash`, respectively.
 Deprecated
-preview and shutdown-scheduled models such as `gemini-3.1-flash-lite-preview`,
+preview and shutdown-scheduled models such as `gemini-3.7-flash`,
+`gemini-3.5-flash`, `gemini-3.1-flash-lite-preview`,
 `gemini-3-pro-preview`, and `gemini-2.5-flash-lite-preview-06-17` remain usable
 by explicit model string for backward compatibility, but are no longer
 advertised in the standard supported-model list for production use.
-`gemini-3.5-flash` is also available as a stable Flash model.
 
 Gemini 3 models accept `reasoning_effort`, which maps to Gemini
 `thinkingConfig.thinkingLevel` while keeping `includeThoughts: false`:
@@ -790,14 +815,22 @@ those models.
 
 #### OpenRouter
 
-The following explicit options use OpenRouter Chat Completions without changing the provider default. Text-only options include Mercury 2.5, Nemotron 3.5 Lightning, Solar Mini4, Solar Pro 4, Apodex 1.1 Mini, and Ling 3.1 Flash; the others support image input. This does not add file, audio, or video input support.
+The following explicit options use OpenRouter Chat Completions without changing the provider default. Text-only options include Mercury 2.5/3, Nemotron 3.5 Lightning, Solar Mini4, Solar Pro 4, and Ling 3.1 Flash; the others support image input. This does not add file, audio, or video input support.
 
 | Model ID | Reasoning efforts (package default) |
 | --- | --- |
 | `mistralai/mistral-large-4-0` | `none` (package default), `high` (upstream default); no reasoning token budget |
-| `unbiased/pareto-26.10-preview` | No effort selector (provider default) |
 | `unbiased/pareto-26.9` | No effort selector (provider default) |
+| `anthropic/claude-haiku-5.5` | none, low, medium, high, xhigh, max (low) |
+| `inception/mercury-3` | none, low, medium, high (none) |
+| `deepseek/deepseek-v4.1-flash-1017` | none, low, high, max (none) |
+| `moonshotai/kimi-k3.1-pro` | none, low, high, max (none) |
+| `minimax/minimax-m3.1-flash` | low, medium, high, xhigh, max (low) |
+| `unbiased/pareto-26.10` | No effort selector or reasoning token budget |
+| `inclusionai/ling-3.0-flash-vl` | No effort selector or reasoning token budget |
+| `nex-agi/nex-n2.5-pro` | none, medium, high (none) |
 | `openai/gpt-6.1-sol` | max, xhigh, high, medium, low (low) |
+| `openai/gpt-6.1-terra` | none, low, medium, high, xhigh, max (none) |
 | `openai/gpt-6-sol` | max, xhigh, high, medium, low, none (none) |
 | `openai/gpt-6-luna` | max, xhigh, high, medium, low, none (none) |
 | `anthropic/claude-sonnet-5.5` | max, xhigh, high, medium, low (low) |
@@ -809,22 +842,24 @@ The following explicit options use OpenRouter Chat Completions without changing 
 | `anthropic/claude-fable-5.1` | max, xhigh, high, medium, low (high) |
 | `deepseek/deepseek-v4.1-flash` | max, high, low, none (none) |
 | `google/gemini-3.8-flash` | high, medium, low (medium) |
-| `inclusionai/ling-3.0-flash-vl:free` | No effort selector (provider default) |
 | `inception/mercury-2.5` | high, medium, low, none (none) |
-| `nex-agi/nex-n2.5-mini:free` | high, medium, none (none) |
-| `nex-agi/nex-n2.5-pro:free` | high, medium, none (none) |
 | `qwen/qwen3.8-max-0902` | xhigh, high, medium, low, minimal (xhigh) |
 | `meta/muse-spark-1.3` | max, xhigh, high, medium, low, minimal (medium) |
 | `inclusionai/ling-3.1-flash` | No effort selector (provider default) |
 | `upstage/solar-pro4` | none, minimal, low, medium, high, xhigh, max (none) |
 | `upstage/solar-mini4` | none, minimal, low, medium, high, xhigh, max (none) |
 | `xiaomi/mimo-v2.6-flash` | No effort selector (provider default) |
-| `apodex/apodex-1.1-mini:free` | No effort selector (provider default) |
 | `nvidia/nemotron-3.5-lightning` | No effort selector (provider default) |
 | `qwen/qwen3.8-27b` | No effort selector (provider default) |
 | `qwen/qwen3.8-omni-flash` | No effort selector (provider default) |
+| `google/gemma-4-31b-it:free` | No effort selector (provider default) |
+| `nvidia/nemotron-3.5-super-vl:free` | No effort selector (provider default) |
 
-For models without documented effort levels or reasoning token budgets, those controls are omitted. Current explicit options in this group are `nvidia/nemotron-3.5-lightning`, `qwen/qwen3.8-27b`, `qwen/qwen3.8-omni-flash`, `xiaomi/mimo-v2.6-flash`, `apodex/apodex-1.1-mini:free`, and `inclusionai/ling-3.1-flash`. Existing `reasoning_effort` and `reasoningMaxTokens` settings are not sent for these models; `includeReasoning` still controls whether reasoning output is included. See the [reasoning configuration documentation](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
+The additional explicit options in the table support tools and streaming. Mercury 3 is text-only; the other additions accept images. MiniMax M3.1 Flash requires reasoning and normalizes unsupported settings to `low`. Pareto 26.10 sends no reasoning parameters. Ling 3.0 Flash VL supports reasoning visibility without an effort selector or token budget. Ling and Nex Pro use paid IDs.
+
+These capabilities follow the [OpenRouter model catalog](https://openrouter.ai/api/v1/models) and [Chat Completions schema](https://openrouter.ai/docs/api-reference/overview).
+
+For models without documented effort levels or reasoning token budgets, those controls are omitted. Current explicit options in this group are `nvidia/nemotron-3.5-lightning`, `qwen/qwen3.8-27b`, `qwen/qwen3.8-omni-flash`, `xiaomi/mimo-v2.6-flash`, `inclusionai/ling-3.1-flash`, `google/gemma-4-31b-it:free`, and `nvidia/nemotron-3.5-super-vl:free`. Existing `reasoning_effort` and `reasoningMaxTokens` settings are not sent for these models; `includeReasoning` still controls whether reasoning output is included. See the [reasoning configuration documentation](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
 
 Solar Pro 4 (`upstage/solar-pro4`) is an explicit text-only option via
 `POST https://openrouter.ai/api/v1/chat/completions`. Select **OpenRouter → Solar Pro 4**
@@ -843,13 +878,28 @@ Solar Mini4 is an explicit text-chat option. Reasoning defaults to `none` for
 responsive replies; supported efforts, including `minimal`, are sent unchanged.
 Its reasoning token budget is omitted. MiMo V2.6 Flash supports text and image
 input here; audio and video inputs are outside this package's supported surface.
-Apodex 1.1 Mini is an explicit text/tool option subject to free-tier limits.
-MiMo and Apodex use provider-default reasoning without an effort or budget field;
+MiMo uses provider-default reasoning without an effort or budget field;
 `includeReasoning` controls whether the upstream response includes reasoning; it
 does not disable reasoning computation or add reasoning display to this package.
-See [Solar Mini4](https://openrouter.ai/upstage/solar-mini4),
-[MiMo V2.6 Flash](https://openrouter.ai/xiaomi/mimo-v2.6-flash), and
-[Apodex 1.1 Mini](https://openrouter.ai/apodex/apodex-1.1-mini%3Afree).
+See [Solar Mini4](https://openrouter.ai/upstage/solar-mini4) and
+[MiMo V2.6 Flash](https://openrouter.ai/xiaomi/mimo-v2.6-flash).
+
+The provider default is `google/gemma-4-31b-it:free`, a free model with text and
+image input and tool calling. It replaced `openai/gpt-oss-20b:free` after that
+free route was removed from the OpenRouter catalog. `getFreeModels()` returns
+`google/gemma-4-31b-it:free` and `nvidia/nemotron-3.5-super-vl:free`. Free
+routes change often, so use `refreshOpenRouterFreeModels` below to find the
+currently available `:free` models.
+
+IDs that the OpenRouter catalog no longer returns remain exported in
+`OPENROUTER_DEPRECATED_MODELS`, but are no longer in the supported model list:
+`openai/gpt-oss-20b:free`, `~openai/gpt-latest`, `anthropic/claude-opus-4`,
+`anthropic/claude-sonnet-4`, `google/gemini-2.5-flash-lite-preview-09-2025`,
+`kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`,
+`unbiased/pareto-26.10-preview`, `apodex/apodex-1.1-mini:free`,
+`inclusionai/ling-3.0-flash-vl:free`, `nex-agi/nex-n2.5-mini:free`, and
+`nex-agi/nex-n2.5-pro:free`. Use `unbiased/pareto-26.9` instead of the Pareto
+preview.
 
 Mistral Large 4 (`mistralai/mistral-large-4-0`) is a supported, explicit public
 preview for text and image input, text output, streaming, and tool calls with a
@@ -892,25 +942,6 @@ model and API route. The [browser authentication guide](https://openrouter.ai/do
 documents direct browser requests; no proxy is added. Mock transport and DOM
 integration tests cover package behavior, not live inference or authenticated CORS.
 No rendered-browser verification, live generation, or CORS probe was run.
-
-Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`) is an explicit preview
-option for text, images, streaming, and automatic tool selection. It may change
-without notice and is not a default or a stable-model recommendation. Select
-**OpenRouter → Pareto 26.10 Preview** and enter your OpenRouter API key, or set
-`provider: 'openrouter'` and this model ID through `ChatServiceFactory`.
-The sample sends Bearer-authenticated JSON directly to
-`https://openrouter.ai/api/v1/chat/completions`; responses use
-`choices[].message` or SSE `choices[].delta` and OpenAI-compatible tool calls.
-Effort and reasoning-token-budget controls are hidden and inherited values are
-omitted because neither control is documented for this model. `includeReasoning` is also ignored because no reasoning controls are documented;
-no reasoning object is sent.
-Structured-output enforcement and file/audio/video input are not enabled.
-Mocked transport and rendered-DOM tests exercise the direct request path,
-streaming, image input, tools, and error recovery; live inference and authenticated
-browser CORS have not been verified. See the
-[model API example](https://openrouter.ai/unbiased/pareto-26.10-preview?view=api),
-[endpoint metadata](https://openrouter.ai/api/v1/models/unbiased/pareto-26.10-preview/endpoints),
-and [Chat Completions reference](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion).
 
 Ling 3.1 Flash (`inclusionai/ling-3.1-flash`) is an explicit text-only option.
 Choose the `openrouter` provider and this model ID with your OpenRouter API key, or
@@ -970,31 +1001,28 @@ const openRouterService = ChatServiceFactory.createChatService('openrouter', {
   - `deepseek/deepseek-v4-flash`: older unversioned 0423 snapshot; supports `none`, `high`, and `xhigh`.
   - `deepseek/deepseek-v4-pro-0813`: fixed Pro snapshot; supports `none`, `high`, and `xhigh`.
   - `deepseek/deepseek-v4-flash-vision-exp`: experimental image-capable model; supports `none`, `low`, `high`, and `max`.
-- Specialized coding models are explicit options rather than defaults. This includes `kwaipilot/kat-coder-air-v2.5` and `kwaipilot/kat-coder-pro-v2.5`, which are text-only.
 - `moonshotai/kimi-k3` availability depends on upstream capacity; OpenRouter may return 429 responses when capacity is constrained.
 - `x-ai/grok-4.5` has region-specific availability, including a current EU limitation. `~x-ai/grok-latest` inherits those limits when it resolves to Grok 4.5.
 - Supported models (curated list):
   - `openrouter/auto`, `openrouter/auto-beta`
   - `openrouter/fusion`
-  - `openai/gpt-oss-20b:free`
-  - `~openai/gpt-latest`, `~openai/gpt-mini-latest`
+  - `google/gemma-4-31b-it:free`, `nvidia/nemotron-3.5-super-vl:free`
+  - `~openai/gpt-mini-latest`
   - `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`
   - `openai/gpt-5.5-pro`, `openai/gpt-5.5`
   - `openai/gpt-5.1-codex`, `openai/gpt-5-mini`, `openai/gpt-5-nano`
   - `openai/gpt-4o`, `openai/gpt-4.1-mini`, `openai/gpt-4.1-nano`
   - `~anthropic/claude-sonnet-latest`, `~anthropic/claude-haiku-latest`
   - `anthropic/claude-fable-5`, `anthropic/claude-sonnet-5`, `anthropic/claude-opus-5`, `anthropic/claude-opus-4.8`
-  - `anthropic/claude-opus-4`, `anthropic/claude-sonnet-4`
   - `anthropic/claude-haiku-4.5`
   - `~google/gemini-pro-latest`, `~google/gemini-flash-latest`
   - `google/gemini-3.7-flash`, `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite`
-  - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`, `google/gemini-2.5-flash-lite-preview-09-2025`
+  - `google/gemini-2.5-pro`, `google/gemini-2.5-flash`
   - `z-ai/glm-5.3`, `z-ai/glm-5.3-flash`, `z-ai/glm-5.2`, `z-ai/glm-4.7-flash`, `z-ai/glm-4.5-air`
   - `~x-ai/grok-latest`, `x-ai/grok-4.6`, `x-ai/grok-4.5`
   - `deepseek/deepseek-v4-flash-0731`, `deepseek/deepseek-v4-flash`, `deepseek/deepseek-v4-pro-0813`, `deepseek/deepseek-v4-flash-vision-exp`
   - `qwen/qwen3.8-flash`
   - `~moonshotai/kimi-latest`, `moonshotai/kimi-k3`, `moonshotai/kimi-k2.7-code`, `moonshotai/kimi-k2.6`, `moonshotai/kimi-k2.5`
-  - `kwaipilot/kat-coder-air-v2.5`, `kwaipilot/kat-coder-pro-v2.5`
 
 **Dynamic OpenRouter free model refresh**
 
@@ -1011,7 +1039,7 @@ const result = await refreshOpenRouterFreeModels({
   maxWorking: 10, // default: 10
 });
 
-console.log(result.working); // e.g. ['openai/gpt-oss-20b:free']
+console.log(result.working); // e.g. ['google/gemma-4-31b-it:free']
 console.log(result.failed); // [{ id, reason }, ...]
 console.log(result.fetchedAt); // Date.now() timestamp
 ```
@@ -1066,6 +1094,8 @@ Notes:
 
 #### Kimi (Moonshot)
 
+The [official K3.1 Pro quickstart](https://platform.kimi.ai/docs/guide/kimi-k3-1-pro-quickstart.md) and [model list](https://platform.kimi.ai/docs/models.md) document both K3.1 variants. Both support image input, tools, and streaming.
+
 ```typescript
 const kimiService = ChatServiceFactory.createChatService('kimi', {
   apiKey: process.env.MOONSHOT_API_KEY,
@@ -1079,11 +1109,12 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 
 Notes:
 - Kimi uses OpenAI-compatible Chat Completions.
-- Supported models: `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`, `kimi-k2.5`
+- Supported models: `kimi-k3.1-pro`, `kimi-k3.1-pro-highspeed`, `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`
+- `kimi-k2.5` was discontinued by Kimi on 2026-08-31. It remains exported in `KIMI_DEPRECATED_MODELS`, but is no longer in the supported model list.
 - `kimi-k2.6` remains the default model for chat-oriented usage.
-- Kimi K3 is an explicit reasoning model. It accepts `reasoning_effort: 'low' | 'high' | 'max'`, defaults to `max`, always reasons, and does not accept the K2.x `thinking` option. `none`, `minimal`, and `medium` are not supported.
-- Kimi K3 uses `max_completion_tokens` for configured response limits.
-- For Kimi K3 multi-turn and tool-call flows, append the returned `completion.assistant_message` to history so `reasoning_content` and `tool_calls` are preserved.
+- Kimi K3 and K3.1 Pro (including Highspeed) are explicit reasoning models. It accepts `reasoning_effort: 'low' | 'high' | 'max'`, defaults to `max`, always reasons, and does not accept the K2.x `thinking` option. `none`, `minimal`, and `medium` are not supported.
+- Kimi K3-family models use `max_completion_tokens` for configured response limits.
+- For Kimi K3-family multi-turn and tool-call flows, append the returned `completion.assistant_message` to history so `reasoning_content` and `tool_calls` are preserved.
 - Kimi K2.7 Code models are coding-oriented and require thinking mode, so they keep `thinking` enabled even when tools are used.
 - Explicitly setting `thinking: { type: 'disabled' }` with Kimi K2.7 Code models throws before sending the request.
 - For older Kimi models, when tools are enabled, `thinking` is forced to `{ type: 'disabled' }`.
@@ -1623,14 +1654,14 @@ without hard-coding provider-specific rules.
 
 Currently, the following AI providers are built-in:
 
-- **OpenAI**: GPT-6.1 Sol (`gpt-6.1-sol`, tools via Responses), GPT-6 Astra (`gpt-6-astra`), GPT-6 Sol (`gpt-6-sol`), and GPT-6 Luna (`gpt-6-luna`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
+- **OpenAI**: GPT-6.1 Terra (`gpt-6.1-terra`, explicit, tools via Responses), GPT-6.1 Sol (`gpt-6.1-sol`, tools via Responses), GPT-6 Astra (`gpt-6-astra`), GPT-6 Sol (`gpt-6-sol`), and GPT-6 Luna (`gpt-6-luna`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-5.4 Nano, GPT-5.1, GPT-5 (Nano/Mini/Standard), GPT-4.1 (including mini and nano), GPT-4, GPT-4o-mini, O3-mini, o1, o1-mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
-- **Gemini**: Supports recommended models like Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
-- **Claude**: Claude Haiku 5.5 (`claude-haiku-5-5`, explicit), Claude Opus 5.5 (`claude-opus-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), and Claude Fable 5.1 (`claude-fable-5-1`); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.
-- **OpenRouter**: Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, explicit public preview), Pareto 26.10 Preview (`unbiased/pareto-26.10-preview`, explicit preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, Solar Pro 4, MiMo V2.6 Flash, Apodex 1.1 Mini (Free), GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Ling 3.0 Flash VL, Mercury 2.5, Nex N2.5 Mini/Pro, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen/Kwaipilot), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input).
+- **Gemini**: Supports recommended models like Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.7 Flash, Gemini 3.5 Flash, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
+- **Claude**: Claude Haiku 5.5 (`claude-haiku-5-5`, explicit), Claude Opus 5.5 (`claude-opus-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), and Claude Fable 5.1 (`claude-fable-5-1`); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.
+- **OpenRouter**: Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, explicit public preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, Solar Pro 4, MiMo V2.6 Flash, GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input). The default is `google/gemma-4-31b-it:free`; `nvidia/nemotron-3.5-super-vl:free` is also listed as a free model. Additional models: `anthropic/claude-haiku-5.5`, `inception/mercury-3`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`. `openai/gpt-6.1-terra` is also an explicit option.
 - **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.7/4.6/4.5 use package-default `reasoning_effort: 'low'`; Grok 4.3 defaults to `none`.
-- **Kimi**: Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`, default), and Kimi K2.5 (`kimi-k2.5`) with vision support
+- **Kimi**: Kimi K3.1 Pro (`kimi-k3.1-pro`) and Highspeed (`kimi-k3.1-pro-highspeed`) are explicit options with image input, tools, streaming, and the same reasoning controls as K3. Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), and Kimi K2.6 (`kimi-k2.6`, default) with vision support
 - **DeepSeek**: DeepSeek V4.1 Flash 1017 via the rolling `deepseek-flash` ID, plus text-only V4 Pro (`deepseek-v4-pro`), through OpenAI-compatible Chat Completions. Legacy Flash aliases remain available for compatibility. Thinking defaults to disabled for low-latency chat.
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models. GLM-5.3 (`zai-glm-5-3`) is an explicit text-only option.
 - **Sakana AI**: Supports Fugu (`fugu`), Fugu Ultra (`fugu-ultra-v1.1`), and vision-capable Sakana Namazu (`sakana-namazu`) via OpenAI-compatible Chat Completions. Namazu thinking defaults to disabled for responsive chat.

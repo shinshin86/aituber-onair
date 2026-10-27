@@ -8,6 +8,18 @@ import {
 import { Provider } from '../App';
 import LocalLlmSetup from './LocalLlmSetup';
 import {
+  MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+  MODEL_INCEPTION_MERCURY_3,
+  MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+  MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+  MODEL_MINIMAX_M3_1_FLASH,
+  MODEL_UNBIASED_PARETO_26_10,
+  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
+  MODEL_NEX_AGI_NEX_N2_5_PRO,
+  MODEL_KIMI_K3_1_PRO,
+  MODEL_KIMI_K3_1_PRO_HIGHSPEED,
+  MODEL_GPT_6_1_TERRA,
+  MODEL_OPENAI_GPT_6_1_TERRA,
   ChatServiceFactory,
   type ChatResponseLength,
   type GPT5PresetKey,
@@ -41,10 +53,6 @@ import {
   type XaiReasoningEffort,
   type ZaiReasoningEffort,
   // OpenAI models
-  MODEL_GPT_5_NANO,
-  MODEL_GPT_5_MINI,
-  MODEL_GPT_5,
-  MODEL_GPT_5_1,
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
@@ -53,13 +61,12 @@ import {
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
-  MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
   MODEL_INCEPTION_MERCURY_2_5,
-  MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
-  MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
   MODEL_MISTRAL_ZAI_GLM_5_3,
@@ -73,18 +80,12 @@ import {
   MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
-  MODEL_GPT_5_4_NANO,
   MODEL_GPT_5_4_PRO,
   MODEL_GPT_4_1,
   MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1_NANO,
   MODEL_GPT_4O_MINI,
   MODEL_GPT_4O,
-  MODEL_O3_MINI,
-  MODEL_O1_MINI,
-  MODEL_O1,
   // Claude models
-  MODEL_CLAUDE_4_5_SONNET,
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_4_5_OPUS,
   MODEL_CLAUDE_4_6_SONNET,
@@ -116,13 +117,11 @@ import {
   MODEL_GEMINI_3_7_FLASH,
   // OpenRouter models
   MODEL_UNBIASED_PARETO_26_9,
-  MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
-  MODEL_APODEX_1_1_MINI_FREE,
   MODEL_OPENAI_GPT_6_1_SOL,
   MODEL_OPENAI_GPT_6_SOL,
   MODEL_OPENAI_GPT_6_LUNA,
@@ -133,12 +132,9 @@ import {
   MODEL_ANTHROPIC_CLAUDE_SONNET_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_5,
   MODEL_ANTHROPIC_CLAUDE_OPUS_4_8,
-  MODEL_GPT_OSS_20B_FREE,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   MODEL_GOOGLE_GEMINI_3_7_FLASH,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
-  MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
-  MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_6,
   MODEL_MOONSHOTAI_KIMI_K2_5,
@@ -151,7 +147,6 @@ import {
   MODEL_OPENROUTER_DEEPSEEK_V4_PRO_0813,
   MODEL_OPENROUTER_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_QWEN_QWEN_3_8_FLASH,
-  MODEL_OPENAI_GPT_LATEST,
   MODEL_OPENAI_GPT_MINI_LATEST,
   MODEL_OPENAI_GPT_5_6_SOL,
   MODEL_OPENAI_GPT_5_6_TERRA,
@@ -166,14 +161,11 @@ import {
   MODEL_OPENAI_GPT_4_1_NANO,
   MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST,
-  MODEL_ANTHROPIC_CLAUDE_OPUS_4,
-  MODEL_ANTHROPIC_CLAUDE_SONNET_4,
   MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
   MODEL_GOOGLE_GEMINI_PRO_LATEST,
   MODEL_GOOGLE_GEMINI_FLASH_LATEST,
   MODEL_GOOGLE_GEMINI_2_5_PRO,
   MODEL_GOOGLE_GEMINI_2_5_FLASH,
-  MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
   MODEL_ZAI_GLM_5_2,
   MODEL_ZAI_GLM_5_3,
   MODEL_ZAI_GLM_5_3_FLASH,
@@ -212,7 +204,6 @@ import {
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_7_CODE,
   MODEL_KIMI_K2_7_CODE_HIGHSPEED,
-  MODEL_KIMI_K2_5,
   // DeepSeek models
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
@@ -379,30 +370,6 @@ const providerInfo: Record<Provider, ProviderInfo> = {
 export const allModels: ProviderModel[] = [
   // OpenAI models
   {
-    id: MODEL_GPT_5_NANO,
-    name: 'GPT-5 Nano',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_5_MINI,
-    name: 'GPT-5 Mini',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_5,
-    name: 'GPT-5',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_5_1,
-    name: 'GPT-5.1',
-    provider: 'openai',
-    default: true,
-  },
-  {
     id: MODEL_GPT_5_4,
     name: 'GPT-5.4',
     provider: 'openai',
@@ -517,26 +484,8 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
-    name: 'Ling 3.0 Flash VL (Free)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
     id: MODEL_INCEPTION_MERCURY_2_5,
     name: 'Mercury 2.5',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
-    name: 'Nex N2.5 Mini (Free)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
-    name: 'Nex N2.5 Pro (Free)',
     provider: 'openrouter',
     default: false,
   },
@@ -571,14 +520,20 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_APODEX_1_1_MINI_FREE,
-    name: 'Apodex 1.1 Mini (Free)',
+    id: MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
+    name: 'Nemotron 3.5 Lightning',
     provider: 'openrouter',
     default: false,
   },
   {
-    id: MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
-    name: 'Nemotron 3.5 Lightning',
+    id: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    name: 'Gemma 4 31B IT (Free)',
+    provider: 'openrouter',
+    default: true,
+  },
+  {
+    id: MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
+    name: 'Nemotron 3.5 Super VL (Free)',
     provider: 'openrouter',
     default: false,
   },
@@ -622,17 +577,11 @@ export const allModels: ProviderModel[] = [
     id: MODEL_GPT_5_6_LUNA,
     name: 'GPT-5.6 Luna',
     provider: 'openai',
-    default: false,
+    default: true,
   },
   {
     id: MODEL_GPT_5_4_MINI,
     name: 'GPT-5.4 Mini',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_5_4_NANO,
-    name: 'GPT-5.4 Nano',
     provider: 'openai',
     default: false,
   },
@@ -655,12 +604,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_GPT_4_1_NANO,
-    name: 'GPT-4.1 Nano',
-    provider: 'openai',
-    default: false,
-  },
-  {
     id: MODEL_GPT_4O_MINI,
     name: 'GPT-4o Mini',
     provider: 'openai',
@@ -669,24 +612,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GPT_4O,
     name: 'GPT-4o',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_O3_MINI,
-    name: 'O3 Mini',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_O1_MINI,
-    name: 'O1 Mini',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_O1,
-    name: 'O1',
     provider: 'openai',
     default: false,
   },
@@ -753,12 +678,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_CLAUDE_4_5_SONNET,
-    name: 'Claude 4.5 Sonnet',
-    provider: 'claude',
-    default: false,
-  },
-  {
     id: MODEL_CLAUDE_4_5_HAIKU,
     name: 'Claude 4.5 Haiku',
     provider: 'claude',
@@ -781,7 +700,7 @@ export const allModels: ProviderModel[] = [
   },
   {
     id: MODEL_GEMINI_3_7_FLASH,
-    name: 'Gemini 3.7 Flash',
+    name: 'Gemini 3.7 Flash (Deprecated)',
     provider: 'gemini',
     default: false,
   },
@@ -793,7 +712,7 @@ export const allModels: ProviderModel[] = [
   },
   {
     id: MODEL_GEMINI_3_5_FLASH,
-    name: 'Gemini 3.5 Flash',
+    name: 'Gemini 3.5 Flash (Deprecated)',
     provider: 'gemini',
     default: false,
   },
@@ -914,18 +833,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_GPT_OSS_20B_FREE,
-    name: 'GPT OSS 20B (Free)',
-    provider: 'openrouter',
-    default: true,
-  },
-  {
-    id: MODEL_OPENAI_GPT_LATEST,
-    name: 'GPT Latest (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
     id: MODEL_OPENAI_GPT_MINI_LATEST,
     name: 'GPT Mini Latest (OpenRouter)',
     provider: 'openrouter',
@@ -1034,18 +941,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_ANTHROPIC_CLAUDE_OPUS_4,
-    name: 'Claude 4 Opus (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_ANTHROPIC_CLAUDE_SONNET_4,
-    name: 'Claude 4 Sonnet (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
     id: MODEL_ANTHROPIC_CLAUDE_4_5_HAIKU,
     name: 'Claude 4.5 Haiku (OpenRouter)',
     provider: 'openrouter',
@@ -1090,12 +985,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GOOGLE_GEMINI_2_5_FLASH,
     name: 'Gemini 2.5 Flash (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE_PREVIEW_09_2025,
-    name: 'Gemini 2.5 Flash Lite Preview (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -1186,24 +1075,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_MOONSHOTAI_KIMI_K2_5,
     name: 'Kimi K2.5 (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_KWAIPILOT_KAT_CODER_AIR_V2_5,
-    name: 'KAT-Coder-Air V2.5 (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
-    name: 'KAT-Coder-Pro V2.5 (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-    name: 'Pareto 26.10 Preview',
     provider: 'openrouter',
     default: false,
   },
@@ -1377,12 +1248,6 @@ export const allModels: ProviderModel[] = [
     provider: 'kimi',
     default: true,
   },
-  {
-    id: MODEL_KIMI_K2_5,
-    name: 'Kimi K2.5',
-    provider: 'kimi',
-    default: false,
-  },
 
   // DeepSeek models
   {
@@ -1496,6 +1361,78 @@ export const allModels: ProviderModel[] = [
     provider: 'gemini-nano',
     default: true,
   },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+    name: 'Claude Haiku 5.5 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_INCEPTION_MERCURY_3,
+    name: 'Mercury 3',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
+    name: 'DeepSeek V4.1 Flash 1017 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
+    name: 'Kimi K3.1 Pro (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_MINIMAX_M3_1_FLASH,
+    name: 'MiniMax M3.1 Flash',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_UNBIASED_PARETO_26_10,
+    name: 'Pareto 26.10',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
+    name: 'Ling 3.0 Flash VL',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_NEX_AGI_NEX_N2_5_PRO,
+    name: 'Nex N2.5 Pro',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_KIMI_K3_1_PRO,
+    name: 'Kimi K3.1 Pro',
+    provider: 'kimi',
+    default: false,
+  },
+  {
+    id: MODEL_KIMI_K3_1_PRO_HIGHSPEED,
+    name: 'Kimi K3.1 Pro Highspeed',
+    provider: 'kimi',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_6_1_TERRA,
+    name: 'GPT-6.1 Terra',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_6_1_TERRA,
+    name: 'GPT-6.1 Terra (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
 ];
 
 export const getProviderForModel = (
@@ -1599,6 +1536,7 @@ export default function ProviderSelector({
   const isResponsesPreferredModel =
     isResponsesOnlyModel ||
     selectedModel === MODEL_GPT_6_1_SOL ||
+    selectedModel === MODEL_GPT_6_1_TERRA ||
     selectedModel === MODEL_GPT_6_SOL ||
     selectedModel === MODEL_GPT_6_LUNA;
   const effectiveOpenAIEndpoint = isResponsesOnlyModel
@@ -2085,7 +2023,8 @@ export default function ProviderSelector({
                     This model uses Responses API for full tool support.
                   </span>
                 )}
-                {selectedModel === MODEL_GPT_6_1_SOL && (
+                {(selectedModel === MODEL_GPT_6_1_SOL ||
+                  selectedModel === MODEL_GPT_6_1_TERRA) && (
                   <span className="helper-text">
                     Responses API is the default and is required for tools.
                     Tool-free Chat Completions supports all reasoning levels.
@@ -2534,8 +2473,8 @@ export default function ProviderSelector({
                     <option value="max">Max (default)</option>
                   </select>
                   <span className="helper-text">
-                    Kimi K3 always reasons. Use Low for shorter reasoning or Max
-                    for the API default.
+                    Kimi K3 and K3.1 Pro always reason. Use Low for shorter
+                    reasoning or Max for the API default.
                   </span>
                 </div>
               ) : (

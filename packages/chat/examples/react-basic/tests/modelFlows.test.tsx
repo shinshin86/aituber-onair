@@ -13,6 +13,7 @@ const DEEPSEEK = 'https://api.deepseek.com/chat/completions';
 const FAKE_KEY = 'mock-only-not-a-provider-key';
 const mandatoryEfforts = ['low', 'medium', 'high', 'xhigh', 'max'];
 
+const KIMI = 'https://api.moonshot.ai/v1/chat/completions';
 const modelCases = [
   {
     provider: 'OpenAI',
@@ -68,6 +69,43 @@ const modelCases = [
       ['none', 'high'],
       'none',
     ],
+    [
+      // The sample retains the previous model's valid none effort.
+      'Claude Haiku 5.5 (OpenRouter)',
+      'anthropic/claude-haiku-5.5',
+      ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+      'none',
+    ],
+    [
+      'Mercury 3',
+      'inception/mercury-3',
+      ['none', 'low', 'medium', 'high'],
+      'none',
+    ],
+    [
+      'DeepSeek V4.1 Flash 1017 (OpenRouter)',
+      'deepseek/deepseek-v4.1-flash-1017',
+      ['none', 'low', 'high', 'max'],
+      'none',
+    ],
+    [
+      'Kimi K3.1 Pro (OpenRouter)',
+      'moonshotai/kimi-k3.1-pro',
+      ['none', 'low', 'high', 'max'],
+      'none',
+    ],
+    [
+      'MiniMax M3.1 Flash',
+      'minimax/minimax-m3.1-flash',
+      ['low', 'medium', 'high', 'xhigh', 'max'],
+      'low',
+    ],
+    [
+      'Nex N2.5 Pro',
+      'nex-agi/nex-n2.5-pro',
+      ['none', 'medium', 'high'],
+      'none',
+    ],
   ].map(([label, model, efforts, initialEffort]) => ({
     provider: 'OpenRouter',
     label: label as string,
@@ -84,6 +122,36 @@ const modelCases = [
     endpoint: DEEPSEEK,
     control: '#deepseek-reasoning-effort',
     efforts: ['none', 'low', 'high', 'max'],
+    initialEffort: 'none',
+  },
+  ...[
+    ['Kimi K3.1 Pro', 'kimi-k3.1-pro'],
+    ['Kimi K3.1 Pro Highspeed', 'kimi-k3.1-pro-highspeed'],
+  ].map(([label, model]) => ({
+    provider: 'Kimi',
+    label,
+    model,
+    endpoint: KIMI,
+    control: '#kimi-reasoning-effort',
+    efforts: ['low', 'high', 'max'],
+    initialEffort: 'max',
+  })),
+  {
+    provider: 'OpenAI',
+    label: 'GPT-6.1 Terra',
+    model: 'gpt-6.1-terra',
+    endpoint: OPENAI_RESPONSES,
+    control: '#reasoning-effort',
+    efforts: ['none', ...mandatoryEfforts],
+    initialEffort: 'low',
+  },
+  {
+    provider: 'OpenRouter',
+    label: 'GPT-6.1 Terra (OpenRouter)',
+    model: 'openai/gpt-6.1-terra',
+    endpoint: OPENROUTER,
+    control: '#openrouter-reasoning-effort',
+    efforts: ['none', ...mandatoryEfforts],
     initialEffort: 'none',
   },
 ];
@@ -279,7 +347,11 @@ describe('React sample model-to-transport flows (mock network only)', () => {
       expect(element<HTMLInputElement>('.chat-input').disabled).toBe(true);
       await change('#api-key', FAKE_KEY);
       expect(element<HTMLInputElement>('#image-upload').disabled).toBe(
-        ['upstage/solar-mini4', 'upstage/solar-pro4'].includes(model.model),
+        [
+          'upstage/solar-mini4',
+          'upstage/solar-pro4',
+          'inception/mercury-3',
+        ].includes(model.model),
       );
       await change(model.control, 'high');
       await change('#response-length', 'long');
@@ -297,7 +369,9 @@ describe('React sample model-to-transport flows (mock network only)', () => {
         expect(requests[0].body.reasoning.effort).toBe('high');
       } else {
         expect(requests[0].body.reasoning_effort).toBe('high');
-        expect(requests[0].body.thinking.type).toBe('enabled');
+        if (model.provider === 'Kimi')
+          expect(requests[0].body.thinking).toBeUndefined();
+        else expect(requests[0].body.thinking.type).toBe('enabled');
       }
       expect(element<HTMLInputElement>('.chat-input').disabled).toBe(true);
       expect(element<HTMLButtonElement>('.send-button').textContent).toBe(
@@ -449,9 +523,9 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     expect(container.querySelectorAll('.message.assistant')).toHaveLength(2);
   });
 
-  it('Pareto 26.10 Preview streams repeated replies and recovers from HTTP errors without unsupported settings', async () => {
+  it('Pareto 26.9 streams repeated replies and recovers from HTTP errors without unsupported settings', async () => {
     await chooseButton('.provider-item', 'OpenRouter');
-    await chooseButton('.model-item', 'Pareto 26.10 Preview');
+    await chooseButton('.model-item', 'Pareto 26.9');
     await change('#api-key', FAKE_KEY);
     expect(container.querySelector('#openrouter-reasoning-effort')).toBeNull();
     expect(
@@ -485,7 +559,7 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     expect(requests).toHaveLength(3);
     for (const { url, body } of requests) {
       expect(url).toBe(OPENROUTER);
-      expect(body.model).toBe('unbiased/pareto-26.10-preview');
+      expect(body.model).toBe('unbiased/pareto-26.9');
       expect(body.stream).toBe(true);
       expect(body.reasoning).toBeUndefined();
       expect(body.reasoning_effort).toBeUndefined();
@@ -499,16 +573,12 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     expect(container.querySelectorAll('.message.assistant')).toHaveLength(2);
   });
 
-  it('switches stable Pareto and preview without leaking inherited reasoning settings', async () => {
+  it('switches to stable Pareto without leaking inherited reasoning settings', async () => {
     await selectModel(modelCases[2]);
     await change('#api-key', FAKE_KEY);
     await change('#openrouter-reasoning-effort', 'high');
     await change('#openrouter-reasoning-max-tokens', '1024');
-    for (const [label, model] of [
-      ['Pareto 26.10 Preview', 'unbiased/pareto-26.10-preview'],
-      ['Pareto 26.9', 'unbiased/pareto-26.9'],
-      ['Pareto 26.10 Preview', 'unbiased/pareto-26.10-preview'],
-    ]) {
+    for (const [label, model] of [['Pareto 26.9', 'unbiased/pareto-26.9']]) {
       await chooseButton('.model-item', label);
       expect(
         container.querySelector('#openrouter-reasoning-effort'),
@@ -766,7 +836,7 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     ]);
   });
 
-  it.each(modelCases)(
+  it.each(modelCases.filter((model) => model.provider !== 'Kimi'))(
     '$provider / $label surfaces provider errors inside an HTTP-success stream',
     async (model) => {
       await selectModel(model);
@@ -807,7 +877,11 @@ describe('React sample model-to-transport flows (mock network only)', () => {
   it.each(
     modelCases.filter(
       (model) =>
-        !['upstage/solar-mini4', 'upstage/solar-pro4'].includes(model.model),
+        ![
+          'upstage/solar-mini4',
+          'upstage/solar-pro4',
+          'inception/mercury-3',
+        ].includes(model.model),
     ),
   )(
     '$provider / $label sends the selected image through its vision path',

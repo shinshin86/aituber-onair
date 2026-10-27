@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { KimiChatServiceProvider } from '../../src/services/providers/kimi/KimiChatServiceProvider';
 import type { KimiChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import {
+  MODEL_KIMI_K3_1_PRO,
+  MODEL_KIMI_K3_1_PRO_HIGHSPEED,
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   MODEL_KIMI_K3,
   MODEL_KIMI_K2_7_CODE,
@@ -36,8 +38,10 @@ describe('KimiChatServiceProvider', () => {
         MODEL_KIMI_K2_7_CODE,
         MODEL_KIMI_K2_7_CODE_HIGHSPEED,
         MODEL_KIMI_K2_6,
-        MODEL_KIMI_K2_5,
+        MODEL_KIMI_K3_1_PRO,
+        MODEL_KIMI_K3_1_PRO_HIGHSPEED,
       ]);
+      expect(models).not.toContain(MODEL_KIMI_K2_5);
     });
   });
 
@@ -48,8 +52,13 @@ describe('KimiChatServiceProvider', () => {
   });
 
   describe('reasoning effort support', () => {
-    it('should expose the official Kimi K3 reasoning levels', () => {
-      expect(getKimiSupportedReasoningEfforts(MODEL_KIMI_K3)).toEqual([
+    it.each([
+      MODEL_KIMI_K3,
+      MODEL_KIMI_K3_1_PRO,
+      MODEL_KIMI_K3_1_PRO_HIGHSPEED,
+    ])('should expose %s reasoning and vision', (model) => {
+      expect(provider.supportsVisionForModel(model)).toBe(true);
+      expect(getKimiSupportedReasoningEfforts(model)).toEqual([
         'low',
         'high',
         'max',
@@ -84,7 +93,11 @@ describe('KimiChatServiceProvider', () => {
     });
   });
 
-  describe('createChatService', () => {
+  describe.each([
+    MODEL_KIMI_K3,
+    MODEL_KIMI_K3_1_PRO,
+    MODEL_KIMI_K3_1_PRO_HIGHSPEED,
+  ])('%s compatibility', (k3Model) => {
     it('should create KimiChatService with default values', () => {
       const options: KimiChatServiceOptions = {
         apiKey: 'test-api-key',
@@ -108,15 +121,15 @@ describe('KimiChatServiceProvider', () => {
     it('should create Kimi K3 with max reasoning and no K2 thinking option', () => {
       const options: KimiChatServiceOptions = {
         apiKey: 'test-api-key',
-        model: MODEL_KIMI_K3,
+        model: k3Model,
       };
 
       provider.createChatService(options);
 
       expect(KimiChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_KIMI_K3,
-        MODEL_KIMI_K3,
+        k3Model,
+        k3Model,
         undefined,
         ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
         undefined,
@@ -131,14 +144,14 @@ describe('KimiChatServiceProvider', () => {
       (reasoningEffort) => {
         provider.createChatService({
           apiKey: 'test-api-key',
-          model: MODEL_KIMI_K3,
+          model: k3Model,
           reasoning_effort: reasoningEffort,
         });
 
         expect(KimiChatService).toHaveBeenCalledWith(
           'test-api-key',
-          MODEL_KIMI_K3,
-          MODEL_KIMI_K3,
+          k3Model,
+          k3Model,
           undefined,
           ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
           undefined,
@@ -153,7 +166,7 @@ describe('KimiChatServiceProvider', () => {
       expect(() => {
         provider.createChatService({
           apiKey: 'test-api-key',
-          model: MODEL_KIMI_K3,
+          model: k3Model,
           reasoning_effort: 'medium',
         } as KimiChatServiceOptions);
       }).toThrow('supports reasoning_effort values: low, high, max');
@@ -163,7 +176,7 @@ describe('KimiChatServiceProvider', () => {
       expect(() => {
         provider.createChatService({
           apiKey: 'test-api-key',
-          model: MODEL_KIMI_K3,
+          model: k3Model,
           thinking: { type: 'enabled' },
         });
       }).toThrow('does not support the K2.x thinking option');

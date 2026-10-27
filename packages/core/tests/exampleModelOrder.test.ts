@@ -5,12 +5,14 @@ import { resolve } from 'node:path';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  MODEL_CLAUDE_4_5_SONNET,
+  MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_5_5_HAIKU,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
   MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+  MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
 } from '../../chat/src';
 import { useSettings as usePetSettings } from '../examples/react-pet-app/src/hooks/useSettings';
 import { OpenRouterModelPicker as PetOpenRouterModelPicker } from '../examples/react-pet-app/src/openrouterCatalog';
@@ -29,7 +31,7 @@ const examples = [
     storageKey: 'react-pet-app-settings',
     useSettings: usePetSettings,
     // Lists Claude models in SDK order.
-    firstClaudeModel: MODEL_CLAUDE_4_5_SONNET,
+    firstClaudeModel: MODEL_CLAUDE_4_5_HAIKU,
     Picker: PetOpenRouterModelPicker,
   },
   {
@@ -112,7 +114,7 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     vi.unstubAllGlobals();
   });
 
-  it('keeps Ling first and preserves Pareto before the appended Mistral option', async () => {
+  it('keeps Ling first and preserves Mistral before the appended Pareto and free options', async () => {
     await renderSettings();
     expect(current.settings.llm.provider).toBe('openai');
 
@@ -120,16 +122,17 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     const models = AITuberOnAirCore.getSupportedModels('openrouter');
     expect(listedModels()).toEqual(models);
     expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(listedModels().slice(models.length - 3, models.length)).toEqual([
-      MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-      MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
-      MODEL_UNBIASED_PARETO_26_9,
-    ]);
+    expect(listedModels().slice(models.length - 13, models.length - 9)).toEqual(
+      [
+        MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+        MODEL_UNBIASED_PARETO_26_9,
+        MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+        MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
+      ],
+    );
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
 
-    await act(async () =>
-      current.updateLLMModel(MODEL_UNBIASED_PARETO_26_10_PREVIEW),
-    );
+    await act(async () => current.updateLLMModel(MODEL_UNBIASED_PARETO_26_9));
     await act(async () => current.updateLLMProvider('openai'));
     await switchToOpenRouter();
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
@@ -145,23 +148,19 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
   it('preserves an explicitly selected Pareto model after saving and remounting', async () => {
     await renderSettings();
     await switchToOpenRouter();
-    await act(async () =>
-      current.updateLLMModel(MODEL_UNBIASED_PARETO_26_10_PREVIEW),
-    );
+    await act(async () => current.updateLLMModel(MODEL_UNBIASED_PARETO_26_9));
 
     const saved = JSON.parse(localStorage.getItem(example.storageKey)!);
     expect(saved.llm).toMatchObject({
       provider: 'openrouter',
-      model: MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+      model: MODEL_UNBIASED_PARETO_26_9,
     });
 
     await act(async () => root.unmount());
     root = createRoot(container);
     await renderSettings();
     expect(current.settings.llm.provider).toBe('openrouter');
-    expect(current.settings.llm.model).toBe(
-      MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-    );
+    expect(current.settings.llm.model).toBe(MODEL_UNBIASED_PARETO_26_9);
     expect(listedModels()).toEqual(
       AITuberOnAirCore.getSupportedModels('openrouter'),
     );
@@ -190,13 +189,22 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     await renderSettings();
     await switchToOpenRouter();
     const models = AITuberOnAirCore.getSupportedModels('openrouter');
-    expect(listedModels()).toEqual([...models, dynamicModel]);
+    // The retired Pareto preview is no longer curated, so it stays as a
+    // persisted legacy entry after the supported models.
+    expect(listedModels()).toEqual([
+      ...models,
+      MODEL_UNBIASED_PARETO_26_10_PREVIEW,
+      dynamicModel,
+    ]);
     expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(listedModels().slice(models.length - 3, models.length)).toEqual([
-      MODEL_UNBIASED_PARETO_26_10_PREVIEW,
-      MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
-      MODEL_UNBIASED_PARETO_26_9,
-    ]);
+    expect(listedModels().slice(models.length - 13, models.length - 9)).toEqual(
+      [
+        MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+        MODEL_UNBIASED_PARETO_26_9,
+        MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+        MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
+      ],
+    );
   });
 });

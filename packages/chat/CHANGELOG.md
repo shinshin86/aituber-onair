@@ -1,14 +1,64 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.66.0
 
-### Added
+### Minor Changes
 
-- Add stable Pareto 26.9 (`unbiased/pareto-26.9`) as an explicit OpenRouter
-  text/image, streaming, and tool-calling option. Preserve defaults and existing
-  model order; omit undocumented reasoning controls, including inherited values.
-- Cover the package transport and React selector/runtime with mocked tests and
-  document setup and limitations in English/Japanese. No live inference or
+- Added GPT-6.1 Terra (`gpt-6.1-terra`) as an explicit OpenAI option with
+  image input and streaming. Tool calls use the Responses API, matching
+  GPT-6.1 Sol. It is also available on OpenRouter as `openai/gpt-6.1-terra`.
+- Added Kimi K3.1 Pro (`kimi-k3.1-pro`) and K3.1 Pro HighSpeed
+  (`kimi-k3.1-pro-highspeed`) as explicit Kimi options. They reuse the K3
+  reasoning (`low` / `high` / `max`), `max_completion_tokens`, and
+  assistant-message replay handling. `kimi-k2.6` remains the default.
+- Added explicit OpenRouter options, appended after the existing models:
+  `anthropic/claude-haiku-5.5`, `inception/mercury-3`,
+  `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`,
+  `minimax/minimax-m3.1-flash` (always reasons; package default `low`),
+  `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, and
+  `nex-agi/nex-n2.5-pro`.
+- Added stable Pareto 26.9 (`unbiased/pareto-26.9`) as an explicit OpenRouter
+  text/image, streaming, and tool-calling option without reasoning controls.
+- Changed the OpenAI provider default from `gpt-5-nano` (shutdown on
+  2026-12-11) to `gpt-5.6-luna`, which defaults to `reasoning_effort: 'none'`.
+- Changed the OpenRouter provider default from `openai/gpt-oss-20b:free`,
+  which was removed from the OpenRouter catalog, to
+  `google/gemma-4-31b-it:free`. `getFreeModels()` now returns
+  `google/gemma-4-31b-it:free` and `nvidia/nemotron-3.5-super-vl:free`.
+
+### Deprecations
+
+The models below were removed from the supported model lists and the React
+example selector. Their constants stay exported, so existing imports still
+compile. Requests to models that were shut down fail at the provider.
+
+- OpenAI (`OPENAI_DEPRECATED_MODELS`):
+  - `o1`, `o3-mini`, `gpt-4.1-nano`: shut down on 2026-10-23
+  - `o1-mini`: shut down in 2025
+  - `gpt-5`, `gpt-5-mini`, `gpt-5-nano`: shutdown scheduled for 2026-12-11
+  - `gpt-5.1`, `gpt-5.4-nano`: shutdown scheduled for 2027-04-01
+- Claude: `claude-sonnet-4-5-20250929` retires on 2026-11-30 and was added to
+  `CLAUDE_DEPRECATED_MODELS`.
+- Gemini: `gemini-3.7-flash` and `gemini-3.5-flash` were deprecated by Google
+  on 2026-10-08 and are now routed to `gemini-3.8-flash` and
+  `gemini-3.6-flash`. They moved to `GEMINI_DEPRECATED_MODELS`.
+- Kimi: `kimi-k2.5` was discontinued on 2026-08-31 and moved to the new
+  `KIMI_DEPRECATED_MODELS`.
+- OpenRouter: 12 IDs no longer returned by the catalog were added to
+  `OPENROUTER_DEPRECATED_MODELS`. They include `openai/gpt-oss-20b:free`,
+  `~openai/gpt-latest`, `unbiased/pareto-26.10-preview`, the KAT-Coder V2.5
+  models, and the former free seed models.
+
+### Patch Changes
+
+- Corrected the retirement JSDoc for `mistral-medium-2508` and
+  `plamo-2.2-prime`.
+- Updated tests, the React example, and the English/Japanese documentation.
+
+### Known Limitations
+
+- New models are verified against official documentation, the live OpenRouter
+  catalog, and mocked transport/rendered-DOM tests. No live inference or
   authenticated browser CORS validation was performed.
 
 ## 0.65.0

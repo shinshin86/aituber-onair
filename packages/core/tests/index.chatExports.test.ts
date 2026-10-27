@@ -323,6 +323,8 @@ describe('Core index chat re-exports', () => {
       MODEL_KIMI_K2_7_CODE_HIGHSPEED,
       MODEL_KIMI_K2_6,
       MODEL_KIMI_K2_5,
+      'kimi-k3.1-pro',
+      'kimi-k3.1-pro-highspeed',
     ]);
     expect(KIMI_THINKING_REQUIRED_MODELS).toEqual([
       MODEL_KIMI_K2_7_CODE,
@@ -575,7 +577,6 @@ describe('Core index chat re-exports', () => {
         MODEL_ANTHROPIC_CLAUDE_OPUS_5,
         MODEL_ANTHROPIC_CLAUDE_SONNET_5,
         MODEL_QWEN_QWEN_3_8_FLASH,
-        MODEL_KWAIPILOT_KAT_CODER_PRO_V2_5,
       ]),
     );
     expect(

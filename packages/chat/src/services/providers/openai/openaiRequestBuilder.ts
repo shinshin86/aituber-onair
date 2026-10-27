@@ -3,6 +3,7 @@ import {
   ENDPOINT_OPENAI_RESPONSES_API,
   OpenAIReasoningEffort,
   MODEL_GPT_6_1_SOL,
+  MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   getDefaultReasoningEffortForOpenAIModel,
   isOpenAIReasoningModel,
@@ -110,16 +111,20 @@ export function buildOpenAIRequestBody({
   ) {
     reasoning_effort = 'low';
   }
+  if (provider === 'openai' && model === MODEL_GPT_6_1_TERRA) {
+    reasoning_effort =
+      reasoning_effort === 'minimal' ? 'none' : (reasoning_effort ?? 'low');
+  }
   const isResponsesAPI = endpoint === ENDPOINT_OPENAI_RESPONSES_API;
 
   if (
     provider === 'openai' &&
-    model === MODEL_GPT_6_1_SOL &&
+    (model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_1_TERRA) &&
     (tools.length > 0 || mcpServers.length > 0) &&
     !isResponsesAPI
   ) {
     throw new Error(
-      'GPT-6.1 Sol tool calling requires the OpenAI Responses API endpoint: ' +
+      `${model === MODEL_GPT_6_1_TERRA ? 'GPT-6.1 Terra' : 'GPT-6.1 Sol'} tool calling requires the OpenAI Responses API endpoint: ` +
         ENDPOINT_OPENAI_RESPONSES_API +
         ". Custom endpoints use Chat Completions and cannot be used with this model's tools.",
     );

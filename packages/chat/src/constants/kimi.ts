@@ -6,7 +6,12 @@ export const MODEL_KIMI_K3 = 'kimi-k3';
 export const MODEL_KIMI_K2_7_CODE = 'kimi-k2.7-code';
 export const MODEL_KIMI_K2_7_CODE_HIGHSPEED = 'kimi-k2.7-code-highspeed';
 export const MODEL_KIMI_K2_6 = 'kimi-k2.6';
+/** @deprecated Discontinued by Kimi on August 31, 2026. Use MODEL_KIMI_K2_6. */
 export const MODEL_KIMI_K2_5 = 'kimi-k2.5';
+export const MODEL_KIMI_K3_1_PRO = 'kimi-k3.1-pro';
+export const MODEL_KIMI_K3_1_PRO_HIGHSPEED = 'kimi-k3.1-pro-highspeed';
+
+export const KIMI_DEPRECATED_MODELS = [MODEL_KIMI_K2_5];
 
 export type KimiReasoningEffort = 'low' | 'high' | 'max';
 
@@ -14,6 +19,8 @@ const KIMI_REASONING_EFFORTS_BY_MODEL: Record<
   string,
   readonly KimiReasoningEffort[]
 > = {
+  [MODEL_KIMI_K3_1_PRO]: ['low', 'high', 'max'],
+  [MODEL_KIMI_K3_1_PRO_HIGHSPEED]: ['low', 'high', 'max'],
   [MODEL_KIMI_K3]: ['low', 'high', 'max'],
 };
 
@@ -24,6 +31,8 @@ export const KIMI_VISION_SUPPORTED_MODELS = [
   MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   MODEL_KIMI_K2_6,
   MODEL_KIMI_K2_5,
+  MODEL_KIMI_K3_1_PRO,
+  MODEL_KIMI_K3_1_PRO_HIGHSPEED,
 ];
 
 // Kimi K2.7 Code supports thinking mode only.
@@ -61,7 +70,7 @@ export function getKimiSupportedReasoningEfforts(
 export function getDefaultKimiReasoningEffort(
   model: string,
 ): KimiReasoningEffort | undefined {
-  return model === MODEL_KIMI_K3 ? 'max' : undefined;
+  return isKimiReasoningEffortModel(model) ? 'max' : undefined;
 }
 
 /**

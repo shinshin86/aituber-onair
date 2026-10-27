@@ -11,6 +11,7 @@ import {
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
   MODEL_GPT_6_1_SOL,
+  MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -30,6 +31,7 @@ import {
   MODEL_O1,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
+  OPENAI_DEPRECATED_MODELS,
 } from '../../src/constants';
 
 // Mock OpenAIChatService
@@ -54,10 +56,6 @@ describe('OpenAIChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_MINI,
-        MODEL_GPT_5,
-        MODEL_GPT_5_1,
         MODEL_GPT_5_4,
         MODEL_GPT_5_5,
         MODEL_GPT_5_6,
@@ -69,23 +67,26 @@ describe('OpenAIChatServiceProvider', () => {
         MODEL_GPT_5_6_TERRA,
         MODEL_GPT_5_6_LUNA,
         MODEL_GPT_5_4_MINI,
-        MODEL_GPT_5_4_NANO,
         MODEL_GPT_5_4_PRO,
         MODEL_GPT_4_1,
         MODEL_GPT_4_1_MINI,
-        MODEL_GPT_4_1_NANO,
         MODEL_GPT_4O_MINI,
         MODEL_GPT_4O,
-        MODEL_O3_MINI,
-        MODEL_O1_MINI,
-        MODEL_O1,
+        MODEL_GPT_6_1_TERRA,
       ]);
+    });
+
+    it('should not advertise deprecated or shut-down models', () => {
+      const models = provider.getSupportedModels();
+      for (const model of OPENAI_DEPRECATED_MODELS) {
+        expect(models).not.toContain(model);
+      }
     });
   });
 
   describe('getDefaultModel', () => {
-    it('should return GPT-5-NANO as default model', () => {
-      expect(provider.getDefaultModel()).toBe(MODEL_GPT_5_NANO);
+    it('should return GPT-5.6 Luna as default model', () => {
+      expect(provider.getDefaultModel()).toBe(MODEL_GPT_5_6_LUNA);
     });
   });
 
@@ -134,14 +135,14 @@ describe('OpenAIChatServiceProvider', () => {
 
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_6_LUNA,
+        MODEL_GPT_5_6_LUNA,
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
         undefined,
         undefined,
-        'minimal', // default reasoning_effort for GPT-5 Nano
+        'none', // default reasoning_effort for GPT-5.6 Luna
         undefined, // enableReasoningSummary
         'openai',
       );
@@ -729,7 +730,7 @@ describe('OpenAIChatServiceProvider', () => {
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
         'gpt-3.5-turbo',
-        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_6_LUNA,
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
@@ -764,14 +765,14 @@ describe('OpenAIChatServiceProvider', () => {
 
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_6_LUNA,
+        MODEL_GPT_5_6_LUNA,
         tools,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
         undefined,
         undefined,
-        'minimal', // default reasoning_effort for GPT-5 Nano
+        'none', // default reasoning_effort for GPT-5.6 Luna
         undefined,
         'openai',
       );
@@ -787,14 +788,14 @@ describe('OpenAIChatServiceProvider', () => {
 
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_6_LUNA,
+        MODEL_GPT_5_6_LUNA,
         undefined,
         'https://custom.api.endpoint',
         [],
         undefined,
         undefined,
-        'minimal', // default reasoning_effort for GPT-5 Nano
+        'none', // default reasoning_effort for GPT-5.6 Luna
         undefined,
         'openai',
       );
@@ -816,14 +817,14 @@ describe('OpenAIChatServiceProvider', () => {
 
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_6_LUNA,
+        MODEL_GPT_5_6_LUNA,
         undefined,
         ENDPOINT_OPENAI_RESPONSES_API, // MCP requires Responses API regardless of model
         options.mcpServers,
         undefined,
         undefined,
-        'minimal',
+        'none',
         undefined,
         'openai',
       );
@@ -847,14 +848,14 @@ describe('OpenAIChatServiceProvider', () => {
 
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_6_LUNA,
+        MODEL_GPT_5_6_LUNA,
         undefined,
         customEndpoint,
         options.mcpServers,
         undefined,
         undefined,
-        'minimal',
+        'none',
         undefined,
         'openai',
       );
@@ -916,14 +917,14 @@ describe('OpenAIChatServiceProvider', () => {
 
       expect(OpenAIChatService).toHaveBeenCalledWith(
         'test-api-key',
-        MODEL_GPT_5_NANO,
-        MODEL_GPT_5_NANO,
+        MODEL_GPT_5_6_LUNA,
+        MODEL_GPT_5_6_LUNA,
         undefined,
         ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
         [],
         'medium',
         undefined,
-        'minimal',
+        'none',
         undefined,
         'openai',
       );

@@ -10,6 +10,7 @@ import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 import type { ChatProviderCapabilities } from '../types/capabilities';
 import {
   MODEL_GPT_6_1_SOL,
+  MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -146,7 +147,8 @@ export class ChatServiceFactory {
           ? ['low', 'medium', 'high', 'xhigh', 'max']
           : providerName === 'openai' && model === MODEL_GPT_6_SOL
             ? ['none', 'low', 'medium', 'high', 'xhigh', 'max']
-            : providerName === 'openai' && model === MODEL_GPT_6_LUNA
+            : providerName === 'openai' &&
+                (model === MODEL_GPT_6_LUNA || model === MODEL_GPT_6_1_TERRA)
               ? ['none', 'low', 'medium', 'high', 'xhigh', 'max']
               : providerName === 'claude' && model
                 ? [...getClaudeSupportedReasoningEfforts(model)]
