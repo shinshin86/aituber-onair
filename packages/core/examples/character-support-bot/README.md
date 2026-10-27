@@ -227,3 +227,14 @@ After building, `npm run server` serves `dist` and the API together at
 
 The bundled Miko asset is part of the example software. See
 [MIKO_ASSET_TERMS.md](./MIKO_ASSET_TERMS.md) for its terms.
+
+### Speech model maintenance
+
+New Gemini TTS settings use `gemini-3.8-flash-tts` and Cartesia uses
+`sonic-3.6`; saved explicit Gemini preview models still load. Legacy Gemini
+TTS models have earliest shutdown on 2026-11-17. The admin OpenAI voice
+selector filters thirteen voices to nine for tts-1/tts-1-hd and resets an
+incompatible voice to alloy when switching models. The OpenAI Speech API
+models shut down on 2027-01-06. Fish Audio S1 retires on 2026-12-31 and the
+S2.1 Pro Free promotion ends on 2026-11-30. OpenRouter TTS and Deepgram remain
+explicitly excluded by this admin example; see its provider exclusion reasons.

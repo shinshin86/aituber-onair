@@ -2103,3 +2103,17 @@ aituber.on(AITuberOnAirCoreEvent.MEMORY_LOADED, (memories) => {
 ### これによりコードは壊れますか？
 
 イベントをリッスンするために`MemoryManager`インスタンスに直接アクセスしていた場合、コードは引き続き機能しますが、この方法は非推奨とみなされます。将来の互換性のために、新しいアプローチへの移行をお勧めします。
+
+## 公開済みモデルの更新
+
+Core は Chat 0.66.0 の新モデルと非推奨モデルの定数を再公開します。
+`MODEL_GPT_6_1_TERRA`、`MODEL_KIMI_K3_1_PRO`、
+`MODEL_KIMI_K3_1_PRO_HIGHSPEED`、`KIMI_DEPRECATED_MODELS` などが使えます。
+新規設定の OpenAI と OpenRouter の既定値は、それぞれ `gpt-5.6-luna` と
+`google/gemma-4-31b-it:free` です。非推奨定数は互換性のため残し、モデル選択肢からは除外します。
+
+Voice 0.29.0 の既定値は Gemini の `gemini-3.8-flash-tts` と Cartesia の
+`sonic-3.6` です。React サンプルは OpenAI TTS のモデル別音声選択と提供終了の案内、
+OpenRouter 経由の ElevenLabs v4/v4 Turbo の音声一覧と MP3 再生に対応します。
+保存済みの旧 Gemini TTS モデルの明示指定は維持します。
+各プロバイダーの制約は [Voice の説明](../voice/README_ja.md)を参照してください。

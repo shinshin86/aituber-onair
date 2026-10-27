@@ -118,6 +118,7 @@ interface TranslationRecord {
     llmDescription: string;
     ttsTitle: string;
     ttsDescription: string;
+    openAiSpeechShutdown: string;
     provider: string;
     model: string;
     chatEndpoint: string;
@@ -294,6 +295,8 @@ export const translations: Record<Language, TranslationRecord> = {
       ttsTitle: 'Text-to-speech',
       ttsDescription:
         'Audio bytes return through the server proxy so the browser can play them and drive Miko’s lip sync.',
+      openAiSpeechShutdown:
+        'OpenAI Speech API models shut down on 2027-01-06. The successor requires the Realtime API and is not supported here.',
       provider: 'Provider',
       model: 'Model',
       chatEndpoint: 'Chat completions endpoint',
@@ -467,6 +470,8 @@ export const translations: Record<Language, TranslationRecord> = {
       ttsTitle: 'テキスト読み上げ',
       ttsDescription:
         'ブラウザが音声を再生してミコのリップシンクへ利用できるよう、音声データをサーバープロキシ経由で返します。',
+      openAiSpeechShutdown:
+        'OpenAI Speech APIのモデルは2027-01-06に提供終了予定です。後継モデルにはRealtime APIが必要で、この画面では利用できません。',
       provider: 'プロバイダー',
       model: 'モデル',
       chatEndpoint: 'Chat Completionsエンドポイント',

@@ -1,3 +1,4 @@
+import { getOpenAiSpeakers, getTtsModelLabel } from './ttsModels';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   getAdminProviders,
@@ -393,16 +394,22 @@ export default function AdminPage({
       ttsEndpointReady &&
       (!selectedLlm?.supportsCustomEndpoint || draft.llm.endpoint.trim()),
   );
-  const voiceFieldMode = resolveVoiceFieldMode(
-    Boolean(selectedTts?.supportsVoiceList),
-    voiceListStatus,
-    voiceOptions,
-  );
-  const selectableVoiceOptions = buildVoiceSelectOptions(
-    voiceOptions,
-    draft?.tts.voice ?? '',
-    t.admin.unknownSavedVoice,
-  );
+  const voiceFieldMode =
+    draft?.tts.provider === 'openai'
+      ? 'select'
+      : resolveVoiceFieldMode(
+          Boolean(selectedTts?.supportsVoiceList),
+          voiceListStatus,
+          voiceOptions,
+        );
+  const selectableVoiceOptions =
+    draft?.tts.provider === 'openai'
+      ? getOpenAiSpeakers(draft.tts.model).map((id) => ({ id, label: id }))
+      : buildVoiceSelectOptions(
+          voiceOptions,
+          draft?.tts.voice ?? '',
+          t.admin.unknownSavedVoice,
+        );
 
   return (
     <div className="admin-shell">
@@ -559,6 +566,9 @@ export default function AdminPage({
                 </div>
               </div>
 
+              {draft.tts.provider === 'openai' && (
+                <p>{t.admin.openAiSpeechShutdown}</p>
+              )}
               <div className="settings-grid">
                 <label>
                   <span>{t.admin.provider}</span>
@@ -587,13 +597,23 @@ export default function AdminPage({
                         onChange={(event) =>
                           setDraft({
                             ...draft,
-                            tts: { ...draft.tts, model: event.target.value },
+                            tts: {
+                              ...draft.tts,
+                              model: event.target.value,
+                              voice:
+                                draft.tts.provider === 'openai' &&
+                                !getOpenAiSpeakers(event.target.value).includes(
+                                  draft.tts.voice,
+                                )
+                                  ? 'alloy'
+                                  : draft.tts.voice,
+                            },
                           })
                         }
                       >
                         {selectedTts.models.map((model) => (
                           <option key={model} value={model}>
-                            {model}
+                            {getTtsModelLabel(model, language)}
                           </option>
                         ))}
                       </select>
@@ -603,7 +623,17 @@ export default function AdminPage({
                         onChange={(event) =>
                           setDraft({
                             ...draft,
-                            tts: { ...draft.tts, model: event.target.value },
+                            tts: {
+                              ...draft.tts,
+                              model: event.target.value,
+                              voice:
+                                draft.tts.provider === 'openai' &&
+                                !getOpenAiSpeakers(event.target.value).includes(
+                                  draft.tts.voice,
+                                )
+                                  ? 'alloy'
+                                  : draft.tts.voice,
+                            },
                           })
                         }
                         placeholder="tts-model"

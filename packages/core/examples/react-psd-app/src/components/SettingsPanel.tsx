@@ -1,3 +1,9 @@
+import { getLlmModelLabel } from '../lib/llmModels';
+import {
+  OPENAI_TTS_MODELS,
+  getOpenAiSpeakers,
+  getTtsModelLabel,
+} from '../lib/ttsModels';
 import {
   AITuberOnAirCore,
   type OpenRouterTtsModel,
@@ -123,10 +129,9 @@ const PSD_EFFECT_OPTIONS: ReadonlyArray<{
   { value: 'thinking', label: '思考マーク（thinking）' },
 ];
 
-const OPENAI_SPEAKERS = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
 const GEMINI_TTS_MODELS = [
-  'gemini-3.8-flash-lite-tts',
   'gemini-3.8-flash-tts',
+  'gemini-3.8-flash-lite-tts',
   'gemini-3.1-flash-tts-preview',
   'gemini-2.5-flash-preview-tts',
   'gemini-2.5-pro-preview-tts',
@@ -1486,7 +1491,7 @@ export function SettingsPanel({
                       {settings.llm.provider === 'deepseek' &&
                       m === 'deepseek-flash'
                         ? 'DeepSeek V4.1 Flash 1017 (deepseek-flash)'
-                        : m}
+                        : getLlmModelLabel(settings.llm.provider, m)}
                     </option>
                   ))}
                 </select>
@@ -1716,6 +1721,28 @@ export function SettingsPanel({
 
             {settings.tts.engine === 'openai' && (
               <>
+                <p className="settings-field-hint">
+                  OpenAI Speech APIのモデルは2027-01-06に提供終了予定です。
+                  後継モデルにはRealtime
+                  APIが必要で、この画面では利用できません。
+                </p>
+                <div className="settings-field">
+                  <label htmlFor="tts-openai-model">モデル</label>
+                  <select
+                    id="tts-openai-model"
+                    value={settings.tts.openAiModel || 'tts-1'}
+                    onChange={(e) =>
+                      updateTtsField('openAiModel', e.target.value)
+                    }
+                    disabled={disabled}
+                  >
+                    {OPENAI_TTS_MODELS.map((model) => (
+                      <option key={model} value={model}>
+                        {getTtsModelLabel(model)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="settings-field">
                   <label htmlFor="tts-openai-apikey">API Key (OpenAI)</label>
                   <input
@@ -1735,7 +1762,7 @@ export function SettingsPanel({
                     onChange={(e) => updateTTSSpeaker(e.target.value)}
                     disabled={disabled}
                   >
-                    {OPENAI_SPEAKERS.map((s) => (
+                    {getOpenAiSpeakers(settings.tts.openAiModel).map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>
@@ -1783,7 +1810,7 @@ export function SettingsPanel({
                   >
                     {GEMINI_TTS_MODELS.map((model) => (
                       <option key={model} value={model}>
-                        {model}
+                        {getTtsModelLabel(model)}
                       </option>
                     ))}
                   </select>
@@ -2107,7 +2134,7 @@ export function SettingsPanel({
                   >
                     {ELEVENLABS_MODELS.map((model) => (
                       <option key={model} value={model}>
-                        {model}
+                        {getTtsModelLabel(model)}
                       </option>
                     ))}
                   </select>
@@ -2366,7 +2393,7 @@ export function SettingsPanel({
                   >
                     {FISH_AUDIO_MODELS.map((model) => (
                       <option key={model} value={model}>
-                        {model}
+                        {getTtsModelLabel(model)}
                       </option>
                     ))}
                   </select>
@@ -2506,9 +2533,16 @@ export function SettingsPanel({
                     <option value="microsoft/mai-voice-2.1-flash">
                       MAI Voice 2.1 Flash（プレビュー）
                     </option>
+                    <option value="elevenlabs/eleven-v4">ElevenLabs v4</option>
+                    <option value="elevenlabs/eleven-v4-turbo">
+                      ElevenLabs v4 Turbo
+                    </option>
                   </select>
                   <p className="settings-field-hint">
-                    どちらも公開プレビュー版で、SLAはなく本番利用は推奨されていません。現時点では日本語の音声がありません。
+                    MAIモデルは公開プレビュー版で、SLAはなく本番利用は推奨されていません。
+                    現時点では日本語の音声がありません。PCM音声をWAV形式で返します。
+                    ElevenLabsモデルはMP3形式で返します。
+                    音声は選択したモデルのカタログから選んでください。
                   </p>
                 </div>
                 <div className="settings-field">
@@ -2634,7 +2668,7 @@ export function SettingsPanel({
                   <label htmlFor="tts-cartesia-model">Model</label>
                   <select
                     id="tts-cartesia-model"
-                    value={settings.tts.cartesiaModel || 'sonic-3.5'}
+                    value={settings.tts.cartesiaModel || 'sonic-3.6'}
                     onChange={(e) =>
                       updateTtsField('cartesiaModel', e.target.value)
                     }
@@ -2642,7 +2676,7 @@ export function SettingsPanel({
                   >
                     {CARTESIA_MODELS.map((model) => (
                       <option key={model} value={model}>
-                        {model}
+                        {getTtsModelLabel(model)}
                       </option>
                     ))}
                   </select>
@@ -2786,7 +2820,7 @@ export function SettingsPanel({
                   >
                     {INWORLD_MODELS.map((model) => (
                       <option key={model} value={model}>
-                        {model}
+                        {getTtsModelLabel(model)}
                       </option>
                     ))}
                   </select>
@@ -3071,7 +3105,7 @@ export function SettingsPanel({
                   >
                     <option value="default">Production (default)</option>
                     <option value="gradium-tts-beta">
-                      Public beta (opt-in)
+                      現在はdefaultの別名・今後のベータ版を利用（任意）
                     </option>
                   </select>
                   <small>
@@ -3114,7 +3148,7 @@ export function SettingsPanel({
                 </div>
                 <div className="settings-field">
                   <label htmlFor="tts-gradium-similarity">
-                    Voice Similarity
+                    音声類似度（非推奨・設定は無視されます）
                   </label>
                   <input
                     id="tts-gradium-similarity"
