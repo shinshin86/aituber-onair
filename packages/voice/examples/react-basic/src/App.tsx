@@ -36,6 +36,8 @@ import {
   ELEVENLABS_MODELS,
   ELEVENLABS_OUTPUT_FORMATS,
   ENGINE_DEFAULTS,
+  getOpenAIVoices,
+  type OpenAIModel,
   GEMINI_TTS_MODELS,
   GRADIUM_MODELS,
   GRADIUM_OUTPUT_FORMATS,
@@ -151,6 +153,7 @@ function App() {
   >(createInitialVoicepeakEmotionWeights);
   const [voicepeakSpeed, setVoicepeakSpeed] = useState('');
   const [voicepeakPitch, setVoicepeakPitch] = useState('');
+  const [openaiModel, setOpenaiModel] = useState<OpenAIModel>('tts-1');
   const [openaiSpeed, setOpenaiSpeed] = useState('');
   const [xaiLanguage, setXaiLanguage] = useState<string>(
     ENGINE_DEFAULTS.xai.defaultLanguage,
@@ -351,12 +354,7 @@ function App() {
   const isOpenRouterSelectionInvalid =
     engine === 'openRouter' &&
     (!openRouterModel ||
-      !speakerOptions.some((option) => option.id === speaker) ||
-      !speaker.endsWith(
-        openRouterModel === 'microsoft/mai-voice-2.1-flash'
-          ? ':MAI-Voice-2.1-Flash'
-          : ':MAI-Voice-2.1',
-      ));
+      !speakerOptions.some((option) => option.id === speaker));
 
   const invalidateOpenRouterVoices = () => {
     // Invalidate synchronously, including an A -> B -> A model change, before
@@ -366,6 +364,15 @@ function App() {
     setSpeakerOptions([]);
     setIsFetchingSpeakers(false);
     setSpeakerFetchError(null);
+  };
+
+  const changeOpenAIModel = (nextModel: OpenAIModel) => {
+    setOpenaiModel(nextModel);
+    if (
+      !Object.prototype.hasOwnProperty.call(getOpenAIVoices(nextModel), speaker)
+    ) {
+      setSpeaker('alloy');
+    }
   };
 
   const changeOpenRouterModel = (nextModel: OpenRouterTtsModel | '') => {
@@ -450,6 +457,7 @@ function App() {
     setApiUrl(defaults.apiUrl);
     setSpeaker(String(defaults.speaker));
     setApiKey('');
+    setOpenaiModel('tts-1');
     setOpenRouterModel('');
     setOpenRouterModelsApiUrl(ENGINE_DEFAULTS.openRouter.modelsApiUrl);
     setMinimaxGroupId('');
@@ -746,7 +754,7 @@ function App() {
 
     if (isOpenRouterSelectionInvalid) {
       setStatus(
-        'Select an OpenRouter preview model, fetch its voices, and select a voice.',
+        'Select an OpenRouter model, fetch its voices, and select a voice.',
       );
       setStatusType('error');
       return;
@@ -1033,6 +1041,7 @@ function App() {
       } else if (engine === 'openRouter') {
         options.openRouterModel = openRouterModel;
       } else if (engine === 'openai') {
+        options.openAiModel = openaiModel;
         const parsedSpeed = Number.parseFloat(openaiSpeed);
         if (!Number.isNaN(parsedSpeed)) {
           options.openAiSpeed = parsedSpeed;
@@ -1562,6 +1571,8 @@ function App() {
               onApiKeyChange={changeApiKey}
               apiUrl={apiUrl}
               onApiUrlChange={setApiUrl}
+              openaiModel={openaiModel}
+              onOpenaiModelChange={changeOpenAIModel}
               openRouterModel={openRouterModel}
               onOpenRouterModelChange={changeOpenRouterModel}
               openRouterModelsApiUrl={openRouterModelsApiUrl}

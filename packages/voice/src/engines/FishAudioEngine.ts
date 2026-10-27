@@ -3,6 +3,10 @@ import { Talk } from '../types/voice';
 import { clampNumber, fetchWithTimeout, throwApiError } from './internal/utils';
 import { VoiceEngine } from './VoiceEngine';
 
+/**
+ * S1 retires on 2026-12-31 and then routes to s2.1-pro. Migrate parenthesis
+ * emotion tags to brackets yourself. s2.1-pro-free is free through 2026-11-30.
+ */
 export type FishAudioModel =
   | 's2.1-pro'
   | 's2.1-pro-free'

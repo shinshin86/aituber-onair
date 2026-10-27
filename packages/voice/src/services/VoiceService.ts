@@ -137,7 +137,7 @@ export interface VoicePeakVoiceServiceOptions
 export interface OpenAiVoiceServiceOptions extends VoiceServiceCommonOptions {
   /** Engine type */
   engineType: 'openai';
-  /** OpenAI TTS model (tts-1, tts-1-hd, gpt-4o-mini-tts) */
+  /** OpenAI Speech API model; tts-1, tts-1-hd and gpt-4o-mini-tts shut down on 2027-01-06. */
   openAiModel?: string;
   /** OpenAI TTS speaking speed (0.25-4.0, default: 1.0) */
   openAiSpeed?: number;
@@ -145,11 +145,11 @@ export interface OpenAiVoiceServiceOptions extends VoiceServiceCommonOptions {
 
 export interface OpenRouterVoiceServiceOptions
   extends VoiceServiceCommonOptions {
-  /** Both MAI models are public-preview, explicit opt-ins. */
+  /** Dedicated speech endpoint; MAI preview and ElevenLabs models are explicit opt-ins. */
   engineType: 'openRouter';
-  /** Required model selection; there is no preview-model fallback. */
+  /** Required model selection; there is no automatic fallback. */
   openRouterModel: OpenRouterTtsModel;
-  /** Full speech endpoint or same-origin browser proxy URL. PCM is wrapped as WAV. */
+  /** Full speech endpoint or same-origin browser proxy URL. MAI PCM becomes WAV; ElevenLabs returns MP3. */
   openRouterApiUrl?: string;
 }
 
@@ -296,13 +296,16 @@ export interface GradiumVoiceServiceOptions extends VoiceServiceCommonOptions {
   engineType: 'gradium';
   /** Custom Gradium one-shot TTS endpoint URL */
   gradiumApiUrl?: string;
-  /** Model selection: omitted/default uses production; beta is opt-in */
+  /** Omitted/default uses production; the opt-in beta alias currently matches it and tracks future betas. */
   gradiumModel?: GradiumModel;
   /** Gradium output audio format (default: wav) */
   gradiumOutputFormat?: GradiumOutputFormat;
   /** Gradium sampling temperature (0.0-1.4, default: 0.7) */
   gradiumTemperature?: number;
-  /** Gradium voice similarity / cfg_coef (1.0-4.0, default: 2.0) */
+  /**
+   * Legacy Gradium voice similarity / cfg_coef (1.0-4.0), forwarded if set.
+   * @deprecated Ignored by Gradium's current TTS model; omit for new integrations.
+   */
   gradiumVoiceSimilarity?: number;
   /** Gradium padding bonus / speed control (-4.0-4.0, default: 0.0) */
   gradiumPaddingBonus?: number;
@@ -316,7 +319,7 @@ export interface GeminiTtsVoiceServiceOptions
   engineType: 'geminiTts';
   /** Custom Gemini API endpoint URL */
   geminiTtsApiUrl?: string;
-  /** Gemini TTS model name */
+  /** Gemini TTS model (default: gemini-3.8-flash-tts). Legacy 3.1/2.5 previews have earliest shutdown on 2026-11-17. */
   geminiTtsModel?: GeminiTtsModel;
   /** Gemini preview TTS language code (default: ja-JP; 3.8 auto-detects) */
   geminiTtsLanguageCode?: string;
