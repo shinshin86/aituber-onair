@@ -203,7 +203,13 @@ Do not embed production API keys in browser-delivered code.
 # Standard OpenAI API key: "sk-..."
 ```
 
-#### OpenRouter MAI Voice (public preview, explicit opt-in)
+#### OpenRouter (explicit opt-in)
+
+All models and voices require explicit selection. `elevenlabs/eleven-v4` and
+`elevenlabs/eleven-v4-turbo` use MP3 output and catalog voice slugs such as
+`george`. The player receives the binary MP3 without a WAV header. The model
+selector filters catalog voices and clears the prior voice when switching.
+Speed, style, and cloning controls are not exposed.
 
 Preview models require an explicit choice and are unsuitable as production
 defaults. This example offers `microsoft/mai-voice-2.1` and
@@ -212,8 +218,8 @@ Microsoft describes both as public preview, without a service-level agreement
 (SLA), and not recommended for production workloads. OpenAI remains the
 example's default engine; switching to OpenRouter leaves the model unselected.
 
-1. Choose **OpenRouter MAI Voice (Public preview)**.
-2. Select a preview model explicitly and enter your OpenRouter API key.
+1. Choose **OpenRouter**.
+2. Select a model explicitly and enter your OpenRouter API key.
 3. Click **Fetch model voices** and select a voice from that model's catalog.
 4. Enter text matching the selected voice's locale, then click **Speak**.
    The built-in demo switches to English; custom text is preserved. Japanese
@@ -228,7 +234,7 @@ the catalog, and late replies cannot overwrite the new settings.
 Fresh catalogs leave the voice unselected until you choose one explicitly;
 refreshing preserves an existing selection only if that voice is still listed.
 
-Speech uses `POST https://openrouter.ai/api/v1/audio/speech` with the selected
+For MAI models, speech uses `POST https://openrouter.ai/api/v1/audio/speech` with the selected
 `model`, plain-text `input`, `voice`, and `response_format: 'pcm'`. The provider
 returns raw 16-bit little-endian PCM at 24 kHz mono (`audio/pcm`). The engine
 wraps those unchanged PCM bytes in a WAV header for the existing playback path.
@@ -291,8 +297,10 @@ the same non-streaming REST endpoint and selectable voice list.
 ```
 
 Open **Gradium TTS パラメータ** to choose **Gradium Model**. Production
-(`default`) remains selected initially. Pre-release models require an explicit
-opt-in: choose `gradium-tts-beta — Beta (opt-in)` to try Gradium's public beta.
+(`default`) remains selected initially. `gradium-tts-beta` currently aliases
+the default model and will track future betas, as documented in the
+[September 30 release notes](https://docs.gradium.ai/guides/release-notes).
+Choose the beta alias explicitly only to follow future beta updates.
 The selection is passed as `gradiumModel` on the next **Speak** request; select
 `default` to return to production. Changing engines resets this choice to
 production. Beta behavior may change.
@@ -441,3 +449,19 @@ For production applications, consider:
 - Error boundaries for robust error handling
 - Loading states and user feedback
 - Audio caching and optimization
+
+### Provider lifecycle and defaults
+
+- Gemini TTS defaults to `gemini-3.8-flash-tts` through the Interactions API.
+  Language Code is disabled for 3.8 because language is detected automatically;
+  Style Prompt is sent as speech metadata. The three legacy 3.1/2.5 preview
+  models remain selectable, but are deprecated with earliest shutdown on
+  2026-11-17.
+- OpenAI's `tts-1`, `tts-1-hd`, and `gpt-4o-mini-tts` Speech API models shut
+  down on 2027-01-06. The Realtime-only successor is outside this example.
+  Select an OpenAI model before its voice; only compatible voices appear and
+  invalid selections reset to alloy when changing models.
+- Cartesia defaults to stable `sonic-3.6`; `sonic-3.5` remains selectable.
+- Fish Audio `s1` retires on 2026-12-31 and then routes to `s2.1-pro`.
+  Convert parenthesis emotion tags to bracket tags when migrating; the engine
+  does not do this automatically. `s2.1-pro-free` is free through 2026-11-30.

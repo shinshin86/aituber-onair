@@ -59,7 +59,7 @@ pnpm install @aituber-onair/voice
 ## Main Features
 
 - **Multiple TTS Engine Support**  
-  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, OpenRouter TTS (preview opt-in), xAI TTS, Unreal Speech,
+  Compatible with VOICEVOX, VoicePeak, OpenAI TTS, OpenRouter TTS (explicit opt-in), xAI TTS, Unreal Speech,
   ElevenLabs, Fish Audio, Cartesia, Deepgram Flux, Inworld, Gradium, Gemini TTS, MiniMax,
   AivisSpeech, Aivis Cloud, Web Speech API, and more
 - **Unified Interface**  
@@ -169,6 +169,17 @@ const weightedVoiceService = new VoiceService({
 ### OpenAI TTS
 OpenAI's text-to-speech API with multiple voice options.
 
+The Speech API models `tts-1`, `tts-1-hd`, and `gpt-4o-mini-tts` are deprecated
+and shut down on **2027-01-06**. The successor `gpt-realtime-2.1-mini` requires
+the Realtime API; it cannot be used with this engine's `/v1/audio/speech` path.
+See the [official migration notice](https://developers.openai.com/api/docs/guides/text-to-speech).
+
+The speaker catalog includes all 13 built-in voices. `tts-1` and `tts-1-hd`
+support alloy, ash, coral, echo, fable, onyx, nova, sage, and shimmer.
+`gpt-4o-mini-tts` also supports ballad, verse, marin, and cedar. Set
+`openAiModel` explicitly for these additional voices. The React example
+filters voices by model and resets an invalid voice to alloy when switching.
+
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'openai',
@@ -177,9 +188,17 @@ const voiceService = new VoiceService({
 });
 ```
 
-### OpenRouter TTS (public-preview opt-in)
+### OpenRouter TTS (explicit opt-in)
 
-Preview models require an explicit choice and are not defaults. This dedicated
+All models require an explicit choice; no model or voice is selected automatically.
+Supported explicit models include `elevenlabs/eleven-v4` and
+`elevenlabs/eleven-v4-turbo`, using MP3 output and the exact model's
+`supported_voices` catalog (for example, `george`). These use the same
+[OpenRouter speech endpoint and MP3 contract](https://openrouter.ai/docs/guides/overview/multimodal/tts),
+with binary `audio/mpeg` returned unchanged to the audio player. Direct
+ElevenLabs engine model restrictions are separate.
+
+Preview models are explicit compatibility options. This dedicated
 engine supports `microsoft/mai-voice-2.1` and
 `microsoft/mai-voice-2.1-flash` through OpenRouter's
 [`POST /api/v1/audio/speech`](https://openrouter.ai/docs/api/api-reference/tts/create-speech).
@@ -221,7 +240,7 @@ const voiceService = new VoiceEngineAdapter({
 await voiceService.speakText('Hello! Welcome to the show.');
 ```
 
-The engine sends Bearer authentication and JSON
+For MAI models, the engine sends Bearer authentication and JSON
 `{ model, input, voice, response_format: 'pcm' }`. The speech API defines
 `audio/pcm` as 16-bit little-endian; the MAI route specifies 24 kHz mono. The
 engine wraps these bytes in a WAV header using the existing PCM helper, so the
@@ -243,9 +262,10 @@ because requests with an API key send it to the configured destination.
 
 When changing models at runtime, choose a voice from the new model's list and
 update `openRouterModel` and `speaker` together. Updating only the model clears
-the prior speaker. Full IDs end with `:MAI-Voice-2.1` or
+the prior speaker. MAI full IDs end with `:MAI-Voice-2.1` or
 `:MAI-Voice-2.1-Flash`; a stale suffix is rejected, never rewritten automatically.
-The React example starts with no preview model or voice selected and provides
+ElevenLabs uses catalog voice slugs without a MAI suffix.
+The React example starts with no model or voice selected and provides
 model-scoped voice selection, API key and separate endpoint controls.
 
 The example uses the direct OpenRouter route. Browser-side keys are visible to
@@ -350,7 +370,11 @@ const voiceService = new VoiceService({
 `speaker` is sent as `reference_id`. Use `getVoiceEngineVoiceList('fishAudio',
 { apiKey })` to list usable models/voices. `s2-pro` is the stable default for
 this integration; `s2.1-pro-free` must be selected explicitly and should not be
-treated as an SLA-backed production tier.
+treated as an SLA-backed production tier. Its free promotion ends on
+**2026-11-30**. Deprecated `s1` retires on **2026-12-31**; subsequent requests
+route to `s2.1-pro`. When migrating, change `(parenthesis)` emotion tags to
+`[bracket]` tags yourself; this engine does not convert them.
+See the [Fish Audio changelog](https://docs.fish.audio/developer-guide/getting-started/changelog).
 
 Released models for directed performances are explicit choices. Select
 `fishAudioModel: 'drama-3'` for Drama 3, [released October 13, 2026](https://fish.audio/blog/fish-audio-drama-3/).
@@ -392,7 +416,7 @@ const voiceService = new VoiceService({
   engineType: 'cartesia',
   speaker: 'your-cartesia-voice-id',
   apiKey: 'your-cartesia-api-key',
-  cartesiaModel: 'sonic-3.5',
+  cartesiaModel: 'sonic-3.6',
   cartesiaLanguage: 'ja',
   cartesiaOutputContainer: 'wav',
   cartesiaSampleRate: 44100,
@@ -401,9 +425,9 @@ const voiceService = new VoiceService({
 
 Use `getVoiceEngineVoiceList('cartesia', { apiKey, language: 'ja' })` to list
 voices. The engine retains the `Cartesia-Version: 2026-03-01` header and
-`voice: { id }` request shape. Set `cartesiaModel: 'sonic-3.6'` explicitly for
-the newer model, or `'sonic-3.6-2026-08-27'` to pin its stable snapshot. The
-existing `sonic-3.5` default is unchanged. Cartesia documents Sonic 3.6 on
+`voice: { id }` request shape. Stable `sonic-3.6` is the default. Select
+`'sonic-3.6-2026-08-27'` to pin its stable snapshot, or `'sonic-3.5'` to use
+the previous model. Cartesia documents Sonic 3.6 on
 [`POST /tts/bytes`](https://docs.cartesia.ai/api-reference/tts/bytes) and
 [backward compatibility for pinned integrations](https://docs.cartesia.ai/changelog/2026).
 WAV/MP3 output and existing voice IDs continue through the same path.
@@ -481,12 +505,14 @@ Gradium one-shot REST TTS support using direct `fetch` calls. This engine uses
 the raw-audio response mode (`only_audio: true`) and does not add the Gradium
 SDK.
 
-Production remains the default. Experimental models require explicit opt-in:
-set `gradiumModel: 'gradium-tts-beta'` to try the public beta, or use
-`gradiumModel: 'default'` (or omit it) for the production model. The beta is a
-supported explicit option, not the recommended default. The React example
-exposes both choices. `updateOptions({ gradiumModel: 'default' })` switches
-an existing adapter back to production; `undefined` clears the selection.
+Production remains the default: use `gradiumModel: 'default'` or omit it.
+According to the [September 30, 2026 release notes](https://docs.gradium.ai/guides/release-notes),
+`gradium-tts-beta` currently aliases that same production model and will track
+future betas. Keep it as an explicit opt-in only when you want future beta
+updates. The React example exposes both choices. Use
+`updateOptions({ gradiumModel: 'default' })` to return to stable releases;
+`undefined` clears the selection. `cfg_coef` is deprecated and ignored by the
+current model; omit `gradiumVoiceSimilarity` for new integrations.
 
 `gradiumModel` is sent as top-level `model_name` in the REST JSON body,
 separately from `json_config`. This follows the official
@@ -502,7 +528,6 @@ const voiceService = new VoiceService({
   apiKey: process.env.GRADIUM_API_KEY,
   gradiumOutputFormat: 'wav',
   gradiumTemperature: 0.7,
-  gradiumVoiceSimilarity: 2,
   gradiumPaddingBonus: 0,
   gradiumRewriteRules: 'en',
 });
@@ -667,15 +692,20 @@ the browser.
 ### Gemini TTS
 Gemini API text-to-speech supports `gemini-3.8-flash-lite-tts` for fast,
 cost-efficient speech and `gemini-3.8-flash-tts` for more expressive speech.
-Earlier preview models remain available. Both 3.8 models use the Interactions
-API and return WAV audio; preview models continue to use `generateContent`.
+`gemini-3.8-flash-tts` is the default. Deprecated legacy models
+`gemini-3.1-flash-tts-preview`, `gemini-2.5-flash-preview-tts`, and
+`gemini-2.5-pro-preview-tts` remain selectable for compatibility, with earliest
+shutdown on **2026-11-17**. Use either 3.8 model as the replacement; see
+[Gemini deprecations](https://ai.google.dev/gemini-api/docs/deprecations).
+Both 3.8 models use the Interactions API and return WAV audio; preview models
+continue to use `generateContent`.
 
 ```typescript
 const voiceService = new VoiceService({
   engineType: 'geminiTts',
   speaker: 'Zephyr',
   apiKey: 'your-google-api-key',
-  geminiTtsModel: 'gemini-3.8-flash-lite-tts',
+  geminiTtsModel: 'gemini-3.8-flash-tts',
   geminiTtsPrompt: 'cheerful and friendly', // Optional speech_metadata.style for 3.8
   geminiTtsApiUrl:
     'https://generativelanguage.googleapis.com/v1beta', // Optional Gemini API base URL
@@ -852,7 +882,6 @@ const voiceService = new VoiceService({
   inworldSampleRateHertz: 48000,
   gradiumOutputFormat: 'wav',
   gradiumTemperature: 0.7,
-  gradiumVoiceSimilarity: 2,
   voicevoxSpeedScale: 1.1,
   voicevoxPitchScale: 0.05,
   voicevoxIntonationScale: 1.2,
@@ -882,10 +911,10 @@ const voiceService = new VoiceService({
   - `openAiCompatibleInstructions`
   - `openAiCompatibleResponseFormat`
 
-- **OpenRouter TTS (public preview)**
+- **OpenRouter TTS (explicit opt-in)**
   - Required model: `openRouterModel` (no default)
-  - Voice: `speaker`, including the matching model suffix
-  - Speech endpoint: `openRouterApiUrl`; PCM response wrapped as 24 kHz mono WAV
+  - Voice: `speaker`, a MAI full ID or ElevenLabs catalog slug
+  - Speech endpoint: `openRouterApiUrl`; MAI PCM wrapped as 24 kHz mono WAV, ElevenLabs MP3 returned directly
   - Voice-list options: `openRouterModel`, optional `openRouterModelsApiUrl`
 
 - **xAI TTS**
@@ -927,7 +956,8 @@ const voiceService = new VoiceService({
 - **Gradium**
   - Endpoint: `gradiumApiUrl`
   - Identity/output: `speaker`, `gradiumModel`, `gradiumOutputFormat`
-  - Voice controls: `gradiumTemperature`, `gradiumVoiceSimilarity`, `gradiumPaddingBonus`, `gradiumRewriteRules`
+  - Voice controls: `gradiumTemperature`, `gradiumPaddingBonus`, `gradiumRewriteRules`
+  - Deprecated compatibility option: `gradiumVoiceSimilarity` (`cfg_coef`); ignored by the current TTS model
 
 - **VOICEVOX**
   - Endpoint: `voicevoxApiUrl`
@@ -1035,7 +1065,7 @@ try {
 ### Gradium Features
 - Cloud TTS endpoint with `x-api-key` authentication
 - Passes `speaker` through to `voice_id` as provided
-- Configurable output format and `json_config` controls for temperature, voice similarity, speed, and rewrite rules
+- Configurable output format and `json_config` controls for temperature, speed, and rewrite rules
 - Flagship voice presets provide readable names for browser speaker selectors
 - Dynamic voice-list lookups may require a backend proxy in browser apps if the provider blocks direct CORS access
 

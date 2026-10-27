@@ -283,7 +283,9 @@ async function getOpenRouterVoiceList(
     label: id,
     metadata: {
       model,
-      language: id.split(':')[0].split('-').slice(0, 2).join('-'),
+      ...(model.startsWith('microsoft/')
+        ? { language: id.split(':')[0].split('-').slice(0, 2).join('-') }
+        : {}),
     },
   }));
 }

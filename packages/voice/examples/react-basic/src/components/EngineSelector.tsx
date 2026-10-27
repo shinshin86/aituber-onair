@@ -6,7 +6,9 @@ import {
   GRADIUM_VOICE_OPTIONS,
   INWORLD_VOICE_LANGUAGE_OPTIONS,
   MINIMAX_SYSTEM_VOICE_OPTIONS,
-  OPENAI_VOICES,
+  OPENAI_MODELS,
+  getOpenAIVoices,
+  type OpenAIModel,
   WEB_SPEECH_VOICE_LANGUAGE_OPTIONS,
   XAI_VOICE_OPTIONS,
   type EngineType,
@@ -28,6 +30,8 @@ interface EngineSelectorProps {
   onApiKeyChange: (nextValue: string) => void;
   apiUrl: string;
   onApiUrlChange: (nextValue: string) => void;
+  openaiModel: OpenAIModel;
+  onOpenaiModelChange: (nextValue: OpenAIModel) => void;
   openRouterModel: OpenRouterTtsModel | '';
   onOpenRouterModelChange: (nextValue: OpenRouterTtsModel | '') => void;
   openRouterModelsApiUrl: string;
@@ -59,6 +63,8 @@ export function EngineSelector({
   onApiKeyChange,
   apiUrl,
   onApiUrlChange,
+  openaiModel,
+  onOpenaiModelChange,
   openRouterModel,
   onOpenRouterModelChange,
   openRouterModelsApiUrl,
@@ -294,11 +300,13 @@ export function EngineSelector({
             value={speaker}
             onChange={(e) => onSpeakerChange(e.target.value)}
           >
-            {Object.entries(OPENAI_VOICES).map(([voiceId, label]) => (
-              <option key={voiceId} value={voiceId}>
-                {label}
-              </option>
-            ))}
+            {Object.entries(getOpenAIVoices(openaiModel)).map(
+              ([voiceId, label]) => (
+                <option key={voiceId} value={voiceId}>
+                  {label}
+                </option>
+              ),
+            )}
           </select>
         </div>
       );
@@ -746,20 +754,53 @@ export function EngineSelector({
               onOpenRouterModelChange(e.target.value as OpenRouterTtsModel | '')
             }
           >
-            <option value="">-- Choose a public-preview model --</option>
+            <option value="">-- Choose a model --</option>
             <option value="microsoft/mai-voice-2.1">
               MAI-Voice-2.1 (Public preview, opt-in)
             </option>
             <option value="microsoft/mai-voice-2.1-flash">
               MAI-Voice-2.1-Flash (Public preview, opt-in)
             </option>
+            <option value="elevenlabs/eleven-v4">ElevenLabs v4</option>
+            <option value="elevenlabs/eleven-v4-turbo">
+              ElevenLabs v4 Turbo
+            </option>
+          </select>
+          {openRouterModel.startsWith('elevenlabs/') ? (
+            <p className="helper-text">
+              One-shot MP3 speech using this model's catalog voices. Speed,
+              style, emotion, and voice cloning controls are not exposed.
+            </p>
+          ) : (
+            <p className="helper-text">
+              Public preview: no service-level agreement (SLA), and not
+              recommended for production workloads. This integration supports
+              plain-text speech as 24 kHz mono PCM, wrapped as WAV for playback;
+              speed, style, emotion, SSML, and voice cloning controls are not
+              exposed.
+            </p>
+          )}
+        </div>
+      )}
+
+      {engine === 'openai' && (
+        <div className="form-group">
+          <label htmlFor="openaiModel">OpenAI Model:</label>
+          <select
+            id="openaiModel"
+            value={openaiModel}
+            onChange={(e) => onOpenaiModelChange(e.target.value as OpenAIModel)}
+          >
+            {OPENAI_MODELS.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
           </select>
           <p className="helper-text">
-            Public preview: no service-level agreement (SLA), and not
-            recommended for production workloads. This integration supports
-            plain-text speech as 24 kHz mono PCM, wrapped as WAV for playback;
-            speed, style, emotion, SSML, and voice cloning controls are not
-            exposed.
+            These Speech API models are deprecated and shut down on 2027-01-06.
+            The successor gpt-realtime-2.1-mini requires the Realtime API and is
+            not supported by this engine.
           </p>
         </div>
       )}

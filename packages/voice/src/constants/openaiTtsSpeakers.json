@@ -1,8 +1,54 @@
 [
-  { "speaker": "alloy", "id": "alloy" },
-  { "speaker": "echo", "id": "echo" },
-  { "speaker": "fable", "id": "fable" },
-  { "speaker": "onyx", "id": "onyx" },
-  { "speaker": "nova", "id": "nova" },
-  { "speaker": "shimmer", "id": "shimmer" }
+  {
+    "speaker": "alloy",
+    "id": "alloy"
+  },
+  {
+    "speaker": "ash",
+    "id": "ash"
+  },
+  {
+    "speaker": "ballad",
+    "id": "ballad"
+  },
+  {
+    "speaker": "coral",
+    "id": "coral"
+  },
+  {
+    "speaker": "echo",
+    "id": "echo"
+  },
+  {
+    "speaker": "fable",
+    "id": "fable"
+  },
+  {
+    "speaker": "nova",
+    "id": "nova"
+  },
+  {
+    "speaker": "onyx",
+    "id": "onyx"
+  },
+  {
+    "speaker": "sage",
+    "id": "sage"
+  },
+  {
+    "speaker": "shimmer",
+    "id": "shimmer"
+  },
+  {
+    "speaker": "verse",
+    "id": "verse"
+  },
+  {
+    "speaker": "marin",
+    "id": "marin"
+  },
+  {
+    "speaker": "cedar",
+    "id": "cedar"
+  }
 ]

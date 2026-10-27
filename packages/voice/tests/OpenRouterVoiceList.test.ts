@@ -70,6 +70,43 @@ describe('OpenRouter model-scoped voice list', () => {
     },
   );
 
+  it.each(['elevenlabs/eleven-v4', 'elevenlabs/eleven-v4-turbo'] as const)(
+    'returns newly discovered catalog voice slugs for %s without a static allowlist',
+    async (model) => {
+      mockModels({
+        data: [
+          {
+            id: model,
+            supported_voices: [
+              'george',
+              'sarah',
+              'george',
+              fullVoice,
+              '',
+              null,
+              'new-catalog-voice',
+              '   ',
+              'voice:invalid-suffix',
+              7,
+            ],
+          },
+          { id: full, supported_voices: [fullVoice] },
+        ],
+      });
+      expect(
+        await getVoiceEngineVoiceList('openRouter', { openRouterModel: model }),
+      ).toEqual([
+        { id: 'george', label: 'george', metadata: { model } },
+        { id: 'sarah', label: 'sarah', metadata: { model } },
+        {
+          id: 'new-catalog-voice',
+          label: 'new-catalog-voice',
+          metadata: { model },
+        },
+      ]);
+    },
+  );
+
   it('supports the public unauthenticated catalog and separate custom models URL', async () => {
     const fetchMock = mockModels({
       data: [{ id: full, supported_voices: [] }],

@@ -6,7 +6,7 @@ afterEach(() => {
 });
 
 describe('CartesiaEngine', () => {
-  it('sends a Sonic 3.5 WAV request and returns audio bytes', async () => {
+  it('sends a Sonic 3.6 WAV request and returns audio bytes', async () => {
     const audio = new Uint8Array([4, 5, 6]).buffer;
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
@@ -32,7 +32,7 @@ describe('CartesiaEngine', () => {
       }),
     );
     expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
-      model_id: 'sonic-3.5',
+      model_id: 'sonic-3.6',
       transcript: 'こんにちは',
       voice: { id: 'cartesia-voice-id' },
       output_format: {
@@ -45,7 +45,7 @@ describe('CartesiaEngine', () => {
     expect(result).toBe(audio);
   });
 
-  it.each(['sonic-3.6', 'sonic-3.6-2026-08-27'])(
+  it.each(['sonic-3.5', 'sonic-3.6', 'sonic-3.6-2026-08-27'])(
     'sends %s through the pinned byte-response API',
     async (model) => {
       const audio = new Uint8Array([82, 73, 70, 70]).buffer;
@@ -82,6 +82,27 @@ describe('CartesiaEngine', () => {
         language: 'ja',
       });
       expect(result).toBe(audio);
+    },
+  );
+
+  it.each([undefined, ''])(
+    'restores Sonic 3.6 when reset to %s',
+    async (model) => {
+      const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+        ok: true,
+        arrayBuffer: async () => new ArrayBuffer(4),
+      } as Response);
+      const engine = new CartesiaEngine();
+      engine.setModel('sonic-3.5');
+      engine.setModel(model);
+      await engine.fetchAudio(
+        { message: 'Hello', style: 'neutral' },
+        'voice',
+        'key',
+      );
+      expect(
+        JSON.parse(fetchMock.mock.calls[0][1]?.body as string).model_id,
+      ).toBe('sonic-3.6');
     },
   );
 

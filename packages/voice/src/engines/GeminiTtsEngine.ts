@@ -12,7 +12,7 @@ export type GeminiTtsModel =
   | 'gemini-2.5-pro-preview-tts'
   | (string & {});
 
-const DEFAULT_GEMINI_TTS_MODEL: GeminiTtsModel = 'gemini-3.1-flash-tts-preview';
+const DEFAULT_GEMINI_TTS_MODEL: GeminiTtsModel = 'gemini-3.8-flash-tts';
 const DEFAULT_LANGUAGE_CODE = 'ja-JP';
 
 interface GeminiGenerateContentResponse {
@@ -39,7 +39,9 @@ interface GeminiInteractionResponse {
 
 /**
  * Gemini TTS voice synthesis engine.
- * Uses the Gemini API with API key authentication.
+ * Uses the Gemini API with API key authentication. Defaults to Gemini 3.8 Flash TTS.
+ * Legacy 3.1/2.5 preview TTS models are deprecated, with earliest shutdown
+ * on 2026-11-17; select a 3.8 model for new integrations.
  */
 export class GeminiTtsEngine implements VoiceEngine {
   private baseUrl: string = GEMINI_TTS_API_URL;
