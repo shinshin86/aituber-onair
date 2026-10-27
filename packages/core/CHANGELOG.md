@@ -1,5 +1,27 @@
 # @aituber-onair/core
 
+## 0.26.25
+
+### Patch Changes
+
+- Propagate published Chat 0.66.0 and Voice 0.29.0.
+- Re-export new Chat model and deprecation constants, refresh supported model
+  selectors, and use GPT-5.6 Luna for new OpenAI configurations.
+- Migrate shut-down saved OpenAI models to GPT-5.6 Luna in avatar examples;
+  preserve still-routed deprecated models and display their saved selection.
+- Apply Gemini 3.8 Flash TTS and Cartesia Sonic 3.6 defaults throughout the
+  React TTS examples while preserving saved explicit legacy model selections.
+- Add OpenAI speech model selection with model-specific voices and incompatible
+  voice resets, OpenRouter ElevenLabs v4/v4 Turbo catalog voices, and provider
+  lifecycle notices across the TTS settings examples and admin interface.
+- Refresh Core and example documentation and embedded package metadata.
+
+### Known Limitations
+
+- No paid inference or speech synthesis was performed. Existing provider CORS
+  restrictions still apply. OpenRouter Gemini and Fish Audio TTS candidates
+  remain outside the supported speech model list.
+
 ## 0.26.24
 
 ### Patch Changes

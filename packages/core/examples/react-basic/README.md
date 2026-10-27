@@ -152,9 +152,10 @@ Click the "設定" (Settings) button to configure your AI provider:
 #### Provider-Specific Models
 
 **OpenAI:**
-- GPT-4.1 series (Nano, Mini, Standard)
-- GPT-5 series (Nano, Mini, Standard, 5.1, 5.4, 5.5, 5.4 Mini, 5.4 Nano, 5.4 Pro)
-- o3-mini
+- GPT-6.1 Sol / Terra, GPT-6 Astra / Sol / Luna
+- GPT-5.6 Luna (default), Sol, Terra, and GPT-5.4 / 5.5 / 5.6
+- GPT-5.4 Mini / Pro and GPT-4.1 Mini / Standard
+- Deprecated constants remain exported but are excluded from the selector
 - GPT-4o, GPT-4o Mini
 
 **OpenAI-Compatible:**
@@ -167,12 +168,13 @@ Click the "設定" (Settings) button to configure your AI provider:
 
 **Gemini:**
 - Gemma 4 series (31B IT, 26B A4B IT)
-- Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, and Gemini 3.5 Flash / Flash-Lite
-- Gemini 3 series (3.1 Flash-Lite, 3.1 Pro Preview, 3 Flash Preview, plus deprecated preview aliases)
+- Gemini 3.8 Flash, Gemini 3.6 Flash, and Gemini 3.5 Flash-Lite
+- Gemini 3 series (3.1 Flash-Lite, 3.1 Pro Preview, and 3 Flash Preview)
+- Deprecated preview aliases remain compatibility exports, outside the selector
 - Gemini 2.5 series (Flash Lite, Flash, Pro)
-- Gemini 2.5 Flash Lite Preview (06-17)
-- Gemini 3 Flash-family models expose `reasoning_effort`; 3.8 Flash and 3.7
-  Flash default to `low`, earlier Flash models default to `minimal`, and Pro
+- Retired Gemini preview IDs are omitted from the selector
+- Gemini 3 Flash-family models expose `reasoning_effort`; 3.8 Flash
+  defaults to `low`, earlier Flash models default to `minimal`, and Pro
   defaults to `low`
 - Gemini 3.8 Flash supports image input and tool calling through the native
   Gemini provider
@@ -190,7 +192,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Claude Opus 4.7
 - Claude 4.6 Opus
 - Claude 4.6 Sonnet
-- Claude 4.5 series (Opus, Sonnet, Haiku)
+- Claude 4.5 Opus / Haiku; deprecated Sonnet is omitted from the selector
 - Retired Claude 4 Sonnet/Opus and Claude 3 Haiku IDs remain compatibility
   exports but are not offered by this selector
 - Supported models expose `reasoning_effort`, mapped to Claude
@@ -214,7 +216,7 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Kimi K2.7 Code
 - Kimi K2.7 Code HighSpeed
 - Kimi K2.6
-- Kimi K2.5
+- Kimi K3.1 Pro / K3.1 Pro HighSpeed; discontinued K2.5 is omitted
 
 **xAI:**
 - Grok 4.6, Grok 4.5, and Grok 4.3
@@ -250,10 +252,14 @@ Click the "設定" (Settings) button to configure your AI provider:
 - Retired PLaMo 2.2 Prime remains a compatibility export
 
 **OpenRouter:**
+- New explicit choices include GPT-6.1 Terra, Claude Haiku 5.5, Mercury 3,
+  DeepSeek V4.1 Flash 1017, Kimi K3.1 Pro, MiniMax M3.1 Flash,
+  Pareto 26.9 / 26.10, Ling 3.0 Flash VL, and Nex N2.5 Pro.
+  Removed catalog IDs remain exported but are excluded from the selector.
 - Curated multi-provider models, including Auto Router Beta, OpenAI GPT-5.6,
   Claude Fable 5 / Sonnet 5 / Opus 5 / Opus 4.8, Gemini 3.7/3.6/3.5,
   Z.ai GLM-5.3 / GLM-5.3 Flash, Grok 4.6, Kimi K3 / Kimi K2.6,
-  Qwen3.8 Flash, KAT-Coder V2.5, DeepSeek V4 Pro 0813, DeepSeek V4 Flash,
+  Qwen3.8 Flash, DeepSeek V4 Pro 0813, DeepSeek V4 Flash,
   and DeepSeek V4 Flash Vision Exp
 - DeepSeek V4 Flash offers the fixed current `deepseek/deepseek-v4-flash-0731`
   model and the separate `deepseek/deepseek-v4-flash` preview snapshot
@@ -309,7 +315,7 @@ The application supports 17 different Text-to-Speech engines:
 
 #### 2. **Gemini TTS**
 - Requires Google API key
-- Default model: `gemini-3.1-flash-tts-preview`; selectable Gemini 3.8 Flash TTS and Flash-Lite TTS
+- Default model: `gemini-3.8-flash-tts`; selectable Gemini 3.8 Flash TTS and Flash-Lite TTS
 - Voices: 30 prebuilt options including Zephyr, Aoede, Kore, Leda, Puck, Charon, Fenrir, and Orus
 - Supports model selection, language code, and style/audio-tag prompt
 
@@ -697,9 +703,10 @@ authenticated backend routes with API keys kept server-side.
 
 ElevenLabs `eleven_v4` retains Stability and Similarity but disables Style,
 Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
-`sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
-model selector defaults to production; `gradium-tts-beta` is an explicit
-opt-in, and switching back to Gradium resets the model to production.
+`sonic-3.6-2026-08-27` with `sonic-3.6` as the default and `sonic-3.5` still selectable. Gradium's
+model selector defaults to production; `gradium-tts-beta` currently aliases
+production and tracks future betas. Switching back to Gradium resets the model
+to production.
 Chat 0.64.0 adds the OpenRouter public preview Mistral Large 4
 (`mistralai/mistral-large-4-0`) after Pareto, with text and image input. Its
 reasoning defaults to `none` for responsive chat. The model selected when
@@ -745,3 +752,19 @@ refreshing this list.
 See [catalog behavior and SDK boundaries](../../../../docs/sample-openrouter-catalog.md)
 for cache, pricing, capability, and request limitations. Run `npm test` in this
 example directory for its offline regression suite.
+
+### Model and voice updates
+
+New OpenAI chat settings use `gpt-5.6-luna`. New or blank Gemini TTS settings
+use `gemini-3.8-flash-tts`; explicit saved legacy models still load. Legacy
+3.1/2.5 TTS models have earliest shutdown on 2026-11-17. Cartesia defaults to
+`sonic-3.6`, with `sonic-3.5` still selectable.
+
+OpenAI speech settings filter nine or thirteen voices by model and reset an
+incompatible voice to alloy on model changes. The Speech API models shut down
+on 2027-01-06; their Realtime-only successor is not supported here.
+OpenRouter TTS offers ElevenLabs v4/v4 Turbo with model-scoped catalog voices
+and MP3 playback, alongside MAI preview PCM wrapped as WAV. No static voice
+allowlist is used for ElevenLabs. Fish Audio S1 retires on 2026-12-31;
+S2.1 Pro Free is free through 2026-11-30. Gradium's beta alias currently
+matches default and tracks future betas; Voice Similarity is deprecated and ignored.

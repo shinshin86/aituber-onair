@@ -1,3 +1,8 @@
+import {
+  OPENAI_TTS_MODELS,
+  getOpenAiSpeakers,
+  getTtsModelLabel,
+} from './lib/ttsModels';
 import React, {
   ChangeEvent,
   useCallback,
@@ -383,8 +388,8 @@ interface InworldVoiceListResponse {
 }
 
 const GEMINI_TTS_MODELS = [
-  'gemini-3.8-flash-lite-tts',
   'gemini-3.8-flash-tts',
+  'gemini-3.8-flash-lite-tts',
   'gemini-3.1-flash-tts-preview',
   'gemini-2.5-flash-preview-tts',
   'gemini-2.5-pro-preview-tts',
@@ -783,7 +788,7 @@ const App: React.FC = () => {
   const [fishAudioLatency, setFishAudioLatency] =
     useState<FishAudioLatency>('normal');
   const [fishAudioSpeed, setFishAudioSpeed] = useState<string>('');
-  const [cartesiaModel, setCartesiaModel] = useState<string>('sonic-3.5');
+  const [cartesiaModel, setCartesiaModel] = useState<string>('sonic-3.6');
   const [cartesiaLanguage, setCartesiaLanguage] =
     useState<CartesiaLanguage>('ja');
   const [cartesiaOutputContainer, setCartesiaOutputContainer] =
@@ -862,6 +867,7 @@ const App: React.FC = () => {
     );
   const [voicepeakSpeed, setVoicepeakSpeed] = useState<string>('');
   const [voicepeakPitch, setVoicepeakPitch] = useState<string>('');
+  const [openaiTtsModel, setOpenaiTtsModel] = useState('tts-1');
   const [openaiSpeed, setOpenaiSpeed] = useState<string>('');
   const [openaiCompatibleApiUrl, setOpenaiCompatibleApiUrl] = useState<string>(
     OPENAI_COMPATIBLE_TTS_DEFAULT_ENDPOINT,
@@ -1248,7 +1254,7 @@ const App: React.FC = () => {
     }
 
     if (selectedVoiceEngine === 'cartesia') {
-      setCartesiaModel('sonic-3.5');
+      setCartesiaModel('sonic-3.6');
       setCartesiaLanguage('ja');
       setCartesiaOutputContainer('wav');
       setCartesiaSampleRate('44100');
@@ -2143,6 +2149,7 @@ const App: React.FC = () => {
       // Add engine-specific options
       switch (selectedVoiceEngine) {
         case 'openai': {
+          options.openAiModel = openaiTtsModel;
           const parsedSpeed = Number.parseFloat(openaiSpeed);
           if (!Number.isNaN(parsedSpeed)) {
             options.openAiSpeed = parsedSpeed;
@@ -2731,7 +2738,7 @@ const App: React.FC = () => {
           break;
         }
         case 'cartesia': {
-          options.cartesiaModel = cartesiaModel.trim() || 'sonic-3.5';
+          options.cartesiaModel = cartesiaModel.trim() || 'sonic-3.6';
           options.cartesiaLanguage = cartesiaLanguage;
           options.cartesiaOutputContainer = cartesiaOutputContainer;
 
@@ -4381,7 +4388,7 @@ const App: React.FC = () => {
                             >
                               {Object.entries(MINIMAX_MODELS).map(([model]) => (
                                 <option key={model} value={model}>
-                                  {model}
+                                  {getTtsModelLabel(model)}
                                 </option>
                               ))}
                             </select>
@@ -5000,7 +5007,7 @@ const App: React.FC = () => {
                           >
                             {ELEVENLABS_MODELS.map((ttsModel) => (
                               <option key={ttsModel} value={ttsModel}>
-                                {ttsModel}
+                                {getTtsModelLabel(ttsModel)}
                               </option>
                             ))}
                           </select>
@@ -5215,7 +5222,7 @@ const App: React.FC = () => {
                       >
                         {FISH_AUDIO_MODELS.map((model) => (
                           <option key={model} value={model}>
-                            {model}
+                            {getTtsModelLabel(model)}
                           </option>
                         ))}
                       </select>
@@ -5333,6 +5340,12 @@ const App: React.FC = () => {
                         <option value="microsoft/mai-voice-2.1-flash">
                           MAI Voice 2.1 Flash（プレビュー）
                         </option>
+                        <option value="elevenlabs/eleven-v4">
+                          ElevenLabs v4
+                        </option>
+                        <option value="elevenlabs/eleven-v4-turbo">
+                          ElevenLabs v4 Turbo
+                        </option>
                       </select>
                       <div
                         style={{
@@ -5341,7 +5354,10 @@ const App: React.FC = () => {
                           marginBottom: '8px',
                         }}
                       >
-                        どちらも公開プレビュー版で、SLAはなく本番利用は推奨されていません。現時点では日本語の音声がありません。
+                        MAIモデルは公開プレビュー版で、SLAはなく本番利用は推奨されていません。
+                        現時点では日本語の音声がありません。PCM音声をWAV形式で返します。
+                        ElevenLabsモデルはMP3形式で返します。
+                        音声は選択したモデルのカタログから選んでください。
                       </div>
                       <label htmlFor="openRouterSpeaker">Voice:</label>
                       <select
@@ -5600,7 +5616,7 @@ const App: React.FC = () => {
                           >
                             {INWORLD_MODELS.map((ttsModel) => (
                               <option key={ttsModel} value={ttsModel}>
-                                {ttsModel}
+                                {getTtsModelLabel(ttsModel)}
                               </option>
                             ))}
                           </select>
@@ -5772,7 +5788,7 @@ const App: React.FC = () => {
                       >
                         <option value="default">Production (default)</option>
                         <option value="gradium-tts-beta">
-                          Public beta (opt-in)
+                          現在はdefaultの別名・今後のベータ版を利用（任意）
                         </option>
                       </select>
                       <label
@@ -5826,7 +5842,9 @@ const App: React.FC = () => {
                           onChange={(e) =>
                             setGradiumVoiceSimilarity(e.target.value)
                           }
-                          placeholder="Similarity"
+                          placeholder="音声類似度（非推奨・設定は無視されます）"
+                          aria-label="音声類似度（非推奨・設定は無視されます）"
+                          disabled
                           style={{ width: '100%', marginBottom: '8px' }}
                         />
                         <input
@@ -5872,6 +5890,35 @@ const App: React.FC = () => {
                       >
                         OpenAI TTS パラメータ
                       </div>
+                      <p>
+                        OpenAI Speech
+                        APIのモデルは2027-01-06に提供終了予定です。
+                        後継モデルにはRealtime
+                        APIが必要で、この画面では利用できません。
+                      </p>
+                      <label htmlFor="openaiTtsModel">モデル:</label>
+                      <select
+                        id="openaiTtsModel"
+                        value={openaiTtsModel}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          setOpenaiTtsModel(next);
+                          setSelectedSpeakers((prev) => ({
+                            ...prev,
+                            openai: getOpenAiSpeakers(next).includes(
+                              String(prev.openai),
+                            )
+                              ? prev.openai
+                              : 'alloy',
+                          }));
+                        }}
+                      >
+                        {OPENAI_TTS_MODELS.map((model) => (
+                          <option key={model} value={model}>
+                            {getTtsModelLabel(model)}
+                          </option>
+                        ))}
+                      </select>
 
                       <label
                         htmlFor="openaiSpeed"
@@ -5932,7 +5979,7 @@ const App: React.FC = () => {
                       >
                         {GEMINI_TTS_MODELS.map((ttsModel) => (
                           <option key={ttsModel} value={ttsModel}>
-                            {ttsModel}
+                            {getTtsModelLabel(ttsModel)}
                           </option>
                         ))}
                       </select>
@@ -7481,7 +7528,11 @@ const App: React.FC = () => {
                         >
                           {/* OpenAI TTS */}
                           {selectedVoiceEngine === 'openai' &&
-                            OPENAI_TTS_SPEAKERS.map((speaker) => (
+                            OPENAI_TTS_SPEAKERS.filter((speaker) =>
+                              getOpenAiSpeakers(openaiTtsModel).includes(
+                                speaker.id,
+                              ),
+                            ).map((speaker) => (
                               <option key={speaker.id} value={speaker.id}>
                                 {speaker.name}{' '}
                                 {speaker.description &&

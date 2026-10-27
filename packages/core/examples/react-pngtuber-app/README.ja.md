@@ -42,7 +42,7 @@ Vite の development / preview proxy を使います。本番環境では API �
   公開価格（ゼロ / 有料 / 不明）の絞り込みに対応します。推論による疎通確認は
   行いません。価格表示は無料利用・利用可能性・実際の請求額を保証しません。
 - TTS エンジン切り替え: `openai`, `geminiTts`, `openaiCompatible`, `voicevox`, `voicepeak`, `aivisSpeech`, `aivisCloud`, `minimax`, `xai`, `unrealSpeech`, `elevenLabs`, `fishAudio`, `cartesia`, `inworld`, `gradium`, `piperPlus`, `webSpeech`, `none`
-- `geminiTts` は `gemini-3.1-flash-tts-preview` を既定利用し、30 種類のプリセットボイスとスタイル / audio-tag プロンプト入力に対応
+- `geminiTts` は `gemini-3.8-flash-tts` を既定利用し、30 種類のプリセットボイスとスタイル / audio-tag プロンプト入力に対応
 - スピーカー一覧の動的取得と選択:
   - `voicevox` / `aivisSpeech`: `/speakers` から取得
   - `fishAudio`: API キー入力後にローカル Vite proxy 経由で `/model` から取得
@@ -311,3 +311,16 @@ Settings からアップロードした画像は、そのセッション中の�
 一体で再配布できますが、素材単体・素材集としての再配布は禁止されています。
 正式版である日本語ガイドラインについては
 [Miko Asset Terms](./MIKO_ASSET_TERMS.md)を参照してください。
+
+### モデルと音声の更新
+
+新規設定の OpenAI チャットは `gpt-5.6-luna`、Gemini TTS は
+`gemini-3.8-flash-tts`、Cartesia は `sonic-3.6` を使います。保存済みの
+Gemini 3.1/2.5 TTS モデルは維持されますが、最短で 2026-11-17 に提供終了予定です。
+OpenAI TTS はモデルごとに9種または13種の音声を表示し、モデル変更後に使えない音声は
+alloy に戻します。Speech API の提供終了日は 2027-01-06 です。
+OpenRouter TTS では ElevenLabs v4/v4 Turbo を選べます。音声は選択したモデルの
+カタログから取得し、MP3 を再生します。MAI のプレビュー音声は WAV として再生します。
+Fish Audio S1 は 2026-12-31 に提供終了、S2.1 Pro Free の無料期間は
+2026-11-30 までです。Gradium の beta は現在の default と同じモデルを指し、
+今後のベータ版に追従します。Voice Similarity は非推奨で無視されます。

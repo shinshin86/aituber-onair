@@ -30,6 +30,9 @@ const OPENAI_VOICES = [
   'onyx',
   'sage',
   'shimmer',
+  'verse',
+  'marin',
+  'cedar',
 ];
 const ELEVENLABS_MODELS = [
   'eleven_multilingual_v2',
@@ -154,9 +157,9 @@ const PROVIDER_METADATA = {
   cartesia: {
     label: 'Cartesia',
     defaultEndpoint: CARTESIA_TTS_API_URL,
-    defaultModel: 'sonic-3.5',
+    defaultModel: 'sonic-3.6',
     defaultVoice: '',
-    models: ['sonic-3.5'],
+    models: ['sonic-3.6', 'sonic-3.6-2026-08-27', 'sonic-3.5'],
     voices: [],
     modelRequired: true,
     voiceRequired: true,
@@ -187,7 +190,7 @@ const PROVIDER_METADATA = {
   geminiTts: {
     label: 'Gemini TTS',
     defaultEndpoint: GEMINI_TTS_API_URL,
-    defaultModel: 'gemini-3.1-flash-tts-preview',
+    defaultModel: 'gemini-3.8-flash-tts',
     defaultVoice: 'Zephyr',
     models: GEMINI_MODELS,
     voices: [],

@@ -336,9 +336,10 @@ authenticated backend routes with API keys kept server-side.
 
 ElevenLabs `eleven_v4` retains Stability and Similarity but disables Style,
 Speed, and Speaker Boost. Cartesia offers `sonic-3.6` and
-`sonic-3.6-2026-08-27` while keeping `sonic-3.5` as the default. Gradium's
-model selector defaults to production; `gradium-tts-beta` is an explicit
-opt-in, and switching back to Gradium resets the model to production.
+`sonic-3.6-2026-08-27` with `sonic-3.6` as the default and `sonic-3.5` still selectable. Gradium's
+model selector defaults to production; `gradium-tts-beta` currently aliases
+production and tracks future betas. Switching back to Gradium resets the model
+to production.
 Chat 0.64.0 adds the OpenRouter public preview Mistral Large 4
 (`mistralai/mistral-large-4-0`) after Pareto, with text and image input. Its
 reasoning defaults to `none` for responsive chat. The model selected when
@@ -384,3 +385,19 @@ Vision and advanced options require both catalog metadata and SDK support.
 Unknown dynamic models keep advanced features off. SDK request defaults,
 including the 5000-token limit and `reasoning.exclude=true`, still apply and can
 exceed a model's limits; this sample does not modify the public SDK registry.
+
+### Model and voice updates
+
+New OpenAI chat settings use `gpt-5.6-luna`. New or blank Gemini TTS settings
+use `gemini-3.8-flash-tts`; explicit saved legacy models still load. Legacy
+3.1/2.5 TTS models have earliest shutdown on 2026-11-17. Cartesia defaults to
+`sonic-3.6`, with `sonic-3.5` still selectable.
+
+OpenAI speech settings filter nine or thirteen voices by model and reset an
+incompatible voice to alloy on model changes. The Speech API models shut down
+on 2027-01-06; their Realtime-only successor is not supported here.
+OpenRouter TTS offers ElevenLabs v4/v4 Turbo with model-scoped catalog voices
+and MP3 playback, alongside MAI preview PCM wrapped as WAV. No static voice
+allowlist is used for ElevenLabs. Fish Audio S1 retires on 2026-12-31;
+S2.1 Pro Free is free through 2026-11-30. Gradium's beta alias currently
+matches default and tracks future betas; Voice Similarity is deprecated and ignored.

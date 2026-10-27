@@ -289,6 +289,7 @@ function buildVoiceOptions(
         ? undefined
         : tts.speaker,
     apiKey,
+    openAiModel: tts.openAiModel || 'tts-1',
     openAiCompatibleApiUrl: resolveSpeechUrl(tts.openAiCompatibleApiUrl),
     openAiCompatibleModel: tts.openAiCompatibleModel,
     openAiCompatibleInstructions: tts.openAiCompatibleInstructions?.trim(),
@@ -937,6 +938,7 @@ export function useAituberCore({
   }, [
     settings.tts.engine,
     settings.tts.speaker,
+    settings.tts.openAiModel,
     settings.tts.openAiCompatibleApiUrl,
     settings.tts.openAiCompatibleModel,
     settings.tts.openAiCompatibleSpeed,

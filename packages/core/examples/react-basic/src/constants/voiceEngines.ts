@@ -50,7 +50,7 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       needsApiKey: true,
       placeholder: 'Google API key',
       defaultParams: {
-        model: 'gemini-3.1-flash-tts-preview',
+        model: 'gemini-3.8-flash-tts',
         languageCode: 'ja-JP',
       },
     },
@@ -150,7 +150,7 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       placeholder: 'Cartesia API key',
       defaultParams: {
         voiceListApiUrl: 'https://api.cartesia.ai/voices',
-        model: 'sonic-3.5',
+        model: 'sonic-3.6',
         language: 'ja',
         outputContainer: 'wav',
         sampleRate: 44100,
@@ -186,7 +186,7 @@ export const VOICE_ENGINE_CONFIGS: Record<VoiceEngineType, VoiceEngineConfig> =
       },
     },
     openRouter: {
-      name: 'OpenRouter (MAI Voice preview)',
+      name: 'OpenRouter',
       apiUrl: 'https://openrouter.ai/api/v1/audio/speech',
       needsApiKey: true,
       placeholder: 'OpenRouter API key',

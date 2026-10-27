@@ -11,6 +11,24 @@ import type {
 
 describe('Released Chat and Voice model exports', () => {
   it.each([
+    'MODEL_GPT_6_1_TERRA',
+    'OPENAI_DEPRECATED_MODELS',
+    'MODEL_KIMI_K3_1_PRO',
+    'MODEL_KIMI_K3_1_PRO_HIGHSPEED',
+    'KIMI_DEPRECATED_MODELS',
+    'GEMINI_DEPRECATED_MODELS',
+    'MODEL_UNBIASED_PARETO_26_9',
+    'MODEL_OPENAI_GPT_6_1_TERRA',
+    'MODEL_GOOGLE_GEMMA_4_31B_IT_FREE',
+    'MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE',
+    'MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5',
+    'MODEL_INCEPTION_MERCURY_3',
+    'MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017',
+    'MODEL_MOONSHOTAI_KIMI_K3_1_PRO',
+    'MODEL_MINIMAX_M3_1_FLASH',
+    'MODEL_UNBIASED_PARETO_26_10',
+    'MODEL_INCLUSIONAI_LING_3_0_FLASH_VL',
+    'MODEL_NEX_AGI_NEX_N2_5_PRO',
     'MODEL_GPT_6_1_SOL',
     'MODEL_GLM_5_3_FLASHX',
     'MODEL_MISTRAL_ZAI_GLM_5_3',
@@ -95,5 +113,26 @@ describe('Released Chat and Voice model exports', () => {
       openRouterModel: model,
     };
     expect(options.openRouterModel).toBe(model);
+  });
+});
+
+describe('Published provider defaults through Core', () => {
+  it.each([
+    ['openai', 'gpt-5.6-luna'],
+    ['openrouter', 'google/gemma-4-31b-it:free'],
+  ] as const)(
+    'uses the published %s default without network calls',
+    (provider, model) => {
+      const service = core.ChatServiceFactory.createChatService(provider, {
+        apiKey: 'mock-key',
+      });
+      expect(service.getModel()).toBe(model);
+    },
+  );
+  it('exposes the current free OpenRouter models', () => {
+    expect(new core.OpenRouterChatServiceProvider().getFreeModels()).toEqual([
+      'google/gemma-4-31b-it:free',
+      'nvidia/nemotron-3.5-super-vl:free',
+    ]);
   });
 });

@@ -79,6 +79,7 @@ export interface LLMSettings {
 
 export interface TTSSettings {
   engine: TTSEngineOption;
+  openAiModel?: string;
   speaker: string;
   openAiCompatibleApiKey?: string;
   openAiCompatibleApiUrl?: string;

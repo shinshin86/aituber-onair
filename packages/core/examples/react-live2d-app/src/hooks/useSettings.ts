@@ -1,3 +1,5 @@
+import { migrateSavedLlmModel } from '../lib/llmModels';
+import { getOpenAiSpeakers } from '../lib/ttsModels';
 import {
   AITuberOnAirCore,
   type OpenRouterTtsModel,
@@ -44,7 +46,7 @@ type ApiKeyProvider = Exclude<ChatProviderOption, 'gemini-nano'>;
 
 const STORAGE_KEY = 'react-live2d-app-settings';
 const DEFAULT_AIVIS_CLOUD_MODEL_UUID = '22e8ed77-94fe-4ef2-871f-a86f94e9a579';
-const DEFAULT_GEMINI_TTS_MODEL = 'gemini-3.1-flash-tts-preview';
+const DEFAULT_GEMINI_TTS_MODEL = 'gemini-3.8-flash-tts';
 const DEFAULT_GEMINI_TTS_LANGUAGE_CODE = 'ja-JP';
 const DEFAULT_OPENAI_COMPATIBLE_MODEL = 'local-model';
 const DEFAULT_OPENAI_COMPATIBLE_ENDPOINT =
@@ -62,7 +64,7 @@ const DEFAULT_FISH_AUDIO_VOICE_LIST_ENDPOINT = '/api/fish-audio/model';
 const DEFAULT_FISH_AUDIO_MODEL = 's2-pro';
 const DEFAULT_CARTESIA_TTS_ENDPOINT = 'https://api.cartesia.ai/tts/bytes';
 const DEFAULT_CARTESIA_VOICE_LIST_ENDPOINT = 'https://api.cartesia.ai/voices';
-const DEFAULT_CARTESIA_MODEL = 'sonic-3.5';
+const DEFAULT_CARTESIA_MODEL = 'sonic-3.6';
 const DEFAULT_INWORLD_TTS_ENDPOINT = 'https://api.inworld.ai/tts/v1/voice';
 const DEFAULT_INWORLD_MODEL = 'inworld-tts-2';
 const DEFAULT_INWORLD_AUDIO_ENCODING = 'MP3';
@@ -140,7 +142,7 @@ function getDefaultSettings(): AppSettings {
   return {
     llm: {
       provider: 'openai',
-      model: 'gpt-4.1-nano',
+      model: 'gpt-5.6-luna',
       systemPrompt: DEFAULT_SYSTEM_PROMPT,
       endpoint: DEFAULT_OPENAI_COMPATIBLE_ENDPOINT,
       xaiReasoningEffort: 'none',
@@ -167,6 +169,7 @@ function getDefaultSettings(): AppSettings {
     tts: {
       engine: 'openai' as TTSEngineOption,
       speaker: 'alloy',
+      openAiModel: 'tts-1',
       openAiCompatibleApiKey: '',
       openAiCompatibleApiUrl: DEFAULT_OPENAI_COMPATIBLE_TTS_ENDPOINT,
       openAiCompatibleModel: DEFAULT_OPENAI_COMPATIBLE_MODEL,
@@ -318,6 +321,21 @@ function getDefaultSettings(): AppSettings {
   };
 }
 
+function normalizeTtsSettings(tts: AppSettings['tts']): AppSettings['tts'] {
+  const openAiModel = tts.openAiModel?.trim() || 'tts-1';
+  return {
+    ...tts,
+    openAiModel,
+    geminiTtsModel: tts.geminiTtsModel?.trim() || DEFAULT_GEMINI_TTS_MODEL,
+    cartesiaModel: tts.cartesiaModel?.trim() || DEFAULT_CARTESIA_MODEL,
+    speaker:
+      tts.engine === 'openai' &&
+      !getOpenAiSpeakers(openAiModel).includes(tts.speaker)
+        ? 'alloy'
+        : tts.speaker,
+  };
+}
+
 function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -328,12 +346,16 @@ function loadSettings(): AppSettings {
         llm: {
           ...defaults.llm,
           ...saved.llm,
+          model: migrateSavedLlmModel(
+            saved.llm?.provider ?? defaults.llm.provider,
+            saved.llm?.model ?? defaults.llm.model,
+          ),
           apiKeys: { ...defaults.llm.apiKeys, ...saved.llm?.apiKeys },
           openRouterDynamicFreeModels: normalizeOpenRouterDynamicFreeModels(
             saved.llm?.openRouterDynamicFreeModels,
           ),
         },
-        tts: { ...defaults.tts, ...saved.tts },
+        tts: normalizeTtsSettings({ ...defaults.tts, ...saved.tts }),
         visual: {
           ...defaults.visual,
           ...saved.visual,
@@ -392,7 +414,11 @@ export function useSettings() {
       return catalog.models.map((model) => model.id);
     }
     const models = getOrderedModels(settings.llm.provider);
-    if (settings.llm.provider !== 'openai-compatible') return models;
+    if (settings.llm.provider !== 'openai-compatible') {
+      return settings.llm.model && !models.includes(settings.llm.model)
+        ? [...models, settings.llm.model]
+        : models;
+    }
     return [settings.llm.model || DEFAULT_OPENAI_COMPATIBLE_MODEL];
   }, [settings.llm.provider, settings.llm.model, catalog.models]);
 
@@ -406,7 +432,9 @@ export function useSettings() {
     const nextModel =
       provider === 'openai-compatible'
         ? DEFAULT_OPENAI_COMPATIBLE_MODEL
-        : models[0] || '';
+        : provider === 'openai'
+          ? 'gpt-5.6-luna'
+          : models[0] || '';
     setSettings((prev) => ({
       ...prev,
       llm: {
@@ -905,7 +933,7 @@ export function useSettings() {
     ) => {
       setSettings((prev) => ({
         ...prev,
-        tts: { ...prev.tts, [key]: value },
+        tts: normalizeTtsSettings({ ...prev.tts, [key]: value }),
       }));
     },
     [],

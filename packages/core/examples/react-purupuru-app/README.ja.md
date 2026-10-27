@@ -223,3 +223,16 @@ transform に追従します。
 素晴らしい本家プロジェクトに感謝します。このサンプルアプリは、パッケージ読み込み、
 表情選択、待機モーション、髪の物理表現、emotion reactions、アイテムレイヤー、
 ドラッグとズームによる配置調整、まばたき、音声に合わせた口パクに対応しています。
+
+### モデルと音声の更新
+
+新規設定の OpenAI チャットは `gpt-5.6-luna`、Gemini TTS は
+`gemini-3.8-flash-tts`、Cartesia は `sonic-3.6` を使います。保存済みの
+Gemini 3.1/2.5 TTS モデルは維持されますが、最短で 2026-11-17 に提供終了予定です。
+OpenAI TTS はモデルごとに9種または13種の音声を表示し、モデル変更後に使えない音声は
+alloy に戻します。Speech API の提供終了日は 2027-01-06 です。
+OpenRouter TTS では ElevenLabs v4/v4 Turbo を選べます。音声は選択したモデルの
+カタログから取得し、MP3 を再生します。MAI のプレビュー音声は WAV として再生します。
+Fish Audio S1 は 2026-12-31 に提供終了、S2.1 Pro Free の無料期間は
+2026-11-30 までです。Gradium の beta は現在の default と同じモデルを指し、
+今後のベータ版に追従します。Voice Similarity は非推奨で無視されます。

@@ -2203,3 +2203,18 @@ Additionally, these new events were added:
 ### Will This Break My Code?
 
 If you were directly accessing the `MemoryManager` instance to subscribe to events, your code will continue to function but is now considered deprecated. We recommend migrating to the new approach for future compatibility.
+
+## Released model updates
+
+Core re-exports Chat 0.66.0 model and deprecation constants, including
+`MODEL_GPT_6_1_TERRA`, `MODEL_KIMI_K3_1_PRO`,
+`MODEL_KIMI_K3_1_PRO_HIGHSPEED`, and `KIMI_DEPRECATED_MODELS`.
+New OpenAI and OpenRouter provider defaults are `gpt-5.6-luna` and
+`google/gemma-4-31b-it:free`. Deprecated constants remain exported for
+compatibility but are omitted from new model selectors.
+
+Voice 0.29.0 defaults to Gemini `gemini-3.8-flash-tts` and Cartesia
+`sonic-3.6`. Core React examples expose OpenAI speech model-specific voice
+selection, lifecycle notices and OpenRouter ElevenLabs v4/v4 Turbo catalog
+voices with MP3 playback. Saved explicit Gemini legacy TTS choices still load.
+See the [Voice documentation](../voice/README.md) for provider limitations.
