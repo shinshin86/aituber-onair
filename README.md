@@ -473,24 +473,6 @@ aituber-onair/
     └── kizuna/           # Viewer relationship / bond system
 ```
 
-## License
-
-The software and documentation are licensed under the MIT License — see
-[LICENSE](./LICENSE).
-
-Bundled Miko avatar images, models, spritesheets, and packages are not covered
-by the MIT License. They are governed by the authoritative Japanese
-[Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms); see
-[Miko Asset Terms](./MIKO_ASSET_TERMS.md) for a short English summary. The assets may be distributed as an integral part of software, apps,
-games, videos, websites, and other works or content, including third-party
-projects. Standalone redistribution and asset collections are prohibited.
-
-## Special Thanks
-
-This project is based on [the work referenced here](https://x.com/shinshin86/status/1862806042603847905). Without the contributions of these pioneers, it would not exist.
-
----
-
 ## For contributors
 
 Working on the monorepo itself:
@@ -522,3 +504,21 @@ Releases are driven by manual version bumps + per-package `CHANGELOG.md`, publis
 - **Major**: breaking changes to public API
 
 `release.yml` uses Changesets to publish packages, create tags (`@aituber-onair/<pkg>@x.y.z`), and create GitHub Releases for packages published in that run. If CI fails mid-run, re-running publishes the remainder but does **not** backfill Releases for already-published packages — create those manually from the package CHANGELOG (tag will already exist). `prerelease-next.yml` only updates the `next` prerelease tag.
+
+---
+
+## License
+
+The software and documentation are licensed under the MIT License — see
+[LICENSE](./LICENSE).
+
+Bundled Miko avatar images, models, spritesheets, and packages are not covered
+by the MIT License. They are governed by the authoritative Japanese
+[Miko Character Usage Guidelines](https://miko.aituberonair.com/#terms); see
+[Miko Asset Terms](./MIKO_ASSET_TERMS.md) for a short English summary. The assets may be distributed as an integral part of software, apps,
+games, videos, websites, and other works or content, including third-party
+projects. Standalone redistribution and asset collections are prohibited.
+
+## Special Thanks
+
+This project is based on [the work referenced here](https://x.com/shinshin86/status/1862806042603847905). Without the contributions of these pioneers, it would not exist.
