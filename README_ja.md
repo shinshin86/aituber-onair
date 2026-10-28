@@ -204,6 +204,57 @@ npm install
 npm run dev
 ```
 
+#### Single Image Avatar Chat — 音声に合わせて動く1枚画像アバター
+
+<p align="center">
+  <img
+    src="./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app.png"
+    alt="イラスト版ミコを使った Single Image Avatar サンプル"
+    width="49%"
+  />
+  <img
+    src="./packages/core/examples/react-single-image-avatar-app/images/react-single-image-avatar-app-puppet.png"
+    alt="フェルト製パペット風ミコを使った Single Image Avatar サンプル"
+    width="49%"
+  />
+</p>
+
+PNG または JPG を1枚だけ使い、TTS の出力音量に合わせて画像全体を動かします。
+跳ねて着地する「Bounce」と、小さく左右へ揺れる「Puppet Wobble」を切り替えられます。
+イラスト版とフェルト製パペット風のミコ画像を同梱しており、API キーなしで動きを
+プレビューできます。詳細は
+[`packages/core/examples/react-single-image-avatar-app`](./packages/core/examples/react-single-image-avatar-app)
+を参照。
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-single-image-avatar-app
+npm install
+npm run dev
+```
+
+#### Mesh Avatar Chat — 1枚絵を Live2D 風に動かすメッシュアバター
+
+![Mesh Avatar サンプルアプリ](./packages/core/examples/react-mesh-avatar-app/images/react-mesh-avatar-app.png)
+
+1枚のイラストを WebGL2 のメッシュ変形で Live2D 風に動かします。顔の向き、
+呼吸、まばたき、視線、毛束ごとの髪の揺れ、アイドル／リアクションモーション、
+音声に合わせた口パク、感情タグに合わせた表情切り替えに対応しています。
+チャイナドレス姿のミコを標準アバターとして同梱しており、
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio) で
+書き出した `.mavatar` を読み込んで差し替えることもできます。
+[Mesh Avatar Chat デモ](https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/)
+と同じアバターランタイムを使っています。詳細は
+[`packages/core/examples/react-mesh-avatar-app`](./packages/core/examples/react-mesh-avatar-app)
+を参照。
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-mesh-avatar-app
+npm install
+npm run dev
+```
+
 いずれの場合もブラウザで `http://localhost:5173` を開き、**Settings** から API キーとプロバイダー設定を入力してください。
 
 サンプル全体の一覧とおすすめの始め方は

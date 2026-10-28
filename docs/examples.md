@@ -38,6 +38,9 @@ to the package examples when you need lower-level integration.
   [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
   if you want one image to move with TTS audio instead of swapping mouth
   states.
+- Use
+  [`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app)
+  if you want one illustration to move Live2D-style with mesh deformation.
 - Use package examples when you want to embed chat, voice, memory, or streaming
   behavior into an existing application.
 
@@ -207,6 +210,28 @@ engine.
 
 ```bash
 cd packages/core/examples/react-single-image-avatar-app
+npm install
+npm run dev
+```
+
+### Mesh Avatar App
+
+<p align="center">
+  <img src="../packages/core/examples/react-mesh-avatar-app/images/react-mesh-avatar-app.png" alt="Mesh Avatar example app" width="720" />
+</p>
+
+Path:
+[`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app)
+
+Animates one illustration Live2D-style with WebGL2 mesh deformation: head
+turns, breathing, blinking, gaze, hair sway, idle and reaction motions, lip
+sync from TTS audio, and emotion-driven expressions. Miko in a qipao is
+bundled, and you can load a `.mavatar` exported from
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio). A
+speech preview works without an API key.
+
+```bash
+cd packages/core/examples/react-mesh-avatar-app
 npm install
 npm run dev
 ```
