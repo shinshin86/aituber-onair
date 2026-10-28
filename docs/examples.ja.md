@@ -37,6 +37,9 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 - 1枚の画像をTTS音声に合わせて動かしたい場合は
   [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
   を使います。
+- 1枚絵をメッシュ変形で Live2D 風に動かしたい場合は
+  [`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app)
+  を使います。
 - 既存アプリにチャット、音声、メモリ、配信連携を組み込みたい場合は、
   パッケージ別サンプルを参照してください。
 
@@ -205,6 +208,28 @@ APIキーやTTS設定がなくても「動きをプレビュー」から確認�
 
 ```bash
 cd packages/core/examples/react-single-image-avatar-app
+npm install
+npm run dev
+```
+
+### Mesh Avatar App
+
+<p align="center">
+  <img src="../packages/core/examples/react-mesh-avatar-app/images/react-mesh-avatar-app.png" alt="Mesh Avatar サンプルアプリ" width="720" />
+</p>
+
+パス:
+[`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app)
+
+1枚のイラストを WebGL2 のメッシュ変形で Live2D 風に動かします。顔の向き、
+呼吸、まばたき、視線、髪の揺れ、アイドル／リアクションモーション、TTS 音声に
+合わせた口パク、感情タグに合わせた表情切り替えに対応しています。
+チャイナドレス姿のミコを同梱しており、
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio) で
+書き出した `.mavatar` も読み込めます。API キーなしで話し方をプレビューできます。
+
+```bash
+cd packages/core/examples/react-mesh-avatar-app
 npm install
 npm run dev
 ```

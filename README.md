@@ -251,6 +251,27 @@ npm install
 npm run dev
 ```
 
+#### Mesh Avatar Chat — Live2D-style motion from a single illustration
+
+![Mesh Avatar example app](./packages/core/examples/react-mesh-avatar-app/images/react-mesh-avatar-app.png)
+
+Animate one illustration Live2D-style with WebGL2 mesh deformation: head turns,
+breathing, blinking, gaze, per-strand hair sway, idle and reaction motions,
+audio-driven lip-sync, and emotion-driven expressions. Miko in a qipao is
+bundled as the default avatar, and you can load any `.mavatar` exported from
+[Mesh Avatar Studio](https://github.com/shinshin86/mesh-avatar-studio). This is
+the same avatar runtime used in the
+[Mesh Avatar Chat demo](https://shinshin86.github.io/aituber-onair/mesh-avatar-chat/).
+See
+[`packages/core/examples/react-mesh-avatar-app`](./packages/core/examples/react-mesh-avatar-app).
+
+```bash
+git clone https://github.com/shinshin86/aituber-onair.git
+cd aituber-onair/packages/core/examples/react-mesh-avatar-app
+npm install
+npm run dev
+```
+
 Open `http://localhost:5173` in any case, then set API keys and provider options in **Settings**.
 
 See [Examples](./docs/examples.md) for the full example map and recommended
