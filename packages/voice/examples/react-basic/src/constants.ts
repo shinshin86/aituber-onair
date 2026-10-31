@@ -302,6 +302,15 @@ export const XAI_VOICE_OPTIONS = Object.entries(XAI_VOICES).map(
   }),
 );
 
+/** Documented Flux voices offered without a catalog lookup. */
+export const DEEPGRAM_PRESET_VOICE_OPTIONS: SpeakerOption[] = [
+  { id: 'flux-haley-en', label: 'Haley (English, preset)' },
+  { id: 'flux-ayumi-ja', label: 'Ayumi (Japanese, preset)' },
+  { id: 'flux-hayato-ja', label: 'Hayato (Japanese, preset)' },
+  { id: 'flux-nozomi-ja', label: 'Nozomi (Japanese, preset)' },
+  { id: 'flux-sayaka-ja', label: 'Sayaka (Japanese, preset)' },
+];
+
 export const UNREAL_SPEECH_CODECS: Record<UnrealSpeechCodec, string> = {
   libmp3lame: 'MP3 (libmp3lame)',
   pcm_mulaw: 'PCM mu-law',

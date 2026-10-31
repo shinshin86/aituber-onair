@@ -16,6 +16,7 @@ import type {
   VoiceEngineVoiceListOptions,
 } from '../types/capabilities';
 import type { VoiceEngineType } from '../types/voiceEngine';
+import { getDeepgramFluxVoiceLanguage } from '../engines/internal/deepgram';
 import { fetchWithTimeout } from '../engines/internal/utils';
 import {
   isOpenRouterVoice,
@@ -482,25 +483,31 @@ async function getDeepgramVoiceList(
   const requestedLanguage = options.language?.toLowerCase();
 
   return (result.tts ?? [])
-    .filter(
-      (voice) =>
-        /^flux-[a-z0-9-]+-en$/.test(voice.canonical_name) &&
-        (!requestedLanguage ||
-          requestedLanguage === 'all' ||
-          requestedLanguage === 'en' ||
-          voice.languages?.some(
-            (language) => language.toLowerCase() === requestedLanguage,
-          )),
-    )
+    .filter((voice) => {
+      // The ID suffix decides support; English and Japanese share /v2/speak.
+      const idLanguage = getDeepgramFluxVoiceLanguage(voice.canonical_name);
+      if (!idLanguage) {
+        return false;
+      }
+      return (
+        !requestedLanguage ||
+        requestedLanguage === 'all' ||
+        requestedLanguage === idLanguage ||
+        (voice.languages ?? []).some(
+          (language) => language.toLowerCase() === requestedLanguage,
+        )
+      );
+    })
     .map((voice) => {
       const name = voice.metadata?.display_name || voice.name;
+      const idLanguage = getDeepgramFluxVoiceLanguage(voice.canonical_name);
       return {
         id: voice.canonical_name,
         label: voice.metadata?.accent
           ? `${name} (${voice.metadata.accent})`
           : name,
         metadata: {
-          languages: voice.languages?.join(', ') || 'en',
+          languages: voice.languages?.join(', ') || idLanguage || 'en',
           ...(voice.metadata?.accent ? { accent: voice.metadata.accent } : {}),
           ...(voice.metadata?.sample ? { sample: voice.metadata.sample } : {}),
           ...(voice.metadata?.tags?.length

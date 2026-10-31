@@ -541,7 +541,8 @@ describe('Voice sample DOM flow with fake network and audio', () => {
           { canonical_name: 'flux-haley-en', name: 'Haley' },
           { canonical_name: 'flux-kit-en', name: 'Kit' },
           { canonical_name: 'aura-2-thalia-en', name: 'Aura' },
-          { canonical_name: 'flux-example-ja', name: 'Other language' },
+          { canonical_name: 'flux-ayumi-ja', name: 'Ayumi' },
+          { canonical_name: 'flux-anouk-nl', name: 'Other language' },
         ],
       });
     });
@@ -550,7 +551,14 @@ describe('Voice sample DOM flow with fake network and audio', () => {
       Array.from((field('speaker') as HTMLSelectElement).options).map(
         (option) => option.value,
       ),
-    ).toEqual(['flux-haley-en', 'flux-kit-en']);
+    ).toEqual([
+      'flux-haley-en',
+      'flux-ayumi-ja',
+      'flux-hayato-ja',
+      'flux-nozomi-ja',
+      'flux-sayaka-ja',
+      'flux-kit-en',
+    ]);
     await change('speaker', 'flux-kit-en');
     await change('apiKey', 'fake-deepgram-key');
     await change('deepgramSpeed', '0.8');
@@ -652,7 +660,15 @@ describe('Voice sample DOM flow with fake network and audio', () => {
         Array.from((field('speaker') as HTMLSelectElement).options).map(
           (option) => option.value,
         ),
-      ).toEqual(['flux-haley-en', 'flux-kit-en', 'flux-fixture-en']);
+      ).toEqual([
+        'flux-haley-en',
+        'flux-ayumi-ja',
+        'flux-hayato-ja',
+        'flux-nozomi-ja',
+        'flux-sayaka-ja',
+        'flux-kit-en',
+        'flux-fixture-en',
+      ]);
       if (response.status === 503) {
         expect(
           container.querySelector('.speaker-fetch-message--error')?.textContent,
@@ -678,12 +694,40 @@ describe('Voice sample DOM flow with fake network and audio', () => {
       Array.from((field('speaker') as HTMLSelectElement).options).map(
         (option) => option.value,
       ),
-    ).toEqual(['flux-haley-en', 'flux-kit-en']);
+    ).toEqual([
+      'flux-haley-en',
+      'flux-ayumi-ja',
+      'flux-hayato-ja',
+      'flux-nozomi-ja',
+      'flux-sayaka-ja',
+      'flux-kit-en',
+    ]);
     expect(container.querySelector('.speaker-fetch-message--error')).toBeNull();
     expect(container.querySelector('.status')?.textContent).toContain(
       'Loaded 1 Flux voices',
     );
     expect(audio.played).not.toHaveBeenCalled();
+  });
+
+  it('speaks Japanese text with a Deepgram Japanese preset without a catalog lookup', async () => {
+    await change('engine', 'deepgram');
+    await change('speaker', 'flux-sayaka-ja');
+    await change('apiKey', 'fake-deepgram-key');
+    await change('text', 'こんにちは、配信へようこそ。');
+    routes.set(
+      'POST http://localhost:3000/api/deepgram/v2/speak?model=flux-sayaka-ja&encoding=mp3',
+      (init) => {
+        expect(JSON.parse(init.body as string)).toEqual({
+          text: 'こんにちは、配信へようこそ。',
+        });
+        return audioResponse();
+      },
+    );
+    await click(speakButton);
+    expect(audio.played).toHaveBeenLastCalledWith(mp3Bytes);
+    expect(container.querySelector('.status')?.textContent).toBe(
+      'Playback completed',
+    );
   });
 
   it('requires a Deepgram key and recovers from a generation error without losing custom input', async () => {
