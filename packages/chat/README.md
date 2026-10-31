@@ -1189,7 +1189,7 @@ Notes:
 - Text-only explicit options include `zai-glm-5-3` (GLM-5.3), with streaming and function calling. Vision and adjustable reasoning are not enabled for this model. Availability depends on your Mistral subscription tier; accounts without access receive HTTP 403 with `tier_not_allowed`.
 - Retired `mistral-medium-2508` remains exported only for source compatibility.
 - Ministral 3 models support text, vision, streaming, and function calling through the same Chat Completions endpoint.
-- `reasoning_effort` is supported as `'none' | 'high'` and is only sent for `mistral-small-latest` and `mistral-medium-3-5`, matching Mistral's adjustable reasoning docs. It is omitted for other models.
+- `reasoning_effort` is supported as `'none' | 'high'` and is only sent for `mistral-small-latest` and `mistral-medium-3-5`, matching Mistral's adjustable reasoning docs. The provider defaults to `none` for responsive chat; `high` is an explicit opt-in. It is omitted for other models, including Mistral Large 4.
 
 Reasoning example:
 
@@ -1236,7 +1236,7 @@ Notes:
 - Supported models: `plamo-3.0-prime` (default), `plamo-3.1-prime`.
 - PLaMo 3.1 Prime (`plamo-3.1-prime`) uses the same endpoint, context window (262,144 tokens), and `reasoning_effort` values as 3.0 Prime. PLaMo's web search option (`web_search_options`) and the separate Deep Research model on the Responses API are not wired into this provider.
 - `plamo-2.2-prime` remains exported for source compatibility, but is no longer advertised because PLaMo documents its 2026-09-30 retirement and replacement by `plamo-3.0-prime`.
-- `reasoning_effort` can be set to `none` or `medium` for reasoning-capable PLaMo models.
+- `reasoning_effort` can be set to `none` or `medium` for reasoning-capable PLaMo models. The package explicitly sends `none` by default for responsive chat, including direct `PlamoChatService` construction. Set `medium` to opt into reasoning.
 - Vision is not advertised as supported by this provider.
 - PLaMo can also be used through `openai-compatible` by manually providing the full endpoint and model.
 

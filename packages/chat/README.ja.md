@@ -1168,7 +1168,7 @@ await mistralService.processChat(
 - 廃止済みの`mistral-medium-2508`はソース互換用にのみexportを残します。
 - Ministral 3系は同じChat Completions endpointでtext、vision、streaming、function callingに対応します。
 - テキスト専用の明示選択モデルとして`zai-glm-5-3`（GLM-5.3）を利用できます。streamingとfunction callingに対応し、visionや推論レベル指定は有効にしません。利用可否はMistralのサブスクリプションtierによって異なり、利用できないアカウントではHTTP 403（`tier_not_allowed`）が返ります。
-- `reasoning_effort`は`'none' | 'high'`に対応し、Mistral公式docsに合わせて`mistral-small-latest`と`mistral-medium-3-5`にだけ送信します。それ以外のモデルでは省略します。
+- `reasoning_effort`は`'none' | 'high'`に対応し、Mistral公式docsに合わせて`mistral-small-latest`と`mistral-medium-3-5`にだけ送信します。プロバイダーは応答速度を優先して`none`を既定とし、`high`は明示指定した場合に使います。Mistral Large 4を含むそれ以外のモデルでは省略します。
 
 reasoning例:
 
@@ -1215,7 +1215,7 @@ const plamoService = ChatServiceFactory.createChatService('plamo', {
 - 対応モデル: `plamo-3.0-prime`（デフォルト）, `plamo-3.1-prime`
 - PLaMo 3.1 Prime（`plamo-3.1-prime`）は3.0 Primeと同じendpoint、コンテキスト長（262,144トークン）、`reasoning_effort`の値で利用できます。PLaMoのWeb検索オプション（`web_search_options`）と、Responses APIで提供される別モデルのDeep Researchはこのproviderには組み込んでいません。
 - `plamo-2.2-prime`はソース互換用にexportを残しますが、PLaMO公式docsで2026-09-30の提供終了と`plamo-3.0-prime`への移行が案内されているため、対応一覧には表示しません。
-- reasoning対応モデルでは`reasoning_effort`に`none`または`medium`を指定できます。
+- reasoning対応モデルでは`reasoning_effort`に`none`または`medium`を指定できます。応答速度を優先し、省略時は`none`を明示送信します。`PlamoChatService`を直接生成する場合も同じです。推論を有効にする場合は`medium`を指定してください。
 - このproviderではvision対応はサポート対象として扱いません。
 - PLaMoは`openai-compatible`にendpointとmodelを直接指定して使うこともできます。
 

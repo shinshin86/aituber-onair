@@ -28,7 +28,7 @@ export class PlamoChatServiceProvider
       tools,
       this.resolveEndpoint(options),
       options.responseLength,
-      options.reasoning_effort,
+      options.reasoning_effort ?? 'none',
     );
   }
 

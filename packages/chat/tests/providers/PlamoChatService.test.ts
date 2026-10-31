@@ -101,19 +101,22 @@ describe('PlamoChatService', () => {
     expect(result.blocks).toEqual([{ type: 'text', text: 'ok' }]);
   });
 
-  it('does not add reasoning parameters by default', async () => {
-    const postSpy = vi
-      .spyOn(ChatServiceHttpClient, 'post')
-      .mockResolvedValue(createOneShotResponse('ok'));
-    const service = new PlamoChatService('test-key');
+  it.each([undefined, MODEL_PLAMO_3_0_PRIME, MODEL_PLAMO_3_1_PRIME])(
+    'defaults %s to explicit reasoning_effort none',
+    async (model) => {
+      const postSpy = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(createOneShotResponse('ok'));
+      const service = new PlamoChatService('test-key', model);
 
-    await service.chatOnce(messages, false);
+      await service.chatOnce(messages, false);
 
-    const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
-    expect(body.model).toBe(MODEL_PLAMO_3_0_PRIME);
-    expect(body.reasoning).toBeUndefined();
-    expect(body.reasoning_effort).toBeUndefined();
-  });
+      const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
+      expect(body.model).toBe(model ?? MODEL_PLAMO_3_0_PRIME);
+      expect(body.reasoning).toBeUndefined();
+      expect(body.reasoning_effort).toBe('none');
+    },
+  );
 
   it('sends supported reasoning_effort when configured', async () => {
     const postSpy = vi

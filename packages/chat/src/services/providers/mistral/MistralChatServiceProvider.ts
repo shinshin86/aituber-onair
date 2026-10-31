@@ -33,7 +33,7 @@ export class MistralChatServiceProvider
     });
     const tools: ToolDefinition[] | undefined = options.tools;
     const reasoningEffort = isMistralReasoningEffortModel(model)
-      ? options.reasoning_effort
+      ? (options.reasoning_effort ?? 'none')
       : undefined;
 
     return new MistralChatService(
