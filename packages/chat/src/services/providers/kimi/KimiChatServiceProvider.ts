@@ -25,7 +25,7 @@ import { resolveVisionModel } from '../../../utils';
 export class KimiChatServiceProvider
   implements ChatServiceProvider<KimiChatServiceOptions>
 {
-  private readonly defaultThinking = { type: 'enabled' as const };
+  private readonly defaultThinking = { type: 'disabled' as const };
 
   /**
    * Create a chat service instance
@@ -151,7 +151,7 @@ export class KimiChatServiceProvider
           `Model ${model} requires thinking mode and does not support thinking: disabled.`,
         );
       }
-      return thinking ?? this.defaultThinking;
+      return thinking ?? { type: 'enabled' };
     }
 
     if (tools && tools.length > 0) {

@@ -314,7 +314,7 @@ export class KimiChatService implements ChatService {
       return { type: 'disabled' };
     }
 
-    return this.thinking ?? { type: 'enabled' };
+    return this.thinking ?? { type: 'disabled' };
   }
 
   private buildToolsDefinition(): any[] {

@@ -1098,13 +1098,14 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 - Kimi K3系の複数ターン・ツール呼び出しでは、`reasoning_content` と `tool_calls` を保持するため、返された `completion.assistant_message` を会話履歴へ追加してください。
 - Kimi K2.7 Code 系モデルはコーディング寄りで、thinking mode が必須のため、ツール使用時も `thinking` を有効のままにします。
 - Kimi K2.7 Code 系モデルで `thinking: { type: 'disabled' }` を明示指定すると、リクエスト送信前にエラーになります。
-- 旧 Kimi モデルでは、ツール使用時に `thinking` を `{ type: 'disabled' }` に強制します。
+- thinkingを無効化できるK2系モデルは、応答速度を優先して`thinking: { type: 'disabled' }`を既定にします。`KimiChatService`を直接生成する場合も同じです。有効にする場合は`thinking: { type: 'enabled' }`を指定してください。ツール使用時は引き続きthinkingを無効にします。
 
 自前ホスティング例:
 
 ```typescript
 const kimiService = ChatServiceFactory.createChatService('kimi', {
   apiKey: process.env.MOONSHOT_API_KEY,
+  model: 'kimi-k2.6', // Explicit legacy model with optional thinking
   baseUrl: 'http://localhost:8000/v1',
   thinking: { type: 'disabled' }
 });

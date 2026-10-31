@@ -213,6 +213,7 @@ These additions support tools and streaming. MiniMax reasoning cannot be disable
 - Vision: Supported
 - Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K3 is an explicit reasoning option, and Kimi K2.7 Code models are coding-oriented.
 - Kimi K3 and K3.1 Pro reasoning: selectable `low`, `high`, or `max`, with `low` as the package default (the API default is `max`). Reasoning cannot be disabled.
+- The legacy K2 thinking control starts at `disabled` for responsive chat. K2.7 Code models require thinking and keep it enabled; K3 models use reasoning effort instead of this control.
 
 **DeepSeek**
 - Models: DeepSeek V4.1 Flash 1017 (`deepseek-flash`), V4 Pro, and legacy Flash aliases. The existing `deepseek-v4-flash` package default is preserved.

@@ -1120,13 +1120,14 @@ Notes:
 - For Kimi K3-family multi-turn and tool-call flows, append the returned `completion.assistant_message` to history so `reasoning_content` and `tool_calls` are preserved.
 - Kimi K2.7 Code models are coding-oriented and require thinking mode, so they keep `thinking` enabled even when tools are used.
 - Explicitly setting `thinking: { type: 'disabled' }` with Kimi K2.7 Code models throws before sending the request.
-- For older Kimi models, when tools are enabled, `thinking` is forced to `{ type: 'disabled' }`.
+- K2 models that allow thinking to be disabled default to `thinking: { type: 'disabled' }` for responsive chat, including direct `KimiChatService` construction. Set `thinking: { type: 'enabled' }` to opt in. When tools are enabled, these models still force thinking off.
 
 Self-hosted example:
 
 ```typescript
 const kimiService = ChatServiceFactory.createChatService('kimi', {
   apiKey: process.env.MOONSHOT_API_KEY,
+  model: 'kimi-k2.6', // Explicit legacy model with optional thinking
   baseUrl: 'http://localhost:8000/v1',
   thinking: { type: 'disabled' }
 });

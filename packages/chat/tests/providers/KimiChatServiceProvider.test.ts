@@ -51,6 +51,16 @@ describe('KimiChatServiceProvider', () => {
     });
   });
 
+  it.each([MODEL_KIMI_K2_5, MODEL_KIMI_K2_6])(
+    'defaults optional thinking to disabled for explicitly named %s',
+    (model) => {
+      provider.createChatService({ apiKey: 'test-key', model });
+      expect(vi.mocked(KimiChatService).mock.calls[0][7]).toEqual({
+        type: 'disabled',
+      });
+    },
+  );
+
   describe('reasoning effort support', () => {
     it.each([
       MODEL_KIMI_K3,

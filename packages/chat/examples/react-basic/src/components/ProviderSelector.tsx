@@ -2468,7 +2468,7 @@ export default function ProviderSelector({
                   <label htmlFor="kimi-thinking-type">Thinking</label>
                   <select
                     id="kimi-thinking-type"
-                    value={kimiThinkingType || 'enabled'}
+                    value={kimiThinkingType || 'disabled'}
                     onChange={(e) =>
                       onKimiThinkingTypeChange?.(
                         e.target.value as 'enabled' | 'disabled',

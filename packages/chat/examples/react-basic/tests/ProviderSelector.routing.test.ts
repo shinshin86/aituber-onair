@@ -20,6 +20,7 @@ import {
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
+  MODEL_KIMI_K2_6,
 } from '../../../src';
 import { createSseResponse } from '../../../tests/helpers/sse';
 import App from '../src/App';
@@ -169,6 +170,34 @@ async function changeSelect(selector: string, value: string) {
 async function renderApp() {
   await act(async () => root.render(createElement(App)));
 }
+
+it.each([undefined, 'disabled', 'enabled'] as const)(
+  'shows optional K2 thinking as %s with disabled as the fallback',
+  async (thinking) => {
+    const onThinkingChange = vi.fn();
+    await act(async () =>
+      root.render(
+        createElement(ProviderSelector, {
+          provider: 'kimi',
+          selectedModel: MODEL_KIMI_K2_6,
+          apiKey: '',
+          responseLength: 'medium',
+          onProviderChange: vi.fn(),
+          onModelChange: vi.fn(),
+          onApiKeyChange: vi.fn(),
+          onResponseLengthChange: vi.fn(),
+          kimiThinkingType: thinking,
+          onKimiThinkingTypeChange: onThinkingChange,
+        }),
+      ),
+    );
+    expect(element<HTMLSelectElement>('#kimi-thinking-type').value).toBe(
+      thinking ?? 'disabled',
+    );
+    await changeSelect('#kimi-thinking-type', 'enabled');
+    expect(onThinkingChange).toHaveBeenCalledWith('enabled');
+  },
+);
 
 async function selectAddition(addition: (typeof additions)[number]) {
   await click(button(addition.providerLabel, 'provider'));

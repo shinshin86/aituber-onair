@@ -187,7 +187,7 @@ function App() {
   const [zaiResponseSchema, setZaiResponseSchema] = useState('');
   const [kimiThinkingType, setKimiThinkingType] = useState<
     'enabled' | 'disabled'
-  >('enabled');
+  >('disabled');
   const [kimiBaseUrl, setKimiBaseUrl] = useState(KIMI_OFFICIAL_BASE_URL);
   const [chatService, setChatService] = useState<ChatService | null>(null);
   const nextMessageIdRef = useRef(0);
