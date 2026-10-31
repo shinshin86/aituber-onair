@@ -237,7 +237,7 @@ const OPENROUTER_MODEL_REASONING: Record<
   },
   [MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5]: {
     efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
-    defaultEffort: 'low',
+    defaultEffort: 'none',
   },
   [MODEL_INCEPTION_MERCURY_3]: {
     efforts: ['none', 'low', 'medium', 'high'],
@@ -323,15 +323,15 @@ const OPENROUTER_MODEL_REASONING: Record<
   },
   [MODEL_OPENAI_GPT_6_ASTRA]: {
     efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
-    defaultEffort: 'medium',
+    defaultEffort: 'low',
   },
   [MODEL_OPENAI_GPT_6_ASTRA_PRO]: {
     efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
-    defaultEffort: 'medium',
+    defaultEffort: 'low',
   },
   [MODEL_ANTHROPIC_CLAUDE_FABLE_5_1]: {
     efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
-    defaultEffort: 'high',
+    defaultEffort: 'low',
   },
   [MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH]: {
     efforts: ['max', 'high', 'low', 'none'],
@@ -339,7 +339,7 @@ const OPENROUTER_MODEL_REASONING: Record<
   },
   [MODEL_GOOGLE_GEMINI_3_8_FLASH]: {
     efforts: ['high', 'medium', 'low'],
-    defaultEffort: 'medium',
+    defaultEffort: 'low',
   },
   [MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE]: {
     efforts: [],
@@ -359,11 +359,11 @@ const OPENROUTER_MODEL_REASONING: Record<
   },
   [MODEL_QWEN_QWEN_3_8_MAX_0902]: {
     efforts: ['xhigh', 'high', 'medium', 'low', 'minimal'],
-    defaultEffort: 'xhigh',
+    defaultEffort: 'minimal',
   },
   [MODEL_META_MUSE_SPARK_1_3]: {
     efforts: ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
-    defaultEffort: 'medium',
+    defaultEffort: 'minimal',
   },
 };
 

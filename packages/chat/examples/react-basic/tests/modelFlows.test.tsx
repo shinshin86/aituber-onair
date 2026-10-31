@@ -38,6 +38,42 @@ const modelCases = [
     ['GPT-6 Sol', 'openai/gpt-6-sol', ['none', ...mandatoryEfforts], 'none'],
     ['GPT-6 Luna', 'openai/gpt-6-luna', ['none', ...mandatoryEfforts], 'none'],
     [
+      'GPT-6 Astra',
+      'openai/gpt-6-astra',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'GPT-6 Astra Pro',
+      'openai/gpt-6-astra-pro',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'Claude Fable 5.1',
+      'anthropic/claude-fable-5.1',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'Gemini 3.8 Flash',
+      'google/gemini-3.8-flash',
+      ['high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'Qwen3.8 Max (0902)',
+      'qwen/qwen3.8-max-0902',
+      ['xhigh', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    [
+      'Muse Spark 1.3',
+      'meta/muse-spark-1.3',
+      ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    [
       'Claude Sonnet 5.5',
       'anthropic/claude-sonnet-5.5',
       mandatoryEfforts,
@@ -70,7 +106,6 @@ const modelCases = [
       'none',
     ],
     [
-      // The sample retains the previous model's valid none effort.
       'Claude Haiku 5.5 (OpenRouter)',
       'anthropic/claude-haiku-5.5',
       ['none', 'low', 'medium', 'high', 'xhigh', 'max'],

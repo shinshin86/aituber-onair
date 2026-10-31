@@ -803,7 +803,7 @@ hidden thinking が使い切るリスクを抑えます。Gemini 2.5 は
 | --- | --- |
 | `mistralai/mistral-large-4-0` | `none`（パッケージ既定）、`high`（上流既定）。推論トークン予算なし |
 | `unbiased/pareto-26.9` | 推論レベル選択なし（プロバイダー既定） |
-| `anthropic/claude-haiku-5.5` | none, low, medium, high, xhigh, max (low) |
+| `anthropic/claude-haiku-5.5` | none, low, medium, high, xhigh, max (none) |
 | `inception/mercury-3` | none, low, medium, high (none) |
 | `deepseek/deepseek-v4.1-flash-1017` | none, low, high, max (none) |
 | `moonshotai/kimi-k3.1-pro` | none, low, high, max (none) |
@@ -819,14 +819,14 @@ hidden thinking が使い切るリスクを抑えます。Gemini 2.5 は
 | `anthropic/claude-opus-5.5` | max, xhigh, high, medium, low (low) |
 | `x-ai/grok-4.7` | xhigh, high, medium, low (low) |
 | `z-ai/glm-5.3-flashx` | max, high, low (low) |
-| `openai/gpt-6-astra` | max, xhigh, high, medium, low (medium) |
-| `openai/gpt-6-astra-pro` | max, xhigh, high, medium, low (medium) |
-| `anthropic/claude-fable-5.1` | max, xhigh, high, medium, low (high) |
+| `openai/gpt-6-astra` | max, xhigh, high, medium, low (low) |
+| `openai/gpt-6-astra-pro` | max, xhigh, high, medium, low (low) |
+| `anthropic/claude-fable-5.1` | max, xhigh, high, medium, low (low) |
 | `deepseek/deepseek-v4.1-flash` | max, high, low, none (none) |
-| `google/gemini-3.8-flash` | high, medium, low (medium) |
+| `google/gemini-3.8-flash` | high, medium, low (low) |
 | `inception/mercury-2.5` | high, medium, low, none (none) |
-| `qwen/qwen3.8-max-0902` | xhigh, high, medium, low, minimal (xhigh) |
-| `meta/muse-spark-1.3` | max, xhigh, high, medium, low, minimal (medium) |
+| `qwen/qwen3.8-max-0902` | xhigh, high, medium, low, minimal (minimal) |
+| `meta/muse-spark-1.3` | max, xhigh, high, medium, low, minimal (minimal) |
 | `inclusionai/ling-3.1-flash` | 推論レベルの選択なし（プロバイダー既定） |
 | `upstage/solar-pro4` | none, minimal, low, medium, high, xhigh, max (none) |
 | `upstage/solar-mini4` | none, minimal, low, medium, high, xhigh, max (none) |

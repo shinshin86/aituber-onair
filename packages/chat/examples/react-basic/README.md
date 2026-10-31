@@ -174,7 +174,7 @@ Additional explicit options (provider default unchanged):
 
 - `openai/gpt-6.1-terra`: GPT-6.1 Terra; image input, tools and streaming; none/low/medium/high/xhigh/max reasoning (package default `none`).
 
-- `anthropic/claude-haiku-5.5`: Claude Haiku 5.5 (OpenRouter); image input; none, low, medium, high, xhigh, max (default `low`).
+- `anthropic/claude-haiku-5.5`: Claude Haiku 5.5 (OpenRouter); image input; none, low, medium, high, xhigh, max (default `none`).
 - `inception/mercury-3`: Mercury 3; text-only; none, low, medium, high (default `none`).
 - `deepseek/deepseek-v4.1-flash-1017`: DeepSeek V4.1 Flash 1017 (OpenRouter); image input; none, low, high, max (default `none`).
 - `moonshotai/kimi-k3.1-pro`: Kimi K3.1 Pro (OpenRouter); image input; none, low, high, max (default `none`).
@@ -387,8 +387,10 @@ models, it always thinks and defaults to low reasoning.
 OpenRouter also offers GPT-6.1 Sol, GPT-6 Sol/Luna, Claude Sonnet/Opus 5.5,
 Grok 4.7, and GLM-5.3 FlashX, alongside Astra/Pro, Fable 5.1, DeepSeek V4.1
 Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
-capabilities. The new OpenRouter models default to low reasoning, except Sol/Luna
-which default to none; tools use OpenRouter Chat Completions. Claude 5.5 tool
+capabilities. Models with configurable reasoning default to their lowest supported
+effort: `none` where available, otherwise `minimal` or `low`. Qwen3.8 Max (0902)
+and Muse Spark 1.3 default to `minimal`; Astra/Pro, Fable 5.1, and Gemini 3.8
+Flash default to `low`. Tools use OpenRouter Chat Completions. Claude 5.5 tool
 selection stays automatic. Mercury 2.5 is text-only. Provider defaults are
 unchanged.
 
