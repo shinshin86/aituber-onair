@@ -15,7 +15,7 @@ export class PlamoChatService extends OpenAIChatService {
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
     responseLength?: ChatResponseLength,
-    reasoning_effort?: PlamoReasoningEffort,
+    reasoning_effort: PlamoReasoningEffort = 'none',
   ) {
     super(
       apiKey,

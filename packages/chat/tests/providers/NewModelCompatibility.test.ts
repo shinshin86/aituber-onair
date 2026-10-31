@@ -147,7 +147,7 @@ describe('New model endpoint compatibility', () => {
     });
   });
 
-  it('routes GPT-6 Sol through Responses with documented effort and image input', async () => {
+  it('defaults GPT-6 Sol to Responses with no reasoning and image input', async () => {
     const post = vi.spyOn(ChatServiceHttpClient, 'post');
     const solResponse = () =>
       createSseResponse([
@@ -161,7 +161,6 @@ describe('New model endpoint compatibility', () => {
     const service = provider.createChatService({
       apiKey: 'test-key',
       model: models.MODEL_GPT_6_SOL,
-      gpt5EndpointPreference: 'chat',
     });
     const response = await service.chatOnce!(messages, true);
     const visionResponse = await service.visionChatOnce!(images, true);
@@ -171,7 +170,7 @@ describe('New model endpoint compatibility', () => {
     expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
     expect(post.mock.calls[0][1]).toMatchObject({
       model: models.MODEL_GPT_6_SOL,
-      reasoning: { effort: 'medium' },
+      reasoning: { effort: 'none' },
     });
     expect(post.mock.calls[1][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
     expect(post.mock.calls[1][1].input[0].content).toContainEqual(
@@ -193,34 +192,39 @@ describe('New model endpoint compatibility', () => {
     ).toEqual(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
   });
 
-  it('allows GPT-6 Sol Chat Completions only when reasoning is disabled', async () => {
-    const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
-      jsonResponse({
-        choices: [{ message: { role: 'assistant', content: 'Sol response' } }],
-      }),
-    );
-    const service = new OpenAIChatServiceProvider().createChatService({
-      apiKey: 'test-key',
-      model: models.MODEL_GPT_6_SOL,
-      gpt5EndpointPreference: 'chat',
-      reasoning_effort: 'none',
-    });
-    const response = await service.chatOnce!(messages, false);
+  it.each([undefined, 'none'] as const)(
+    'uses GPT-6 Sol Chat Completions with effort %s',
+    async (effort) => {
+      const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+        jsonResponse({
+          choices: [
+            { message: { role: 'assistant', content: 'Sol response' } },
+          ],
+        }),
+      );
+      const service = new OpenAIChatServiceProvider().createChatService({
+        apiKey: 'test-key',
+        model: models.MODEL_GPT_6_SOL,
+        gpt5EndpointPreference: 'chat',
+        reasoning_effort: effort,
+      });
+      const response = await service.chatOnce!(messages, false);
 
-    expect(post.mock.calls[0][0]).toBe(
-      models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
-    );
-    expect(post.mock.calls[0][1]).toMatchObject({
-      model: models.MODEL_GPT_6_SOL,
-      reasoning_effort: 'none',
-    });
-    expect(response.blocks).toContainEqual({
-      type: 'text',
-      text: 'Sol response',
-    });
-  });
+      expect(post.mock.calls[0][0]).toBe(
+        models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+      );
+      expect(post.mock.calls[0][1]).toMatchObject({
+        model: models.MODEL_GPT_6_SOL,
+        reasoning_effort: 'none',
+      });
+      expect(response.blocks).toContainEqual({
+        type: 'text',
+        text: 'Sol response',
+      });
+    },
+  );
 
-  it('routes GPT-6 Luna through Responses with tools, low reasoning, and vision', async () => {
+  it('defaults GPT-6 Luna to Responses with tools, no reasoning, and vision', async () => {
     const post = vi.spyOn(ChatServiceHttpClient, 'post');
     const lunaResponse = () =>
       createSseResponse([
@@ -235,7 +239,6 @@ describe('New model endpoint compatibility', () => {
       apiKey: 'test-key',
       model: models.MODEL_GPT_6_LUNA,
       tools,
-      gpt5EndpointPreference: 'chat',
     });
     const response = await service.chatOnce!(messages, true);
     const visionResponse = await service.visionChatOnce!(images, true);
@@ -245,7 +248,7 @@ describe('New model endpoint compatibility', () => {
     expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
     expect(post.mock.calls[0][1]).toMatchObject({
       model: models.MODEL_GPT_6_LUNA,
-      reasoning: { effort: 'low' },
+      reasoning: { effort: 'none' },
       tools: [expect.objectContaining({ type: 'function' })],
     });
     expect(post.mock.calls[1][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
@@ -268,34 +271,74 @@ describe('New model endpoint compatibility', () => {
     ).toEqual(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
   });
 
-  it('allows GPT-6 Luna Chat Completions only when reasoning is disabled', async () => {
-    const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
-      jsonResponse({
-        choices: [{ message: { role: 'assistant', content: 'Luna response' } }],
-      }),
-    );
-    const service = new OpenAIChatServiceProvider().createChatService({
-      apiKey: 'test-key',
-      model: models.MODEL_GPT_6_LUNA,
-      tools,
-      gpt5EndpointPreference: 'chat',
-      reasoning_effort: 'none',
-    });
-    const response = await service.chatOnce!(messages, false);
+  it.each([undefined, 'none'] as const)(
+    'uses GPT-6 Luna Chat Completions with effort %s',
+    async (effort) => {
+      const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+        jsonResponse({
+          choices: [
+            { message: { role: 'assistant', content: 'Luna response' } },
+          ],
+        }),
+      );
+      const service = new OpenAIChatServiceProvider().createChatService({
+        apiKey: 'test-key',
+        model: models.MODEL_GPT_6_LUNA,
+        tools,
+        gpt5EndpointPreference: 'chat',
+        reasoning_effort: effort,
+      });
+      const response = await service.chatOnce!(messages, false);
 
-    expect(post.mock.calls[0][0]).toBe(
-      models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
-    );
-    expect(post.mock.calls[0][1]).toMatchObject({
-      model: models.MODEL_GPT_6_LUNA,
-      reasoning_effort: 'none',
-      tools: [expect.objectContaining({ type: 'function' })],
-    });
-    expect(response.blocks).toContainEqual({
-      type: 'text',
-      text: 'Luna response',
-    });
-  });
+      expect(post.mock.calls[0][0]).toBe(
+        models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+      );
+      expect(post.mock.calls[0][1]).toMatchObject({
+        model: models.MODEL_GPT_6_LUNA,
+        reasoning_effort: 'none',
+        tools: [expect.objectContaining({ type: 'function' })],
+      });
+      expect(response.blocks).toContainEqual({
+        type: 'text',
+        text: 'Luna response',
+      });
+    },
+  );
+
+  describe.each([models.MODEL_GPT_6_SOL, models.MODEL_GPT_6_LUNA])(
+    '%s explicit reasoning',
+    (model) => {
+      it.each(['low', 'medium', 'high', 'xhigh', 'max'] as const)(
+        'keeps %s effort on Responses even with a Chat Completions preference',
+        async (effort) => {
+          const post = vi
+            .spyOn(ChatServiceHttpClient, 'post')
+            .mockResolvedValue(
+              jsonResponse({
+                output: [
+                  {
+                    type: 'message',
+                    content: [{ type: 'output_text', text: 'Hello' }],
+                  },
+                ],
+              }),
+            );
+          const service = new OpenAIChatServiceProvider().createChatService({
+            apiKey: 'test-key',
+            model,
+            tools,
+            gpt5EndpointPreference: 'chat',
+            reasoning_effort: effort,
+          });
+          await service.chatOnce!(messages, false);
+          expect(post.mock.calls[0][0]).toBe(
+            models.ENDPOINT_OPENAI_RESPONSES_API,
+          );
+          expect(post.mock.calls[0][1].reasoning).toEqual({ effort });
+        },
+      );
+    },
+  );
 
   it('sends Claude Opus 5.5 image requests through the Messages API', async () => {
     const post = vi
@@ -560,12 +603,26 @@ describe('New model endpoint compatibility', () => {
   });
 
   it.each([
-    [models.MODEL_OPENAI_GPT_6_ASTRA, 'none', 'medium'],
-    [models.MODEL_OPENAI_GPT_6_ASTRA_PRO, 'none', 'medium'],
-    [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, 'none', 'high'],
-    [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, 'none', 'medium'],
-    [models.MODEL_QWEN_QWEN_3_8_MAX_0902, 'none', 'xhigh'],
-    [models.MODEL_META_MUSE_SPARK_1_3, 'none', 'medium'],
+    [models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5, undefined, 'none'],
+    [models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5, 'high', 'high'],
+    [models.MODEL_OPENAI_GPT_6_ASTRA, undefined, 'low'],
+    [models.MODEL_OPENAI_GPT_6_ASTRA, 'high', 'high'],
+    [models.MODEL_OPENAI_GPT_6_ASTRA_PRO, undefined, 'low'],
+    [models.MODEL_OPENAI_GPT_6_ASTRA_PRO, 'high', 'high'],
+    [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, undefined, 'low'],
+    [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, 'high', 'high'],
+    [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, undefined, 'low'],
+    [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, 'high', 'high'],
+    [models.MODEL_QWEN_QWEN_3_8_MAX_0902, undefined, 'minimal'],
+    [models.MODEL_QWEN_QWEN_3_8_MAX_0902, 'high', 'high'],
+    [models.MODEL_META_MUSE_SPARK_1_3, undefined, 'minimal'],
+    [models.MODEL_META_MUSE_SPARK_1_3, 'high', 'high'],
+    [models.MODEL_OPENAI_GPT_6_ASTRA, 'none', 'low'],
+    [models.MODEL_OPENAI_GPT_6_ASTRA_PRO, 'none', 'low'],
+    [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, 'none', 'low'],
+    [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, 'none', 'low'],
+    [models.MODEL_QWEN_QWEN_3_8_MAX_0902, 'none', 'minimal'],
+    [models.MODEL_META_MUSE_SPARK_1_3, 'none', 'minimal'],
     [models.MODEL_QWEN_QWEN_3_8_MAX_0902, 'minimal', 'minimal'],
     [models.MODEL_META_MUSE_SPARK_1_3, 'minimal', 'minimal'],
     [models.MODEL_NEX_AGI_NEX_N2_5_MINI_FREE, 'low', 'none'],
@@ -669,7 +726,7 @@ describe('October explicit OpenRouter reasoning profiles', () => {
     {
       model: models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
       efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
-      defaultEffort: 'low',
+      defaultEffort: 'none',
     },
     {
       model: models.MODEL_INCEPTION_MERCURY_3,

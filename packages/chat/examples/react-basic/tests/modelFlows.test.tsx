@@ -38,6 +38,42 @@ const modelCases = [
     ['GPT-6 Sol', 'openai/gpt-6-sol', ['none', ...mandatoryEfforts], 'none'],
     ['GPT-6 Luna', 'openai/gpt-6-luna', ['none', ...mandatoryEfforts], 'none'],
     [
+      'GPT-6 Astra',
+      'openai/gpt-6-astra',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'GPT-6 Astra Pro',
+      'openai/gpt-6-astra-pro',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'Claude Fable 5.1',
+      'anthropic/claude-fable-5.1',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'Gemini 3.8 Flash',
+      'google/gemini-3.8-flash',
+      ['high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'Qwen3.8 Max (0902)',
+      'qwen/qwen3.8-max-0902',
+      ['xhigh', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    [
+      'Muse Spark 1.3',
+      'meta/muse-spark-1.3',
+      ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    [
       'Claude Sonnet 5.5',
       'anthropic/claude-sonnet-5.5',
       mandatoryEfforts,
@@ -70,7 +106,6 @@ const modelCases = [
       'none',
     ],
     [
-      // The sample retains the previous model's valid none effort.
       'Claude Haiku 5.5 (OpenRouter)',
       'anthropic/claude-haiku-5.5',
       ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
@@ -134,7 +169,7 @@ const modelCases = [
     endpoint: KIMI,
     control: '#kimi-reasoning-effort',
     efforts: ['low', 'high', 'max'],
-    initialEffort: 'max',
+    initialEffort: 'low',
   })),
   {
     provider: 'OpenAI',
@@ -143,7 +178,7 @@ const modelCases = [
     endpoint: OPENAI_RESPONSES,
     control: '#reasoning-effort',
     efforts: ['none', ...mandatoryEfforts],
-    initialEffort: 'low',
+    initialEffort: 'none',
   },
   {
     provider: 'OpenRouter',
@@ -698,6 +733,28 @@ describe('React sample model-to-transport flows (mock network only)', () => {
       expect(body.reasoning_effort).toBeUndefined();
       expect(body.reasoning.max_tokens).toBeUndefined();
     }
+  });
+
+  it('defaults verbosity to low on both endpoints and resets it after switching providers', async () => {
+    expect(element<HTMLSelectElement>('#verbosity').value).toBe('low');
+    await change('#api-key', FAKE_KEY);
+    await completeReply(OPENAI_CHAT);
+    expect(requests[0].body.verbosity).toBe('low');
+
+    await selectModel(modelCases[0]);
+    await completeReply(OPENAI_RESPONSES);
+    expect(requests[1].body.text.verbosity).toBe('low');
+    for (const verbosity of ['medium', 'high']) {
+      await change('#verbosity', verbosity);
+      await completeReply(OPENAI_RESPONSES);
+      expect(requests.at(-1)!.body.text.verbosity).toBe(verbosity);
+    }
+
+    await chooseButton('.provider-item', 'OpenRouter');
+    await chooseButton('.provider-item', 'OpenAI');
+    expect(element<HTMLSelectElement>('#verbosity').value).toBe('low');
+    await completeReply(OPENAI_CHAT);
+    expect(requests.at(-1)!.body.verbosity).toBe('low');
   });
 
   it('enables summary for the displayed default Responses endpoint and switches to Chat Completions', async () => {

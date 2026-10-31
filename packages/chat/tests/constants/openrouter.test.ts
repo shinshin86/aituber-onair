@@ -11,6 +11,13 @@ import {
   MODEL_QWEN_QWEN_3_8_FLASH,
   MODEL_ZAI_GLM_5_3,
   MODEL_ZAI_GLM_5_3_FLASH,
+  MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
+  MODEL_OPENAI_GPT_6_ASTRA,
+  MODEL_OPENAI_GPT_6_ASTRA_PRO,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_GOOGLE_GEMINI_3_8_FLASH,
+  MODEL_QWEN_QWEN_3_8_MAX_0902,
+  MODEL_META_MUSE_SPARK_1_3,
   getDefaultOpenRouterReasoningEffort,
   getOpenRouterSupportedReasoningEfforts,
   isOpenRouterFreeModel,
@@ -36,6 +43,29 @@ describe('isOpenRouterFreeModel', () => {
 });
 
 describe('OpenRouter reasoning effort helpers', () => {
+  it.each([
+    [MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5, 'none'],
+    [MODEL_OPENAI_GPT_6_ASTRA, 'low'],
+    [MODEL_OPENAI_GPT_6_ASTRA_PRO, 'low'],
+    [MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, 'low'],
+    [MODEL_GOOGLE_GEMINI_3_8_FLASH, 'low'],
+    [MODEL_QWEN_QWEN_3_8_MAX_0902, 'minimal'],
+    [MODEL_META_MUSE_SPARK_1_3, 'minimal'],
+  ] as const)(
+    'defaults %s to its lightest supported effort %s',
+    (model, effort) => {
+      const supported = getOpenRouterSupportedReasoningEfforts(model);
+      expect(supported).toContain(effort);
+      expect(getDefaultOpenRouterReasoningEffort(model)).toBe(effort);
+      expect(normalizeOpenRouterReasoningEffort(model)).toBe(effort);
+      for (const explicit of supported) {
+        expect(normalizeOpenRouterReasoningEffort(model, explicit)).toBe(
+          explicit,
+        );
+      }
+    },
+  );
+
   it('uses the documented efforts for unversioned DeepSeek V4 Flash', () => {
     expect(
       getOpenRouterSupportedReasoningEfforts(

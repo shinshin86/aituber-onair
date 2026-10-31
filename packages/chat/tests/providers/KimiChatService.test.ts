@@ -5,9 +5,13 @@ import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   MODEL_KIMI_K3,
   MODEL_KIMI_K2_6,
+  MODEL_KIMI_K2_5,
   MODEL_KIMI_K2_7_CODE,
+  MODEL_KIMI_K2_7_CODE_HIGHSPEED,
 } from '../../src/constants';
 import { KimiChatService } from '../../src/services/providers/kimi/KimiChatService';
+import { KimiChatServiceProvider } from '../../src/services/providers/kimi/KimiChatServiceProvider';
+import type { KimiChatServiceOptions } from '../../src/services/providers/ChatServiceProvider';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
 import { buildToolContinuationMessages } from '../../src/backend';
 import type {
@@ -41,6 +45,109 @@ const createOneShotResponse = (message: Record<string, unknown>) =>
     }),
   }) as Response;
 
+describe.each(['direct', 'provider'] as const)(
+  'K2 thinking through %s construction',
+  (construction) => {
+    const createService = (options: KimiChatServiceOptions) =>
+      construction === 'provider'
+        ? new KimiChatServiceProvider().createChatService(options)
+        : new KimiChatService(
+            options.apiKey,
+            options.model,
+            options.visionModel ?? options.model,
+            options.tools,
+            options.endpoint,
+            options.responseLength,
+            options.responseFormat,
+            options.thinking,
+          );
+
+    beforeEach(() => vi.restoreAllMocks());
+
+    describe.each([MODEL_KIMI_K2_5, MODEL_KIMI_K2_6])(
+      '%s optional thinking',
+      (model) => {
+        it.each([
+          ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
+          'http://localhost:8000/v1/chat/completions',
+        ])('disables thinking by default at %s', async (endpoint) => {
+          const post = vi
+            .spyOn(ChatServiceHttpClient, 'post')
+            .mockResolvedValue(createOneShotResponse({ content: 'Hello' }));
+          const service = createService({
+            apiKey: 'test-key',
+            model,
+            endpoint,
+          });
+          await service.chatOnce!(messages, false);
+          const body = post.mock.calls[0][1];
+          if (endpoint === ENDPOINT_KIMI_CHAT_COMPLETIONS_API) {
+            expect(body.thinking).toEqual({ type: 'disabled' });
+            expect(body.chat_template_kwargs).toBeUndefined();
+          } else {
+            expect(body.thinking).toBeUndefined();
+            expect(body.chat_template_kwargs).toEqual({ thinking: false });
+          }
+          expect(body.reasoning_effort).toBeUndefined();
+        });
+
+        it('preserves explicit thinking opt-in', async () => {
+          const post = vi
+            .spyOn(ChatServiceHttpClient, 'post')
+            .mockResolvedValue(createOneShotResponse({ content: 'Hello' }));
+          const service = createService({
+            apiKey: 'test-key',
+            model,
+            thinking: { type: 'enabled', clear_thinking: true },
+          });
+          await service.chatOnce!(messages, false);
+          expect(post.mock.calls[0][1].thinking).toEqual({
+            type: 'enabled',
+            clear_thinking: true,
+          });
+        });
+      },
+    );
+
+    describe.each([MODEL_KIMI_K2_7_CODE, MODEL_KIMI_K2_7_CODE_HIGHSPEED])(
+      '%s required thinking',
+      (model) => {
+        it.each([false, true])(
+          'stays enabled with tools=%s',
+          async (withTools) => {
+            const post = vi
+              .spyOn(ChatServiceHttpClient, 'post')
+              .mockResolvedValue(createOneShotResponse({ content: 'Hello' }));
+            const service = createService({
+              apiKey: 'test-key',
+              model,
+              tools: withTools ? tools : undefined,
+            });
+            await service.chatOnce!(messages, false);
+            expect(post.mock.calls[0][1].thinking).toEqual({ type: 'enabled' });
+            expect(post.mock.calls[0][1].reasoning_effort).toBeUndefined();
+          },
+        );
+
+        it('rejects explicit disabled thinking before transport', async () => {
+          const post = vi.spyOn(ChatServiceHttpClient, 'post');
+          await expect(
+            (async () => {
+              const service = createService({
+                apiKey: 'test-key',
+                model,
+                thinking: { type: 'disabled' },
+              });
+              await service.chatOnce!(messages, false);
+            })(),
+          ).rejects.toThrow('requires thinking mode');
+          expect(post).not.toHaveBeenCalled();
+        });
+      },
+    );
+  },
+);
+
 const createStreamResponse = (chunks: string[]): Response => {
   let index = 0;
   const body = {
@@ -66,12 +173,6 @@ describe.each([
 ])('%s compatibility', (k3Model) => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    global.TextDecoder = class {
-      decode(value?: Uint8Array): string {
-        if (!value) return '';
-        return Buffer.from(value).toString('utf-8');
-      }
-    } as typeof TextDecoder;
   });
 
   it.each(['low', 'high', 'max'] as const)(
@@ -198,7 +299,7 @@ describe.each([
     expect(post.mock.calls[0][1]).toMatchObject({
       model: k3Model,
       messages: imageMessages,
-      reasoning_effort: 'max',
+      reasoning_effort: 'low',
       tools: [{ type: 'function', function: { name: 'lookupWeather' } }],
     });
     expect(post.mock.calls[0][1]).not.toHaveProperty('thinking');
@@ -223,7 +324,7 @@ describe.each([
     expect(post.mock.calls[1][1]).toMatchObject({
       model: k3Model,
       stream: true,
-      reasoning_effort: 'max',
+      reasoning_effort: 'low',
     });
     expect(second.assistant_message).toMatchObject({
       content: 'Sunny',

@@ -336,7 +336,7 @@ describe('Core index chat re-exports', () => {
       'high',
       'max',
     ]);
-    expect(getDefaultKimiReasoningEffort(MODEL_KIMI_K3)).toBe('max');
+    expect(getDefaultKimiReasoningEffort(MODEL_KIMI_K3)).toBe('low');
     expect(isKimiReasoningEffortModel(MODEL_KIMI_K3)).toBe(true);
     expect(isKimiVisionModel(MODEL_KIMI_K3)).toBe(true);
     expect(isKimiVisionModel(MODEL_KIMI_K2_7_CODE)).toBe(true);
@@ -435,7 +435,10 @@ describe('Core index chat re-exports', () => {
     expect(typeof PlamoChatService).toBe('function');
     expect(MODEL_PLAMO_3_0_PRIME).toBe('plamo-3.0-prime');
     expect(MODEL_PLAMO_2_2_PRIME).toBe('plamo-2.2-prime');
-    expect(PLAMO_SUPPORTED_MODELS).toEqual([MODEL_PLAMO_3_0_PRIME]);
+    expect(PLAMO_SUPPORTED_MODELS).toEqual([
+      MODEL_PLAMO_3_0_PRIME,
+      'plamo-3.1-prime',
+    ]);
     expect(ENDPOINT_PLAMO_CHAT_COMPLETIONS_API).toBe(
       'https://api.platform.preferredai.jp/v1/chat/completions',
     );

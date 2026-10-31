@@ -159,9 +159,7 @@ function App() {
   const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | undefined>();
   const [reasoning_effort, setReasoningEffort] =
     useState<ReasoningEffortLevel>('none');
-  const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
-    'medium',
-  );
+  const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>('low');
   const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
     'chat' | 'responses' | 'auto' | undefined
   >();
@@ -187,7 +185,7 @@ function App() {
   const [zaiResponseSchema, setZaiResponseSchema] = useState('');
   const [kimiThinkingType, setKimiThinkingType] = useState<
     'enabled' | 'disabled'
-  >('enabled');
+  >('disabled');
   const [kimiBaseUrl, setKimiBaseUrl] = useState(KIMI_OFFICIAL_BASE_URL);
   const [chatService, setChatService] = useState<ChatService | null>(null);
   const nextMessageIdRef = useRef(0);
@@ -666,7 +664,7 @@ function App() {
                 isKimiReasoningEffortModel(defaultModel)
               ) {
                 setReasoningEffort(
-                  getDefaultKimiReasoningEffort(defaultModel) ?? 'max',
+                  getDefaultKimiReasoningEffort(defaultModel) ?? 'low',
                 );
               } else if (
                 newProvider === 'xai' &&
@@ -684,7 +682,7 @@ function App() {
               } else {
                 setReasoningEffort('medium');
               }
-              setVerbosity('medium');
+              setVerbosity('low');
             }}
             apiKey={apiKey}
             onApiKeyChange={setApiKey}
@@ -741,7 +739,7 @@ function App() {
                 isKimiReasoningEffortModel(modelId)
               ) {
                 setReasoningEffort(
-                  getDefaultKimiReasoningEffort(modelId) ?? 'max',
+                  getDefaultKimiReasoningEffort(modelId) ?? 'low',
                 );
               } else if (newProvider === 'deepseek') {
                 setReasoningEffort(

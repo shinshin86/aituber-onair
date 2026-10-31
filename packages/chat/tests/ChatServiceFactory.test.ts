@@ -338,7 +338,7 @@ describe('ChatServiceFactory', () => {
         'ministral-14b-2512',
         'mistral-medium-3-5',
         'mistral-large-latest',
-        'mistral-large-2512',
+        'mistral-large-4-0',
         'mistral-small-2603',
         'zai-glm-5-3',
       ]);
@@ -351,7 +351,7 @@ describe('ChatServiceFactory', () => {
       ]);
 
       const plamoModels = ChatServiceFactory.getSupportedModels('plamo');
-      expect(plamoModels).toEqual(['plamo-3.0-prime']);
+      expect(plamoModels).toEqual(['plamo-3.0-prime', 'plamo-3.1-prime']);
     });
   });
 

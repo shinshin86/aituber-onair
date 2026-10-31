@@ -35,7 +35,7 @@
     "directory": "packages/core"
   },
   "dependencies": {
-    "@aituber-onair/chat": "^0.66.0",
+    "@aituber-onair/chat": "^0.67.0",
     "@aituber-onair/voice": "^0.30.0"
   },
   "peerDependencies": {

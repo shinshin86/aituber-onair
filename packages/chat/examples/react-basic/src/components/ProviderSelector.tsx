@@ -201,9 +201,6 @@ import {
   MODEL_GROK_4_20_NON_REASONING,
   // Kimi models
   MODEL_KIMI_K3,
-  MODEL_KIMI_K2_6,
-  MODEL_KIMI_K2_7_CODE,
-  MODEL_KIMI_K2_7_CODE_HIGHSPEED,
   // DeepSeek models
   MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
@@ -215,7 +212,7 @@ import {
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_LARGE_LATEST,
-  MODEL_MISTRAL_LARGE_2512,
+  MODEL_MISTRAL_LARGE_4_0,
   MODEL_MISTRAL_SMALL_2603,
   // Sakana models
   MODEL_FUGU,
@@ -223,6 +220,7 @@ import {
   MODEL_SAKANA_NAMAZU,
   // PLaMo models
   MODEL_PLAMO_3_0_PRIME,
+  MODEL_PLAMO_3_1_PRIME,
   // Gemini Nano models
   MODEL_GEMINI_NANO,
   isKimiReasoningEffortModel,
@@ -1230,24 +1228,6 @@ export const allModels: ProviderModel[] = [
     provider: 'kimi',
     default: false,
   },
-  {
-    id: MODEL_KIMI_K2_7_CODE,
-    name: 'Kimi K2.7 Code',
-    provider: 'kimi',
-    default: false,
-  },
-  {
-    id: MODEL_KIMI_K2_7_CODE_HIGHSPEED,
-    name: 'Kimi K2.7 Code HighSpeed',
-    provider: 'kimi',
-    default: false,
-  },
-  {
-    id: MODEL_KIMI_K2_6,
-    name: 'Kimi K2.6',
-    provider: 'kimi',
-    default: true,
-  },
 
   // DeepSeek models
   {
@@ -1307,8 +1287,8 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_MISTRAL_LARGE_2512,
-    name: 'Mistral Large 3',
+    id: MODEL_MISTRAL_LARGE_4_0,
+    name: 'Mistral Large 4 (Preview)',
     provider: 'mistral',
     default: false,
   },
@@ -1352,6 +1332,12 @@ export const allModels: ProviderModel[] = [
     name: 'PLaMo 3.0 Prime',
     provider: 'plamo',
     default: true,
+  },
+  {
+    id: MODEL_PLAMO_3_1_PRIME,
+    name: 'PLaMo 3.1 Prime',
+    provider: 'plamo',
+    default: false,
   },
 
   // Gemini Nano models (browser built-in AI)
@@ -1413,7 +1399,7 @@ export const allModels: ProviderModel[] = [
     id: MODEL_KIMI_K3_1_PRO,
     name: 'Kimi K3.1 Pro',
     provider: 'kimi',
-    default: false,
+    default: true,
   },
   {
     id: MODEL_KIMI_K3_1_PRO_HIGHSPEED,
@@ -2118,7 +2104,7 @@ export default function ProviderSelector({
                 <label htmlFor="verbosity">Verbosity</label>
                 <select
                   id="verbosity"
-                  value={verbosity || 'medium'}
+                  value={verbosity || 'low'}
                   onChange={(e) =>
                     onVerbosityChange?.(
                       e.target.value as 'low' | 'medium' | 'high',
@@ -2458,7 +2444,7 @@ export default function ProviderSelector({
                       reasoning_effort === 'high' ||
                       reasoning_effort === 'max'
                         ? reasoning_effort
-                        : 'max'
+                        : 'low'
                     }
                     onChange={(e) =>
                       onReasoningEffortChange?.(
@@ -2468,9 +2454,9 @@ export default function ProviderSelector({
                     disabled={disabled}
                     className="select-input"
                   >
-                    <option value="low">Low</option>
+                    <option value="low">Low (default)</option>
                     <option value="high">High</option>
-                    <option value="max">Max (default)</option>
+                    <option value="max">Max</option>
                   </select>
                   <span className="helper-text">
                     Kimi K3 and K3.1 Pro always reason. Use Low for shorter
@@ -2482,7 +2468,7 @@ export default function ProviderSelector({
                   <label htmlFor="kimi-thinking-type">Thinking</label>
                   <select
                     id="kimi-thinking-type"
-                    value={kimiThinkingType || 'enabled'}
+                    value={kimiThinkingType || 'disabled'}
                     onChange={(e) =>
                       onKimiThinkingTypeChange?.(
                         e.target.value as 'enabled' | 'disabled',

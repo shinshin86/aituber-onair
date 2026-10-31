@@ -3,6 +3,7 @@ import {
   ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
   MODEL_PLAMO_2_2_PRIME,
   MODEL_PLAMO_3_0_PRIME,
+  MODEL_PLAMO_3_1_PRIME,
 } from '../../src/constants';
 import { PlamoChatService } from '../../src/services/providers/plamo/PlamoChatService';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
@@ -72,19 +73,50 @@ describe('PlamoChatService', () => {
     );
   });
 
-  it('does not add reasoning parameters by default', async () => {
+  it('sends PLaMo 3.1 Prime through the chat completions endpoint', async () => {
     const postSpy = vi
       .spyOn(ChatServiceHttpClient, 'post')
       .mockResolvedValue(createOneShotResponse('ok'));
-    const service = new PlamoChatService('test-key');
+    const service = new PlamoChatService(
+      'test-key',
+      MODEL_PLAMO_3_1_PRIME,
+      MODEL_PLAMO_3_1_PRIME,
+      undefined,
+      ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
+      undefined,
+      'medium',
+    );
 
-    await service.chatOnce(messages, false);
+    const result = await service.chatOnce(messages, false);
 
-    const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
-    expect(body.model).toBe(MODEL_PLAMO_3_0_PRIME);
-    expect(body.reasoning).toBeUndefined();
-    expect(body.reasoning_effort).toBeUndefined();
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
+      expect.objectContaining({
+        model: MODEL_PLAMO_3_1_PRIME,
+        stream: false,
+        reasoning_effort: 'medium',
+      }),
+      { Authorization: 'Bearer test-key' },
+    );
+    expect(result.blocks).toEqual([{ type: 'text', text: 'ok' }]);
   });
+
+  it.each([undefined, MODEL_PLAMO_3_0_PRIME, MODEL_PLAMO_3_1_PRIME])(
+    'defaults %s to explicit reasoning_effort none',
+    async (model) => {
+      const postSpy = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(createOneShotResponse('ok'));
+      const service = new PlamoChatService('test-key', model);
+
+      await service.chatOnce(messages, false);
+
+      const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
+      expect(body.model).toBe(model ?? MODEL_PLAMO_3_0_PRIME);
+      expect(body.reasoning).toBeUndefined();
+      expect(body.reasoning_effort).toBe('none');
+    },
+  );
 
   it('sends supported reasoning_effort when configured', async () => {
     const postSpy = vi

@@ -127,6 +127,7 @@ built-in model status is `available`.
 **OpenAI**
 - Models: GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-4.1, GPT-4.1 Mini, GPT-4o, GPT-4o Mini
 - Default: GPT-5.6 Luna. Models that OpenAI has deprecated or shut down (GPT-5, GPT-5 Mini/Nano, GPT-5.1, GPT-5.4 Nano, GPT-4.1 Nano, o1, o1-mini, o3-mini) are no longer selectable.
+- Verbosity: defaults to `low` for concise replies, including after switching providers. Select `medium` or `high` for more detail, or choose a GPT-5 preset to use its verbosity setting.
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
 - Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), and GPT-5.6 supports None/Low/Medium/High/XHigh/Max
@@ -174,7 +175,7 @@ Additional explicit options (provider default unchanged):
 
 - `openai/gpt-6.1-terra`: GPT-6.1 Terra; image input, tools and streaming; none/low/medium/high/xhigh/max reasoning (package default `none`).
 
-- `anthropic/claude-haiku-5.5`: Claude Haiku 5.5 (OpenRouter); image input; none, low, medium, high, xhigh, max (default `low`).
+- `anthropic/claude-haiku-5.5`: Claude Haiku 5.5 (OpenRouter); image input; none, low, medium, high, xhigh, max (default `none`).
 - `inception/mercury-3`: Mercury 3; text-only; none, low, medium, high (default `none`).
 - `deepseek/deepseek-v4.1-flash-1017`: DeepSeek V4.1 Flash 1017 (OpenRouter); image input; none, low, high, max (default `none`).
 - `moonshotai/kimi-k3.1-pro`: Kimi K3.1 Pro (OpenRouter); image input; none, low, high, max (default `none`).
@@ -212,7 +213,8 @@ These additions support tools and streaming. MiniMax reasoning cannot be disable
 - Models: Kimi K3.1 Pro (`kimi-k3.1-pro`), Kimi K3.1 Pro Highspeed (`kimi-k3.1-pro-highspeed`), Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6 (Kimi K2.5 was discontinued on 2026-08-31)
 - Vision: Supported
 - Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K3 is an explicit reasoning option, and Kimi K2.7 Code models are coding-oriented.
-- Kimi K3 and K3.1 Pro reasoning: selectable `low`, `high`, or `max`, with `max` as the API default. Reasoning cannot be disabled.
+- Kimi K3 and K3.1 Pro reasoning: selectable `low`, `high`, or `max`, with `low` as the package default (the API default is `max`). Reasoning cannot be disabled.
+- The legacy K2 thinking control starts at `disabled` for responsive chat. K2.7 Code models require thinking and keep it enabled; K3 models use reasoning effort instead of this control.
 
 **DeepSeek**
 - Models: DeepSeek V4.1 Flash 1017 (`deepseek-flash`), V4 Pro, and legacy Flash aliases. The existing `deepseek-v4-flash` package default is preserved.
@@ -364,12 +366,12 @@ Common extensions:
 
 The model selector includes GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
 OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash 1017 (`deepseek-flash`). Astra
-uses Responses and starts at low reasoning; Luna uses Responses and defaults to
-low reasoning for responsive chat. Fable 5.1 always thinks and uses automatic
+uses Responses and starts at low reasoning; GPT-6 Sol and GPT-6 Luna use Responses
+and default to none for responsive chat. Fable 5.1 always thinks and uses automatic
 tool selection. DeepSeek tools require reasoning to be set to none.
 
 GPT-6.1 Terra is an explicit native option with image input, streaming, and
-None/Low/Medium/High/XHigh/Max reasoning. Its package effort default is Low
+None/Low/Medium/High/XHigh/Max reasoning. Its package effort default is None
 (API default Medium). Responses is the default; tool-free Chat Completions is
 available at every supported effort. Tools and MCP require Responses at the
 standard endpoint, and custom endpoints reject tools before sending. Sampling
@@ -387,8 +389,10 @@ models, it always thinks and defaults to low reasoning.
 OpenRouter also offers GPT-6.1 Sol, GPT-6 Sol/Luna, Claude Sonnet/Opus 5.5,
 Grok 4.7, and GLM-5.3 FlashX, alongside Astra/Pro, Fable 5.1, DeepSeek V4.1
 Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
-capabilities. The new OpenRouter models default to low reasoning, except Sol/Luna
-which default to none; tools use OpenRouter Chat Completions. Claude 5.5 tool
+capabilities. Models with configurable reasoning default to their lowest supported
+effort: `none` where available, otherwise `minimal` or `low`. Qwen3.8 Max (0902)
+and Muse Spark 1.3 default to `minimal`; Astra/Pro, Fable 5.1, and Gemini 3.8
+Flash default to `low`. Tools use OpenRouter Chat Completions. Claude 5.5 tool
 selection stays automatic. Mercury 2.5 is text-only. Provider defaults are
 unchanged.
 

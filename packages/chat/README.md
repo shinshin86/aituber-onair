@@ -303,7 +303,7 @@ rather than the API's `medium` default. The provider's default model is unchange
 [Model API reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol),
 [API guide](https://developers.openai.com/api/docs/guides/latest-model).
 
-Models with image input and streaming whose tools require Responses use Responses by default. `gpt-6.1-terra` (`MODEL_GPT_6_1_TERRA`) is an explicit option in this group. It supports `none`, `low`, `medium`, `high`, `xhigh`, and `max` reasoning effort. The API default is `medium`; the package default is `low`. Tool-free requests may use Chat Completions. Tools and MCP at the standard endpoint always use Responses, while custom endpoints with tools are rejected before sending.
+Models with image input and streaming whose tools require Responses use Responses by default. `gpt-6.1-terra` (`MODEL_GPT_6_1_TERRA`) is an explicit option in this group. It supports `none`, `low`, `medium`, `high`, `xhigh`, and `max` reasoning effort. The API default is `medium`; the package default is `none`. Tool-free requests may use Chat Completions. Tools and MCP at the standard endpoint always use Responses, while custom endpoints with tools are rejected before sending.
 
 This package does not send sampling fields such as `temperature`, `top_p`, or `logprobs`. The OpenRouter variant, `openai/gpt-6.1-terra`, uses Chat Completions with package-default reasoning effort `none`. Provider default models are unchanged.
 
@@ -313,14 +313,16 @@ See the [official Terra model specification](https://developers.openai.com/api/d
 
 `gpt-6-sol` (`MODEL_GPT_6_SOL`) is also available with image input and
 streaming. It uses Responses by default and supports `none`, `low`, `medium`,
-`high`, `xhigh`, and `max` reasoning effort. The package default is `medium`;
-Chat Completions can be selected explicitly when `reasoning_effort` is `none`.
+`high`, `xhigh`, and `max` reasoning effort. The package default is `none`;
+select `gpt5EndpointPreference: 'chat'` to use Chat Completions with this default.
+Explicit reasoning levels above `none` use Responses.
 
 `gpt-6-luna` (`MODEL_GPT_6_LUNA`) supports image input, streaming, and
 function calling. It uses Responses by default and supports `none`, `low`,
-`medium`, `high`, `xhigh`, and `max`; the package defaults to `low` for
-responsive chat. Chat Completions function calling requires
-`reasoning_effort: 'none'`. [Model API reference](https://developers.openai.com/api/docs/models/gpt-6-luna).
+`medium`, `high`, `xhigh`, and `max`; the package defaults to `none` for
+responsive chat. Select `gpt5EndpointPreference: 'chat'` to use Chat Completions,
+including function calling, with this default. Explicit reasoning levels above
+`none` use Responses. [Model API reference](https://developers.openai.com/api/docs/models/gpt-6-luna).
 
 ```typescript
 const openaiService = ChatServiceFactory.createChatService('openai', {
@@ -821,7 +823,7 @@ The following explicit options use OpenRouter Chat Completions without changing 
 | --- | --- |
 | `mistralai/mistral-large-4-0` | `none` (package default), `high` (upstream default); no reasoning token budget |
 | `unbiased/pareto-26.9` | No effort selector (provider default) |
-| `anthropic/claude-haiku-5.5` | none, low, medium, high, xhigh, max (low) |
+| `anthropic/claude-haiku-5.5` | none, low, medium, high, xhigh, max (none) |
 | `inception/mercury-3` | none, low, medium, high (none) |
 | `deepseek/deepseek-v4.1-flash-1017` | none, low, high, max (none) |
 | `moonshotai/kimi-k3.1-pro` | none, low, high, max (none) |
@@ -837,14 +839,14 @@ The following explicit options use OpenRouter Chat Completions without changing 
 | `anthropic/claude-opus-5.5` | max, xhigh, high, medium, low (low) |
 | `x-ai/grok-4.7` | xhigh, high, medium, low (low) |
 | `z-ai/glm-5.3-flashx` | max, high, low (low) |
-| `openai/gpt-6-astra` | max, xhigh, high, medium, low (medium) |
-| `openai/gpt-6-astra-pro` | max, xhigh, high, medium, low (medium) |
-| `anthropic/claude-fable-5.1` | max, xhigh, high, medium, low (high) |
+| `openai/gpt-6-astra` | max, xhigh, high, medium, low (low) |
+| `openai/gpt-6-astra-pro` | max, xhigh, high, medium, low (low) |
+| `anthropic/claude-fable-5.1` | max, xhigh, high, medium, low (low) |
 | `deepseek/deepseek-v4.1-flash` | max, high, low, none (none) |
-| `google/gemini-3.8-flash` | high, medium, low (medium) |
+| `google/gemini-3.8-flash` | high, medium, low (low) |
 | `inception/mercury-2.5` | high, medium, low, none (none) |
-| `qwen/qwen3.8-max-0902` | xhigh, high, medium, low, minimal (xhigh) |
-| `meta/muse-spark-1.3` | max, xhigh, high, medium, low, minimal (medium) |
+| `qwen/qwen3.8-max-0902` | xhigh, high, medium, low, minimal (minimal) |
+| `meta/muse-spark-1.3` | max, xhigh, high, medium, low, minimal (minimal) |
 | `inclusionai/ling-3.1-flash` | No effort selector (provider default) |
 | `upstage/solar-pro4` | none, minimal, low, medium, high, xhigh, max (none) |
 | `upstage/solar-mini4` | none, minimal, low, medium, high, xhigh, max (none) |
@@ -1109,21 +1111,23 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 
 Notes:
 - Kimi uses OpenAI-compatible Chat Completions.
-- Supported models: `kimi-k3.1-pro`, `kimi-k3.1-pro-highspeed`, `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`
+- Supported models: `kimi-k3.1-pro` (default), `kimi-k3.1-pro-highspeed`, `kimi-k3`
+- The default model is `kimi-k3.1-pro`, the migration target named in Kimi's K2 series retirement notice. It always reasons and cannot disable reasoning, so this package sends `reasoning_effort: 'low'` by default to keep chat replies responsive (Kimi's API default is `max`). `high` and `max` remain explicit options. K3-family models reject the K2.x `thinking` option; set `model: 'kimi-k2.6'` explicitly while your account can still use K2 models.
+- Kimi stopped offering K2 series models to newly registered users on 2026-10-31 and plans to retire all K2 series models by the end of December 2026. `kimi-k2.6`, `kimi-k2.7-code`, and `kimi-k2.7-code-highspeed` remain exported in `KIMI_DEPRECATED_MODELS`, but are no longer in the supported model list.
 - `kimi-k2.5` was discontinued by Kimi on 2026-08-31. It remains exported in `KIMI_DEPRECATED_MODELS`, but is no longer in the supported model list.
-- `kimi-k2.6` remains the default model for chat-oriented usage.
-- Kimi K3 and K3.1 Pro (including Highspeed) are explicit reasoning models. It accepts `reasoning_effort: 'low' | 'high' | 'max'`, defaults to `max`, always reasons, and does not accept the K2.x `thinking` option. `none`, `minimal`, and `medium` are not supported.
+- Kimi K3 and K3.1 Pro (including Highspeed) are explicit reasoning models. It accepts `reasoning_effort: 'low' | 'high' | 'max'`, defaults to `low` in this package (the Kimi API default is `max`), always reasons, and does not accept the K2.x `thinking` option. `none`, `minimal`, and `medium` are not supported.
 - Kimi K3-family models use `max_completion_tokens` for configured response limits.
 - For Kimi K3-family multi-turn and tool-call flows, append the returned `completion.assistant_message` to history so `reasoning_content` and `tool_calls` are preserved.
 - Kimi K2.7 Code models are coding-oriented and require thinking mode, so they keep `thinking` enabled even when tools are used.
 - Explicitly setting `thinking: { type: 'disabled' }` with Kimi K2.7 Code models throws before sending the request.
-- For older Kimi models, when tools are enabled, `thinking` is forced to `{ type: 'disabled' }`.
+- K2 models that allow thinking to be disabled default to `thinking: { type: 'disabled' }` for responsive chat, including direct `KimiChatService` construction. Set `thinking: { type: 'enabled' }` to opt in. When tools are enabled, these models still force thinking off.
 
 Self-hosted example:
 
 ```typescript
 const kimiService = ChatServiceFactory.createChatService('kimi', {
   apiKey: process.env.MOONSHOT_API_KEY,
+  model: 'kimi-k2.6', // Explicit legacy model with optional thinking
   baseUrl: 'http://localhost:8000/v1',
   thinking: { type: 'disabled' }
 });
@@ -1180,11 +1184,13 @@ await mistralService.processChat(
 Notes:
 - Mistral uses Chat Completions at `https://api.mistral.ai/v1/chat/completions`.
 - Default model: `mistral-small-latest`, chosen for the sample-friendly balance of low cost, strong general chat quality, vision support, and adjustable reasoning support.
-- Supported models: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `zai-glm-5-3`.
+- Supported models: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-4-0`, `mistral-small-2603`, `zai-glm-5-3`.
+- Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview option with text and image input, documented on Mistral's [model page](https://docs.mistral.ai/models/mistral-large-4-0.md). It accepts only `low`, `medium`, and `high` reasoning levels, which this package does not expose yet, so `reasoning_effort` is not sent for it. Thinking chunks in the response are skipped and only the answer text is returned.
+- `mistral-large-2512` (Mistral Large 3) was deprecated by Mistral on 2026-10-31 and retires on 2027-04-30. It remains exported in `MISTRAL_DEPRECATED_MODELS` for source compatibility, but is no longer advertised.
 - Text-only explicit options include `zai-glm-5-3` (GLM-5.3), with streaming and function calling. Vision and adjustable reasoning are not enabled for this model. Availability depends on your Mistral subscription tier; accounts without access receive HTTP 403 with `tier_not_allowed`.
 - Retired `mistral-medium-2508` remains exported only for source compatibility.
 - Ministral 3 models support text, vision, streaming, and function calling through the same Chat Completions endpoint.
-- `reasoning_effort` is supported as `'none' | 'high'` and is only sent for `mistral-small-latest` and `mistral-medium-3-5`, matching Mistral's adjustable reasoning docs. It is omitted for other models.
+- `reasoning_effort` is supported as `'none' | 'high'` and is only sent for `mistral-small-latest` and `mistral-medium-3-5`, matching Mistral's adjustable reasoning docs. The provider defaults to `none` for responsive chat; `high` is an explicit opt-in. It is omitted for other models, including Mistral Large 4.
 
 Reasoning example:
 
@@ -1228,9 +1234,10 @@ const plamoService = ChatServiceFactory.createChatService('plamo', {
 
 Notes:
 - PLaMo uses OpenAI-compatible Chat Completions at `https://api.platform.preferredai.jp/v1/chat/completions`.
-- Supported model: `plamo-3.0-prime` (default).
+- Supported models: `plamo-3.0-prime` (default), `plamo-3.1-prime`.
+- PLaMo 3.1 Prime (`plamo-3.1-prime`) uses the same endpoint, context window (262,144 tokens), and `reasoning_effort` values as 3.0 Prime. PLaMo's web search option (`web_search_options`) and the separate Deep Research model on the Responses API are not wired into this provider.
 - `plamo-2.2-prime` remains exported for source compatibility, but is no longer advertised because PLaMo documents its 2026-09-30 retirement and replacement by `plamo-3.0-prime`.
-- `reasoning_effort` can be set to `none` or `medium` for reasoning-capable PLaMo models.
+- `reasoning_effort` can be set to `none` or `medium` for reasoning-capable PLaMo models. The package explicitly sends `none` by default for responsive chat, including direct `PlamoChatService` construction. Set `medium` to opt into reasoning.
 - Vision is not advertised as supported by this provider.
 - PLaMo can also be used through `openai-compatible` by manually providing the full endpoint and model.
 
@@ -1661,11 +1668,11 @@ Currently, the following AI providers are built-in:
 - **OpenRouter**: Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, explicit public preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, Solar Pro 4, MiMo V2.6 Flash, GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input). The default is `google/gemma-4-31b-it:free`; `nvidia/nemotron-3.5-super-vl:free` is also listed as a free model. Additional models: `anthropic/claude-haiku-5.5`, `inception/mercury-3`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`. `openai/gpt-6.1-terra` is also an explicit option.
 - **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.7/4.6/4.5 use package-default `reasoning_effort: 'low'`; Grok 4.3 defaults to `none`.
-- **Kimi**: Kimi K3.1 Pro (`kimi-k3.1-pro`) and Highspeed (`kimi-k3.1-pro-highspeed`) are explicit options with image input, tools, streaming, and the same reasoning controls as K3. Supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `max` as the default), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), and Kimi K2.6 (`kimi-k2.6`, default) with vision support
+- **Kimi**: Kimi K3.1 Pro (`kimi-k3.1-pro`, default) and Highspeed (`kimi-k3.1-pro-highspeed`) support image input, tools, streaming, and the same reasoning controls as K3. Also supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `low` as the package default), all with vision support. K2 series models (`kimi-k2.6`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`) are deprecated ahead of Kimi's December 2026 retirement
 - **DeepSeek**: DeepSeek V4.1 Flash 1017 via the rolling `deepseek-flash` ID, plus text-only V4 Pro (`deepseek-v4-pro`), through OpenAI-compatible Chat Completions. Legacy Flash aliases remain available for compatibility. Thinking defaults to disabled for low-latency chat.
-- **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models. GLM-5.3 (`zai-glm-5-3`) is an explicit text-only option.
+- **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models. GLM-5.3 (`zai-glm-5-3`) is an explicit text-only option. Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview option; deprecated `mistral-large-2512` is no longer advertised.
 - **Sakana AI**: Supports Fugu (`fugu`), Fugu Ultra (`fugu-ultra-v1.1`), and vision-capable Sakana Namazu (`sakana-namazu`) via OpenAI-compatible Chat Completions. Namazu thinking defaults to disabled for responsive chat.
-- **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) via OpenAI-compatible Chat Completions; the retiring 2.2 constant remains exported for compatibility.
+- **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) and PLaMo 3.1 Prime (`plamo-3.1-prime`) via OpenAI-compatible Chat Completions; the retiring 2.2 constant remains exported for compatibility.
 - **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Web pages require Chrome 148+ on a supported desktop device; no Chrome flags are required. Streams when Chrome exposes `promptStreaming()`; no vision support.
 
 ## License

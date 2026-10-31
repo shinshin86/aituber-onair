@@ -4,7 +4,7 @@ import { ToolDefinition, ToolChatCompletion } from '../../../types';
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   KimiReasoningEffort,
-  MODEL_KIMI_K2_6,
+  MODEL_KIMI_K3_1_PRO,
   getDefaultKimiReasoningEffort,
   getKimiSupportedReasoningEfforts,
   isKimiReasoningEffortModel,
@@ -54,8 +54,8 @@ export class KimiChatService implements ChatService {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_KIMI_K2_6,
-    visionModel: string = MODEL_KIMI_K2_6,
+    model: string = MODEL_KIMI_K3_1_PRO,
+    visionModel: string = MODEL_KIMI_K3_1_PRO,
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
     responseLength?: ChatResponseLength,
@@ -314,7 +314,7 @@ export class KimiChatService implements ChatService {
       return { type: 'disabled' };
     }
 
-    return this.thinking ?? { type: 'enabled' };
+    return this.thinking ?? { type: 'disabled' };
   }
 
   private buildToolsDefinition(): any[] {
