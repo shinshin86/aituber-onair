@@ -1087,9 +1087,10 @@ const kimiService = ChatServiceFactory.createChatService('kimi', {
 
 注意:
 - KimiはOpenAI互換のChat Completionsを利用します。
-- 対応モデル: `kimi-k3.1-pro`, `kimi-k3.1-pro-highspeed`, `kimi-k3`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`, `kimi-k2.6`
+- 対応モデル: `kimi-k3.1-pro`（デフォルト）, `kimi-k3.1-pro-highspeed`, `kimi-k3`
+- デフォルトモデルは、KimiのK2系列提供終了の告知で移行先として案内されている`kimi-k3.1-pro`です。推論モデルのため、デフォルトのリクエストは`reasoning_effort: 'max'`を送り、K2.x向けの`thinking`オプションは受け付けません。アカウントでK2系列をまだ利用できる間は`model: 'kimi-k2.6'`を明示するか、応答速度を優先する場合は`reasoning_effort`を下げてください。
+- Kimiは2026-10-31から新規登録ユーザーへのK2系列の提供を停止し、2026年12月末までにK2系列全体を提供終了する予定です。`kimi-k2.6`、`kimi-k2.7-code`、`kimi-k2.7-code-highspeed`は`KIMI_DEPRECATED_MODELS`として定数を残しますが、supported modelsからは外しています。
 - `kimi-k2.5` は 2026-08-31 に Kimi が提供を終了しました。`KIMI_DEPRECATED_MODELS` として定数は残していますが、supported models からは外しています。
-- チャット用途向けのデフォルトモデルは引き続き `kimi-k2.6` です。
 - Kimi K3とK3.1 Pro（Highspeedを含む）は明示的に選択するReasoningモデルです。`reasoning_effort: 'low' | 'high' | 'max'` に対応し、デフォルトは `max` です。Reasoning自体は無効化できず、K2系の `thinking` オプションも利用できません。`none`、`minimal`、`medium` は非対応です。
 - Kimi K3系の出力上限には `max_completion_tokens` を使用します。
 - Kimi K3系の複数ターン・ツール呼び出しでは、`reasoning_content` と `tool_calls` を保持するため、返された `completion.assistant_message` を会話履歴へ追加してください。
@@ -1159,7 +1160,9 @@ await mistralService.processChat(
 注意:
 - Mistralは`https://api.mistral.ai/v1/chat/completions`のChat Completionsを利用します。
 - デフォルトモデルは`mistral-small-latest`です。低コスト、汎用チャット品質、vision対応、adjustable reasoning対応のバランスがよいためサンプル向けの既定値にしています。
-- 対応モデル: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-2512`, `mistral-small-2603`, `zai-glm-5-3`
+- 対応モデル: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-medium-3-5`, `mistral-large-latest`, `mistral-large-4-0`, `mistral-small-2603`, `zai-glm-5-3`
+- Mistral Large 4（`mistral-large-4-0`）は、テキスト・画像入力に対応する公開プレビューの明示選択モデルです（Mistral公式の[モデルページ](https://docs.mistral.ai/models/mistral-large-4-0.md)）。推論レベルは`low` / `medium` / `high`のみで、このパッケージではまだ指定できないため`reasoning_effort`は送信しません。応答中のthinkingチャンクは読み飛ばし、回答テキストだけを返します。
+- `mistral-large-2512`（Mistral Large 3）は2026-10-31にMistralで非推奨となり、2027-04-30に提供終了します。ソース互換用に`MISTRAL_DEPRECATED_MODELS`としてexportを残しますが、対応一覧には表示しません。
 - 廃止済みの`mistral-medium-2508`はソース互換用にのみexportを残します。
 - Ministral 3系は同じChat Completions endpointでtext、vision、streaming、function callingに対応します。
 - テキスト専用の明示選択モデルとして`zai-glm-5-3`（GLM-5.3）を利用できます。streamingとfunction callingに対応し、visionや推論レベル指定は有効にしません。利用可否はMistralのサブスクリプションtierによって異なり、利用できないアカウントではHTTP 403（`tier_not_allowed`）が返ります。
@@ -1207,7 +1210,8 @@ const plamoService = ChatServiceFactory.createChatService('plamo', {
 
 注意:
 - PLaMoは`https://api.platform.preferredai.jp/v1/chat/completions`のOpenAI互換Chat Completionsを利用します。
-- 対応モデル: `plamo-3.0-prime`（デフォルト）
+- 対応モデル: `plamo-3.0-prime`（デフォルト）, `plamo-3.1-prime`
+- PLaMo 3.1 Prime（`plamo-3.1-prime`）は3.0 Primeと同じendpoint、コンテキスト長（262,144トークン）、`reasoning_effort`の値で利用できます。PLaMoのWeb検索オプション（`web_search_options`）と、Responses APIで提供される別モデルのDeep Researchはこのproviderには組み込んでいません。
 - `plamo-2.2-prime`はソース互換用にexportを残しますが、PLaMO公式docsで2026-09-30の提供終了と`plamo-3.0-prime`への移行が案内されているため、対応一覧には表示しません。
 - reasoning対応モデルでは`reasoning_effort`に`none`または`medium`を指定できます。
 - このproviderではvision対応はサポート対象として扱いません。
@@ -1634,11 +1638,11 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **OpenRouter**: Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, 明示選択の公開プレビュー), Ling 3.1 Flash（テキスト専用・明示選択）、Solar Mini4、Solar Pro 4、MiMo V2.6 Flash、GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max, Muse Spark 1.3; OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwenのキュレーション済み一覧をサポート。GLM-5.3/FlashX、Qwen3.8 Flash、DeepSeek V4 Flash Vision Exp、Claude Sonnet 5/Opus 4.8、Kimi K2.6も含みます。 明示選択として`nvidia/nemotron-3.5-lightning`（テキスト専用）、`qwen/qwen3.8-27b`と`qwen/qwen3.8-omni-flash`（画像入力対応）も利用できます。デフォルトは`google/gemma-4-31b-it:free`で、`nvidia/nemotron-3.5-super-vl:free`も無料モデルとして掲載しています。 追加モデル: `anthropic/claude-haiku-5.5`, `inception/mercury-3`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`. `openai/gpt-6.1-terra`も明示選択で利用できます。
 - **Z.ai**: GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-TurboとGLM-4.7/4.6のテキストモデル、GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V系のビジョンモデルをサポート。GLM-5.3はthinking必須で`low`、GLM-5.2は`none`を既定値にします
 - **xAI**: Grok 4.7、Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 Reasoning/Non-Reasoningをvision対応でサポート。Grok 4.7/4.6/4.5のpackage既定は低遅延向けの`reasoning_effort: 'low'`、Grok 4.3は`none`です
-- **Kimi**: Kimi K3.1 Pro（`kimi-k3.1-pro`）とHighspeed（`kimi-k3.1-pro-highspeed`）を明示選択で利用できます。画像・ツール・ストリーミングに対応し、推論設定はK3と共通です。Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`、デフォルト、いずれもビジョン対応）をサポート
+- **Kimi**: Kimi K3.1 Pro（`kimi-k3.1-pro`、デフォルト）とHighspeed（`kimi-k3.1-pro-highspeed`）は画像・ツール・ストリーミングに対応し、推論設定はK3と共通です。Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、デフォルトは `max`）もサポートし、いずれもビジョン対応です。K2系列（`kimi-k2.6`、`kimi-k2.7-code`、`kimi-k2.7-code-highspeed`）は2026年12月の提供終了に先立ち非推奨にしています
 - **DeepSeek**: 更新に追従する`deepseek-flash` IDでDeepSeek V4.1 Flash 1017を利用できます。テキスト専用のV4 Pro（`deepseek-v4-pro`）にもOpenAI互換Chat Completions経由で対応し、旧Flash IDは互換用に維持しています。低遅延チャット向けにthinkingはデフォルト無効です。
-- **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します。GLM-5.3 (`zai-glm-5-3`) はテキスト専用の明示選択モデルです。
+- **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します。GLM-5.3 (`zai-glm-5-3`) はテキスト専用の明示選択モデルです。Mistral Large 4（`mistral-large-4-0`）は公開プレビューの明示選択モデルで、非推奨の`mistral-large-2512`は対応一覧に表示しません。
 - **Sakana AI**: Fugu、Fugu Ultra、日本語特化・ビジョン対応のSakana Namazu（`sakana-namazu`）をOpenAI互換Chat Completions経由でサポート。Namazuのthinkingはデフォルト無効です
-- **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）をOpenAI互換Chat Completions経由でサポートし、廃止予定の2.2定数は互換用にexportを残します
+- **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）とPLaMo 3.1 Prime（`plamo-3.1-prime`）をOpenAI互換Chat Completions経由でサポートし、廃止予定の2.2定数は互換用にexportを残します
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Webページでは対応するデスクトップ端末上のChrome 148以降が必要で、Chromeフラグの設定は不要。`promptStreaming()` が利用できる場合はストリーミングし、ビジョン非対応
 
 ## ライセンス

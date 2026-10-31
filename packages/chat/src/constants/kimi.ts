@@ -3,15 +3,23 @@ export const ENDPOINT_KIMI_CHAT_COMPLETIONS_API =
 
 // Kimi models
 export const MODEL_KIMI_K3 = 'kimi-k3';
+/** @deprecated Kimi retires all K2 series models by the end of December 2026. Use MODEL_KIMI_K3_1_PRO. */
 export const MODEL_KIMI_K2_7_CODE = 'kimi-k2.7-code';
+/** @deprecated Kimi retires all K2 series models by the end of December 2026. Use MODEL_KIMI_K3_1_PRO. */
 export const MODEL_KIMI_K2_7_CODE_HIGHSPEED = 'kimi-k2.7-code-highspeed';
+/** @deprecated Kimi retires all K2 series models by the end of December 2026. Use MODEL_KIMI_K3_1_PRO. */
 export const MODEL_KIMI_K2_6 = 'kimi-k2.6';
-/** @deprecated Discontinued by Kimi on August 31, 2026. Use MODEL_KIMI_K2_6. */
+/** @deprecated Discontinued by Kimi on August 31, 2026. Use MODEL_KIMI_K3_1_PRO. */
 export const MODEL_KIMI_K2_5 = 'kimi-k2.5';
 export const MODEL_KIMI_K3_1_PRO = 'kimi-k3.1-pro';
 export const MODEL_KIMI_K3_1_PRO_HIGHSPEED = 'kimi-k3.1-pro-highspeed';
 
-export const KIMI_DEPRECATED_MODELS = [MODEL_KIMI_K2_5];
+export const KIMI_DEPRECATED_MODELS = [
+  MODEL_KIMI_K2_7_CODE,
+  MODEL_KIMI_K2_7_CODE_HIGHSPEED,
+  MODEL_KIMI_K2_6,
+  MODEL_KIMI_K2_5,
+];
 
 export type KimiReasoningEffort = 'low' | 'high' | 'max';
 

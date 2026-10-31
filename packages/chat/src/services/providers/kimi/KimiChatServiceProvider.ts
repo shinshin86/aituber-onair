@@ -3,9 +3,6 @@ import {
   MODEL_KIMI_K3_1_PRO_HIGHSPEED,
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   MODEL_KIMI_K3,
-  MODEL_KIMI_K2_7_CODE,
-  MODEL_KIMI_K2_7_CODE_HIGHSPEED,
-  MODEL_KIMI_K2_6,
   getDefaultKimiReasoningEffort,
   getKimiSupportedReasoningEfforts,
   isKimiReasoningEffortModel,
@@ -77,28 +74,21 @@ export class KimiChatServiceProvider
    * Get the list of supported models
    */
   getSupportedModels(): string[] {
-    return [
-      MODEL_KIMI_K3,
-      MODEL_KIMI_K2_7_CODE,
-      MODEL_KIMI_K2_7_CODE_HIGHSPEED,
-      MODEL_KIMI_K2_6,
-      MODEL_KIMI_K3_1_PRO,
-      MODEL_KIMI_K3_1_PRO_HIGHSPEED,
-    ];
+    return [MODEL_KIMI_K3, MODEL_KIMI_K3_1_PRO, MODEL_KIMI_K3_1_PRO_HIGHSPEED];
   }
 
   /**
    * Get the default model
    */
   getDefaultModel(): string {
-    return MODEL_KIMI_K2_6;
+    return MODEL_KIMI_K3_1_PRO;
   }
 
   /**
    * Get the default vision model
    */
   private getDefaultVisionModel(): string {
-    return MODEL_KIMI_K2_6;
+    return MODEL_KIMI_K3_1_PRO;
   }
 
   /**

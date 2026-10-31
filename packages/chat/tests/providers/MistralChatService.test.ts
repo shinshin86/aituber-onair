@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   MODEL_MINISTRAL_8B_2512,
+  MODEL_MISTRAL_LARGE_4_0,
   MODEL_MISTRAL_MEDIUM_2508,
   MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_SMALL_LATEST,
@@ -189,6 +190,33 @@ describe('MistralChatService', () => {
       finish_reason: undefined,
       usage: undefined,
     });
+  });
+
+  it('sends Mistral Large 4 without reasoning_effort and drops thinking chunks', async () => {
+    const postSpy = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+      createOneShotResponse([
+        {
+          type: 'thinking',
+          thinking: [{ type: 'text', text: 'internal reasoning' }],
+        },
+        { type: 'text', text: 'Large 4 answer' },
+      ]),
+    );
+    const service = new MistralChatService(
+      'test-key',
+      MODEL_MISTRAL_LARGE_4_0,
+      MODEL_MISTRAL_LARGE_4_0,
+    );
+
+    const result = await service.chatOnce(messages, false);
+
+    expect(postSpy).toHaveBeenCalledWith(
+      ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
+      expect.objectContaining({ model: MODEL_MISTRAL_LARGE_4_0 }),
+      expect.anything(),
+    );
+    expect((postSpy.mock.calls[0][1] as any).reasoning_effort).toBeUndefined();
+    expect(result.blocks).toEqual([{ type: 'text', text: 'Large 4 answer' }]);
   });
 
   it('handles OpenAI-compatible streaming responses', async () => {

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
   MODEL_PLAMO_3_0_PRIME,
+  MODEL_PLAMO_3_1_PRIME,
 } from '../../src/constants';
 import { PlamoChatService } from '../../src/services/providers/plamo/PlamoChatService';
 import { PlamoChatServiceProvider } from '../../src/services/providers/plamo/PlamoChatServiceProvider';
@@ -14,7 +15,10 @@ describe('PlamoChatServiceProvider', () => {
   });
 
   it('returns supported PLaMo models', () => {
-    expect(provider.getSupportedModels()).toEqual([MODEL_PLAMO_3_0_PRIME]);
+    expect(provider.getSupportedModels()).toEqual([
+      MODEL_PLAMO_3_0_PRIME,
+      MODEL_PLAMO_3_1_PRIME,
+    ]);
   });
 
   it('returns PLaMo 3.0 Prime as the default model', () => {
@@ -24,6 +28,7 @@ describe('PlamoChatServiceProvider', () => {
   it('reports vision as unsupported', () => {
     expect(provider.supportsVision()).toBe(false);
     expect(provider.supportsVisionForModel(MODEL_PLAMO_3_0_PRIME)).toBe(false);
+    expect(provider.supportsVisionForModel(MODEL_PLAMO_3_1_PRIME)).toBe(false);
     expect(provider.getVisionSupportLevel()).toBe('unsupported');
     expect(provider.getVisionSupportLevelForModel(MODEL_PLAMO_3_0_PRIME)).toBe(
       'unsupported',

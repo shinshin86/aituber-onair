@@ -6,6 +6,8 @@ import {
   MODEL_MINISTRAL_3B_2512,
   MODEL_MINISTRAL_8B_2512,
   MODEL_MISTRAL_LARGE_2512,
+  MODEL_MISTRAL_LARGE_4_0,
+  MISTRAL_DEPRECATED_MODELS,
   MODEL_MISTRAL_LARGE_LATEST,
   MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_SMALL_2603,
@@ -29,10 +31,18 @@ describe('MistralChatServiceProvider', () => {
       MODEL_MINISTRAL_14B_2512,
       MODEL_MISTRAL_MEDIUM_3_5,
       MODEL_MISTRAL_LARGE_LATEST,
-      MODEL_MISTRAL_LARGE_2512,
+      MODEL_MISTRAL_LARGE_4_0,
       MODEL_MISTRAL_SMALL_2603,
       MODEL_MISTRAL_ZAI_GLM_5_3,
     ]);
+  });
+
+  it('does not advertise deprecated Mistral models', () => {
+    const models = provider.getSupportedModels();
+    expect(MISTRAL_DEPRECATED_MODELS).toContain(MODEL_MISTRAL_LARGE_2512);
+    for (const model of MISTRAL_DEPRECATED_MODELS) {
+      expect(models).not.toContain(model);
+    }
   });
 
   it('returns Mistral Small Latest as the default model', () => {
@@ -49,6 +59,7 @@ describe('MistralChatServiceProvider', () => {
     expect(provider.supportsVisionForModel(MODEL_MINISTRAL_14B_2512)).toBe(
       true,
     );
+    expect(provider.supportsVisionForModel(MODEL_MISTRAL_LARGE_4_0)).toBe(true);
     expect(provider.getVisionSupportLevel()).toBe('supported');
     expect(
       provider.getVisionSupportLevelForModel(MODEL_MISTRAL_SMALL_LATEST),
