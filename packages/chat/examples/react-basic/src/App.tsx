@@ -159,9 +159,7 @@ function App() {
   const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | undefined>();
   const [reasoning_effort, setReasoningEffort] =
     useState<ReasoningEffortLevel>('none');
-  const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
-    'medium',
-  );
+  const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>('low');
   const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
     'chat' | 'responses' | 'auto' | undefined
   >();
@@ -684,7 +682,7 @@ function App() {
               } else {
                 setReasoningEffort('medium');
               }
-              setVerbosity('medium');
+              setVerbosity('low');
             }}
             apiKey={apiKey}
             onApiKeyChange={setApiKey}

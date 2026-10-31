@@ -127,6 +127,7 @@ built-in model status is `available`.
 **OpenAI**
 - Models: GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-4.1, GPT-4.1 Mini, GPT-4o, GPT-4o Mini
 - Default: GPT-5.6 Luna. Models that OpenAI has deprecated or shut down (GPT-5, GPT-5 Mini/Nano, GPT-5.1, GPT-5.4 Nano, GPT-4.1 Nano, o1, o1-mini, o3-mini) are no longer selectable.
+- Verbosity: defaults to `low` for concise replies, including after switching providers. Select `medium` or `high` for more detail, or choose a GPT-5 preset to use its verbosity setting.
 - Vision: GPT-4 Vision
 - Best for: General purpose, code generation, advanced reasoning
 - Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), and GPT-5.6 supports None/Low/Medium/High/XHigh/Max

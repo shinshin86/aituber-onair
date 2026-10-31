@@ -2104,7 +2104,7 @@ export default function ProviderSelector({
                 <label htmlFor="verbosity">Verbosity</label>
                 <select
                   id="verbosity"
-                  value={verbosity || 'medium'}
+                  value={verbosity || 'low'}
                   onChange={(e) =>
                     onVerbosityChange?.(
                       e.target.value as 'low' | 'medium' | 'high',

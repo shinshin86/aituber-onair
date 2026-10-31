@@ -735,6 +735,28 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     }
   });
 
+  it('defaults verbosity to low on both endpoints and resets it after switching providers', async () => {
+    expect(element<HTMLSelectElement>('#verbosity').value).toBe('low');
+    await change('#api-key', FAKE_KEY);
+    await completeReply(OPENAI_CHAT);
+    expect(requests[0].body.verbosity).toBe('low');
+
+    await selectModel(modelCases[0]);
+    await completeReply(OPENAI_RESPONSES);
+    expect(requests[1].body.text.verbosity).toBe('low');
+    for (const verbosity of ['medium', 'high']) {
+      await change('#verbosity', verbosity);
+      await completeReply(OPENAI_RESPONSES);
+      expect(requests.at(-1)!.body.text.verbosity).toBe(verbosity);
+    }
+
+    await chooseButton('.provider-item', 'OpenRouter');
+    await chooseButton('.provider-item', 'OpenAI');
+    expect(element<HTMLSelectElement>('#verbosity').value).toBe('low');
+    await completeReply(OPENAI_CHAT);
+    expect(requests.at(-1)!.body.verbosity).toBe('low');
+  });
+
   it('enables summary for the displayed default Responses endpoint and switches to Chat Completions', async () => {
     await selectModel(modelCases[0]);
     await change('#api-key', FAKE_KEY);
