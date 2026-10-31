@@ -1,5 +1,42 @@
 # @aituber-onair/voice
 
+## 0.30.0
+
+### Minor Changes
+
+- Add Japanese Deepgram Flux voices alongside English voices through the
+  existing one-shot `POST /v2/speak` integration: `flux-ayumi-ja`,
+  `flux-hayato-ja`, `flux-nozomi-ja`, and `flux-sayaka-ja`. Supply the full
+  voice ID as `speaker` and use text matching the voice's language.
+- Include English and Japanese Flux voices in
+  `getVoiceEngineVoiceList('deepgram')` results from the public `/v2/models`
+  catalog. Recognize `-en` / `-ja` voice ID suffixes for language filtering,
+  including entries without language metadata. Use `language: 'en'` or
+  `language: 'ja'` to narrow the list; other Flux languages and Aura voices
+  remain excluded.
+- Add the four Japanese voices as fixed presets in the React voice example,
+  alongside Haley, so they can be selected without a catalog request.
+  Catalog refreshes preserve the current selection and deduplicate presets.
+  The existing `flux-haley-en` default is unchanged.
+
+### Patch Changes
+
+- Share Flux voice ID validation between speech requests and catalog
+  filtering, and update English/Japanese documentation and example labels.
+- Add mocked request, voice-list language filtering, runtime update, and
+  example DOM regression coverage for Japanese voices.
+
+### Known Limitations
+
+- Japanese voice availability is documented in the official voice catalog
+  and public model catalog. MP3 output and speed with Japanese voices have
+  not been live-verified through this package. Speed support varies by
+  model/language, and unsupported combinations may return
+  `SPEED_NOT_SUPPORTED`.
+- Direct browser CORS has not been live-verified. Aura, WebSocket streaming,
+  interruption handling, callbacks, and beta expressivity remain outside
+  this integration.
+
 ## 0.29.0
 
 ### Minor Changes

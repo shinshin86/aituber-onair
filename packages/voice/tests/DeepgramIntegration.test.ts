@@ -129,11 +129,22 @@ describe('Deepgram voice catalog', () => {
         languages: ['en', 'en-GB'],
       },
       { canonical_name: 'aura-2-thalia-en', name: 'Aura' },
-      { canonical_name: 'flux-example-ja', name: 'Unsupported language' },
+      {
+        canonical_name: 'flux-ayumi-ja',
+        name: 'ayumi',
+        languages: ['ja'],
+        metadata: {
+          accent: 'Japanese',
+          display_name: 'Ayumi',
+          tags: ['feminine', 'cheerful'],
+        },
+      },
+      { canonical_name: 'flux-hayato-ja', name: 'Hayato' },
+      { canonical_name: 'flux-anouk-nl', name: 'Unsupported language' },
     ],
   };
 
-  it('normalizes only supported Flux English voices without sending a key', async () => {
+  it('normalizes only supported Flux English and Japanese voices without sending a key', async () => {
     const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => modelResponse,
@@ -157,6 +168,20 @@ describe('Deepgram voice catalog', () => {
         label: 'Kit',
         metadata: { languages: 'en, en-GB' },
       },
+      {
+        id: 'flux-ayumi-ja',
+        label: 'Ayumi (Japanese)',
+        metadata: {
+          languages: 'ja',
+          accent: 'Japanese',
+          tags: 'feminine, cheerful',
+        },
+      },
+      {
+        id: 'flux-hayato-ja',
+        label: 'Hayato',
+        metadata: { languages: 'ja' },
+      },
     ]);
     expect(fetchMock.mock.calls[0][0]).toBe(DEEPGRAM_VOICES_API_URL);
     expect(fetchMock.mock.calls[0][1]?.headers).toBeUndefined();
@@ -178,6 +203,18 @@ describe('Deepgram voice catalog', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('/api/deepgram/v2/models');
     await expect(
       getVoiceEngineVoiceList('deepgram', { language: 'ja' }),
+    ).resolves.toMatchObject([
+      { id: 'flux-ayumi-ja' },
+      { id: 'flux-hayato-ja' },
+    ]);
+    await expect(
+      getVoiceEngineVoiceList('deepgram', { language: 'EN' }),
+    ).resolves.toMatchObject([{ id: 'flux-haley-en' }, { id: 'flux-kit-en' }]);
+    await expect(
+      getVoiceEngineVoiceList('deepgram', { language: 'all' }),
+    ).resolves.toHaveLength(4);
+    await expect(
+      getVoiceEngineVoiceList('deepgram', { language: 'nl' }),
     ).resolves.toEqual([]);
   });
 

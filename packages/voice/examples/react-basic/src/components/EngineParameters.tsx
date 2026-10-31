@@ -543,7 +543,7 @@ export function EngineParameters({
         <CollapsibleCard
           className="parameter-card openai-card"
           title="Deepgram Flux パラメータ"
-          description="英語のみ対応。Flux の one-shot REST API から MP3 音声を取得します。日本語・Aura・WebSocket には対応していません。"
+          description="英語・日本語の Flux voice に対応。Flux の one-shot REST API から MP3 音声を取得します。Aura・WebSocket には対応していません。話速は model/言語によって未対応の場合があります（日本語 voice では未検証）。"
         >
           <NumberSliderField
             id="deepgramSpeed"

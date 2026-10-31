@@ -150,16 +150,43 @@ describe('DeepgramEngine', () => {
     );
   });
 
-  it.each(['', 'aura-2-thalia-en', 'flux-haley-ja', 'haley'])(
-    'rejects unsupported voice %s before requesting',
-    async (speaker) => {
-      const { fetchMock } = mockAudioResponse();
-      await expect(
-        new DeepgramEngine().fetchAudio(talk, speaker, 'key'),
-      ).rejects.toMatchObject({ kind: 'configuration' });
-      expect(fetchMock).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    'flux-ayumi-ja',
+    'flux-hayato-ja',
+    'flux-nozomi-ja',
+    'flux-sayaka-ja',
+  ])('accepts the documented Japanese Flux voice %s', async (speaker) => {
+    const { fetchMock } = mockAudioResponse();
+
+    await new DeepgramEngine().fetchAudio(
+      { message: 'こんにちは、今日もよろしくね。' },
+      speaker,
+      'key',
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      `${DEEPGRAM_TTS_API_URL}?model=${speaker}&encoding=mp3`,
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ text: 'こんにちは、今日もよろしくね。' }),
+      }),
+    );
+  });
+
+  it.each([
+    '',
+    'aura-2-thalia-en',
+    'flux-anouk-nl',
+    'flux-ayumi-jp',
+    'flux-ayumi-ja-JP',
+    'haley',
+  ])('rejects unsupported voice %s before requesting', async (speaker) => {
+    const { fetchMock } = mockAudioResponse();
+    await expect(
+      new DeepgramEngine().fetchAudio(talk, speaker, 'key'),
+    ).rejects.toMatchObject({ kind: 'configuration' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 
   it('requires a key and nonempty text before requesting', async () => {
     const { fetchMock } = mockAudioResponse();
@@ -236,7 +263,7 @@ describe('DeepgramEngine', () => {
     ).rejects.toThrow('Deepgram returned empty audio');
   });
 
-  it('provides an English test message for the English-only route', () => {
+  it('provides an English default test message and accepts a custom one', () => {
     const engine = new DeepgramEngine();
     expect(engine.getTestMessage()).toBe(
       'Hello! This is Deepgram Flux text to speech.',

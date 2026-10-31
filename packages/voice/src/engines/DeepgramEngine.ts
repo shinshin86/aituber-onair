@@ -1,5 +1,6 @@
 import { DEEPGRAM_TTS_API_URL } from '../constants/voiceEngine';
 import type { Talk } from '../types/voice';
+import { DEEPGRAM_FLUX_VOICE_ID_PATTERN } from './internal/deepgram';
 import {
   clampNumber,
   createConfigurationError,
@@ -9,7 +10,10 @@ import {
 import type { VoiceEngine } from './VoiceEngine';
 import { VoiceEngineError } from './VoiceEngineError';
 
-/** One-shot Flux TTS on /v2/speak. The speaker is a full English Flux model ID. */
+/**
+ * One-shot Flux TTS on /v2/speak. The speaker is a full English or Japanese
+ * Flux model ID (`flux-{voice}-en` or `flux-{voice}-ja`).
+ */
 export class DeepgramEngine implements VoiceEngine {
   private apiEndpoint = DEEPGRAM_TTS_API_URL;
   private speed?: number;
@@ -35,9 +39,9 @@ export class DeepgramEngine implements VoiceEngine {
     }
 
     const model = speaker.trim();
-    if (!/^flux-[a-z0-9-]+-en$/.test(model)) {
+    if (!DEEPGRAM_FLUX_VOICE_ID_PATTERN.test(model)) {
       throw createConfigurationError(
-        'Deepgram speaker must be an English Flux model ID (flux-{voice}-en)',
+        'Deepgram speaker must be an English or Japanese Flux model ID (flux-{voice}-en or flux-{voice}-ja)',
       );
     }
 
