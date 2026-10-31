@@ -134,7 +134,7 @@ const modelCases = [
     endpoint: KIMI,
     control: '#kimi-reasoning-effort',
     efforts: ['low', 'high', 'max'],
-    initialEffort: 'max',
+    initialEffort: 'low',
   })),
   {
     provider: 'OpenAI',

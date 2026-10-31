@@ -198,7 +198,7 @@ describe.each([
     expect(post.mock.calls[0][1]).toMatchObject({
       model: k3Model,
       messages: imageMessages,
-      reasoning_effort: 'max',
+      reasoning_effort: 'low',
       tools: [{ type: 'function', function: { name: 'lookupWeather' } }],
     });
     expect(post.mock.calls[0][1]).not.toHaveProperty('thinking');
@@ -223,7 +223,7 @@ describe.each([
     expect(post.mock.calls[1][1]).toMatchObject({
       model: k3Model,
       stream: true,
-      reasoning_effort: 'max',
+      reasoning_effort: 'low',
     });
     expect(second.assistant_message).toMatchObject({
       content: 'Sunny',

@@ -73,12 +73,14 @@ export function getKimiSupportedReasoningEfforts(
 }
 
 /**
- * Get the official default reasoning effort for a Kimi model.
+ * Get the package default reasoning effort for a Kimi model.
+ * Kimi's API default is `max`; this package defaults to `low` for responsive
+ * chat and keeps `high` / `max` as explicit options.
  */
 export function getDefaultKimiReasoningEffort(
   model: string,
 ): KimiReasoningEffort | undefined {
-  return isKimiReasoningEffortModel(model) ? 'max' : undefined;
+  return isKimiReasoningEffortModel(model) ? 'low' : undefined;
 }
 
 /**

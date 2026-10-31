@@ -666,7 +666,7 @@ function App() {
                 isKimiReasoningEffortModel(defaultModel)
               ) {
                 setReasoningEffort(
-                  getDefaultKimiReasoningEffort(defaultModel) ?? 'max',
+                  getDefaultKimiReasoningEffort(defaultModel) ?? 'low',
                 );
               } else if (
                 newProvider === 'xai' &&
@@ -741,7 +741,7 @@ function App() {
                 isKimiReasoningEffortModel(modelId)
               ) {
                 setReasoningEffort(
-                  getDefaultKimiReasoningEffort(modelId) ?? 'max',
+                  getDefaultKimiReasoningEffort(modelId) ?? 'low',
                 );
               } else if (newProvider === 'deepseek') {
                 setReasoningEffort(

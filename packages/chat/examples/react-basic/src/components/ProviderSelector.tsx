@@ -2444,7 +2444,7 @@ export default function ProviderSelector({
                       reasoning_effort === 'high' ||
                       reasoning_effort === 'max'
                         ? reasoning_effort
-                        : 'max'
+                        : 'low'
                     }
                     onChange={(e) =>
                       onReasoningEffortChange?.(
@@ -2454,9 +2454,9 @@ export default function ProviderSelector({
                     disabled={disabled}
                     className="select-input"
                   >
-                    <option value="low">Low</option>
+                    <option value="low">Low (default)</option>
                     <option value="high">High</option>
-                    <option value="max">Max (default)</option>
+                    <option value="max">Max</option>
                   </select>
                   <span className="helper-text">
                     Kimi K3 and K3.1 Pro always reason. Use Low for shorter

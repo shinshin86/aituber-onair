@@ -114,11 +114,11 @@ describe('KimiChatServiceProvider', () => {
         undefined,
         undefined,
         undefined,
-        'max',
+        'low',
       );
     });
 
-    it('should create Kimi K3 with max reasoning and no K2 thinking option', () => {
+    it('should create Kimi K3 with package-default low reasoning and no K2 thinking option', () => {
       const options: KimiChatServiceOptions = {
         apiKey: 'test-api-key',
         model: k3Model,
@@ -135,11 +135,11 @@ describe('KimiChatServiceProvider', () => {
         undefined,
         undefined,
         undefined,
-        'max',
+        'low',
       );
     });
 
-    it.each(['low', 'high'] as const)(
+    it.each(['high', 'max'] as const)(
       'should create Kimi K3 with %s reasoning when configured',
       (reasoningEffort) => {
         provider.createChatService({
@@ -273,7 +273,7 @@ describe('KimiChatServiceProvider', () => {
         undefined,
         undefined,
         undefined,
-        'max',
+        'low',
       );
     });
 

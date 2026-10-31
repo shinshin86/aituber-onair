@@ -212,7 +212,7 @@ These additions support tools and streaming. MiniMax reasoning cannot be disable
 - Models: Kimi K3.1 Pro (`kimi-k3.1-pro`), Kimi K3.1 Pro Highspeed (`kimi-k3.1-pro-highspeed`), Kimi K3, Kimi K2.7 Code, Kimi K2.7 Code HighSpeed, Kimi K2.6 (Kimi K2.5 was discontinued on 2026-08-31)
 - Vision: Supported
 - Best for: Moonshot models with OpenAI-compatible API. Kimi K2.6 remains the chat-oriented default; Kimi K3 is an explicit reasoning option, and Kimi K2.7 Code models are coding-oriented.
-- Kimi K3 and K3.1 Pro reasoning: selectable `low`, `high`, or `max`, with `max` as the API default. Reasoning cannot be disabled.
+- Kimi K3 and K3.1 Pro reasoning: selectable `low`, `high`, or `max`, with `low` as the package default (the API default is `max`). Reasoning cannot be disabled.
 
 **DeepSeek**
 - Models: DeepSeek V4.1 Flash 1017 (`deepseek-flash`), V4 Pro, and legacy Flash aliases. The existing `deepseek-v4-flash` package default is preserved.
