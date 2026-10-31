@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat ロゴ](./images/aituber-onair-chat.png)
 
-AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、DeepSeek、Mistral、Sakana AI、PLaMo、Agent SDKプロバイダー等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
+AITuber OnAirのチャット・LLM API統合ライブラリです。このパッケージは、OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude、Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、DeepSeek、Mistral、Sakana AI、Sarashina、PLaMo、Agent SDKプロバイダー等の様々なAIチャットプロバイダーとやり取りするための統一されたインターフェースを提供します。
 
 ## 機能
 
-- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、DeepSeek、Mistral、Sakana AI、PLaMo、Agent SDKプロバイダー
+- 🤖 **複数のAIプロバイダー対応**: OpenAI、ローカルLLM含むOpenAI互換プロバイダー、Claude (Anthropic)、Google Gemini、Gemini Nano（Chromeブラウザ内蔵AI）、OpenRouter、Z.ai、xAI、Kimi、DeepSeek、Mistral、Sakana AI、Sarashina、PLaMo、Agent SDKプロバイダー
 - 🔄 **統一されたインターフェース**: 異なるプロバイダー間での一貫したAPI
 - 🛠️ **ツール・関数呼び出し**: AI関数呼び出しの自動反復処理をサポート
 - 💬 **ストリーミングレスポンス**: リアルタイムストリーミングチャット応答
@@ -1226,6 +1226,50 @@ const sakanaService = ChatServiceFactory.createChatService('sakana', {
 - Sakanaは最高性能にはResponses APIを推奨していますが、このproviderはpackageのOpenAI互換chat経路に合わせてChat Completionsを利用します。
 - ブラウザから直接呼ぶ場合、Sakana側がoriginに対してCORSを許可していないと失敗します。ブラウザ単体ではなく、Node.js、backend/serverless proxy、または`examples/node-basic/sakana-example.js`を利用してください。
 
+#### Sarashina（ベータ・バックエンド専用）
+
+このブラウザ例から直接呼び出せないプロバイダーは、選択を無効にしています。
+現在は Sakana AI と Sarashina が該当します。Sarashina は保護されたバックエンドから
+呼び出し、API キーをブラウザやモバイルアプリに露出させないよう公式に案内されています。
+[認証とセキュリティ](https://docs.sarashina.ai/introduction)。
+
+```typescript
+const service = ChatServiceFactory.createChatService('sarashina', {
+  apiKey: process.env.SARASHINA_API_KEY,
+  model: 'sarashina3.2-mini-thinking', // Explicit; default is sarashina3-nano
+  reasoning_effort: 'low', // Thinking model only; package default
+});
+const history: Message[] = [{ role: 'user', content: 'Say hello in Japanese.' }];
+const completion = await service.chatOnce(history, true, (text) => console.log(text));
+if (completion.assistant_message) history.push(completion.assistant_message);
+history.push({ role: 'user', content: 'Continue.' });
+// Keep assistant_message.reasoning unchanged; never display or decode it.
+await service.chatOnce(history, false, () => {});
+```
+
+対話モデルはテキスト専用で、軽量な対話用の `sarashina3-nano` を既定値にします。
+`sarashina3-mini` と `sarashina3.2-mini-thinking` は明示して選べます。
+いずれもコンテキスト長は 128k です。モデレーション専用の `sarashina3-guard` は
+対話モデルに含めません。[モデル一覧](https://docs.sarashina.ai/models)。
+
+Bearer 認証で `https://api.sarashina.ai/v1/chat/completions` を呼び出し、streaming と
+自動 function tool 呼び出しに対応します。`responseLength` は `max_completion_tokens` に変換し、
+`chatOnce(..., maxTokens)` の明示値は 1〜8000 に収めます。応答長未指定時は共通の 5000 を使います。
+`reasoning_effort` は thinking モデルだけで `low` / `medium` / `high` を指定でき、
+省略時は `low` です。他のモデルで指定すると、送信前にエラーになります。
+返された `assistant_message` を履歴に追加すると、テキスト・ツールの各ターンで
+暗号化された `reasoning` を変更せず再送できます。表示や復号はしないでください。
+`[DONE]` が届く前に SSE が終了した場合はエラーにします。出力上限が小さいと、
+thinking 中に上限へ達し、回答が得られない場合があります。画像入力と構造化出力の設定は
+公開していません。[API リファレンス](https://docs.sarashina.ai/api-reference/chat-completions)。
+
+[サービス](https://sarashina.ai/)は無償ベータ版です。
+[利用規約](https://sarashina.ai/terms)では利用対象を日本国内居住者または国内に本店を持つ法人に限定し、
+入出力をモデル学習やサービス開発に利用できるとしています。学習利用の拒否は有償プラン向けの規定です。
+データを送信する前に現在の規約を確認してください。実際の推論やアカウント・地域のアクセス確認は
+行っていません。Node の例は `examples/node-basic/sarashina-example.js` にあり、
+オプションで暗号化状態を保持した会話継続も試せます。
+
 #### PLaMo
 
 ```typescript
@@ -1669,6 +1713,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **DeepSeek**: 更新に追従する`deepseek-flash` IDでDeepSeek V4.1 Flash 1017を利用できます。テキスト専用のV4 Pro（`deepseek-v4-pro`）にもOpenAI互換Chat Completions経由で対応し、旧Flash IDは互換用に維持しています。低遅延チャット向けにthinkingはデフォルト無効です。
 - **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します。GLM-5.3 (`zai-glm-5-3`) はテキスト専用の明示選択モデルです。Mistral Large 4（`mistral-large-4-0`）は公開プレビューの明示選択モデルで、非推奨の`mistral-large-2512`は対応一覧に表示しません。
 - **Sakana AI**: Fugu、Fugu Ultra、日本語特化・ビジョン対応のSakana Namazu（`sakana-namazu`）をOpenAI互換Chat Completions経由でサポート。Namazuのthinkingはデフォルト無効です
+- **Sarashina**: ベータのバックエンド専用 API。テキスト、streaming、tools、暗号化 reasoning の再送に対応します。既定モデルは Nano で、Mini と Mini Thinking は明示選択です。認証、データ利用規約、出力上限は Sarashina の節を参照してください。
 - **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）とPLaMo 3.1 Prime（`plamo-3.1-prime`）をOpenAI互換Chat Completions経由でサポートし、廃止予定の2.2定数は互換用にexportを残します
 - **Gemini Nano**: Chromeブラウザ内蔵AI（LanguageModel API）。デバイス上で動作し、APIキー不要。Webページでは対応するデスクトップ端末上のChrome 148以降が必要で、Chromeフラグの設定は不要。`promptStreaming()` が利用できる場合はストリーミングし、ビジョン非対応
 

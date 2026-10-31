@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, Sakana AI, PLaMo, and Agent SDK providers.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, Sakana AI, Sarashina, PLaMo, and Agent SDK providers.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, Sakana AI, PLaMo, and Agent SDK providers
+- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, Sakana AI, Sarashina, PLaMo, and Agent SDK providers
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -1249,6 +1249,52 @@ Notes:
 - Sakana recommends the Responses API for best performance, but this provider uses Chat Completions because it matches the package's OpenAI-compatible chat path.
 - Direct browser usage may fail with CORS unless Sakana enables CORS for your origin. Use Node.js, a backend/serverless proxy, or `examples/node-basic/sakana-example.js` instead of calling Sakana directly from browser-only apps.
 
+#### Sarashina (beta, backend only)
+
+Providers that cannot be called directly by this browser example are shown
+disabled; currently Sakana AI and Sarashina. Sarashina requires a protected
+backend and must not expose API keys in browser or mobile clients.
+[Authentication and security](https://docs.sarashina.ai/introduction).
+
+```typescript
+const service = ChatServiceFactory.createChatService('sarashina', {
+  apiKey: process.env.SARASHINA_API_KEY,
+  model: 'sarashina3.2-mini-thinking', // Explicit; default is sarashina3-nano
+  reasoning_effort: 'low', // Thinking model only; package default
+});
+const history: Message[] = [{ role: 'user', content: 'Say hello in Japanese.' }];
+const completion = await service.chatOnce(history, true, (text) => console.log(text));
+if (completion.assistant_message) history.push(completion.assistant_message);
+history.push({ role: 'user', content: 'Continue.' });
+// Keep assistant_message.reasoning unchanged; never display or decode it.
+await service.chatOnce(history, false, () => {});
+```
+
+The text-only chat models are `sarashina3-nano` (lightweight conversational
+default), `sarashina3-mini`, and `sarashina3.2-mini-thinking` (explicit).
+All have 128k context; moderation-only `sarashina3-guard` is excluded.
+[Models](https://docs.sarashina.ai/models).
+
+Requests use Bearer-authenticated Chat Completions at
+`https://api.sarashina.ai/v1/chat/completions`. Streaming and automatic function
+tools are supported. `responseLength` maps to `max_completion_tokens`;
+explicit `chatOnce(..., maxTokens)` values are clamped to 1–8000. The shared
+unspecified-length default is 5000. Only the thinking model accepts
+`reasoning_effort: 'low' | 'medium' | 'high'`; omitted effort becomes `low`.
+Passing effort to other models is rejected before sending. Append the returned
+`assistant_message` to preserve encrypted `reasoning` across text and tool turns.
+Incomplete SSE without `[DONE]` throws. Short output budgets can finish during
+thinking without visible text. Vision and structured-output configuration are
+not exposed. [API reference](https://docs.sarashina.ai/api-reference/chat-completions).
+
+The [service](https://sarashina.ai/) is a free beta. The
+[terms](https://sarashina.ai/terms) restrict eligibility to Japan residents or
+companies headquartered in Japan and allow input/output use for training and
+service development; training opt-out is described for paid plans only.
+Check the current terms before sending data. No live inference or account/region
+access test was run. See `examples/node-basic/sarashina-example.js` for a Node
+sample, including optional state-preserving continuation.
+
 #### PLaMo
 
 ```typescript
@@ -1698,6 +1744,7 @@ Currently, the following AI providers are built-in:
 - **DeepSeek**: DeepSeek V4.1 Flash 1017 via the rolling `deepseek-flash` ID, plus text-only V4 Pro (`deepseek-v4-pro`), through OpenAI-compatible Chat Completions. Legacy Flash aliases remain available for compatibility. Thinking defaults to disabled for low-latency chat.
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models. GLM-5.3 (`zai-glm-5-3`) is an explicit text-only option. Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview option; deprecated `mistral-large-2512` is no longer advertised.
 - **Sakana AI**: Supports Fugu (`fugu`), Fugu Ultra (`fugu-ultra-v1.1`), and vision-capable Sakana Namazu (`sakana-namazu`) via OpenAI-compatible Chat Completions. Namazu thinking defaults to disabled for responsive chat.
+- **Sarashina**: Beta backend-only text, streaming, tools and encrypted reasoning replay. Nano is the lightweight chat default; Mini and Mini Thinking are explicit choices. See the Sarashina section for credentials, data-use terms and output limits.
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) and PLaMo 3.1 Prime (`plamo-3.1-prime`) via OpenAI-compatible Chat Completions; the retiring 2.2 constant remains exported for compatibility.
 - **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Web pages require Chrome 148+ on a supported desktop device; no Chrome flags are required. Streams when Chrome exposes `promptStreaming()`; no vision support.
 

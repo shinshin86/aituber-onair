@@ -193,6 +193,11 @@ describe('ChatServiceFactory', () => {
         apiKey: 'test-sakana-key',
       });
       expect(sakanaService).toBeDefined();
+      const sarashinaService = ChatServiceFactory.createChatService(
+        'sarashina',
+        { apiKey: 'test-key' },
+      );
+      expect(sarashinaService.getModel()).toBe('sarashina3-nano');
 
       // Test PLaMo
       const plamoService = ChatServiceFactory.createChatService('plamo', {
@@ -231,6 +236,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('deepseek')).toBe(true);
       expect(providers.has('mistral')).toBe(true);
       expect(providers.has('sakana')).toBe(true);
+      expect(providers.has('sarashina')).toBe(true);
       expect(providers.has('plamo')).toBe(true);
     });
 
@@ -262,6 +268,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('deepseek');
       expect(availableProviders).toContain('mistral');
       expect(availableProviders).toContain('sakana');
+      expect(availableProviders).toContain('sarashina');
       expect(availableProviders).toContain('plamo');
     });
 
@@ -287,6 +294,7 @@ describe('ChatServiceFactory', () => {
       expect(availableProviders).toContain('deepseek');
       expect(availableProviders).toContain('mistral');
       expect(availableProviders).toContain('sakana');
+      expect(availableProviders).toContain('sarashina');
       expect(availableProviders).toContain('plamo');
     });
   });
@@ -589,6 +597,7 @@ describe('ChatServiceFactory', () => {
       expect(providers.has('deepseek')).toBe(true);
       expect(providers.has('mistral')).toBe(true);
       expect(providers.has('sakana')).toBe(true);
+      expect(providers.has('sarashina')).toBe(true);
       expect(providers.has('plamo')).toBe(true);
       expect(providers.size).toBeGreaterThanOrEqual(3);
     });

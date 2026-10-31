@@ -8,6 +8,7 @@ import type { XaiReasoningEffort } from '../../constants/xai';
 import type { KimiReasoningEffort } from '../../constants/kimi';
 import type { DeepSeekReasoningEffort } from '../../constants/deepseek';
 import type { OpenRouterReasoningEffort } from '../../constants/openrouter';
+import type { SarashinaReasoningEffort } from '../../constants/sarashina';
 import type { ZaiReasoningEffort } from '../../constants/zai';
 import { ToolDefinition, MCPServerConfig } from '../../types';
 
@@ -201,6 +202,25 @@ export type SakanaChatServiceOptions = DisallowKeys<
   | 'responseFormat'
 >;
 
+export type SarashinaChatServiceOptions = Omit<
+  DisallowKeys<
+    BaseChatServiceOptions,
+    | 'visionModel'
+    | 'verbosity'
+    | 'gpt5Preset'
+    | 'gpt5EndpointPreference'
+    | 'enableReasoningSummary'
+    | 'includeReasoning'
+    | 'reasoningMaxTokens'
+    | 'thinking'
+    | 'responseFormat'
+  >,
+  'reasoning_effort'
+> & {
+  /** Only sarashina3.2-mini-thinking accepts reasoning effort. */
+  reasoning_effort?: SarashinaReasoningEffort;
+};
+
 export type PlamoChatServiceOptions = Omit<
   DisallowKeys<
     BaseChatServiceOptions,
@@ -293,6 +313,7 @@ export type ChatServiceOptionsByProvider = {
   deepseek: DeepSeekChatServiceOptions;
   mistral: MistralChatServiceOptions;
   sakana: SakanaChatServiceOptions;
+  sarashina: SarashinaChatServiceOptions;
   plamo: PlamoChatServiceOptions;
   'gemini-nano': GeminiNanoChatServiceOptions;
 };

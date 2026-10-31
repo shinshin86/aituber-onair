@@ -4,7 +4,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
 
 ## Features
 
-- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI, and PLaMo in real-time
+- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI and Sarashina, and PLaMo in real-time
 - 💬 **Real-time Streaming** - See AI responses as they're generated
 - 📝 **Chat History** - Full conversation history with role indicators
 - 🖼️ **Vision Support** - Upload and analyze images (drag & drop supported)
@@ -77,7 +77,7 @@ react-basic/
 
 ### Basic Chat
 
-1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI, or PLaMo)
+1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI and Sarashina, or PLaMo)
 2. Enter your API key
 3. Type a message and press Enter or click Send
 4. Watch the AI response stream in real-time
@@ -292,6 +292,21 @@ npm install
 - **429**: Rate limit exceeded
 - **500**: Server error (try again)
 
+### Sarashina (backend-only beta)
+
+Sarashina appears disabled in the provider list. Its source model metadata lists
+`sarashina3-nano` (lightweight chat default), `sarashina3-mini`, and
+`sarashina3.2-mini-thinking`; Guard is moderation-only and is excluded. No Sarashina
+requests or API keys are sent by this browser example. Use the Node sample.
+The backend provider supports text, streaming, tools and encrypted reasoning replay.
+It defaults thinking effort to `low` and limits `max_completion_tokens` to 8000;
+keep the returned `assistant_message` unchanged in continuation history.
+See [API docs](https://docs.sarashina.ai/api-reference/chat-completions),
+[models](https://docs.sarashina.ai/models), and the package README for full limits.
+The [service](https://sarashina.ai/) is a free beta; [terms](https://sarashina.ai/terms)
+allow input/output use for training and describe training opt-out for paid plans only.
+Live inference, account access and browser rendering have not been verified.
+
 ### CORS Issues
 
 Named providers in this sample send requests directly to their configured
@@ -302,10 +317,12 @@ native OpenAI, Z.ai, and OpenRouter requests remain direct browser requests.
 Their success depends on the upstream service permitting your origin and
 request headers. Mock transport tests do not verify live CORS behavior.
 
-Sakana AI is shown as a disabled provider in this browser example because direct browser
-requests can fail with CORS unless Sakana enables the required CORS headers for
-your origin. Use `../node-basic/sakana-example.js` from Node.js, or call Sakana through your own
-backend/serverless proxy in a web app.
+Providers that cannot be called directly by this browser example are shown disabled;
+currently Sakana AI and Sarashina. Sakana requests may fail CORS; Sarashina's
+[security guide](https://docs.sarashina.ai/introduction) requires a protected backend
+and forbids exposing API keys in browser/mobile clients. Use
+`../node-basic/sakana-example.js` or `../node-basic/sarashina-example.js` in Node.js,
+or an application backend that keeps provider credentials server-side.
 
 For production, you'll need to:
 1. Use a backend proxy

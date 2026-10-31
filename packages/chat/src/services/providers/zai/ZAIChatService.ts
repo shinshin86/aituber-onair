@@ -1,3 +1,4 @@
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
 import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
@@ -222,7 +223,7 @@ export class ZAIChatService implements ChatService {
     const body: any = {
       model,
       stream,
-      messages,
+      messages: stripSarashinaReasoning(messages),
     };
 
     const tokenLimit =

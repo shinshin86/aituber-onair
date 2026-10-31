@@ -21,6 +21,7 @@ const KNOWN_CHAT_PROVIDERS = new Set([
   'openrouter',
   'plamo',
   'sakana',
+  'sarashina',
   'xai',
   'zai',
 ]);
@@ -36,6 +37,7 @@ const TOOL_SUPPORTED_PROVIDERS = new Set([
   'openrouter',
   'plamo',
   'sakana',
+  'sarashina',
   'xai',
   'zai',
 ]);

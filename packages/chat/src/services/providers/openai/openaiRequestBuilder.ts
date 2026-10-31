@@ -1,3 +1,4 @@
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
@@ -173,7 +174,7 @@ export function buildOpenAIRequestBody({
     body.messages =
       provider === 'mistral'
         ? cleanMessagesForMistralChatCompletions(messages)
-        : messages;
+        : stripSarashinaReasoning(messages);
   }
 
   // Add GPT-5 specific parameters.

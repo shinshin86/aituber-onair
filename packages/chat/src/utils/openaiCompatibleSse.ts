@@ -12,6 +12,8 @@ type SseParseOptions = {
   onJsonError?: JsonParseErrorHandler;
   appendTextBlock?: (blocks: ToolChatBlock[], text: string) => void;
   preserveAssistantMessage?: boolean;
+  reasoningField?: 'reasoning_content' | 'reasoning';
+  requireDone?: boolean;
   throwOnApiError?: boolean;
 };
 
@@ -77,6 +79,7 @@ const throwIfApiError = (data: any): void => {
 const forEachSsePayload = async (
   res: Response,
   onPayload: (payload: string) => void,
+  requireDone = false,
 ): Promise<void> => {
   const reader = res.body?.getReader();
   if (!reader) {
@@ -109,6 +112,9 @@ const forEachSsePayload = async (
       onPayload(payload);
     }
   }
+  if (requireDone && !shouldStop) {
+    throw new Error('Incomplete provider stream: missing [DONE].');
+  }
 };
 
 export async function parseOpenAICompatibleTextStream(
@@ -118,19 +124,23 @@ export async function parseOpenAICompatibleTextStream(
 ): Promise<string> {
   let full = '';
 
-  await forEachSsePayload(res, (payload) => {
-    const json = parseJsonPayload(payload, options.onJsonError);
-    if (!json) return;
-    if (options.throwOnApiError) {
-      throwIfApiError(json);
-    }
+  await forEachSsePayload(
+    res,
+    (payload) => {
+      const json = parseJsonPayload(payload, options.onJsonError);
+      if (!json) return;
+      if (options.throwOnApiError) {
+        throwIfApiError(json);
+      }
 
-    const content = extractTextContent(json.choices?.[0]?.delta?.content);
-    if (content) {
-      onPartial(content);
-      full += content;
-    }
-  });
+      const content = extractTextContent(json.choices?.[0]?.delta?.content);
+      if (content) {
+        onPartial(content);
+        full += content;
+      }
+    },
+    options.requireDone,
+  );
 
   return full;
 }
@@ -144,56 +154,61 @@ export async function parseOpenAICompatibleToolStream(
   const toolCallsMap = new Map<number, any>();
   let fullContent = '';
   let reasoningContent = '';
+  const reasoningField = options.reasoningField ?? 'reasoning_content';
   let finishReason: string | undefined;
   let usage: Record<string, any> | undefined;
   const appendTextBlock =
     options.appendTextBlock ?? StreamTextAccumulator.append;
 
-  await forEachSsePayload(res, (payload) => {
-    const json = parseJsonPayload(payload, options.onJsonError);
-    if (!json) return;
-    if (options.throwOnApiError) {
-      throwIfApiError(json);
-    }
+  await forEachSsePayload(
+    res,
+    (payload) => {
+      const json = parseJsonPayload(payload, options.onJsonError);
+      if (!json) return;
+      if (options.throwOnApiError) {
+        throwIfApiError(json);
+      }
 
-    const choice = json.choices?.[0];
-    if (typeof choice?.finish_reason === 'string') {
-      finishReason = choice.finish_reason;
-    }
-    if (json.usage) {
-      usage = json.usage;
-    }
+      const choice = json.choices?.[0];
+      if (typeof choice?.finish_reason === 'string') {
+        finishReason = choice.finish_reason;
+      }
+      if (json.usage) {
+        usage = json.usage;
+      }
 
-    const delta = choice?.delta;
+      const delta = choice?.delta;
 
-    const content = extractTextContent(delta?.content);
-    if (content) {
-      onPartial(content);
-      appendTextBlock(textBlocks, content);
-      fullContent += content;
-    }
+      const content = extractTextContent(delta?.content);
+      if (content) {
+        onPartial(content);
+        appendTextBlock(textBlocks, content);
+        fullContent += content;
+      }
 
-    const reasoning = extractTextContent(delta?.reasoning_content);
-    if (reasoning) {
-      reasoningContent += reasoning;
-    }
+      const reasoning = extractTextContent(delta?.[reasoningField]);
+      if (reasoning) {
+        reasoningContent += reasoning;
+      }
 
-    if (delta?.tool_calls) {
-      delta.tool_calls.forEach((c: any) => {
-        const entry = toolCallsMap.get(c.index) ?? {
-          id: c.id,
-          type: c.type,
-          name: c.function?.name,
-          args: '',
-        };
-        if (c.id) entry.id = c.id;
-        if (c.type) entry.type = c.type;
-        if (c.function?.name) entry.name = c.function.name;
-        entry.args += c.function?.arguments || '';
-        toolCallsMap.set(c.index, entry);
-      });
-    }
-  });
+      if (delta?.tool_calls) {
+        delta.tool_calls.forEach((c: any) => {
+          const entry = toolCallsMap.get(c.index) ?? {
+            id: c.id,
+            type: c.type,
+            name: c.function?.name,
+            args: '',
+          };
+          if (c.id) entry.id = c.id;
+          if (c.type) entry.type = c.type;
+          if (c.function?.name) entry.name = c.function.name;
+          entry.args += c.function?.arguments || '';
+          toolCallsMap.set(c.index, entry);
+        });
+      }
+    },
+    options.requireDone,
+  );
 
   const toolBlocks: ToolChatBlock[] = Array.from(toolCallsMap.entries())
     .sort((a, b) => a[0] - b[0])
@@ -220,7 +235,7 @@ export async function parseOpenAICompatibleToolStream(
   const assistantMessage: ChatCompletionAssistantMessage = {
     role: 'assistant',
     content: fullContent,
-    ...(reasoningContent ? { reasoning_content: reasoningContent } : {}),
+    ...(reasoningContent ? { [reasoningField]: reasoningContent } : {}),
     ...(assistantToolCalls.length > 0
       ? { tool_calls: assistantToolCalls }
       : {}),

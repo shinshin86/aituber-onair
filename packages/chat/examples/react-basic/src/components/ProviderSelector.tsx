@@ -214,6 +214,10 @@ import {
   MODEL_MISTRAL_LARGE_LATEST,
   MODEL_MISTRAL_LARGE_4_0,
   MODEL_MISTRAL_SMALL_2603,
+  // Sarashina models
+  MODEL_SARASHINA_3_NANO,
+  MODEL_SARASHINA_3_MINI,
+  MODEL_SARASHINA_3_2_MINI_THINKING,
   // Sakana models
   MODEL_FUGU,
   MODEL_FUGU_ULTRA_V1_1,
@@ -354,6 +358,13 @@ const providerInfo: Record<Provider, ProviderInfo> = {
     disabled: true,
     disabledReason:
       'Disabled: browser CORS unsupported. Use Node.js or a backend proxy.',
+  },
+  sarashina: {
+    name: 'Sarashina',
+    placeholder: 'xxx...',
+    disabled: true,
+    disabledReason:
+      'Disabled: API keys must stay on a protected backend. Use Node.js or a backend proxy.',
   },
   plamo: {
     name: 'PLaMo',
@@ -1303,6 +1314,26 @@ export const allModels: ProviderModel[] = [
     id: MODEL_MISTRAL_ZAI_GLM_5_3,
     name: 'GLM-5.3 (Mistral)',
     provider: 'mistral',
+    default: false,
+  },
+
+  // Sarashina models (provider is disabled in browser UI).
+  {
+    id: MODEL_SARASHINA_3_NANO,
+    name: 'Sarashina3 Nano',
+    provider: 'sarashina',
+    default: true,
+  },
+  {
+    id: MODEL_SARASHINA_3_MINI,
+    name: 'Sarashina3 Mini',
+    provider: 'sarashina',
+    default: false,
+  },
+  {
+    id: MODEL_SARASHINA_3_2_MINI_THINKING,
+    name: 'Sarashina3.2 Mini Thinking',
+    provider: 'sarashina',
     default: false,
   },
 

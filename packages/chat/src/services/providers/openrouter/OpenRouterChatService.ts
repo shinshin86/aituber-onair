@@ -1,3 +1,4 @@
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
 import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
@@ -355,7 +356,7 @@ export class OpenRouterChatService implements ChatService {
   ): any {
     const body: any = {
       model,
-      messages,
+      messages: stripSarashinaReasoning(messages),
       stream,
     };
 
