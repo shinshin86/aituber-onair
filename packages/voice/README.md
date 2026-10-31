@@ -436,7 +436,8 @@ WAV/MP3 output and existing voice IDs continue through the same path.
 
 Deepgram Flux uses the [one-shot `POST /v2/speak` endpoint](https://developers.deepgram.com/docs/flux-tts/batch)
 with `Authorization: Token ...` and returns MP3 audio bytes. This integration
-supports English Flux voices only. It does not implement Aura (`/v1/speak`),
+supports English (`flux-{voice}-en`) and Japanese (`flux-{voice}-ja`) Flux
+voices; other Flux languages are rejected. It does not implement Aura (`/v1/speak`),
 WebSocket streaming, interruption handling, callbacks, or beta expressivity.
 
 ```typescript
@@ -449,10 +450,18 @@ const voiceService = new VoiceService({
 ```
 
 The required full voice ID in `speaker` is sent as the `model` query parameter.
-The example defaults to `flux-haley-en`. `deepgramSpeed` is optional (0.5–1.5,
-in 0.05 steps).
+The example defaults to `flux-haley-en`. The documented Japanese voices are
+`flux-ayumi-ja`, `flux-hayato-ja`, `flux-nozomi-ja`, and `flux-sayaka-ja`;
+pair them with Japanese text. `deepgramSpeed` is optional (0.5–1.5,
+in 0.05 steps). Deepgram documents that speed is not supported by every model
+or language and returns `SPEED_NOT_SUPPORTED` for unsupported combinations.
+Japanese voices are docs-verified against the official
+[voice catalog](https://developers.deepgram.com/docs/flux-tts/voices) and the
+public model catalog only; MP3 output and speed with Japanese voices have not
+been live-verified through this package.
 Use `getVoiceEngineVoiceList('deepgram')` to fetch the public v2 model catalog
-(`GET /v2/models`, no API key) and keep its English Flux entries. The v1
+(`GET /v2/models`, no API key) and keep its English and Japanese Flux entries.
+Pass `language: 'en'` or `language: 'ja'` to narrow the list. The v1
 catalog (`/v1/models`) lists Aura voices only. The React example always offers the documented Haley preset independently of
 the catalog. Its optional catalog refresh preserves the selected voice, and
 empty results or errors also preserve the existing list. See the
@@ -941,7 +950,7 @@ const voiceService = new VoiceService({
 
 - **Deepgram Flux**
   - Endpoint: `deepgramApiUrl`
-  - Voice/model: `speaker` (Flux English ID), optional `deepgramSpeed`
+  - Voice/model: `speaker` (Flux English or Japanese ID), optional `deepgramSpeed`
   - Output: MP3
 
 - **Cartesia**
@@ -1053,7 +1062,7 @@ try {
 ### Deepgram Flux Features
 
 - Token-authenticated one-shot `/v2/speak` requests with binary MP3 output
-- English-only Flux voices from the public v2 model catalog
+- English and Japanese Flux voices from the public v2 model catalog
 - Optional speech speed and custom endpoint; no emotion/style mapping
 
 ### Inworld Features

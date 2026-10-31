@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { OpenRouterTtsModel } from '@aituber-onair/voice';
 import {
+  DEEPGRAM_PRESET_VOICE_OPTIONS,
   ENGINE_DEFAULTS,
   GEMINI_TTS_VOICES,
   GRADIUM_VOICE_OPTIONS,
@@ -163,20 +164,21 @@ export function EngineSelector({
     }
 
     if (engine === 'deepgram') {
-      const preset = {
-        id: ENGINE_DEFAULTS.deepgram.speaker,
-        label: 'Haley (English, preset)',
-      };
       const voices = [
-        preset,
-        ...speakerOptions.filter((voice) => voice.id !== preset.id),
+        ...DEEPGRAM_PRESET_VOICE_OPTIONS,
+        ...speakerOptions.filter(
+          (voice) =>
+            !DEEPGRAM_PRESET_VOICE_OPTIONS.some(
+              (preset) => preset.id === voice.id,
+            ),
+        ),
       ];
       if (speaker && !voices.some((voice) => voice.id === speaker)) {
         voices.push({ id: speaker, label: `${speaker} (current selection)` });
       }
       return (
         <div className="form-group">
-          <label htmlFor="speaker">Speaker (English only):</label>
+          <label htmlFor="speaker">Speaker (English / Japanese):</label>
           <select
             id="speaker"
             value={speaker}
@@ -205,12 +207,15 @@ export function EngineSelector({
             </div>
           )}
           <div className="speaker-fetch-message">
-            Haley はカタログに依存しない固定プリセットです。
-            公開カタログを確認すると、ほかの Flux voice を選択肢に追加します。
-            確認は任意で API key 不要です。更新時も現在の選択を維持し、
+            Haley（英語）と Ayumi・Hayato・Nozomi・Sayaka（日本語）は
+            カタログに依存しない固定プリセットです。
+            公開カタログを確認すると、ほかの英語・日本語の Flux voice
+            を選択肢に追加します。 確認は任意で API key
+            不要です。更新時も現在の選択を維持し、
             空の結果や取得エラーでは既存の一覧も保持します。音声生成には API key
-            と英語のテキストが必要です。 この例は Vite proxy
-            を使用します。本番では backend route を用意し、 API key
+            と、voice の言語に合わせたテキスト（英語または日本語）が必要です。
+            日本語 voice での MP3 出力と話速指定は実 API で未検証です。 この例は
+            Vite proxy を使用します。本番では backend route を用意し、 API key
             をサーバーで管理してください。
           </div>
         </div>
@@ -733,7 +738,7 @@ export function EngineSelector({
           <option value="elevenLabs">ElevenLabs</option>
           <option value="fishAudio">Fish Audio</option>
           <option value="cartesia">Cartesia</option>
-          <option value="deepgram">Deepgram Flux (English only)</option>
+          <option value="deepgram">Deepgram Flux (English / Japanese)</option>
           <option value="inworld">Inworld</option>
           <option value="gradium">Gradium</option>
           <option value="openaiCompatible">OpenAI-Compatible TTS</option>

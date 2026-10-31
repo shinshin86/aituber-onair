@@ -423,7 +423,8 @@ voice 一覧を取得できます。エンジンは公式仕様の
 
 Deepgram Flux は [one-shot `POST /v2/speak`](https://developers.deepgram.com/docs/flux-tts/batch)
 を使用し、`Authorization: Token ...` で認証して MP3 音声バイト列を返します。
-この実装は英語の Flux voice のみ対応します。Aura (`/v1/speak`)、WebSocket
+この実装は英語（`flux-{voice}-en`）と日本語（`flux-{voice}-ja`）の Flux voice に
+対応し、それ以外の言語の Flux voice は拒否します。Aura (`/v1/speak`)、WebSocket
 ストリーミング、割り込み、callback、ベータ版 expressivity は未実装です。
 
 ```typescript
@@ -436,9 +437,16 @@ const voiceService = new VoiceService({
 ```
 
 `speaker` は必須で、完全な voice ID を `model` クエリとして送信します。
-サンプルの既定値は `flux-haley-en` です。`deepgramSpeed` は任意指定で 0.5〜1.5
-（0.05 刻み）です。`getVoiceEngineVoiceList('deepgram')` は API key 不要の
-公開 v2 カタログ（`GET /v2/models`）から英語の Flux voice のみを抽出します。
+サンプルの既定値は `flux-haley-en` です。公式に記載された日本語 voice は
+`flux-ayumi-ja`、`flux-hayato-ja`、`flux-nozomi-ja`、`flux-sayaka-ja` で、
+日本語のテキストと組み合わせて使います。`deepgramSpeed` は任意指定で 0.5〜1.5
+（0.05 刻み）です。Deepgram は話速がすべての model/言語で使えるわけではなく、
+未対応の組み合わせでは `SPEED_NOT_SUPPORTED` を返すと記載しています。
+日本語 voice は公式 voice 一覧と公開 model カタログで確認済み（docs-verified）
+ですが、このパッケージ経由での日本語 voice の MP3 出力と話速指定は実 API で未検証です。
+`getVoiceEngineVoiceList('deepgram')` は API key 不要の
+公開 v2 カタログ（`GET /v2/models`）から英語と日本語の Flux voice を抽出します。
+`language: 'en'` または `language: 'ja'` で絞り込めます。
 v1 カタログ（`/v1/models`）には Aura の voice しか含まれません。React 例では
 カタログに依存しない公式の Haley 固定プリセットを常に選べます。任意のカタログ更新でも現在の選択を維持し、
 空の結果や取得エラーでは既存の一覧も保持します。
@@ -931,7 +939,7 @@ const voiceService = new VoiceService({
 
 - **Deepgram Flux**
   - エンドポイント: `deepgramApiUrl`
-  - voice/model: `speaker`（英語の Flux ID）、任意の `deepgramSpeed`
+  - voice/model: `speaker`（英語または日本語の Flux ID）、任意の `deepgramSpeed`
   - 出力: MP3
 
 - **Cartesia**
@@ -1043,7 +1051,7 @@ try {
 ### Deepgram Flux の機能
 
 - Token 認証の one-shot `/v2/speak` とバイナリ MP3 出力
-- 公開 v2 model カタログから英語の Flux voice を取得
+- 公開 v2 model カタログから英語と日本語の Flux voice を取得
 - 任意の話速と endpoint 設定。emotion/style の自動変換は非対応
 
 ### Inworld の機能
