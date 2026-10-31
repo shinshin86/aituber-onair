@@ -120,6 +120,7 @@ describe.each(examples)('$name released voice settings', (example) => {
   it('selects the published OpenAI default when switching back to that provider', async () => {
     await mount();
     await act(async () => current.updateLLMProvider('kimi'));
+    expect(current.settings.llm.model).toBe('kimi-k3.1-pro');
     await act(async () => current.updateLLMProvider('openai'));
     expect(current.settings.llm.model).toBe('gpt-5.6-luna');
   });
@@ -148,6 +149,7 @@ describe.each(examples)('$name released voice settings', (example) => {
     ...CLAUDE_DEPRECATED_MODELS.map((model) => ['claude', model]),
     ...GEMINI_DEPRECATED_MODELS.map((model) => ['gemini', model]),
     ...KIMI_DEPRECATED_MODELS.map((model) => ['kimi', model]),
+    ['mistral', 'mistral-large-2512'],
     ['openai-compatible', 'gpt-4.1-nano'],
   ])(
     'preserves saved %s model %s and keeps it available',

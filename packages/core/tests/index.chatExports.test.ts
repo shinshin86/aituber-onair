@@ -96,6 +96,7 @@ import {
   MODEL_MINISTRAL_14B_2512,
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_MEDIUM_3_5,
+  MODEL_MISTRAL_LARGE_4_0,
   MISTRAL_SUPPORTED_MODELS,
   MISTRAL_VISION_SUPPORTED_MODELS,
   MistralChatService,
@@ -109,6 +110,7 @@ import {
   SAKANA_VISION_SUPPORTED_MODELS,
   ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
   SakanaChatService,
+  MODEL_PLAMO_3_1_PRIME,
   MODEL_PLAMO_3_0_PRIME,
   MODEL_PLAMO_2_2_PRIME,
   PLAMO_SUPPORTED_MODELS,
@@ -399,6 +401,9 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports Mistral chat provider items', () => {
     expect(typeof MistralChatService).toBe('function');
+    expect(MODEL_MISTRAL_LARGE_4_0).toBe('mistral-large-4-0');
+    expect(MISTRAL_SUPPORTED_MODELS).toContain(MODEL_MISTRAL_LARGE_4_0);
+    expect(isMistralReasoningEffortModel(MODEL_MISTRAL_LARGE_4_0)).toBe(false);
     expect(MODEL_MINISTRAL_3B_2512).toBe('ministral-3b-2512');
     expect(MODEL_MINISTRAL_8B_2512).toBe('ministral-8b-2512');
     expect(MODEL_MINISTRAL_14B_2512).toBe('ministral-14b-2512');
@@ -433,11 +438,12 @@ describe('Core index chat re-exports', () => {
 
   it('re-exports PLaMo chat provider items', () => {
     expect(typeof PlamoChatService).toBe('function');
+    expect(MODEL_PLAMO_3_1_PRIME).toBe('plamo-3.1-prime');
     expect(MODEL_PLAMO_3_0_PRIME).toBe('plamo-3.0-prime');
     expect(MODEL_PLAMO_2_2_PRIME).toBe('plamo-2.2-prime');
     expect(PLAMO_SUPPORTED_MODELS).toEqual([
       MODEL_PLAMO_3_0_PRIME,
-      'plamo-3.1-prime',
+      MODEL_PLAMO_3_1_PRIME,
     ]);
     expect(ENDPOINT_PLAMO_CHAT_COMPLETIONS_API).toBe(
       'https://api.platform.preferredai.jp/v1/chat/completions',

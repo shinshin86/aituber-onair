@@ -114,10 +114,10 @@ For endpoint details and limitations, see the
 
 ### Deepgram Flux setup
 
-Use `engineType: 'deepgram'`, an API key, and an English Flux voice ID
+Use `engineType: 'deepgram'`, an API key, and an English or Japanese Flux voice ID
 such as `flux-haley-en`. Core re-exports `DeepgramEngine`, its option types,
 and the speech/catalog URL constants. `getVoiceEngineVoiceList('deepgram')`
-lists English voices from the public v2 catalog without an API key.
+lists English and Japanese voices from the public v2 catalog without an API key.
 `deepgramSpeed` accepts 0.5–1.5 in 0.05 steps. This integration returns a
 complete MP3 from `POST /v2/speak`; it does not use Aura or WebSocket speech.
 See the [Deepgram batch guide](https://developers.deepgram.com/docs/flux-tts/batch).
@@ -1380,7 +1380,7 @@ Possible use cases for `chatLogUpdated` include:
 - **ElevenLabs**: ElevenLabs Text to Speech API with model, output format, language code, voice settings, and text normalization options.
 - **Fish Audio**: Fish Audio one-shot, single-speaker TTS with explicit `drama-3` and `drama-3-preview` model choices, S2 Pro by default, configurable output/latency options, and reference-voice list discovery.
 - **Cartesia**: Cartesia synchronous TTS with Sonic 3.5 / 3.6, language/output controls, and voice-list discovery.
-- **Deepgram Flux**: English-only, one-shot MP3 speech with a public voice catalog and optional speed control.
+- **Deepgram Flux**: English/Japanese one-shot MP3 speech with a public voice catalog and optional speed control.
 - **Inworld**: Inworld TTS REST API with selectable model, audio encoding, sample rate, bitrate, language, delivery mode, and temperature options.
 - **Gradium**: Gradium REST TTS API with selectable preset voices, output format, temperature, similarity, padding, and rewrite-rule options.
 - **OpenAI-Compatible TTS**: Self-hosted or third-party `/v1/audio/speech` compatible endpoints.
@@ -1550,11 +1550,11 @@ Currently, the following AI provider is built-in:
 - **Claude**: Supports current Claude API model IDs including Claude Haiku 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Retired IDs remain exported for source compatibility but are not advertised in selectors. Supported models accept `reasoning_effort`, which maps to Anthropic's `output_config.effort`; the package defaults these models to `low` (the API default is `high`).
 - **xAI**: Supports Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 model families. Grok 4.6 supports `low`, `medium`, `high`, and `xhigh` reasoning effort and defaults to `low`; Grok 4.5 also defaults to `low`, while Grok 4.3 defaults to `none` for lower latency. Retired Grok 4.1 Fast IDs remain compatibility exports only.
 - **DeepSeek**: Supports DeepSeek V4 Flash, DeepSeek V4 Pro, and the vision-capable DeepSeek V4 Flash Vision Exp through the first-class `deepseek` provider. These models expose model-aware `reasoning_effort`; Core keeps Chat's low-latency `none` default, while higher supported efforts remain selectable. Thinking and tool calling cannot currently be combined in one request.
-- **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including adjustable reasoning for supported models.
+- **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including adjustable reasoning for supported models. Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview; its reasoning levels are not exposed by this package.
 - **Sakana AI**: Supports Fugu (`fugu`), the exact Fugu Ultra v1.1 ID (`fugu-ultra-v1.1`), and the Japanese-focused, vision-capable Sakana Namazu (`sakana-namazu`) through the first-class `sakana` provider. Namazu disables optional thinking by default for responsive chat and can enable it explicitly through chat template options. Older aliases remain compatibility exports. Browser examples show this provider as disabled because direct browser requests can fail with CORS; use Node.js or a backend proxy.
-- **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`) through the first-class `plamo` provider. PLaMo 2.2 Prime remains a deprecated compatibility export ahead of its scheduled retirement.
+- **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`) and PLaMo 3.1 Prime (`plamo-3.1-prime`) through the first-class `plamo` provider. Retired PLaMo 2.2 Prime remains a compatibility export.
 - **Z.ai**: Supports GLM-5.3, the vision-capable GLM-5.3 Flash, GLM-5.2, GLM-5.1, GLM-5/GLM-5-Turbo (text-only), GLM-5V-Turbo (vision), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, and GLM-4.6V Flash/FlashX. GLM-5.3 models always use thinking, expose only `low`, `high`, and `max`, and default to the minimum `low` level for responsive chat. GLM-5.2 continues to default to `none`.
-- **Kimi**: Supports Kimi K3 (`kimi-k3`), Kimi K2.7 Code (`kimi-k2.7-code`), Kimi K2.7 Code HighSpeed (`kimi-k2.7-code-highspeed`), Kimi K2.6 (`kimi-k2.6`), and Kimi K2.5 (`kimi-k2.5`) with vision support. Models that expose `reasoning_effort` use their documented supported values and defaults: Kimi K3 accepts `low`, `high`, and `max`, defaults to `max`, and cannot disable reasoning. Kimi K2.7 Code models require thinking mode.
+- **Kimi**: Kimi K3.1 Pro (`kimi-k3.1-pro`, default), K3.1 Pro Highspeed, and K3 support vision and `low` / `high` / `max` reasoning. The package defaults to `low`; the API defaults to `max`. Deprecated K2 constants remain exported for saved configurations. Optional K2 thinking defaults to disabled; K2.7 Code models require thinking.
 - **OpenRouter**: Supports a curated OpenRouter model list, including Auto Router and Auto Router Beta, Fusion, latest-family aliases, OpenAI GPT-5.6, Claude Fable 5 / Sonnet 5 / Opus 5 / Opus 4.8, Gemini 3.7/3.6/3.5, Z.ai GLM-5.3 / GLM-5.3 Flash / GLM-5.2, xAI Grok 4.6/4.5, Kimi K3 / Kimi K2.6, Qwen3.8 Flash, KAT-Coder V2.5, and DeepSeek V4 Flash / V4 Flash Vision Exp / V4 Pro 0813. Model-aware vision and reasoning controls use Chat's current per-model values and low-latency defaults; catalog-absent IDs remain compatibility exports but are not advertised.
 - **OpenAI-Compatible**: Supports arbitrary OpenAI-compatible Chat Completions endpoints; vision capability is treated as unknown until the target endpoint/model responds
 
@@ -2218,3 +2218,9 @@ Voice 0.29.0 defaults to Gemini `gemini-3.8-flash-tts` and Cartesia
 selection, lifecycle notices and OpenRouter ElevenLabs v4/v4 Turbo catalog
 voices with MP3 playback. Saved explicit Gemini legacy TTS choices still load.
 See the [Voice documentation](../voice/README.md) for provider limitations.
+
+### Chat 0.67.0 and Voice 0.30.0
+
+Core re-exports `MODEL_PLAMO_3_1_PRIME` and `MODEL_MISTRAL_LARGE_4_0` (public preview). New Kimi settings use `kimi-k3.1-pro` with package-default low reasoning. Deprecated K2 and Mistral Large 3 constants remain exported; saved selections are preserved. Models with optional reasoning use the lightest supported default from Chat, and higher levels remain explicit options.
+
+Deepgram Japanese presets are `flux-ayumi-ja`, `flux-hayato-ja`, `flux-nozomi-ja`, and `flux-sayaka-ja`. All ten React TTS examples offer them alongside Haley without a catalog lookup. `language: 'en'` or `language: 'ja'` filters the public voice list. Japanese MP3 output and speed have not been live-verified; speed support varies by language/model.

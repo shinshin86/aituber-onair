@@ -22,6 +22,31 @@ const examples = [
 afterEach(() => vi.unstubAllGlobals());
 
 describe.each(examples)('Deepgram catalog in %s', (example) => {
+  it('merges Japanese fixed presets with catalog and saved voices without duplicates', async () => {
+    const { getDeepgramVoiceOptions } = await import(
+      `../examples/${example}/src/hooks/useDeepgramVoices.ts`
+    );
+    const voices = getDeepgramVoiceOptions(
+      [
+        { id: 'flux-ayumi-ja', label: 'Ayumi catalog' },
+        { id: 'flux-kit-en', label: 'Kit' },
+        { id: 'flux-hayato-ja', label: 'Hayato catalog' },
+        { id: 'aura-2-thalia-en', label: 'Aura' },
+      ],
+      'flux-saved-ja',
+    );
+    expect(voices.map((voice: { id: string }) => voice.id)).toEqual([
+      'flux-haley-en',
+      'flux-ayumi-ja',
+      'flux-hayato-ja',
+      'flux-nozomi-ja',
+      'flux-sayaka-ja',
+      'flux-kit-en',
+      'flux-saved-ja',
+    ]);
+    expect(getDeepgramVoiceOptions([], 'flux-sayaka-ja')).toHaveLength(5);
+  });
+
   it('retains a loaded list after empty and failed refreshes and ignores stale endpoint responses', async () => {
     const dom = new JSDOM(
       '<!doctype html><html><body><div id="root"></div></body></html>',
@@ -52,7 +77,10 @@ describe.each(examples)('Deepgram catalog in %s', (example) => {
         state.voices.map((voice) => voice.label).join(', '),
       );
     }
-    const voices = [{ id: 'flux-kit-en', label: 'Kit' }];
+    const voices = [
+      { id: 'flux-kit-en', label: 'Kit' },
+      { id: 'flux-ayumi-ja', label: 'Ayumi' },
+    ];
     listVoices.mockReset().mockResolvedValue(voices);
     try {
       await act(async () =>
@@ -65,7 +93,11 @@ describe.each(examples)('Deepgram catalog in %s', (example) => {
       listVoices.mockResolvedValueOnce([]);
       await act(async () => state!.refresh());
       expect(state!.voices).toEqual(voices);
-      expect(state!.error).toContain('keeping the current list');
+      expect(state!.error).toContain(
+        example === 'react-basic'
+          ? 'keeping the current list'
+          : '現在の一覧を保持',
+      );
       listVoices.mockRejectedValueOnce(new Error('offline'));
       await act(async () => state!.refresh());
       expect(state!.voices).toEqual(voices);

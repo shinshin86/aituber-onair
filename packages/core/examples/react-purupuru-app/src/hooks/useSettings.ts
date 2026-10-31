@@ -498,7 +498,9 @@ export function useSettings() {
         ? DEFAULT_OPENAI_COMPATIBLE_MODEL
         : provider === 'openai'
           ? 'gpt-5.6-luna'
-          : models[0] || '';
+          : provider === 'kimi'
+            ? 'kimi-k3.1-pro'
+            : models[0] || '';
     setSettings((prev) => ({
       ...prev,
       llm: {
