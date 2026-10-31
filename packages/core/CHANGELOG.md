@@ -1,5 +1,23 @@
 # @aituber-onair/core
 
+## 0.26.26
+
+### Patch Changes
+
+- Propagate published Chat 0.67.0 and Voice 0.30.0. Re-export PLaMo 3.1
+  Prime and Mistral Large 4 (public preview), retaining deprecated exports.
+- Use Kimi K3.1 Pro for new configurations and the lightest supported
+  reasoning defaults. Preserve saved deprecated K2 and Mistral model IDs
+  and display their deprecation status.
+- Add the four Japanese Deepgram Flux presets and English/Japanese catalog
+  selection to all ten React TTS settings examples, preserving saved voices.
+- Refresh documentation and all embedded Core example package metadata.
+
+### Known Limitations
+
+- No paid chat inference or speech synthesis was performed. Japanese Deepgram
+  MP3 output and speed remain documented but not live-verified.
+
 ## 0.26.25
 
 ### Patch Changes

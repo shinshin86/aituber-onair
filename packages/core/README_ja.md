@@ -46,7 +46,7 @@ API と制約の詳細は [Chat README](../chat/README.ja.md) と [Voice README]
 
 ### Deepgram Flux の設定
 
-`engineType: 'deepgram'`、API キー、`flux-haley-en` などの英語 Flux 音声 ID を指定します。Core は `DeepgramEngine`、設定型、音声合成・カタログ URL 定数を再エクスポートします。`getVoiceEngineVoiceList('deepgram')` は API キーなしで v2 公開カタログの英語音声を取得します。`deepgramSpeed` は 0.5〜1.5 を 0.05 刻みで指定できます。`POST /v2/speak` から完成した MP3 を取得する方式で、Aura や WebSocket 音声合成は使いません。[Deepgram batch ガイド](https://developers.deepgram.com/docs/flux-tts/batch)を参照してください。
+`engineType: 'deepgram'`、API キー、`flux-haley-en` などの英語・日本語 Flux 音声 ID を指定します。Core は `DeepgramEngine`、設定型、音声合成・カタログ URL 定数を再エクスポートします。`getVoiceEngineVoiceList('deepgram')` は API キーなしで v2 公開カタログの英語・日本語音声を取得します。`deepgramSpeed` は 0.5〜1.5 を 0.05 刻みで指定できます。`POST /v2/speak` から完成した MP3 を取得する方式で、Aura や WebSocket 音声合成は使いません。[Deepgram batch ガイド](https://developers.deepgram.com/docs/flux-tts/batch)を参照してください。
 
 TTS 設定を持つ全10 React サンプルでは、Vite の dev / preview proxy 経由で `/api/deepgram/v2/speak` と `/api/deepgram/v2/models` を使います。本番環境では認証付き backend route を用意し、API キーをサーバー側に保持してください。アバターサンプルでは音声合成・カタログ URL を変更できます。音声一覧の更新は選択中の音声を保持し、空の結果や取得失敗でも既存の一覧を残します。Haley は常に選択できます。Gradium は production が既定で、エンジンを切り替えて Gradium に戻すと production に戻ります。
 
@@ -1453,9 +1453,9 @@ OpenRouter API、DeepSeek API、Mistral API、Sakana AI、PLaMo が利用可能�
 - **DeepSeek**: first-class `deepseek` provider として DeepSeek V4 Flash / V4 Pro / Vision 対応の DeepSeek V4 Flash Vision Exp をサポート。各モデルでモデル別の `reasoning_effort` を利用でき、Core でも Chat の低レイテンシ向けデフォルト `none` を維持しつつ、対応する高い effort へ切り替えられます。現時点では thinking と tool calling を同一リクエストで併用できません
 - **Mistral**: Vision 対応の Ministral 3 系（`ministral-3b-2512`、`ministral-8b-2512`、`ministral-14b-2512`）と、`mistral-small-latest`、`mistral-medium-3-5`、`mistral-large-latest` などの現行 generalist model をサポート。対応モデルでは adjustable reasoning も利用可能
 - **Sakana AI**: first-class `sakana` provider として Fugu（`fugu`）、正確な Fugu Ultra v1.1 ID（`fugu-ultra-v1.1`）、日本語特化かつ Vision 対応の Sakana Namazu（`sakana-namazu`）をサポート。Namazu は応答性重視で任意の thinking をデフォルト無効とし、chat template option から明示的に有効化できます。旧 alias は compatibility export として残します。ブラウザ例では CORS により disabled 表示にしています
-- **PLaMo**: first-class `plamo` provider として PLaMo 3.0 Prime（`plamo-3.0-prime`）をサポート。PLaMo 2.2 Prime は retirement 予定の deprecated compatibility export です
+- **PLaMo**: first-class `plamo` provider として PLaMo 3.0 Prime（`plamo-3.0-prime`）とPLaMo 3.1 Prime（`plamo-3.1-prime`）に対応します。提供終了したPLaMo 2.2 Primeの定数は互換用に残します
 - **Z.ai**: GLM-5.3、Vision 対応の GLM-5.3 Flash、GLM-5.2、GLM-5.1、GLM-5/GLM-5-Turbo（テキスト専用）、GLM-5V-Turbo（Vision 対応）、GLM-4.7、GLM-4.7 Flash/FlashX、GLM-4.6、GLM-4.6V、GLM-4.6V Flash/FlashX をサポート。GLM-5.3 系は thinking 常時有効で `low`、`high`、`max` のみを公開し、応答性重視で最小の `low` を既定値にします。GLM-5.2 は引き続き `none` が既定値です
-- **Kimi**: Kimi K3（`kimi-k3`）、Kimi K2.7 Code（`kimi-k2.7-code`）、Kimi K2.7 Code HighSpeed（`kimi-k2.7-code-highspeed`）、Kimi K2.6（`kimi-k2.6`）、Kimi K2.5（`kimi-k2.5`）を Vision 対応でサポート。`reasoning_effort` を公開するモデルでは公式の対応値とデフォルトを使用します。Kimi K3 は `low`、`high`、`max` を指定でき、デフォルトは `max` です。推論自体は無効化できません。Kimi K2.7 Code 系は thinking mode が必須です
+- **Kimi**: Kimi K3.1 Pro（`kimi-k3.1-pro`、既定）、K3.1 Pro Highspeed、K3は画像入力と推論レベル`low` / `high` / `max`に対応します。パッケージ既定は`low`、API既定は`max`です。K2系は非推奨ですが、保存済み設定向けに定数を残します。無効化できるK2のthinkingは既定で無効、K2.7 Code系は有効のままです。
 - **OpenRouter**: Auto Router / Auto Router Beta、Fusion、latest 系 alias、OpenAI GPT-5.6、Claude Fable 5 / Sonnet 5 / Opus 5 / Opus 4.8、Gemini 3.7 / 3.6 / 3.5、Z.ai GLM-5.3 / GLM-5.3 Flash / GLM-5.2、xAI Grok 4.6 / 4.5、Kimi K3 / Kimi K2.6、Qwen3.8 Flash、KAT-Coder V2.5、DeepSeek V4 Flash / V4 Flash Vision Exp / V4 Pro 0813 を含むキュレーション済みモデル一覧をサポート。モデル別の Vision / reasoning control と低レイテンシ既定を引き継ぎ、catalog に存在しない ID は compatibility export のみとします
 - **OpenAI-Compatible**: 任意の OpenAI 互換 Chat Completions endpoint をサポートし、Vision 対応は endpoint / model の応答まで `unknown` として扱います
 
@@ -2117,3 +2117,9 @@ Voice 0.29.0 の既定値は Gemini の `gemini-3.8-flash-tts` と Cartesia の
 OpenRouter 経由の ElevenLabs v4/v4 Turbo の音声一覧と MP3 再生に対応します。
 保存済みの旧 Gemini TTS モデルの明示指定は維持します。
 各プロバイダーの制約は [Voice の説明](../voice/README_ja.md)を参照してください。
+
+### Chat 0.67.0・Voice 0.30.0 の反映
+
+`MODEL_PLAMO_3_1_PRIME` と `MODEL_MISTRAL_LARGE_4_0`（公開プレビュー）をCoreから利用できます。Kimiの新規設定は`kimi-k3.1-pro`と推論レベル`low`を使います。非推奨のK2系とMistral Large 3も定数のexportを残し、保存済みの選択を維持します。推論設定を省略した場合はChatが対応する最小のレベルを使い、高いレベルは明示指定で選べます。
+
+Deepgramの日本語音声は`flux-ayumi-ja`、`flux-hayato-ja`、`flux-nozomi-ja`、`flux-sayaka-ja`です。TTS設定を持つ全10 Reactサンプルでは、Haleyと日本語4音声をカタログ取得前から選べます。音声一覧は`language: 'en'`または`language: 'ja'`で絞り込めます。日本語音声のMP3出力と話速は実APIでは未検証で、話速の対応は言語・モデルによって異なります。

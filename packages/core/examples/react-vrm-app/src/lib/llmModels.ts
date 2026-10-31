@@ -33,5 +33,7 @@ const DEPRECATED_MODELS: Record<string, readonly string[]> = {
 export function getLlmModelLabel(provider: string, model: string): string {
   return DEPRECATED_MODELS[provider]?.includes(model)
     ? `${model}（非推奨）`
-    : model;
+    : provider === 'mistral' && model === 'mistral-large-4-0'
+      ? `${model}（プレビュー）`
+      : model;
 }

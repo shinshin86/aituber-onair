@@ -146,7 +146,10 @@ import {
   revokeObjectUrl,
 } from './utils/geminiImageGeneration';
 import { useGeminiNanoStatus } from './hooks/useGeminiNanoStatus';
-import { useDeepgramVoices } from './hooks/useDeepgramVoices';
+import {
+  useDeepgramVoices,
+  getDeepgramVoiceOptions,
+} from './hooks/useDeepgramVoices';
 import { usePiperPlusStatus } from './hooks/usePiperPlusStatus';
 
 // when use MCP, uncomment the following line
@@ -621,11 +624,10 @@ const App: React.FC = () => {
   const [gpt5Preset, setGpt5Preset] = useState<GPT5PresetKey | 'custom'>(
     GPT5_SAMPLE_PRESET,
   );
-  const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>(
-    'medium',
+  const [verbosity, setVerbosity] = useState<'low' | 'medium' | 'high'>('low');
+  const [reasoning_effort, setReasoningEffort] = useState<ReasoningEffortLevel>(
+    getDefaultReasoningEffortForOpenAIModel(DEFAULT_MODEL),
   );
-  const [reasoning_effort, setReasoningEffort] =
-    useState<ReasoningEffortLevel>('medium');
   const [gpt5EndpointPreference, setGpt5EndpointPreference] = useState<
     'chat' | 'responses'
   >('chat');
@@ -1600,6 +1602,10 @@ const App: React.FC = () => {
     switch (chatProvider) {
       case 'openai':
         setModel(openaiModels[0]);
+        setReasoningEffort(
+          getDefaultReasoningEffortForOpenAIModel(openaiModels[0]),
+        );
+        setVerbosity('low');
         break;
       case 'gemini':
         setModel(geminiModels[0]);
@@ -1625,7 +1631,7 @@ const App: React.FC = () => {
       case 'kimi':
         setModel(kimiModels[0]);
         setReasoningEffort(
-          getDefaultKimiReasoningEffort(kimiModels[0]) ?? 'max',
+          getDefaultKimiReasoningEffort(kimiModels[0]) ?? 'low',
         );
         break;
       case 'xai':
@@ -3267,7 +3273,7 @@ const App: React.FC = () => {
   const isKimiReasoningEffortModelSelected =
     kimiSupportedReasoningEfforts.length > 0;
   const kimiReasoningEffortValue: KimiReasoningEffort =
-    normalizeReasoningEffortForKimiModel(model, reasoning_effort) ?? 'max';
+    normalizeReasoningEffortForKimiModel(model, reasoning_effort) ?? 'low';
   const deepSeekSupportedReasoningEfforts =
     chatProvider === 'deepseek' && model
       ? getDeepSeekSupportedReasoningEfforts(model)
@@ -3664,6 +3670,10 @@ const App: React.FC = () => {
                             </option>
                           ))}
                         {chatProvider === 'kimi' &&
+                          !kimiModels.includes(model) && (
+                            <option value={model}>{model} (deprecated)</option>
+                          )}
+                        {chatProvider === 'kimi' &&
                           kimiModels.map((m) => (
                             <option key={m} value={m}>
                               {m}
@@ -3682,9 +3692,13 @@ const App: React.FC = () => {
                             </option>
                           ))}
                         {chatProvider === 'mistral' &&
+                          !mistralModels.includes(model) && (
+                            <option value={model}>{model} (deprecated)</option>
+                          )}
+                        {chatProvider === 'mistral' &&
                           mistralModels.map((m) => (
                             <option key={m} value={m}>
-                              {m}
+                              {m === 'mistral-large-4-0' ? `${m} (preview)` : m}
                             </option>
                           ))}
                         {chatProvider === 'sakana' &&
@@ -3828,8 +3842,8 @@ const App: React.FC = () => {
                               fontSize: '12px',
                             }}
                           >
-                            Kimi K3 always reasons. Use Low for shorter
-                            reasoning, or Max to keep the API default.
+                            Kimi K3 and K3.1 Pro always reason. Use Low for
+                            shorter reasoning, or Max to keep the API default.
                           </div>
                         </>
                       )}
@@ -5751,9 +5765,10 @@ const App: React.FC = () => {
                           : 'Refresh voices'}
                       </button>
                       <p>
-                        English-only one-shot Flux TTS (MP3). Dev/preview uses a
-                        Vite proxy; production needs an authenticated backend
-                        route.
+                        English / Japanese one-shot Flux TTS (MP3). Japanese MP3
+                        output and speed are documented but not live-verified.
+                        Dev/preview uses a Vite proxy; production needs an
+                        authenticated backend route.
                       </p>
                       {deepgram.error && <p role="alert">{deepgram.error}</p>}
                     </div>
@@ -7632,25 +7647,14 @@ const App: React.FC = () => {
 
                           {selectedVoiceEngine === 'deepgram' && (
                             <>
-                              <option value="flux-haley-en">
-                                Haley (English)
-                              </option>
-                              {selectedSpeakers.deepgram !== 'flux-haley-en' &&
-                                !deepgram.voices.some(
-                                  (voice) =>
-                                    voice.id === selectedSpeakers.deepgram,
-                                ) && (
-                                  <option value={selectedSpeakers.deepgram}>
-                                    {selectedSpeakers.deepgram} (saved voice)
-                                  </option>
-                                )}
-                              {deepgram.voices
-                                .filter((voice) => voice.id !== 'flux-haley-en')
-                                .map((voice) => (
-                                  <option key={voice.id} value={voice.id}>
-                                    {voice.label}
-                                  </option>
-                                ))}
+                              {getDeepgramVoiceOptions(
+                                deepgram.voices,
+                                String(selectedSpeakers.deepgram),
+                              ).map((voice) => (
+                                <option key={voice.id} value={voice.id}>
+                                  {voice.label}
+                                </option>
+                              ))}
                             </>
                           )}
                           {selectedVoiceEngine === 'gradium' &&

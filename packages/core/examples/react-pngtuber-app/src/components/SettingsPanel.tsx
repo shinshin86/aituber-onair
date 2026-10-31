@@ -18,7 +18,10 @@ import {
 } from '@aituber-onair/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DEFAULT_SYSTEM_PROMPT } from '../constants/prompts';
-import { useDeepgramVoices } from '../hooks/useDeepgramVoices';
+import {
+  useDeepgramVoices,
+  getDeepgramVoiceOptions,
+} from '../hooks/useDeepgramVoices';
 import { useGeminiNanoStatus } from '../hooks/useGeminiNanoStatus';
 import type { useScreenVisionController } from '../hooks/useScreenVisionController';
 import type { useSettings } from '../hooks/useSettings';
@@ -2517,7 +2520,7 @@ export function SettingsPanel({
                 </div>
                 <div className="settings-field">
                   <label htmlFor="tts-deepgram-speaker">
-                    Voice (English Flux)
+                    音声（英語 / 日本語 Flux）
                   </label>
                   <select
                     id="tts-deepgram-speaker"
@@ -2525,22 +2528,14 @@ export function SettingsPanel({
                     onChange={(e) => updateTTSSpeaker(e.target.value)}
                     disabled={disabled}
                   >
-                    <option value="flux-haley-en">Haley (English)</option>
-                    {settings.tts.speaker !== 'flux-haley-en' &&
-                      !deepgram.voices.some(
-                        (voice) => voice.id === settings.tts.speaker,
-                      ) && (
-                        <option value={settings.tts.speaker}>
-                          {settings.tts.speaker} (saved voice)
-                        </option>
-                      )}
-                    {deepgram.voices
-                      .filter((voice) => voice.id !== 'flux-haley-en')
-                      .map((voice) => (
-                        <option key={voice.id} value={voice.id}>
-                          {voice.label}
-                        </option>
-                      ))}
+                    {getDeepgramVoiceOptions(
+                      deepgram.voices,
+                      settings.tts.speaker,
+                    ).map((voice) => (
+                      <option key={voice.id} value={voice.id}>
+                        {voice.label}
+                      </option>
+                    ))}
                   </select>
                   <button
                     type="button"
@@ -2548,7 +2543,7 @@ export function SettingsPanel({
                     onClick={deepgram.refresh}
                     disabled={disabled || deepgram.loading}
                   >
-                    {deepgram.loading ? 'Loading voices...' : 'Refresh voices'}
+                    {deepgram.loading ? '音声を取得中...' : '音声一覧を更新'}
                   </button>
                   {deepgram.error && (
                     <p className="settings-field-error">{deepgram.error}</p>
@@ -2596,8 +2591,7 @@ export function SettingsPanel({
                     disabled={disabled}
                   />
                   <small>
-                    English-only one-shot Flux TTS (MP3). Dev/preview uses a
-                    Vite proxy; production needs an authenticated backend route.
+                    英語・日本語のFlux音声をMP3で取得します。日本語音声のMP3出力と話速は公式仕様に記載されていますが、実APIでは未検証です。開発・プレビューにはViteプロキシ、本番には認証付きバックエンドを使用してください。
                   </small>
                 </div>
               </>

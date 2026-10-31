@@ -333,7 +333,7 @@ examples keep their existing reasoning UI; OpenAI's casual preset selects
 the new OpenRouter Qwen models support images. Mistral GLM-5.3 requires an
 eligible subscription tier, and native Z.ai browser calls may fail on CORS.
 
-Select **Deepgram Flux** for English-only, one-shot MP3 speech. Enter a
+Select **Deepgram Flux** for English/Japanese one-shot MP3 speech. Enter a
 Deepgram API key and select a named voice from the public v2 catalog.
 Haley is always available; refreshes preserve the selected voice and keep
 the previous list on empty or failed responses. Optional Speed is 0.5–1.5
@@ -408,3 +408,9 @@ and MP3 playback, alongside MAI preview PCM wrapped as WAV. No static voice
 allowlist is used for ElevenLabs. Fish Audio S1 retires on 2026-12-31;
 S2.1 Pro Free is free through 2026-11-30. Gradium's beta alias currently
 matches default and tracks future betas; Voice Similarity is deprecated and ignored.
+
+### Chat and voice updates
+
+Chat 0.67.0 adds PLaMo 3.1 Prime and Mistral Large 4 (public preview). New Kimi configurations use K3.1 Pro with low reasoning. Saved deprecated K2 and Mistral Large 3 selections remain unchanged and are marked as deprecated.
+
+Deepgram offers Haley (English) and Ayumi, Hayato, Nozomi, and Sayaka (Japanese) as fixed presets, including before a catalog lookup. English and Japanese catalog voices are selectable without resetting the saved voice. Japanese MP3 output and speed are documented but have not been live-verified.
