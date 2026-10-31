@@ -1,5 +1,96 @@
 # @aituber-onair/chat
 
+## 0.67.0
+
+### Minor Changes
+
+- Added PLaMo 3.1 Prime (`plamo-3.1-prime`) as an explicit option on the
+  existing Chat Completions endpoint, with the same `none` / `medium`
+  reasoning settings as PLaMo 3.0 Prime. Web search options and the separate
+  Responses-based Deep Research model are not exposed by this provider.
+- Added Mistral Large 4 (`mistral-large-4-0`) as an explicit public preview
+  option with text/image input and streaming. The provider omits
+  `reasoning_effort`: this model accepts `low`, `medium`, and `high`, which
+  the package does not expose yet. Thinking chunks are skipped so only the
+  answer text is returned.
+
+### Behavior Changes
+
+Applications that rely on omitted reasoning/thinking settings or provider
+defaults may behave differently after upgrading. Explicitly configure the
+model and supported reasoning/thinking level to retain the previous behavior.
+
+- Changed the Kimi default text and vision model from `kimi-k2.6` to
+  `kimi-k3.1-pro`. K3-family models always reason and reject the K2.x
+  `thinking` option; use `reasoning_effort` instead. Explicit K2 model IDs
+  remain callable while the account and provider still allow access.
+- Kimi K3, K3.1 Pro, and K3.1 Pro Highspeed now send
+  `reasoning_effort: 'low'` by default instead of `max`, the API default.
+  Set `high` or `max` explicitly for deeper reasoning.
+- K2 models that allow thinking to be disabled now default to
+  `thinking: { type: 'disabled' }` instead of `enabled`, including direct
+  `KimiChatService` use. Explicit `enabled` remains available without tools;
+  tools still force thinking off for these models. K2.7 Code and Code
+  HighSpeed keep mandatory thinking enabled, including with tools, and
+  continue to reject explicit `disabled` settings. Self-hosted endpoints map
+  disabled thinking to `chat_template_kwargs: { thinking: false }`.
+- Direct OpenAI defaults now use `none` for GPT-6 Sol (previously `medium`),
+  GPT-6 Luna (previously `low`), and GPT-6.1 Terra (previously `low`). Terra
+  also uses `none` when constructed directly. Responses remains the default
+  endpoint; a Chat Completions preference now works for Sol/Luna without an
+  explicit `none` setting. Explicit higher efforts still use Responses for
+  Sol/Luna. GPT-6.1 Sol and GPT-6 Astra remain at their minimum `low` effort.
+- Changed OpenRouter package defaults to the lowest effort already supported
+  for each model. Unsupported effort requests also fall back to these new
+  defaults; valid explicit efforts are preserved:
+  - `anthropic/claude-haiku-5.5`: `low` -> `none`
+  - `openai/gpt-6-astra`: `medium` -> `low`
+  - `openai/gpt-6-astra-pro`: `medium` -> `low`
+  - `anthropic/claude-fable-5.1`: `high` -> `low`
+  - `google/gemini-3.8-flash`: `medium` -> `low`
+  - `qwen/qwen3.8-max-0902`: `xhigh` -> `minimal`
+  - `meta/muse-spark-1.3`: `medium` -> `minimal`
+- The Mistral provider now explicitly sends `reasoning_effort: 'none'` when
+  omitted for `mistral-small-latest` and `mistral-medium-3-5`. Explicit
+  `high` is preserved. Other Mistral models, including Large 4, still omit
+  the field.
+- PLaMo now explicitly sends `reasoning_effort: 'none'` when omitted,
+  including direct `PlamoChatService` construction. Set `medium` explicitly
+  to enable reasoning.
+- The React basic example now starts OpenAI verbosity at `low` instead of
+  `medium`, including after provider switches. Explicit `medium` / `high`
+  and preset-specific verbosity remain available. Its legacy Kimi thinking
+  control also starts at `disabled`.
+
+### Deprecations
+
+The following models were removed from supported lists and the React example
+selector. Constants remain exported for source compatibility; retaining an
+import does not guarantee provider access.
+
+- Mistral: `mistral-large-2512` (Mistral Large 3) was deprecated on
+  2026-10-31 and retires on 2027-04-30. It is now included in
+  `MISTRAL_DEPRECATED_MODELS`.
+- Kimi: `kimi-k2.6`, `kimi-k2.7-code`, and `kimi-k2.7-code-highspeed` were
+  added to `KIMI_DEPRECATED_MODELS`. Kimi stopped offering K2 models to new
+  accounts on 2026-10-31 and plans to retire the series by the end of
+  December 2026. The already-discontinued `kimi-k2.5` remains deprecated.
+
+### Patch Changes
+
+- Updated English/Japanese documentation and the React basic example for the
+  new options and defaults.
+- Expanded mocked transport and rendered-DOM regression coverage for default
+  settings, explicit opt-ins, endpoint routing, and mandatory thinking.
+- Removed an unnecessary global decoder override from Kimi tests to avoid
+  affecting UTF-8 streaming tests in other providers.
+
+### Known Limitations
+
+- Live inference and authenticated upstream browser CORS have not been
+  verified for the new model options. Mistral Large 4 remains a public
+  preview, and its adjustable reasoning levels are not exposed yet.
+
 ## 0.66.0
 
 ### Minor Changes
