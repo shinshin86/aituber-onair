@@ -706,8 +706,10 @@ const claudeService = ChatServiceFactory.createChatService('claude', {
 
 `claude-opus-5` と `claude-opus-5-5` は高性能用途向けの明示的な選択肢として利用でき、パッケージの
 既定値にはしていません。Claude Opus 5 は adaptive thinking が既定で有効です。
-Opus 5.5 は画像入力に対応します。今回参照した資料ではモデル固有のeffort値を
-確認できなかったため、effortは指定せずAPI側の既定動作を使います。
+Opus 5.5 は画像入力と5段階の effort に対応します。effort を省略した場合、
+パッケージは `low` を送信します。API 自体の既定値は `medium` です。
+Opus 5.5 の adaptive thinking は常時有効で、この実装は thinking モードを上書きしません。
+[Effort リファレンス](https://platform.claude.com/docs/en/build-with-claude/effort)。
 `claude-sonnet-5-5`（`MODEL_CLAUDE_5_5_SONNET`）は Messages API の明示的な選択肢として、
 画像入力、streaming、自動ツール選択に対応します。既定で adaptive thinking が有効で、
 effortは5段階すべてに対応します。強制ツール選択はAPIで拒否されますが、このパッケージは
@@ -736,10 +738,10 @@ user ターンでリクエストを終えてください。thinking は `max_tok
 対応するClaudeモデルでは `reasoning_effort` を指定でき、Anthropic APIの
 `output_config.effort` に変換されます。リアルタイムの会話向けに、調整可能なすべてのモデルで
 パッケージ既定値を `low` とし、指定がないときも `low` を送信します。Claude API 自体の既定値は
-`high`（Haiku 5.5 では `medium`）です。別のレベルを使う場合は `reasoning_effort` を指定してください。
+`high`（Opus 5.5 と Haiku 5.5 では `medium`）です。別のレベルを使う場合は `reasoning_effort` を指定してください。
 モデルが対応していない `xhigh` や `max` を指定した場合は `high` を使います。
 
-- Claude Haiku 5.5、Fable 5、Opus 5、Sonnet 5.5、Sonnet 5、Opus 4.8、Opus 4.7:
+- Claude Haiku 5.5、Opus 5.5、Fable 5、Opus 5、Sonnet 5.5、Sonnet 5、Opus 4.8、Opus 4.7:
   `low`、`medium`、`high`、`xhigh`、`max`
 - Claude Opus 4.6、Sonnet 4.6:
   `low`、`medium`、`high`、`max`
@@ -794,6 +796,9 @@ Gemini 3 モデルでは `reasoning_effort` を指定できます。この値は
 これにより各モデルで利用可能な最小の thinking level を使い、短い出力上限を
 hidden thinking が使い切るリスクを抑えます。Gemini 2.5 は
 `thinkingBudget` を使うため、`reasoning_effort` は送信しません。
+generateContent の [ThinkingConfig リファレンス](https://ai.google.dev/api/generate-content#ThinkingConfig)
+では `thinkingLevel` は Gemini 3 以降に対応し、それ以前のモデルではエラーになります。
+Interactions API の Gemini 2.5 の表を、この実装には適用していません。
 
 #### OpenRouter
 
@@ -952,6 +957,25 @@ OpenAI直結のエンドポイント制約は適用しません。Claude 5.5の�
 本パッケージは自動選択を使います。
 
 常時推論モデルでは`none`を送らず、無効な設定を表の既定値へ補正します。`openai/gpt-6-astra-pro`はOpenRouterがProモードへ変換するIDであり、OpenAI直結のIDではありません。Fable 5.1では`tool_choice`を省略します。`:free`モデルには無料枠のレート制限があります。 [Catalog](https://openrouter.ai/api/v1/models), [API schema](https://openrouter.ai/docs/api_reference/overview).
+
+公式カタログで effort の許容値を確認できるモデルでは、指定がないときに利用可能な最小値を
+送信します。より重いレベルは明示して選べます。次の OpenRouter モデルにも適用します。
+エイリアスの許容値は、確認時点のカタログに基づきます。
+
+| パッケージの effort | モデル ID |
+| --- | --- |
+| `none` | `~openai/gpt-mini-latest`, `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`, `openai/gpt-5.5`, `~anthropic/claude-haiku-latest`, `anthropic/claude-opus-5`, `anthropic/claude-opus-4.8`, `~moonshotai/kimi-latest`, `moonshotai/kimi-k3` |
+| `minimal` | `openai/gpt-5-mini`, `openai/gpt-5-nano`, `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite` |
+| `low` | `openai/gpt-5.1-codex`, `~anthropic/claude-sonnet-latest`, `anthropic/claude-fable-5`, `~google/gemini-pro-latest`, `~google/gemini-flash-latest`, `google/gemini-3.7-flash`, `~x-ai/grok-latest`, `x-ai/grok-4.6`, `x-ai/grok-4.5` |
+| `medium` | `openai/gpt-5.5-pro` |
+
+最小 effort が `medium` 以上のモデルは、プロバイダーの既定モデルにはしません。
+現在は `openai/gpt-5.5-pro` が該当し、最小値は `medium` です。
+動的ルーター、推論非対応モデル、effort の段階指定が文書化されていないモデルには、
+今回自動設定を追加していません。OpenRouter の Gemini 2.5、Claude Haiku 4.5、
+GLM-4.x、Kimi K2.5/K2.7 Code はカタログに effort の許容値がなく、上流の thinking
+既定動作を維持します。[モデルカタログ](https://openrouter.ai/api/v1/models)、
+[推論設定](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens#discovering-per-model-reasoning-options)。
 
 ```typescript
 const openRouterService = ChatServiceFactory.createChatService('openrouter', {

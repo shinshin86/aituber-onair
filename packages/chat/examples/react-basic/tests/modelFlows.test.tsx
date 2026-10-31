@@ -1,3 +1,5 @@
+import { remainingOpenRouterReasoningProfiles } from '../../../tests/fixtures/openrouterReasoningDefaults';
+import { allModels } from '../src/components/ProviderSelector';
 import { catalogFixture } from './catalogFixture';
 // @vitest-environment jsdom
 import { act } from 'react';
@@ -189,6 +191,20 @@ const modelCases = [
     efforts: ['none', ...mandatoryEfforts],
     initialEffort: 'none',
   },
+  ...remainingOpenRouterReasoningProfiles.map(
+    ({ model, efforts, defaultEffort }) => ({
+      provider: 'OpenRouter',
+      label:
+        allModels.find(
+          (entry) => entry.provider === 'openrouter' && entry.id === model,
+        )?.name ?? model,
+      model,
+      endpoint: OPENROUTER,
+      control: '#openrouter-reasoning-effort',
+      efforts: [...efforts],
+      initialEffort: defaultEffort,
+    }),
+  ),
 ];
 
 type ModelCase = (typeof modelCases)[number];

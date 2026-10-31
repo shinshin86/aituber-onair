@@ -141,6 +141,9 @@ built-in model status is `available`.
 **Claude**
 - Models: Claude Haiku 5.5, Claude Opus 5.5, Claude Sonnet 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Haiku). Claude Sonnet 4.5 is deprecated (retires 2026-11-30) and is no longer selectable
 - Vision: All listed Claude models
+- Opus 5.5 exposes Low/Medium/High/XHigh/Max and starts at `low`; the API
+  default label is `medium`. Adaptive thinking stays on, and explicit effort
+  choices are preserved when reselecting the model.
 - Haiku 5.5 is an explicit option appended to the Claude selector; Haiku 4.5
   remains the default. Selecting Haiku 5.5 starts at `low` effort for chat;
   its API default is `medium`. The effort control sends any of the five
@@ -166,10 +169,31 @@ built-in model status is `available`.
 **Gemini**
 - Models: Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models, including Gemini 3.7 Flash and Gemini 3.5 Flash, remain selectable with a deprecated label for explicit compatibility.
-- Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models.
+- Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models. The [generateContent reference](https://ai.google.dev/api/generate-content#ThinkingConfig) restricts `thinkingLevel` to Gemini 3 and later; Interactions API settings are not used here.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
 
 **OpenRouter**
+
+For catalog-verified effort controls, omitted options send the lightest accepted
+value; heavier efforts remain explicit choices. The following additional
+OpenRouter routes use these package defaults (including aliases as currently
+resolved by the catalog):
+
+| Package effort | Model IDs |
+| --- | --- |
+| `none` | `~openai/gpt-mini-latest`, `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`, `openai/gpt-5.5`, `~anthropic/claude-haiku-latest`, `anthropic/claude-opus-5`, `anthropic/claude-opus-4.8`, `~moonshotai/kimi-latest`, `moonshotai/kimi-k3` |
+| `minimal` | `openai/gpt-5-mini`, `openai/gpt-5-nano`, `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite` |
+| `low` | `openai/gpt-5.1-codex`, `~anthropic/claude-sonnet-latest`, `anthropic/claude-fable-5`, `~google/gemini-pro-latest`, `~google/gemini-flash-latest`, `google/gemini-3.7-flash`, `~x-ai/grok-latest`, `x-ai/grok-4.6`, `x-ai/grok-4.5` |
+| `medium` | `openai/gpt-5.5-pro` |
+
+Models whose minimum effort is `medium` or higher are explicit options, not
+provider defaults; currently `openai/gpt-5.5-pro` requires at least `medium`.
+Dynamic routers, non-reasoning models, and models without documented effort
+selection do not gain an automatic effort setting. In particular, OpenRouter's
+Gemini 2.5, Claude Haiku 4.5, GLM-4.x, and Kimi K2.5/K2.7 Code routes do not
+publish effort levels in the catalog; their upstream thinking defaults remain
+in effect. [Model catalog](https://openrouter.ai/api/v1/models),
+[reasoning controls](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens#discovering-per-model-reasoning-options).
 
 Additional explicit options (provider default unchanged):
 

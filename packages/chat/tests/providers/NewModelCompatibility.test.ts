@@ -1,3 +1,7 @@
+import {
+  remainingOpenRouterReasoningProfiles,
+  openRouterModelsWithoutEffortDefaults,
+} from '../fixtures/openrouterReasoningDefaults';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as models from '../../src/constants';
 import { ChatServiceFactory } from '../../src/services/ChatServiceFactory';
@@ -340,42 +344,48 @@ describe('New model endpoint compatibility', () => {
     },
   );
 
-  it('sends Claude Opus 5.5 image requests through the Messages API', async () => {
-    const post = vi
-      .spyOn(ChatServiceHttpClient, 'post')
-      .mockResolvedValue(
-        jsonResponse({ content: [{ type: 'text', text: 'Claude response' }] }),
+  it.each([undefined, 'low', 'medium', 'high', 'xhigh', 'max'] as const)(
+    'sends Claude Opus 5.5 image requests with %s effort through the Messages API',
+    async (effort) => {
+      const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+        jsonResponse({
+          content: [{ type: 'text', text: 'Claude response' }],
+        }),
       );
-    const provider = new ClaudeChatServiceProvider();
-    const service = provider.createChatService({
-      apiKey: 'test-key',
-      model: models.MODEL_CLAUDE_5_5_OPUS,
-    });
-    const response = await service.visionChatOnce!(images, false);
+      const provider = new ClaudeChatServiceProvider();
+      const service = provider.createChatService({
+        apiKey: 'test-key',
+        model: models.MODEL_CLAUDE_5_5_OPUS,
+        reasoning_effort: effort,
+      });
+      const response = await service.visionChatOnce!(images, false);
 
-    expect(provider.getSupportedModels()).toContain(
-      models.MODEL_CLAUDE_5_5_OPUS,
-    );
-    expect(provider.supportsVisionForModel(models.MODEL_CLAUDE_5_5_OPUS)).toBe(
-      true,
-    );
-    expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_CLAUDE_API);
-    expect(post.mock.calls[0][1]).toMatchObject({
-      model: models.MODEL_CLAUDE_5_5_OPUS,
-      messages: [
-        {
-          content: expect.arrayContaining([
-            expect.objectContaining({ type: 'image' }),
-          ]),
-        },
-      ],
-    });
-    expect(post.mock.calls[0][1].output_config).toBeUndefined();
-    expect(response.blocks).toContainEqual({
-      type: 'text',
-      text: 'Claude response',
-    });
-  });
+      expect(provider.getSupportedModels()).toContain(
+        models.MODEL_CLAUDE_5_5_OPUS,
+      );
+      expect(
+        provider.supportsVisionForModel(models.MODEL_CLAUDE_5_5_OPUS),
+      ).toBe(true);
+      expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_CLAUDE_API);
+      expect(post.mock.calls[0][1]).toMatchObject({
+        model: models.MODEL_CLAUDE_5_5_OPUS,
+        messages: [
+          {
+            content: expect.arrayContaining([
+              expect.objectContaining({ type: 'image' }),
+            ]),
+          },
+        ],
+      });
+      expect(post.mock.calls[0][1].output_config).toEqual({
+        effort: effort ?? 'low',
+      });
+      expect(response.blocks).toContainEqual({
+        type: 'text',
+        text: 'Claude response',
+      });
+    },
+  );
 
   it('sends Claude Sonnet 5.5 image requests with effort through the Messages API', async () => {
     const post = vi
@@ -718,6 +728,7 @@ describe('October explicit OpenRouter reasoning profiles', () => {
   beforeEach(() => vi.restoreAllMocks());
 
   const profiles = [
+    ...remainingOpenRouterReasoningProfiles,
     {
       model: models.MODEL_OPENAI_GPT_6_1_TERRA,
       efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
@@ -803,6 +814,28 @@ describe('October explicit OpenRouter reasoning profiles', () => {
         if (model === models.MODEL_UNBIASED_PARETO_26_10)
           expect(body.reasoning).toBeUndefined();
       }
+    },
+  );
+});
+
+describe('OpenRouter routes without verified effort defaults', () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  it.each(openRouterModelsWithoutEffortDefaults)(
+    'does not invent a default effort for %s',
+    async (model) => {
+      const post = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(
+          jsonResponse({ choices: [{ message: { content: 'ok' } }] }),
+        );
+      const service = new OpenRouterChatServiceProvider().createChatService({
+        apiKey: 'test-key',
+        model,
+      });
+      await service.chatOnce!(messages, false);
+      expect(models.getDefaultOpenRouterReasoningEffort(model)).toBeUndefined();
+      expect(post.mock.calls[0][1].reasoning?.effort).toBeUndefined();
     },
   );
 });

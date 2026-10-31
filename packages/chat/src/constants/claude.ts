@@ -68,6 +68,7 @@ const CLAUDE_REASONING_EFFORTS_BY_MODEL: Record<
   [MODEL_CLAUDE_5_FABLE]: CLAUDE_XHIGH_REASONING_EFFORTS,
   [MODEL_CLAUDE_5_SONNET]: CLAUDE_XHIGH_REASONING_EFFORTS,
   [MODEL_CLAUDE_5_OPUS]: CLAUDE_XHIGH_REASONING_EFFORTS,
+  [MODEL_CLAUDE_5_5_OPUS]: CLAUDE_XHIGH_REASONING_EFFORTS,
   [MODEL_CLAUDE_5_5_SONNET]: CLAUDE_XHIGH_REASONING_EFFORTS,
   [MODEL_CLAUDE_5_5_HAIKU]: CLAUDE_XHIGH_REASONING_EFFORTS,
 };
@@ -104,7 +105,7 @@ export function isClaudeReasoningEffortModel(model: string): boolean {
 
 /**
  * Package/UI effort default. Configurable models start at low for real-time
- * chat; the Claude API itself defaults to high (medium on Haiku 5.5).
+ * chat; the Claude API itself defaults to high (medium on Opus 5.5 and Haiku 5.5).
  */
 export function getDefaultClaudeReasoningEffort(
   model: string,

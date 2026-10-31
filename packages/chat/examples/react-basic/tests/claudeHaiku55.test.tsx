@@ -6,6 +6,7 @@ import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_5_5_HAIKU,
+  MODEL_CLAUDE_5_5_OPUS,
 } from '../../../src';
 import App from '../src/App';
 import {
@@ -165,7 +166,33 @@ afterEach(async () => {
   expect(responses).toEqual([]);
 });
 
-describe('Haiku 5.5 actual React App and transport (offline)', () => {
+describe('Claude 5.5 actual React App and transport (offline)', () => {
+  it('defaults Opus 5.5 to low and preserves all explicit effort levels', async () => {
+    await choose('.provider-item', 'Claude');
+    await choose('.model-item', 'Claude Opus 5.5');
+    await change('#api-key', FAKE_KEY);
+    const control = element<HTMLSelectElement>('#claude-reasoning-effort');
+    expect([...control.options].map((option) => option.value)).toEqual(efforts);
+    expect(control.value).toBe('low');
+    expect(control.options[1].textContent).toBe('Medium (API default)');
+    expect(control.options[2].textContent).toBe('High');
+    reply();
+    await send();
+    expect(requests[0].body).toMatchObject({
+      model: MODEL_CLAUDE_5_5_OPUS,
+      output_config: { effort: 'low' },
+    });
+    expect(requests[0].body.thinking).toBeUndefined();
+    for (const effort of efforts) {
+      await change('#claude-reasoning-effort', effort);
+      await choose('.model-item', 'Claude Opus 5.5');
+      expect(control.value).toBe(effort);
+      reply();
+      await send(`Use ${effort}`);
+      expect(requests.at(-1)!.body.output_config).toEqual({ effort });
+    }
+  });
+
   it('appends an explicit selector and preserves the provider default', async () => {
     expect(
       allModels.filter((model) => model.provider === 'claude').at(-1),

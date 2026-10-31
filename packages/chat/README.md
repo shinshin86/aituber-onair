@@ -718,10 +718,12 @@ const claudeService = ChatServiceFactory.createChatService('claude', {
 ```
 
 `claude-opus-5` and `claude-opus-5-5` are available as explicit high-capability
-options and are not the package default. Opus 5.5 supports image input; the
-package leaves its reasoning effort unspecified because model-specific effort
-values are not documented in the sources used for this integration. Claude
-Opus 5 has adaptive thinking enabled by default.
+options and are not the package default. Opus 5.5 supports image input and
+all five effort levels. The package sends `low` when effort is omitted,
+while the API defaults to `medium`. Adaptive thinking is always on for Opus 5.5;
+this integration does not send a thinking-mode override.
+[Effort reference](https://platform.claude.com/docs/en/build-with-claude/effort).
+Claude Opus 5 has adaptive thinking enabled by default.
 `claude-sonnet-5-5` (`MODEL_CLAUDE_5_5_SONNET`) is an explicit Messages API
 option with images, streaming, and automatic tool selection. It runs adaptive
 thinking by default, supports all five effort levels, and rejects forced tool
@@ -751,11 +753,11 @@ via `chatOnce(..., maxTokens)` when needed, especially at higher efforts.
 Supported Claude models accept `reasoning_effort`, which maps to Anthropic's
 `output_config.effort`. For real-time chat, the package defaults every
 configurable model to `low` and sends it when no effort is set; the Claude API
-itself defaults to `high` (`medium` on Haiku 5.5). Set `reasoning_effort`
+itself defaults to `high` (`medium` on Opus 5.5 and Haiku 5.5). Set `reasoning_effort`
 explicitly to use another level. Requests for an unsupported `xhigh` or `max`
 fall back to `high`:
 
-- Claude Haiku 5.5, Fable 5, Opus 5, Sonnet 5.5, Sonnet 5, Opus 4.8, and Opus 4.7:
+- Claude Haiku 5.5, Opus 5.5, Fable 5, Opus 5, Sonnet 5.5, Sonnet 5, Opus 4.8, and Opus 4.7:
   `low`, `medium`, `high`, `xhigh`, or `max`.
 - Claude Opus 4.6 and Sonnet 4.6:
   `low`, `medium`, `high`, or `max`.
@@ -813,7 +815,10 @@ Gemini 3 models accept `reasoning_effort`, which maps to Gemini
 This uses the lowest supported thinking level for chat and reduces the risk of
 hidden thinking exhausting short output limits. Gemini 2.5 uses
 `thinkingBudget` instead, so `reasoning_effort` is intentionally not sent for
-those models.
+those models. The generateContent
+[ThinkingConfig reference](https://ai.google.dev/api/generate-content#ThinkingConfig)
+limits `thinkingLevel` to Gemini 3 and later; the Interactions API's 2.5
+thinking-level table does not apply to this provider path.
 
 #### OpenRouter
 
@@ -964,6 +969,27 @@ and browser CORS have not been verified. See the
 [endpoint metadata](https://openrouter.ai/api/v1/models/inclusionai/ling-3.1-flash/endpoints),
 [Chat Completions reference](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion),
 and [reasoning replay requirements](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
+
+For catalog-verified effort controls, omitted options send the lightest accepted
+value; heavier efforts remain explicit choices. The following additional
+OpenRouter routes use these package defaults (including aliases as currently
+resolved by the catalog):
+
+| Package effort | Model IDs |
+| --- | --- |
+| `none` | `~openai/gpt-mini-latest`, `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`, `openai/gpt-5.5`, `~anthropic/claude-haiku-latest`, `anthropic/claude-opus-5`, `anthropic/claude-opus-4.8`, `~moonshotai/kimi-latest`, `moonshotai/kimi-k3` |
+| `minimal` | `openai/gpt-5-mini`, `openai/gpt-5-nano`, `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite` |
+| `low` | `openai/gpt-5.1-codex`, `~anthropic/claude-sonnet-latest`, `anthropic/claude-fable-5`, `~google/gemini-pro-latest`, `~google/gemini-flash-latest`, `google/gemini-3.7-flash`, `~x-ai/grok-latest`, `x-ai/grok-4.6`, `x-ai/grok-4.5` |
+| `medium` | `openai/gpt-5.5-pro` |
+
+Models whose minimum effort is `medium` or higher are explicit options, not
+provider defaults; currently `openai/gpt-5.5-pro` requires at least `medium`.
+Dynamic routers, non-reasoning models, and models without documented effort
+selection do not gain an automatic effort setting. In particular, OpenRouter's
+Gemini 2.5, Claude Haiku 4.5, GLM-4.x, and Kimi K2.5/K2.7 Code routes do not
+publish effort levels in the catalog; their upstream thinking defaults remain
+in effect. [Model catalog](https://openrouter.ai/api/v1/models),
+[reasoning controls](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens#discovering-per-model-reasoning-options).
 
 The package favors the lowest supported reasoning level for responsive chat
 with GPT-6.1 Sol, GPT-6 Sol/Luna, Claude 5.5, Grok 4.7, and GLM-5.3 FlashX.

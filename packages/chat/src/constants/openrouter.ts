@@ -296,6 +296,104 @@ const OPENROUTER_MODEL_REASONING: Record<
     defaultEffort: undefined,
   },
 
+  // Catalog-verified effort controls; omitted options use the lightest value.
+  [MODEL_OPENAI_GPT_MINI_LATEST]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh'],
+    defaultEffort: 'none',
+  },
+  [MODEL_OPENAI_GPT_5_6_SOL]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_OPENAI_GPT_5_6_TERRA]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_OPENAI_GPT_5_6_LUNA]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_OPENAI_GPT_5_5_PRO]: {
+    efforts: ['medium', 'high', 'xhigh'],
+    defaultEffort: 'medium',
+  },
+  [MODEL_OPENAI_GPT_5_5]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh'],
+    defaultEffort: 'none',
+  },
+  [MODEL_OPENAI_GPT_5_1_CODEX]: {
+    efforts: ['low', 'medium', 'high'],
+    defaultEffort: 'low',
+  },
+  [MODEL_OPENAI_GPT_5_MINI]: {
+    efforts: ['minimal', 'low', 'medium', 'high'],
+    defaultEffort: 'minimal',
+  },
+  [MODEL_OPENAI_GPT_5_NANO]: {
+    efforts: ['minimal', 'low', 'medium', 'high'],
+    defaultEffort: 'minimal',
+  },
+  [MODEL_ANTHROPIC_CLAUDE_SONNET_LATEST]: {
+    efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'low',
+  },
+  [MODEL_ANTHROPIC_CLAUDE_HAIKU_LATEST]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_ANTHROPIC_CLAUDE_FABLE_5]: {
+    efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'low',
+  },
+  [MODEL_ANTHROPIC_CLAUDE_OPUS_5]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_ANTHROPIC_CLAUDE_OPUS_4_8]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_GOOGLE_GEMINI_PRO_LATEST]: {
+    efforts: ['low', 'medium', 'high'],
+    defaultEffort: 'low',
+  },
+  [MODEL_GOOGLE_GEMINI_FLASH_LATEST]: {
+    efforts: ['low', 'medium', 'high'],
+    defaultEffort: 'low',
+  },
+  [MODEL_GOOGLE_GEMINI_3_7_FLASH]: {
+    efforts: ['low', 'medium', 'high'],
+    defaultEffort: 'low',
+  },
+  [MODEL_GOOGLE_GEMINI_3_6_FLASH]: {
+    efforts: ['minimal', 'low', 'medium', 'high'],
+    defaultEffort: 'minimal',
+  },
+  [MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE]: {
+    efforts: ['minimal', 'low', 'medium', 'high'],
+    defaultEffort: 'minimal',
+  },
+  [MODEL_XAI_GROK_LATEST]: {
+    efforts: ['low', 'medium', 'high', 'xhigh'],
+    defaultEffort: 'low',
+  },
+  [MODEL_XAI_GROK_4_6]: {
+    efforts: ['low', 'medium', 'high', 'xhigh'],
+    defaultEffort: 'low',
+  },
+  [MODEL_XAI_GROK_4_5]: {
+    efforts: ['low', 'medium', 'high'],
+    defaultEffort: 'low',
+  },
+  [MODEL_MOONSHOTAI_KIMI_LATEST]: {
+    efforts: ['none', 'low', 'high', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_MOONSHOTAI_KIMI_K3]: {
+    efforts: ['none', 'low', 'high', 'max'],
+    defaultEffort: 'none',
+  },
+
   // Chat-oriented defaults avoid disabling mandatory reasoning and favor latency.
   [MODEL_OPENAI_GPT_6_1_SOL]: {
     efforts: ['low', 'medium', 'high', 'xhigh', 'max'],

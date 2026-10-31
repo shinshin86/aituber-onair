@@ -1964,10 +1964,16 @@ export default function ProviderSelector({
                     {effort === 'low'
                       ? 'Low (fastest)'
                       : effort === 'medium' &&
-                          selectedModel === MODEL_CLAUDE_5_5_HAIKU
+                          [
+                            MODEL_CLAUDE_5_5_HAIKU,
+                            MODEL_CLAUDE_5_5_OPUS,
+                          ].includes(selectedModel)
                         ? 'Medium (API default)'
                         : effort === 'high' &&
-                            selectedModel !== MODEL_CLAUDE_5_5_HAIKU
+                            ![
+                              MODEL_CLAUDE_5_5_HAIKU,
+                              MODEL_CLAUDE_5_5_OPUS,
+                            ].includes(selectedModel)
                           ? 'High (API default)'
                           : effort === 'xhigh'
                             ? 'XHigh'
