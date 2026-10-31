@@ -247,13 +247,7 @@ export function getDefaultReasoningEffortForGPT5Model(
 export function getDefaultReasoningEffortForOpenAIModel(
   model: string,
 ): 'none' | 'minimal' | 'low' | 'medium' {
-  return model === MODEL_GPT_6_1_SOL ||
-    model === MODEL_GPT_6_1_TERRA ||
-    model === MODEL_GPT_6_ASTRA
+  return model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_ASTRA
     ? 'low'
-    : model === MODEL_GPT_6_SOL
-      ? 'medium'
-      : model === MODEL_GPT_6_LUNA
-        ? 'low'
-        : getDefaultReasoningEffortForGPT5Model(model);
+    : getDefaultReasoningEffortForGPT5Model(model);
 }

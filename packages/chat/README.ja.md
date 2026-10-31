@@ -297,7 +297,7 @@ Chat Completions形式を維持し、認証情報を別URLへ転送せず、こ�
 [Model API reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol)、
 [API guide](https://developers.openai.com/api/docs/guides/latest-model)。
 
-画像入力・ストリーミングに対応し、ツール利用にResponses APIが必要なモデルは、既定でResponsesを使います。`gpt-6.1-terra`（`MODEL_GPT_6_1_TERRA`）もこのグループの明示選択モデルです。`reasoning_effort`は `none`、`low`、`medium`、`high`、`xhigh`、`max` に対応します。API既定は `medium`、パッケージ既定は `low` です。ツールを使わない場合はChat Completionsも選べます。標準エンドポイントでのツール・MCP利用はResponsesへ切り替え、カスタムエンドポイントでのツール利用は送信前にエラーにします。
+画像入力・ストリーミングに対応し、ツール利用にResponses APIが必要なモデルは、既定でResponsesを使います。`gpt-6.1-terra`（`MODEL_GPT_6_1_TERRA`）もこのグループの明示選択モデルです。`reasoning_effort`は `none`、`low`、`medium`、`high`、`xhigh`、`max` に対応します。API既定は `medium`、パッケージ既定は `none` です。ツールを使わない場合はChat Completionsも選べます。標準エンドポイントでのツール・MCP利用はResponsesへ切り替え、カスタムエンドポイントでのツール利用は送信前にエラーにします。
 
 このパッケージは `temperature`、`top_p`、`logprobs` などのサンプリング項目を送信しません。OpenRouter版の `openai/gpt-6.1-terra` はChat Completionsを使い、推論設定のパッケージ既定は `none` です。プロバイダーの既定モデルは変更しません。
 
@@ -307,14 +307,16 @@ Chat Completions形式を維持し、認証情報を別URLへ転送せず、こ�
 
 `gpt-6-sol`（`MODEL_GPT_6_SOL`）も画像入力とストリーミングに対応します。
 既定ではResponses APIを使い、`none`、`low`、`medium`、`high`、`xhigh`、`max`を
-指定できます。パッケージ既定は`medium`です。Chat Completionsを選ぶ場合は
-`reasoning_effort: 'none'`を指定してください。
+指定できます。パッケージ既定は`none`です。
+`gpt5EndpointPreference: 'chat'`でChat Completionsを選べます。
+`none`より高い推論レベルを明示指定した場合はResponsesを使います。
 
 `gpt-6-luna`（`MODEL_GPT_6_LUNA`）は画像入力、ストリーミング、関数呼び出しに
 対応します。既定ではResponses APIを使い、`none`、`low`、`medium`、`high`、
-`xhigh`、`max`を指定できます。応答速度を優先し、パッケージ既定は`low`です。
-Chat Completionsで関数呼び出しを使う場合は`reasoning_effort: 'none'`を
-指定してください。[Model API reference](https://developers.openai.com/api/docs/models/gpt-6-luna).
+`xhigh`、`max`を指定できます。応答速度を優先し、パッケージ既定は`none`です。
+`gpt5EndpointPreference: 'chat'`でChat Completionsを選ぶと、
+この既定値で関数呼び出しも使えます。`none`より高い推論レベルを
+明示指定した場合はResponsesを使います。[Model API reference](https://developers.openai.com/api/docs/models/gpt-6-luna).
 
 ```typescript
 const openaiService = ChatServiceFactory.createChatService('openai', {

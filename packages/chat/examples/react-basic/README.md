@@ -364,12 +364,12 @@ Common extensions:
 
 The model selector includes GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
 OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash 1017 (`deepseek-flash`). Astra
-uses Responses and starts at low reasoning; Luna uses Responses and defaults to
-low reasoning for responsive chat. Fable 5.1 always thinks and uses automatic
+uses Responses and starts at low reasoning; GPT-6 Sol and GPT-6 Luna use Responses
+and default to none for responsive chat. Fable 5.1 always thinks and uses automatic
 tool selection. DeepSeek tools require reasoning to be set to none.
 
 GPT-6.1 Terra is an explicit native option with image input, streaming, and
-None/Low/Medium/High/XHigh/Max reasoning. Its package effort default is Low
+None/Low/Medium/High/XHigh/Max reasoning. Its package effort default is None
 (API default Medium). Responses is the default; tool-free Chat Completions is
 available at every supported effort. Tools and MCP require Responses at the
 standard endpoint, and custom endpoints reject tools before sending. Sampling

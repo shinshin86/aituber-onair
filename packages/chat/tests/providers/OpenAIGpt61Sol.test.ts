@@ -74,7 +74,7 @@ describe.each([
   },
 ])('$label compatibility', ({ model, id, label, none }) => {
   const normalized = (effort?: OpenAIReasoningEffort) => {
-    if (effort === undefined) return 'low';
+    if (effort === undefined) return none ? 'none' : 'low';
     if (effort === 'minimal') return none ? 'none' : 'low';
     if (effort === 'none' && !none) return 'low';
     return effort;
@@ -95,7 +95,9 @@ describe.each([
     expect(allowsReasoningLow(model)).toBe(true);
     expect(allowsReasoningXHigh(model)).toBe(true);
     expect(allowsReasoningMax(model)).toBe(true);
-    expect(getDefaultReasoningEffortForOpenAIModel(model)).toBe('low');
+    expect(getDefaultReasoningEffortForOpenAIModel(model)).toBe(
+      none ? 'none' : 'low',
+    );
     expect(
       ChatServiceFactory.getProviderCapabilities('openai', model),
     ).toMatchObject({
@@ -243,7 +245,15 @@ describe.each([
     },
   );
 
-  it.each(['none', 'low', 'medium', 'high', 'xhigh', 'max'] as const)(
+  it.each([
+    undefined,
+    'none',
+    'low',
+    'medium',
+    'high',
+    'xhigh',
+    'max',
+  ] as const)(
     'uses tool-free Chat Completions with %s and no sampling fields',
     async (effort) => {
       const post = vi
@@ -464,7 +474,7 @@ describe.each([
       expect.objectContaining({
         model,
         messages,
-        reasoning_effort: 'low',
+        reasoning_effort: normalized(),
       }),
       { Authorization: 'Bearer test-key' },
     );

@@ -303,7 +303,7 @@ rather than the API's `medium` default. The provider's default model is unchange
 [Model API reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol),
 [API guide](https://developers.openai.com/api/docs/guides/latest-model).
 
-Models with image input and streaming whose tools require Responses use Responses by default. `gpt-6.1-terra` (`MODEL_GPT_6_1_TERRA`) is an explicit option in this group. It supports `none`, `low`, `medium`, `high`, `xhigh`, and `max` reasoning effort. The API default is `medium`; the package default is `low`. Tool-free requests may use Chat Completions. Tools and MCP at the standard endpoint always use Responses, while custom endpoints with tools are rejected before sending.
+Models with image input and streaming whose tools require Responses use Responses by default. `gpt-6.1-terra` (`MODEL_GPT_6_1_TERRA`) is an explicit option in this group. It supports `none`, `low`, `medium`, `high`, `xhigh`, and `max` reasoning effort. The API default is `medium`; the package default is `none`. Tool-free requests may use Chat Completions. Tools and MCP at the standard endpoint always use Responses, while custom endpoints with tools are rejected before sending.
 
 This package does not send sampling fields such as `temperature`, `top_p`, or `logprobs`. The OpenRouter variant, `openai/gpt-6.1-terra`, uses Chat Completions with package-default reasoning effort `none`. Provider default models are unchanged.
 
@@ -313,14 +313,16 @@ See the [official Terra model specification](https://developers.openai.com/api/d
 
 `gpt-6-sol` (`MODEL_GPT_6_SOL`) is also available with image input and
 streaming. It uses Responses by default and supports `none`, `low`, `medium`,
-`high`, `xhigh`, and `max` reasoning effort. The package default is `medium`;
-Chat Completions can be selected explicitly when `reasoning_effort` is `none`.
+`high`, `xhigh`, and `max` reasoning effort. The package default is `none`;
+select `gpt5EndpointPreference: 'chat'` to use Chat Completions with this default.
+Explicit reasoning levels above `none` use Responses.
 
 `gpt-6-luna` (`MODEL_GPT_6_LUNA`) supports image input, streaming, and
 function calling. It uses Responses by default and supports `none`, `low`,
-`medium`, `high`, `xhigh`, and `max`; the package defaults to `low` for
-responsive chat. Chat Completions function calling requires
-`reasoning_effort: 'none'`. [Model API reference](https://developers.openai.com/api/docs/models/gpt-6-luna).
+`medium`, `high`, `xhigh`, and `max`; the package defaults to `none` for
+responsive chat. Select `gpt5EndpointPreference: 'chat'` to use Chat Completions,
+including function calling, with this default. Explicit reasoning levels above
+`none` use Responses. [Model API reference](https://developers.openai.com/api/docs/models/gpt-6-luna).
 
 ```typescript
 const openaiService = ChatServiceFactory.createChatService('openai', {

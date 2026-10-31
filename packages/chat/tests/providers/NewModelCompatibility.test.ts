@@ -147,7 +147,7 @@ describe('New model endpoint compatibility', () => {
     });
   });
 
-  it('routes GPT-6 Sol through Responses with documented effort and image input', async () => {
+  it('defaults GPT-6 Sol to Responses with no reasoning and image input', async () => {
     const post = vi.spyOn(ChatServiceHttpClient, 'post');
     const solResponse = () =>
       createSseResponse([
@@ -161,7 +161,6 @@ describe('New model endpoint compatibility', () => {
     const service = provider.createChatService({
       apiKey: 'test-key',
       model: models.MODEL_GPT_6_SOL,
-      gpt5EndpointPreference: 'chat',
     });
     const response = await service.chatOnce!(messages, true);
     const visionResponse = await service.visionChatOnce!(images, true);
@@ -171,7 +170,7 @@ describe('New model endpoint compatibility', () => {
     expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
     expect(post.mock.calls[0][1]).toMatchObject({
       model: models.MODEL_GPT_6_SOL,
-      reasoning: { effort: 'medium' },
+      reasoning: { effort: 'none' },
     });
     expect(post.mock.calls[1][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
     expect(post.mock.calls[1][1].input[0].content).toContainEqual(
@@ -193,34 +192,39 @@ describe('New model endpoint compatibility', () => {
     ).toEqual(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
   });
 
-  it('allows GPT-6 Sol Chat Completions only when reasoning is disabled', async () => {
-    const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
-      jsonResponse({
-        choices: [{ message: { role: 'assistant', content: 'Sol response' } }],
-      }),
-    );
-    const service = new OpenAIChatServiceProvider().createChatService({
-      apiKey: 'test-key',
-      model: models.MODEL_GPT_6_SOL,
-      gpt5EndpointPreference: 'chat',
-      reasoning_effort: 'none',
-    });
-    const response = await service.chatOnce!(messages, false);
+  it.each([undefined, 'none'] as const)(
+    'uses GPT-6 Sol Chat Completions with effort %s',
+    async (effort) => {
+      const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+        jsonResponse({
+          choices: [
+            { message: { role: 'assistant', content: 'Sol response' } },
+          ],
+        }),
+      );
+      const service = new OpenAIChatServiceProvider().createChatService({
+        apiKey: 'test-key',
+        model: models.MODEL_GPT_6_SOL,
+        gpt5EndpointPreference: 'chat',
+        reasoning_effort: effort,
+      });
+      const response = await service.chatOnce!(messages, false);
 
-    expect(post.mock.calls[0][0]).toBe(
-      models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
-    );
-    expect(post.mock.calls[0][1]).toMatchObject({
-      model: models.MODEL_GPT_6_SOL,
-      reasoning_effort: 'none',
-    });
-    expect(response.blocks).toContainEqual({
-      type: 'text',
-      text: 'Sol response',
-    });
-  });
+      expect(post.mock.calls[0][0]).toBe(
+        models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+      );
+      expect(post.mock.calls[0][1]).toMatchObject({
+        model: models.MODEL_GPT_6_SOL,
+        reasoning_effort: 'none',
+      });
+      expect(response.blocks).toContainEqual({
+        type: 'text',
+        text: 'Sol response',
+      });
+    },
+  );
 
-  it('routes GPT-6 Luna through Responses with tools, low reasoning, and vision', async () => {
+  it('defaults GPT-6 Luna to Responses with tools, no reasoning, and vision', async () => {
     const post = vi.spyOn(ChatServiceHttpClient, 'post');
     const lunaResponse = () =>
       createSseResponse([
@@ -235,7 +239,6 @@ describe('New model endpoint compatibility', () => {
       apiKey: 'test-key',
       model: models.MODEL_GPT_6_LUNA,
       tools,
-      gpt5EndpointPreference: 'chat',
     });
     const response = await service.chatOnce!(messages, true);
     const visionResponse = await service.visionChatOnce!(images, true);
@@ -245,7 +248,7 @@ describe('New model endpoint compatibility', () => {
     expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
     expect(post.mock.calls[0][1]).toMatchObject({
       model: models.MODEL_GPT_6_LUNA,
-      reasoning: { effort: 'low' },
+      reasoning: { effort: 'none' },
       tools: [expect.objectContaining({ type: 'function' })],
     });
     expect(post.mock.calls[1][0]).toBe(models.ENDPOINT_OPENAI_RESPONSES_API);
@@ -268,34 +271,74 @@ describe('New model endpoint compatibility', () => {
     ).toEqual(['none', 'low', 'medium', 'high', 'xhigh', 'max']);
   });
 
-  it('allows GPT-6 Luna Chat Completions only when reasoning is disabled', async () => {
-    const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
-      jsonResponse({
-        choices: [{ message: { role: 'assistant', content: 'Luna response' } }],
-      }),
-    );
-    const service = new OpenAIChatServiceProvider().createChatService({
-      apiKey: 'test-key',
-      model: models.MODEL_GPT_6_LUNA,
-      tools,
-      gpt5EndpointPreference: 'chat',
-      reasoning_effort: 'none',
-    });
-    const response = await service.chatOnce!(messages, false);
+  it.each([undefined, 'none'] as const)(
+    'uses GPT-6 Luna Chat Completions with effort %s',
+    async (effort) => {
+      const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+        jsonResponse({
+          choices: [
+            { message: { role: 'assistant', content: 'Luna response' } },
+          ],
+        }),
+      );
+      const service = new OpenAIChatServiceProvider().createChatService({
+        apiKey: 'test-key',
+        model: models.MODEL_GPT_6_LUNA,
+        tools,
+        gpt5EndpointPreference: 'chat',
+        reasoning_effort: effort,
+      });
+      const response = await service.chatOnce!(messages, false);
 
-    expect(post.mock.calls[0][0]).toBe(
-      models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
-    );
-    expect(post.mock.calls[0][1]).toMatchObject({
-      model: models.MODEL_GPT_6_LUNA,
-      reasoning_effort: 'none',
-      tools: [expect.objectContaining({ type: 'function' })],
-    });
-    expect(response.blocks).toContainEqual({
-      type: 'text',
-      text: 'Luna response',
-    });
-  });
+      expect(post.mock.calls[0][0]).toBe(
+        models.ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
+      );
+      expect(post.mock.calls[0][1]).toMatchObject({
+        model: models.MODEL_GPT_6_LUNA,
+        reasoning_effort: 'none',
+        tools: [expect.objectContaining({ type: 'function' })],
+      });
+      expect(response.blocks).toContainEqual({
+        type: 'text',
+        text: 'Luna response',
+      });
+    },
+  );
+
+  describe.each([models.MODEL_GPT_6_SOL, models.MODEL_GPT_6_LUNA])(
+    '%s explicit reasoning',
+    (model) => {
+      it.each(['low', 'medium', 'high', 'xhigh', 'max'] as const)(
+        'keeps %s effort on Responses even with a Chat Completions preference',
+        async (effort) => {
+          const post = vi
+            .spyOn(ChatServiceHttpClient, 'post')
+            .mockResolvedValue(
+              jsonResponse({
+                output: [
+                  {
+                    type: 'message',
+                    content: [{ type: 'output_text', text: 'Hello' }],
+                  },
+                ],
+              }),
+            );
+          const service = new OpenAIChatServiceProvider().createChatService({
+            apiKey: 'test-key',
+            model,
+            tools,
+            gpt5EndpointPreference: 'chat',
+            reasoning_effort: effort,
+          });
+          await service.chatOnce!(messages, false);
+          expect(post.mock.calls[0][0]).toBe(
+            models.ENDPOINT_OPENAI_RESPONSES_API,
+          );
+          expect(post.mock.calls[0][1].reasoning).toEqual({ effort });
+        },
+      );
+    },
+  );
 
   it('sends Claude Opus 5.5 image requests through the Messages API', async () => {
     const post = vi

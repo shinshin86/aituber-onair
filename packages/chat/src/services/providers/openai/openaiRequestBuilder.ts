@@ -113,7 +113,7 @@ export function buildOpenAIRequestBody({
   }
   if (provider === 'openai' && model === MODEL_GPT_6_1_TERRA) {
     reasoning_effort =
-      reasoning_effort === 'minimal' ? 'none' : (reasoning_effort ?? 'low');
+      reasoning_effort === 'minimal' ? 'none' : (reasoning_effort ?? 'none');
   }
   const isResponsesAPI = endpoint === ENDPOINT_OPENAI_RESPONSES_API;
 

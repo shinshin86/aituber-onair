@@ -143,7 +143,7 @@ const modelCases = [
     endpoint: OPENAI_RESPONSES,
     control: '#reasoning-effort',
     efforts: ['none', ...mandatoryEfforts],
-    initialEffort: 'low',
+    initialEffort: 'none',
   },
   {
     provider: 'OpenRouter',
