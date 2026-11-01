@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  getDefaultOpenRouterReasoningEffort,
+  MODEL_CLAUDE_5_5_OPUS,
+  getDefaultClaudeReasoningEffort,
+  getClaudeSupportedReasoningEfforts,
   AITuberOnAirCore,
   ChatServiceFactory,
   DEEPGRAM_DEFAULT_VOICE,
@@ -51,6 +55,87 @@ function chatResponse() {
 }
 
 describe('Published providers available through Core', () => {
+  it.each([
+    ['~openai/gpt-mini-latest', 'none'],
+    ['openai/gpt-5.6-sol', 'none'],
+    ['openai/gpt-5.6-terra', 'none'],
+    ['openai/gpt-5.6-luna', 'none'],
+    ['openai/gpt-5.5-pro', 'medium'],
+    ['openai/gpt-5.5', 'none'],
+    ['openai/gpt-5.1-codex', 'low'],
+    ['openai/gpt-5-mini', 'minimal'],
+    ['openai/gpt-5-nano', 'minimal'],
+    ['~anthropic/claude-sonnet-latest', 'low'],
+    ['~anthropic/claude-haiku-latest', 'none'],
+    ['anthropic/claude-fable-5', 'low'],
+    ['anthropic/claude-opus-5', 'none'],
+    ['anthropic/claude-opus-4.8', 'none'],
+    ['~google/gemini-pro-latest', 'low'],
+    ['~google/gemini-flash-latest', 'low'],
+    ['google/gemini-3.7-flash', 'low'],
+    ['google/gemini-3.6-flash', 'minimal'],
+    ['google/gemini-3.5-flash-lite', 'minimal'],
+    ['~x-ai/grok-latest', 'low'],
+    ['x-ai/grok-4.6', 'low'],
+    ['x-ai/grok-4.5', 'low'],
+    ['~moonshotai/kimi-latest', 'none'],
+    ['moonshotai/kimi-k3', 'none'],
+  ] as const)(
+    'sends the published minimum effort for OpenRouter %s',
+    async (model, effort) => {
+      const fetch = vi.fn().mockImplementation(async () => chatResponse());
+      vi.stubGlobal('fetch', fetch);
+      const service = ChatServiceFactory.createChatService('openrouter', {
+        apiKey: 'mock-only-key',
+        model,
+      });
+      await service.chatOnce(
+        [{ role: 'user', content: 'Hello' }],
+        false,
+        () => {},
+      );
+      expect(getDefaultOpenRouterReasoningEffort(model)).toBe(effort);
+      expect(JSON.parse(fetch.mock.calls[0][1].body).reasoning.effort).toBe(
+        effort,
+      );
+    },
+  );
+
+  it('inherits Claude Opus 5.5 low effort without removing explicit higher levels', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockImplementation(
+          async () =>
+            new Response(
+              JSON.stringify({ content: [{ type: 'text', text: 'Hello' }] }),
+            ),
+        ),
+    );
+    expect(getClaudeSupportedReasoningEfforts(MODEL_CLAUDE_5_5_OPUS)).toEqual([
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+    ]);
+    expect(getDefaultClaudeReasoningEffort(MODEL_CLAUDE_5_5_OPUS)).toBe('low');
+    const service = ChatServiceFactory.createChatService('claude', {
+      apiKey: 'mock-only-key',
+      model: MODEL_CLAUDE_5_5_OPUS,
+    });
+    await service.chatOnce(
+      [{ role: 'user', content: 'Hello' }],
+      false,
+      () => {},
+    );
+    expect(
+      JSON.parse(vi.mocked(fetch).mock.calls[0][1]!.body as string)
+        .output_config,
+    ).toEqual({ effort: 'low' });
+  });
+
   it('sends current DeepSeek Flash text and image requests through Core with thinking disabled', async () => {
     const fetch = vi.fn().mockImplementation(async () => chatResponse());
     vi.stubGlobal('fetch', fetch);

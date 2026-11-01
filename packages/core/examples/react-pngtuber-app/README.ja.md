@@ -1,6 +1,10 @@
 # PNGTuber Chat
 
-Core 0.26.23は、公開済みのChat 0.65.0とVoice 0.28.0を利用します。
+このブラウザ例から API を直接呼び出せないプロバイダーは、選択を無効にしています。
+現在は Sakana AI と Sarashina が該当します。Sarashina の API キーは保護された
+バックエンドで管理し、Node.js などのサーバー環境から利用してください。
+
+Core 0.26.27は、公開済みのChat 0.68.0とVoice 0.30.0を利用します。
 DeepSeek-V4.1-Flash-1017には`deepseek-flash`を指定してください。
 同じIDのまま、提供元の更新によって利用するモデルが変わる場合があります。
 Fish AudioのModel欄では、単一話者・一括生成向けの`drama-3`と
@@ -24,7 +28,7 @@ Vite の development / preview proxy を使います。本番環境では API �
 
 ## このアプリでできること
 
-- LLM プロバイダ切り替え: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`, `sakana`（ブラウザ UI では disabled 表示）, `plamo`
+- LLM プロバイダ切り替え: `openai`, `openai-compatible`, `openrouter`, `gemini`, `gemini-nano`, `claude`, `zai`, `kimi`, `xai`, `deepseek`, `mistral`, `sakana` / `sarashina`（ブラウザ UI では disabled 表示）, `plamo`
 - xAI Grok 4.6 の `reasoning_effort` は `low`、`medium`、`high`、`xhigh`
   に対応し、既定は `low` です。Grok 4.3 は低レイテンシ向けに `none` が
   デフォルトです
@@ -324,3 +328,17 @@ OpenRouter TTS では ElevenLabs v4/v4 Turbo を選べます。音声は選択�
 Fish Audio S1 は 2026-12-31 に提供終了、S2.1 Pro Free の無料期間は
 2026-11-30 までです。Gradium の beta は現在の default と同じモデルを指し、
 今後のベータ版に追従します。Voice Similarity は非推奨で無視されます。
+
+### Chat 0.68.0
+
+Core 0.26.27、Chat 0.68.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
+ブラウザで新しく選べない状態で表示します。保存済みのプロバイダー、モデル、キーは維持します。
+バックエンドではテキスト専用の `sarashina3-nano`（既定）、`sarashina3-mini`、
+`sarashina3.2-mini-thinking` を利用できます。Guard はモデレーション専用なので含めません。
+無償ベータで、[利用条件とデータ利用規約](https://sarashina.ai/terms)が適用されます。
+
+Claude Opus 5.5 は `low`、OpenRouter の新たに24件のプロファイルが付いたモデルは、
+Chat が定める利用可能な最小の effort を引き継ぎます。明示した重い設定は維持します。
+アバター例は Claude / OpenRouter の effort を独自に上書きしません。
+Gemini 2.5 は generateContent で thinking budget を使うため、従来の動作を維持します。
+実際の推論やブラウザのレイアウトは未検証です。

@@ -109,6 +109,7 @@ import { xaiModels } from './constants/xai';
 import { deepseekModelLabels, deepseekModels } from './constants/deepseek';
 import { mistralModels } from './constants/mistral';
 import { sakanaModels } from './constants/sakana';
+import { sarashinaModels } from './constants/sarashina';
 import { plamoModels } from './constants/plamo';
 import { openrouterModels } from './constants/openrouter';
 import {
@@ -1648,6 +1649,9 @@ const App: React.FC = () => {
         break;
       case 'mistral':
         setModel(mistralModels[0]);
+        break;
+      case 'sarashina':
+        setModel(sarashinaModels[0]);
         break;
       case 'sakana':
         setModel(sakanaModels[0]);
@@ -3606,6 +3610,9 @@ const App: React.FC = () => {
                     <option value="sakana" disabled>
                       Sakana AI (Node/backend only)
                     </option>
+                    <option value="sarashina" disabled>
+                      Sarashina (Node/backend only)
+                    </option>
                     <option value="plamo">PLaMo</option>
                     <option value="openrouter">OpenRouter</option>
                     <option value="openai-compatible">OpenAI-Compatible</option>
@@ -3699,6 +3706,12 @@ const App: React.FC = () => {
                           mistralModels.map((m) => (
                             <option key={m} value={m}>
                               {m === 'mistral-large-4-0' ? `${m} (preview)` : m}
+                            </option>
+                          ))}
+                        {chatProvider === 'sarashina' &&
+                          sarashinaModels.map((m) => (
+                            <option key={m} value={m}>
+                              {m}
                             </option>
                           ))}
                         {chatProvider === 'sakana' &&
@@ -4085,11 +4098,21 @@ const App: React.FC = () => {
                           <option key={effort} value={effort}>
                             {effort === 'low'
                               ? 'Low (fastest)'
-                              : effort === 'high'
-                                ? 'High (API default)'
-                                : effort === 'xhigh'
-                                  ? 'XHigh'
-                                  : `${effort[0].toUpperCase()}${effort.slice(1)}`}
+                              : effort === 'medium' &&
+                                  [
+                                    'claude-opus-5-5',
+                                    'claude-haiku-5-5',
+                                  ].includes(model)
+                                ? 'Medium (API default)'
+                                : effort === 'high' &&
+                                    ![
+                                      'claude-opus-5-5',
+                                      'claude-haiku-5-5',
+                                    ].includes(model)
+                                  ? 'High (API default)'
+                                  : effort === 'xhigh'
+                                    ? 'XHigh'
+                                    : `${effort[0].toUpperCase()}${effort.slice(1)}`}
                           </option>
                         ))}
                       </select>

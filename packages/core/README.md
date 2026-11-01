@@ -1537,7 +1537,7 @@ This is useful when running voice engines on different ports or remote servers.
 AITuber OnAir Core adopts an extensible provider system, enabling integration with various AI APIs.
 Currently, OpenAI API, OpenAI-compatible APIs, Gemini API, Gemini Nano
 (Chrome Built-in AI), Claude API, xAI API, Z.ai API, Kimi API, and OpenRouter
-API, DeepSeek API, Mistral API, Sakana AI, and PLaMo are available. If you
+API, DeepSeek API, Mistral API, Sakana AI, Sarashina, and PLaMo are available. If you
 would like to use any other API, please submit a PR or send us a message.
 
 ### Available Providers
@@ -1551,7 +1551,12 @@ Currently, the following AI provider is built-in:
 - **xAI**: Supports Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 model families. Grok 4.6 supports `low`, `medium`, `high`, and `xhigh` reasoning effort and defaults to `low`; Grok 4.5 also defaults to `low`, while Grok 4.3 defaults to `none` for lower latency. Retired Grok 4.1 Fast IDs remain compatibility exports only.
 - **DeepSeek**: Supports DeepSeek V4 Flash, DeepSeek V4 Pro, and the vision-capable DeepSeek V4 Flash Vision Exp through the first-class `deepseek` provider. These models expose model-aware `reasoning_effort`; Core keeps Chat's low-latency `none` default, while higher supported efforts remain selectable. Thinking and tool calling cannot currently be combined in one request.
 - **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including adjustable reasoning for supported models. Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview; its reasoning levels are not exposed by this package.
+Providers whose APIs must not be called directly from this browser example are
+shown disabled: currently Sakana AI and Sarashina. Sarashina API keys must stay
+on a protected backend; use a Node/backend integration.
+
 - **Sakana AI**: Supports Fugu (`fugu`), the exact Fugu Ultra v1.1 ID (`fugu-ultra-v1.1`), and the Japanese-focused, vision-capable Sakana Namazu (`sakana-namazu`) through the first-class `sakana` provider. Namazu disables optional thinking by default for responsive chat and can enable it explicitly through chat template options. Older aliases remain compatibility exports. Browser examples show this provider as disabled because direct browser requests can fail with CORS; use Node.js or a backend proxy.
+- **Sarashina**: Backend-only free-beta text, streaming and tool calls. Nano is the lightweight chat default; Mini and Mini Thinking are explicit options. Its API keys must remain server-side, so direct-browser examples show it disabled. Keep returned assistant reasoning state unchanged for continuation. See [API docs](https://docs.sarashina.ai/) and [data-use terms](https://sarashina.ai/terms).
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`) and PLaMo 3.1 Prime (`plamo-3.1-prime`) through the first-class `plamo` provider. Retired PLaMo 2.2 Prime remains a compatibility export.
 - **Z.ai**: Supports GLM-5.3, the vision-capable GLM-5.3 Flash, GLM-5.2, GLM-5.1, GLM-5/GLM-5-Turbo (text-only), GLM-5V-Turbo (vision), GLM-4.7, GLM-4.7 Flash/FlashX, GLM-4.6, GLM-4.6V, and GLM-4.6V Flash/FlashX. GLM-5.3 models always use thinking, expose only `low`, `high`, and `max`, and default to the minimum `low` level for responsive chat. GLM-5.2 continues to default to `none`.
 - **Kimi**: Kimi K3.1 Pro (`kimi-k3.1-pro`, default), K3.1 Pro Highspeed, and K3 support vision and `low` / `high` / `max` reasoning. The package defaults to `low`; the API defaults to `max`. Deprecated K2 constants remain exported for saved configurations. Optional K2 thinking defaults to disabled; K2.7 Code models require thinking.
@@ -2224,3 +2229,20 @@ See the [Voice documentation](../voice/README.md) for provider limitations.
 Core re-exports `MODEL_PLAMO_3_1_PRIME` and `MODEL_MISTRAL_LARGE_4_0` (public preview). New Kimi settings use `kimi-k3.1-pro` with package-default low reasoning. Deprecated K2 and Mistral Large 3 constants remain exported; saved selections are preserved. Models with optional reasoning use the lightest supported default from Chat, and higher levels remain explicit options.
 
 Deepgram Japanese presets are `flux-ayumi-ja`, `flux-hayato-ja`, `flux-nozomi-ja`, and `flux-sayaka-ja`. All ten React TTS examples offer them alongside Haley without a catalog lookup. `language: 'en'` or `language: 'ja'` filters the public voice list. Japanese MP3 output and speed have not been live-verified; speed support varies by language/model.
+
+### Chat 0.68.0
+
+This Core release uses Core 0.26.27 with Chat 0.68.0 and Voice 0.30.0. Sarashina is
+shown but disabled for new browser selections, like Sakana AI. Avatar apps preserve saved provider, model and key values;
+the Basic example persists only catalog settings. The backend provider offers text-only
+`sarashina3-nano` (default), `sarashina3-mini`, and `sarashina3.2-mini-thinking`;
+Guard is moderation-only and is not a chat choice. Sarashina is a free beta
+subject to [eligibility and data-use terms](https://sarashina.ai/terms).
+
+Claude Opus 5.5 now inherits `low` effort, and OpenRouter's 24 newly profiled
+routes inherit their minimum supported effort from Chat. Explicit higher
+settings remain available. The Basic example labels Opus 5.5/Haiku 5.5 API
+defaults as `medium`; avatar examples leave Claude/OpenRouter effort unspecified
+and inherit package defaults. Direct Gemini 2.5 behavior is unchanged because
+the generateContent path uses thinking budgets rather than 2.5 thinking levels.
+No live inference or browser-layout verification was performed.

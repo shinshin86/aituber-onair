@@ -26,6 +26,7 @@ export type ChatProviderOption =
   | 'deepseek'
   | 'mistral'
   | 'sakana'
+  | 'sarashina'
   | 'plamo';
 export type TTSEngineOption =
   | 'openai'
@@ -62,6 +63,7 @@ export interface ProviderApiKeys {
   deepseek?: string;
   mistral?: string;
   sakana?: string;
+  sarashina?: string;
   plamo?: string;
 }
 

@@ -1438,7 +1438,7 @@ aituber.updateVoiceService({
 AITuber OnAir Coreは拡張可能なプロバイダーシステムを採用しており、様々なAI APIとの連携が可能です。
 現在はOpenAI API、OpenAI互換API、Gemini API、Gemini Nano
 （Chrome Built-in AI）、Claude API、xAI API、Z.ai API、Kimi API、
-OpenRouter API、DeepSeek API、Mistral API、Sakana AI、PLaMo が利用可能です。
+OpenRouter API、DeepSeek API、Mistral API、Sakana AI、Sarashina、PLaMo が利用可能です。
 もし利用したいAPIがあればPRやメッセージをください。
 
 ### 利用可能なプロバイダー
@@ -1452,7 +1452,12 @@ OpenRouter API、DeepSeek API、Mistral API、Sakana AI、PLaMo が利用可能�
 - **xAI**: Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 系をサポート。Grok 4.6 は `low`、`medium`、`high`、`xhigh` を利用でき、既定は `low` です。Grok 4.5 も `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです。Grok 4.1 Fast は compatibility export のみです
 - **DeepSeek**: first-class `deepseek` provider として DeepSeek V4 Flash / V4 Pro / Vision 対応の DeepSeek V4 Flash Vision Exp をサポート。各モデルでモデル別の `reasoning_effort` を利用でき、Core でも Chat の低レイテンシ向けデフォルト `none` を維持しつつ、対応する高い effort へ切り替えられます。現時点では thinking と tool calling を同一リクエストで併用できません
 - **Mistral**: Vision 対応の Ministral 3 系（`ministral-3b-2512`、`ministral-8b-2512`、`ministral-14b-2512`）と、`mistral-small-latest`、`mistral-medium-3-5`、`mistral-large-latest` などの現行 generalist model をサポート。対応モデルでは adjustable reasoning も利用可能
+このブラウザ例から API を直接呼び出せないプロバイダーは、選択を無効にしています。
+現在は Sakana AI と Sarashina が該当します。Sarashina の API キーは保護された
+バックエンドで管理し、Node.js などのサーバー環境から利用してください。
+
 - **Sakana AI**: first-class `sakana` provider として Fugu（`fugu`）、正確な Fugu Ultra v1.1 ID（`fugu-ultra-v1.1`）、日本語特化かつ Vision 対応の Sakana Namazu（`sakana-namazu`）をサポート。Namazu は応答性重視で任意の thinking をデフォルト無効とし、chat template option から明示的に有効化できます。旧 alias は compatibility export として残します。ブラウザ例では CORS により disabled 表示にしています
+- **Sarashina**: バックエンド専用の無償ベータ API。テキスト、streaming、tools に対応し、軽量な Nano が既定モデルです。Mini と Mini Thinking は明示して選べます。キーをサーバーで管理するため、ブラウザ例では選択を無効にします。返された assistant の暗号化 reasoning を会話履歴に保持してください。[API ドキュメント](https://docs.sarashina.ai/)、[データ利用規約](https://sarashina.ai/terms)。
 - **PLaMo**: first-class `plamo` provider として PLaMo 3.0 Prime（`plamo-3.0-prime`）とPLaMo 3.1 Prime（`plamo-3.1-prime`）に対応します。提供終了したPLaMo 2.2 Primeの定数は互換用に残します
 - **Z.ai**: GLM-5.3、Vision 対応の GLM-5.3 Flash、GLM-5.2、GLM-5.1、GLM-5/GLM-5-Turbo（テキスト専用）、GLM-5V-Turbo（Vision 対応）、GLM-4.7、GLM-4.7 Flash/FlashX、GLM-4.6、GLM-4.6V、GLM-4.6V Flash/FlashX をサポート。GLM-5.3 系は thinking 常時有効で `low`、`high`、`max` のみを公開し、応答性重視で最小の `low` を既定値にします。GLM-5.2 は引き続き `none` が既定値です
 - **Kimi**: Kimi K3.1 Pro（`kimi-k3.1-pro`、既定）、K3.1 Pro Highspeed、K3は画像入力と推論レベル`low` / `high` / `max`に対応します。パッケージ既定は`low`、API既定は`max`です。K2系は非推奨ですが、保存済み設定向けに定数を残します。無効化できるK2のthinkingは既定で無効、K2.7 Code系は有効のままです。
@@ -2123,3 +2128,17 @@ OpenRouter 経由の ElevenLabs v4/v4 Turbo の音声一覧と MP3 再生に対�
 `MODEL_PLAMO_3_1_PRIME` と `MODEL_MISTRAL_LARGE_4_0`（公開プレビュー）をCoreから利用できます。Kimiの新規設定は`kimi-k3.1-pro`と推論レベル`low`を使います。非推奨のK2系とMistral Large 3も定数のexportを残し、保存済みの選択を維持します。推論設定を省略した場合はChatが対応する最小のレベルを使い、高いレベルは明示指定で選べます。
 
 Deepgramの日本語音声は`flux-ayumi-ja`、`flux-hayato-ja`、`flux-nozomi-ja`、`flux-sayaka-ja`です。TTS設定を持つ全10 Reactサンプルでは、Haleyと日本語4音声をカタログ取得前から選べます。音声一覧は`language: 'en'`または`language: 'ja'`で絞り込めます。日本語音声のMP3出力と話速は実APIでは未検証で、話速の対応は言語・モデルによって異なります。
+
+### Chat 0.68.0
+
+Core 0.26.27、Chat 0.68.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
+ブラウザで新しく選べない状態で表示します。アバター例の保存済みプロバイダー、モデル、キーは維持します。Basic はカタログ設定だけを保存します。
+バックエンドではテキスト専用の `sarashina3-nano`（既定）、`sarashina3-mini`、
+`sarashina3.2-mini-thinking` を利用できます。Guard はモデレーション専用なので含めません。
+無償ベータで、[利用条件とデータ利用規約](https://sarashina.ai/terms)が適用されます。
+
+Claude Opus 5.5 は `low`、OpenRouter の新たに24件のプロファイルが付いたモデルは、
+Chat が定める利用可能な最小の effort を引き継ぎます。明示した重い設定は維持します。
+アバター例は Claude / OpenRouter の effort を独自に上書きしません。
+Gemini 2.5 は generateContent で thinking budget を使うため、従来の動作を維持します。
+実際の推論やブラウザのレイアウトは未検証です。

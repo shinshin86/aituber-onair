@@ -60,6 +60,11 @@ const PROVIDERS: {
   { value: 'kimi', label: 'Kimi' },
   { value: 'deepseek', label: 'DeepSeek' },
   { value: 'mistral', label: 'Mistral' },
+  {
+    value: 'sarashina',
+    label: 'Sarashina (Node/backend only)',
+    disabled: true,
+  },
   { value: 'sakana', label: 'Sakana AI (Node/backend only)', disabled: true },
   { value: 'plamo', label: 'PLaMo' },
 ];
