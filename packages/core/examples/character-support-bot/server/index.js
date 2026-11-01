@@ -64,6 +64,7 @@ const PROVIDER_LABELS = {
   deepseek: 'DeepSeek',
   mistral: 'Mistral',
   sakana: 'Sakana AI',
+  sarashina: 'Sarashina',
   plamo: 'PLaMo',
 };
 

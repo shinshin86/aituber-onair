@@ -238,3 +238,14 @@ incompatible voice to alloy when switching models. The OpenAI Speech API
 models shut down on 2027-01-06. Fish Audio S1 retires on 2026-12-31 and the
 S2.1 Pro Free promotion ends on 2026-11-30. OpenRouter TTS and Deepgram remain
 explicitly excluded by this admin example; see its provider exclusion reasons.
+
+### Sarashina on the protected backend
+
+Core 0.26.27 uses published Chat 0.68.0. This sample enumerates providers on
+its protected server, so Sarashina is usable in the admin provider list like
+Sakana AI; the browser sends requests only to the sample server. Direct-browser
+examples disable those providers. Choose Sarashina3 Nano for the lightweight
+chat default, Mini for standard chat, or Mini Thinking for explicit reasoning.
+Keys remain on the server. The API is a free beta with
+[eligibility and data-use terms](https://sarashina.ai/terms); input/output may
+be used for training. No live Sarashina account or inference call was tested.

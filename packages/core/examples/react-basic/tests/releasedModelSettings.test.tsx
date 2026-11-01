@@ -63,6 +63,44 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 describe('released model settings', () => {
+  it('shows Sarashina disabled and labels Claude Opus 5.5 effort correctly', async () => {
+    await act(async () => root.render(<App />));
+    await button('設定');
+    const provider =
+      container.querySelector<HTMLSelectElement>('#chatProvider')!;
+    const option = provider.querySelector<HTMLOptionElement>(
+      'option[value="sarashina"]',
+    )!;
+    expect(option.disabled).toBe(true);
+    expect(option.textContent).toBe('Sarashina (Node/backend only)');
+    expect(
+      provider.querySelector<HTMLOptionElement>('option[value="sakana"]')
+        ?.disabled,
+    ).toBe(true);
+    expect(provider.value).toBe('openai');
+    await choose('chatProvider', 'claude');
+    await choose('model', 'claude-opus-5-5');
+    const effort = container.querySelector<HTMLSelectElement>(
+      '#claudeReasoningEffort',
+    )!;
+    expect(effort.value).toBe('low');
+    expect([...effort.options].map((option) => option.value)).toEqual([
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+    ]);
+    expect(effort.querySelector('option[value="medium"]')?.textContent).toBe(
+      'Medium (API default)',
+    );
+    expect(effort.querySelector('option[value="high"]')?.textContent).toBe(
+      'High',
+    );
+    await choose('claudeReasoningEffort', 'max');
+    expect(effort.value).toBe('max');
+  });
+
   it('starts with the current Chat default because basic persists only catalog state', async () => {
     // Basic has no saved LLM settings to migrate. Old model-shaped properties
     // in its catalog storage must not override the current initial default.

@@ -74,6 +74,41 @@ describe('OpenRouter settings integration', () => {
     container.remove();
     vi.unstubAllGlobals();
   });
+  it.each(['sakana', 'sarashina'])(
+    'preserves saved %s settings while keeping its option disabled',
+    async (provider) => {
+      const model = provider === 'sarashina' ? 'sarashina3-mini' : 'fugu';
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          llm: { provider, model, apiKeys: { [provider]: 'mock-saved-key' } },
+        }),
+      );
+      await act(async () => root.render(<Harness />));
+      const select =
+        container.querySelector<HTMLSelectElement>('#llm-provider')!;
+      expect(select.value).toBe(provider);
+      const option = select.querySelector<HTMLOptionElement>(
+        'option[value="sarashina"]',
+      )!;
+      expect(option.disabled).toBe(true);
+      expect(option.textContent).toBe('Sarashina (Node/backend only)');
+      expect(
+        select.querySelector<HTMLOptionElement>('option[value="sakana"]')
+          ?.disabled,
+      ).toBe(true);
+      const saved = JSON.parse(localStorage.getItem(storageKey)!);
+      expect(saved.llm.provider).toBe(provider);
+      expect(saved.llm.model).toBe(model);
+      expect(saved.llm.apiKeys[provider]).toBe('mock-saved-key');
+      expect(
+        vi
+          .mocked(fetch)
+          .mock.calls.every(([url]) => !String(url).includes('sarashina.ai')),
+      ).toBe(true);
+    },
+  );
+
   it('preserves legacy selected IDs and keys, uses authoritative rows, and persists explicit selection', async () => {
     await act(async () => {
       root.render(<Harness />);

@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MODEL_SARASHINA_3_NANO,
+  MODEL_SARASHINA_3_MINI,
+  MODEL_SARASHINA_3_2_MINI_THINKING,
+  SARASHINA_API_BASE_URL,
+  ENDPOINT_SARASHINA_CHAT_COMPLETIONS_API,
+  SARASHINA_SUPPORTED_MODELS,
+  SARASHINA_MAX_COMPLETION_TOKENS,
+  SarashinaChatService,
+  SarashinaChatServiceProvider,
+  getSarashinaSupportedReasoningEfforts,
+  getDefaultSarashinaReasoningEffort,
+  type SarashinaReasoningEffort,
+  type SarashinaChatServiceOptions,
   AITuberOnAirCore,
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   GEMINI_NANO_MAX_CONTEXT_MESSAGES,
@@ -415,6 +428,45 @@ describe('Core index chat re-exports', () => {
     );
     expect(MISTRAL_VISION_SUPPORTED_MODELS).toContain(MODEL_MINISTRAL_14B_2512);
     expect(isMistralReasoningEffortModel(MODEL_MISTRAL_MEDIUM_3_5)).toBe(true);
+  });
+
+  it('re-exports Sarashina models, limits, providers, and typed options', () => {
+    expect(MODEL_SARASHINA_3_NANO).toBe('sarashina3-nano');
+    expect(MODEL_SARASHINA_3_MINI).toBe('sarashina3-mini');
+    expect(MODEL_SARASHINA_3_2_MINI_THINKING).toBe(
+      'sarashina3.2-mini-thinking',
+    );
+    expect(SARASHINA_API_BASE_URL).toBe('https://api.sarashina.ai/v1');
+    expect(ENDPOINT_SARASHINA_CHAT_COMPLETIONS_API).toBe(
+      `${SARASHINA_API_BASE_URL}/chat/completions`,
+    );
+    expect(SARASHINA_MAX_COMPLETION_TOKENS).toBe(8000);
+    expect(SARASHINA_SUPPORTED_MODELS).toEqual([
+      MODEL_SARASHINA_3_NANO,
+      MODEL_SARASHINA_3_MINI,
+      MODEL_SARASHINA_3_2_MINI_THINKING,
+    ]);
+    const effort: SarashinaReasoningEffort = 'low';
+    const options: SarashinaChatServiceOptions = {
+      apiKey: 'mock-only-key',
+      model: MODEL_SARASHINA_3_2_MINI_THINKING,
+      reasoning_effort: effort,
+    };
+    const provider = new SarashinaChatServiceProvider();
+    expect(provider.createChatService(options)).toBeInstanceOf(
+      SarashinaChatService,
+    );
+    expect(provider.getDefaultModel()).toBe(MODEL_SARASHINA_3_NANO);
+    expect(provider.supportsVision()).toBe(false);
+    expect(getDefaultSarashinaReasoningEffort(options.model!)).toBe(effort);
+    expect(getSarashinaSupportedReasoningEfforts(options.model!)).toEqual([
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(AITuberOnAirCore.getSupportedModels('sarashina')).toEqual(
+      SARASHINA_SUPPORTED_MODELS,
+    );
   });
 
   it('re-exports Sakana chat provider items', () => {

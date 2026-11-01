@@ -1,6 +1,10 @@
 # React Basic Example - AITuber OnAir Core
 
-Core 0.26.23 uses published Chat 0.65.0 and Voice 0.28.0. Select
+Providers whose APIs must not be called directly from this browser example are
+shown disabled: currently Sakana AI and Sarashina. Sarashina API keys must stay
+on a protected backend; use a Node/backend integration.
+
+Core 0.26.27 uses published Chat 0.68.0 and Voice 0.30.0. Select
 `deepseek-flash` for DeepSeek-V4.1-Flash-1017; this rolling API ID follows
 provider updates. Fish Audio's Model selector includes `drama-3` and
 `drama-3-preview` for one-shot, single-speaker speech. The preview may change;
@@ -55,7 +59,7 @@ This example application serves as a practical implementation guide for integrat
   - OpenAI-Compatible (local/self-hosted Chat Completions endpoints)
   - Google Gemini (Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemma 4, Pro, Flash, Thinking models)
   - Anthropic Claude (Fable 5, Opus 5, Sonnet 5, 4.8 Opus, 4.7 Opus, 4.6 Sonnet/Opus, and 4.5 Opus/Sonnet/Haiku)
-  - DeepSeek, Mistral, Sakana AI (disabled in browser UI), and PLaMo first-class providers
+  - DeepSeek, Mistral, Sakana AI and Sarashina (disabled in browser UI), and PLaMo first-class providers
   - Seamless provider switching
 
 - **🎙️ Comprehensive Voice Synthesis**
@@ -144,7 +148,7 @@ the server provides them, and **Test speech** plays a short sample. See the
 
 Click the "設定" (Settings) button to configure your AI provider:
 
-1. **Select Provider**: Choose from OpenAI, Gemini, Gemini Nano, Claude, Z.ai, Kimi, xAI, DeepSeek, Mistral, PLaMo, OpenRouter, or OpenAI-Compatible. Sakana AI is shown as disabled for browser-only usage.
+1. **Select Provider**: Choose from OpenAI, Gemini, Gemini Nano, Claude, Z.ai, Kimi, xAI, DeepSeek, Mistral, PLaMo, OpenRouter, or OpenAI-Compatible. Sakana AI and Sarashina are shown disabled for browser-only usage.
 2. **Enter API Key**: Provide your provider's API key (`openai-compatible` and `gemini-nano` can work without one)
 3. **Choose Model**: Select the specific model to use
 4. **System Prompt**: Customize the AI's behavior and personality
@@ -771,3 +775,20 @@ matches default and tracks future betas; Voice Similarity is deprecated and igno
 Chat 0.67.0 adds PLaMo 3.1 Prime and Mistral Large 4 (public preview). New Kimi configurations use K3.1 Pro with low reasoning. Saved deprecated K2 and Mistral Large 3 selections remain unchanged and are marked as deprecated.
 
 Deepgram offers Haley (English) and Ayumi, Hayato, Nozomi, and Sayaka (Japanese) as fixed presets, including before a catalog lookup. English and Japanese catalog voices are selectable without resetting the saved voice. Japanese MP3 output and speed are documented but have not been live-verified.
+
+### Chat 0.68.0
+
+This example uses Core 0.26.27 with Chat 0.68.0 and Voice 0.30.0. Sarashina is
+shown but disabled for new browser selections, like Sakana AI. Avatar apps preserve saved provider, model and key values;
+the Basic example persists only catalog settings. The backend provider offers text-only
+`sarashina3-nano` (default), `sarashina3-mini`, and `sarashina3.2-mini-thinking`;
+Guard is moderation-only and is not a chat choice. Sarashina is a free beta
+subject to [eligibility and data-use terms](https://sarashina.ai/terms).
+
+Claude Opus 5.5 now inherits `low` effort, and OpenRouter's 24 newly profiled
+routes inherit their minimum supported effort from Chat. Explicit higher
+settings remain available. The Basic example labels Opus 5.5/Haiku 5.5 API
+defaults as `medium`; avatar examples leave Claude/OpenRouter effort unspecified
+and inherit package defaults. Direct Gemini 2.5 behavior is unchanged because
+the generateContent path uses thinking budgets rather than 2.5 thinking levels.
+No live inference or browser-layout verification was performed.

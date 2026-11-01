@@ -128,6 +128,7 @@ function getDefaultSettings(): AppSettings {
         deepseek: '',
         mistral: '',
         sakana: '',
+        sarashina: '',
         plamo: '',
         'openai-compatible': '',
       },

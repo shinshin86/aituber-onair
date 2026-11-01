@@ -30,6 +30,7 @@ export {
   type DeepSeekChatServiceOptions,
   type MistralChatServiceOptions,
   type SakanaChatServiceOptions,
+  type SarashinaChatServiceOptions,
   type PlamoChatServiceOptions,
   // OpenAI provider
   OpenAIChatService,
@@ -65,6 +66,9 @@ export {
   // Sakana provider
   SakanaChatService,
   SakanaChatServiceProvider,
+  // Sarashina provider
+  SarashinaChatService,
+  SarashinaChatServiceProvider,
   // PLaMo provider
   PlamoChatService,
   PlamoChatServiceProvider,
@@ -282,6 +286,17 @@ export {
   SAKANA_API_BASE_URL,
   ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
   isSakanaVisionModel,
+  // Sarashina model constants
+  MODEL_SARASHINA_3_NANO,
+  MODEL_SARASHINA_3_MINI,
+  MODEL_SARASHINA_3_2_MINI_THINKING,
+  SARASHINA_API_BASE_URL,
+  ENDPOINT_SARASHINA_CHAT_COMPLETIONS_API,
+  SARASHINA_SUPPORTED_MODELS,
+  SARASHINA_MAX_COMPLETION_TOKENS,
+  type SarashinaReasoningEffort,
+  getSarashinaSupportedReasoningEfforts,
+  getDefaultSarashinaReasoningEffort,
   // PLaMo model constants
   MODEL_PLAMO_3_1_PRIME,
   MODEL_PLAMO_3_0_PRIME,

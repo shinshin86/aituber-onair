@@ -1,5 +1,26 @@
 # @aituber-onair/core
 
+## 0.26.27
+
+### Patch Changes
+
+- Propagate published Chat 0.68.0 and re-export the Sarashina provider,
+  options, model constants, endpoint, limits, and reasoning helpers.
+- Show Sarashina disabled in the ten direct-browser React provider selectors,
+  matching Sakana's handling. Keep API keys on a protected backend and
+  preserve saved provider settings. Guard is not a general chat option.
+- Inherit Chat's model-specific minimum OpenRouter reasoning defaults and
+  Claude Opus 5.5 low effort. Correct the API-default label for Opus 5.5 and
+  Haiku 5.5 without replacing explicit effort choices. Gemini 2.5 behavior
+  remains unchanged on the generateContent path.
+- Refresh provider documentation and all embedded Core example metadata.
+
+### Known Limitations
+
+- Sarashina is a free beta subject to provider eligibility and data-use terms.
+  No live inference, account/region access, or rendered-browser verification
+  was performed.
+
 ## 0.26.26
 
 ### Patch Changes
