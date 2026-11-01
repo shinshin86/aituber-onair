@@ -15,3 +15,4 @@ export * from './plamo';
 export * from './chat';
 export * from './prompts';
 export * from './geminiNano';
+export * from './sarashina';

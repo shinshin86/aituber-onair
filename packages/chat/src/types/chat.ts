@@ -13,6 +13,8 @@ export interface Message {
   timestamp?: number;
   /** Provider reasoning state that must be preserved for some models. */
   reasoning_content?: string;
+  /** Opaque encrypted Sarashina reasoning; replay unchanged on assistant turns. */
+  reasoning?: string;
   /** Provider-native content blocks that must be preserved across turns. */
   provider_content?: unknown[];
   /** OpenAI-compatible assistant tool calls. */

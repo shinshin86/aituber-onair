@@ -140,6 +140,7 @@ describe.skipIf(!hasUmdBundle)('UMD Bundle', () => {
         'deepseek',
         'mistral',
         'sakana',
+        'sarashina',
         'plamo',
       ];
 
@@ -156,6 +157,18 @@ describe.skipIf(!hasUmdBundle)('UMD Bundle', () => {
           expect(typeof service.processChat).toBe('function');
         }).not.toThrow();
       }
+    });
+
+    it('exports Sarashina provider classes and model constants', () => {
+      expect(typeof AITuberOnAirChat.SarashinaChatService).toBe('function');
+      expect(typeof AITuberOnAirChat.SarashinaChatServiceProvider).toBe(
+        'function',
+      );
+      expect(AITuberOnAirChat.MODEL_SARASHINA_3_NANO).toBe('sarashina3-nano');
+      expect(AITuberOnAirChat.MODEL_SARASHINA_3_MINI).toBe('sarashina3-mini');
+      expect(AITuberOnAirChat.MODEL_SARASHINA_3_2_MINI_THINKING).toBe(
+        'sarashina3.2-mini-thinking',
+      );
     });
 
     it('should allow calling installGASFetch without errors', () => {

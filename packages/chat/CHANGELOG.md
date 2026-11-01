@@ -1,5 +1,105 @@
 # @aituber-onair/chat
 
+## 0.68.0
+
+### Minor Changes
+
+- Added the backend-only `sarashina` provider with text, streaming, automatic
+  function tools, and encrypted reasoning-state replay. The default model is
+  the lightweight conversational `sarashina3-nano`; `sarashina3-mini` and
+  `sarashina3.2-mini-thinking` are explicit options. The moderation-only Guard
+  model is excluded, and vision is unsupported.
+- Sarashina maps `responseLength` to `max_completion_tokens` and clamps
+  explicit limits to 1–8000. The thinking model alone accepts `low`, `medium`,
+  and `high` reasoning effort, defaulting to `low`; explicit effort on other
+  Sarashina models is rejected before sending. Retain the returned
+  `assistant_message`, including its opaque `reasoning`, for continuation.
+  Incomplete SSE streams without `[DONE]` are rejected.
+- Added a Node Sarashina example with optional state-preserving continuation.
+  Providers that cannot be called directly by the browser example are shown
+  disabled: currently Sakana AI and Sarashina. Sarashina's official guidance
+  requires protected backend execution and prohibits exposing API keys in
+  browser/mobile clients.
+
+### Behavior Changes
+
+Omitted reasoning settings now send an explicit model-specific minimum where
+verified. Applications relying on upstream defaults may produce different
+responses after upgrading. Valid explicit efforts remain available; unsupported
+efforts on the new OpenRouter profiles normalize to the package default.
+
+The following OpenRouter routes previously omitted `reasoning.effort` and now
+send the value in the last column. API defaults describe the catalog checked
+on 2026-11-01; aliases can change upstream. `off` means the catalog disabled
+reasoning by default. Some routes retain the same effective setting while
+making it explicit.
+
+| OpenRouter model ID | 0.67.0 omitted behavior | 0.68.0 explicit effort |
+| --- | --- | --- |
+| `~openai/gpt-mini-latest` | omitted (API: `off`) | `none` |
+| `openai/gpt-5.6-sol` | omitted (API: `medium`) | `none` |
+| `openai/gpt-5.6-terra` | omitted (API: `medium`) | `none` |
+| `openai/gpt-5.6-luna` | omitted (API: `medium`) | `none` |
+| `openai/gpt-5.5-pro` | omitted (API: `medium`) | `medium` |
+| `openai/gpt-5.5` | omitted (API: `medium`) | `none` |
+| `openai/gpt-5.1-codex` | omitted (API: `medium`) | `low` |
+| `openai/gpt-5-mini` | omitted (API: `medium`) | `minimal` |
+| `openai/gpt-5-nano` | omitted (API: `medium`) | `minimal` |
+| `~anthropic/claude-sonnet-latest` | omitted (API: `high`) | `low` |
+| `~anthropic/claude-haiku-latest` | omitted (API: `medium`) | `none` |
+| `anthropic/claude-fable-5` | omitted (API: `high`) | `low` |
+| `anthropic/claude-opus-5` | omitted (API: `high`) | `none` |
+| `anthropic/claude-opus-4.8` | omitted (API: `off`) | `none` |
+| `~google/gemini-pro-latest` | omitted (API: `medium`) | `low` |
+| `~google/gemini-flash-latest` | omitted (API: `medium`) | `low` |
+| `google/gemini-3.7-flash` | omitted (API: `medium`) | `low` |
+| `google/gemini-3.6-flash` | omitted (API: `medium`) | `minimal` |
+| `google/gemini-3.5-flash-lite` | omitted (API: `minimal`) | `minimal` |
+| `~x-ai/grok-latest` | omitted (API: `high`) | `low` |
+| `x-ai/grok-4.6` | omitted (API: `high`) | `low` |
+| `x-ai/grok-4.5` | omitted (API: `high`) | `low` |
+| `~moonshotai/kimi-latest` | omitted (API: `max`) | `none` |
+| `moonshotai/kimi-k3` | omitted (API: `max`) | `none` |
+
+- Models that require at least `medium` remain explicit choices rather than
+  provider defaults; currently `openai/gpt-5.5-pro` requires `medium`.
+  Dynamic routers, non-reasoning models, and models without documented effort
+  levels retain their previous omitted-effort behavior. Provider default
+  models are unchanged. [OpenRouter catalog](https://openrouter.ai/api/v1/models).
+- OpenRouter requests now retain `minimal` on the wire for GPT-5 Mini/Nano and
+  Gemini 3.6 Flash/3.5 Flash-Lite instead of converting it to `low`.
+- Direct Claude Opus 5.5 now accepts all five effort levels and sends
+  `output_config.effort: 'low'` when omitted, instead of leaving effort to the
+  API's `medium` default. The React selector also starts at `low` and labels
+  `medium` as the API default. Explicit supported efforts are preserved.
+- The new message-level Sarashina `reasoning` field is removed when sending
+  history to any other provider, preventing encrypted Sarashina state from
+  being forwarded during provider switches. Existing `reasoning_content` and
+  provider-native history handling are unchanged.
+
+### Patch Changes
+
+- Clarified that direct Gemini 2.5 Pro/Flash/Flash-Lite behavior is unchanged:
+  this provider uses generateContent, where `thinkingLevel` is restricted to
+  Gemini 3 and later. The Interactions API's Gemini 2.5 thinking-level table
+  does not apply; a new `thinkingBudget` option was not introduced.
+  Flash-Lite's off-by-default behavior is retained.
+- Updated English/Japanese documentation and React/Node examples, with mocked
+  transport coverage for all new defaults, explicit efforts, encrypted-state
+  replay, output limits, errors, browser disabling, and provider isolation.
+
+### Known Limitations
+
+- Sarashina is a [free beta](https://sarashina.ai/). Its
+  [terms](https://sarashina.ai/terms) restrict eligibility to Japan residents
+  or companies headquartered in Japan and allow training/service-development
+  use of input/output data. Training opt-out is described for paid plans only.
+  Check current terms before sending data.
+- Sarashina live inference, encrypted-state decryption, account/region access,
+  and rendered-browser layout were not verified. Short output budgets can end
+  during thinking before visible text is produced. Image input, structured-
+  output configuration, and task-specific APIs are outside this integration.
+
 ## 0.67.0
 
 ### Minor Changes

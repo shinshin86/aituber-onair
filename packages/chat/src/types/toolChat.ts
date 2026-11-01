@@ -32,6 +32,8 @@ export interface ChatCompletionAssistantMessage {
   role: 'assistant';
   content: string;
   reasoning_content?: string;
+  /** Opaque encrypted Sarashina reasoning; replay unchanged on assistant turns. */
+  reasoning?: string;
   provider_content?: unknown[];
   tool_calls?: ChatCompletionToolCall[];
   [key: string]: unknown;

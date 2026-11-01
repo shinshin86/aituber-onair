@@ -8,6 +8,7 @@ import { OpenAICompatibleChatServiceProvider } from './openaiCompatible/OpenAICo
 import { OpenAIChatServiceProvider } from './openai/OpenAIChatServiceProvider';
 import { OpenRouterChatServiceProvider } from './openrouter/OpenRouterChatServiceProvider';
 import { PlamoChatServiceProvider } from './plamo/PlamoChatServiceProvider';
+import { SarashinaChatServiceProvider } from './sarashina/SarashinaChatServiceProvider';
 import { SakanaChatServiceProvider } from './sakana/SakanaChatServiceProvider';
 import { XAIChatServiceProvider } from './xai/XAIChatServiceProvider';
 import { ZAIChatServiceProvider } from './zai/ZAIChatServiceProvider';
@@ -26,4 +27,5 @@ export const DEFAULT_CHAT_SERVICE_PROVIDERS = [
   new MistralChatServiceProvider(),
   new SakanaChatServiceProvider(),
   new PlamoChatServiceProvider(),
+  new SarashinaChatServiceProvider(),
 ];

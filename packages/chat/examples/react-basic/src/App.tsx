@@ -71,6 +71,7 @@ export type Provider =
   | 'deepseek'
   | 'mistral'
   | 'sakana'
+  | 'sarashina'
   | 'plamo';
 
 interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {

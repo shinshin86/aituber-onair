@@ -4,7 +4,7 @@ Interactive web application demonstrating the @aituber-onair/chat package with R
 
 ## Features
 
-- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI, and PLaMo in real-time
+- 🔄 **Provider Switching** - Switch between OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI and Sarashina, and PLaMo in real-time
 - 💬 **Real-time Streaming** - See AI responses as they're generated
 - 📝 **Chat History** - Full conversation history with role indicators
 - 🖼️ **Vision Support** - Upload and analyze images (drag & drop supported)
@@ -77,7 +77,7 @@ react-basic/
 
 ### Basic Chat
 
-1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI, or PLaMo)
+1. Select a provider (OpenAI, OpenAI-compatible, Claude, Gemini, OpenRouter, Z.ai, Kimi, DeepSeek, Mistral, browser-disabled Sakana AI and Sarashina, or PLaMo)
 2. Enter your API key
 3. Type a message and press Enter or click Send
 4. Watch the AI response stream in real-time
@@ -141,6 +141,9 @@ built-in model status is `available`.
 **Claude**
 - Models: Claude Haiku 5.5, Claude Opus 5.5, Claude Sonnet 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, and Claude 4.5 (Opus, Haiku). Claude Sonnet 4.5 is deprecated (retires 2026-11-30) and is no longer selectable
 - Vision: All listed Claude models
+- Opus 5.5 exposes Low/Medium/High/XHigh/Max and starts at `low`; the API
+  default label is `medium`. Adaptive thinking stays on, and explicit effort
+  choices are preserved when reselecting the model.
 - Haiku 5.5 is an explicit option appended to the Claude selector; Haiku 4.5
   remains the default. Selecting Haiku 5.5 starts at `low` effort for chat;
   its API default is `medium`. The effort control sends any of the five
@@ -166,10 +169,31 @@ built-in model status is `available`.
 **Gemini**
 - Models: Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models, including Gemini 3.7 Flash and Gemini 3.5 Flash, remain selectable with a deprecated label for explicit compatibility.
-- Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models.
+- Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models. The [generateContent reference](https://ai.google.dev/api/generate-content#ThinkingConfig) restricts `thinkingLevel` to Gemini 3 and later; Interactions API settings are not used here.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
 
 **OpenRouter**
+
+For catalog-verified effort controls, omitted options send the lightest accepted
+value; heavier efforts remain explicit choices. The following additional
+OpenRouter routes use these package defaults (including aliases as currently
+resolved by the catalog):
+
+| Package effort | Model IDs |
+| --- | --- |
+| `none` | `~openai/gpt-mini-latest`, `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`, `openai/gpt-5.5`, `~anthropic/claude-haiku-latest`, `anthropic/claude-opus-5`, `anthropic/claude-opus-4.8`, `~moonshotai/kimi-latest`, `moonshotai/kimi-k3` |
+| `minimal` | `openai/gpt-5-mini`, `openai/gpt-5-nano`, `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite` |
+| `low` | `openai/gpt-5.1-codex`, `~anthropic/claude-sonnet-latest`, `anthropic/claude-fable-5`, `~google/gemini-pro-latest`, `~google/gemini-flash-latest`, `google/gemini-3.7-flash`, `~x-ai/grok-latest`, `x-ai/grok-4.6`, `x-ai/grok-4.5` |
+| `medium` | `openai/gpt-5.5-pro` |
+
+Models whose minimum effort is `medium` or higher are explicit options, not
+provider defaults; currently `openai/gpt-5.5-pro` requires at least `medium`.
+Dynamic routers, non-reasoning models, and models without documented effort
+selection do not gain an automatic effort setting. In particular, OpenRouter's
+Gemini 2.5, Claude Haiku 4.5, GLM-4.x, and Kimi K2.5/K2.7 Code routes do not
+publish effort levels in the catalog; their upstream thinking defaults remain
+in effect. [Model catalog](https://openrouter.ai/api/v1/models),
+[reasoning controls](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens#discovering-per-model-reasoning-options).
 
 Additional explicit options (provider default unchanged):
 
@@ -268,6 +292,21 @@ npm install
 - **429**: Rate limit exceeded
 - **500**: Server error (try again)
 
+### Sarashina (backend-only beta)
+
+Sarashina appears disabled in the provider list. Its source model metadata lists
+`sarashina3-nano` (lightweight chat default), `sarashina3-mini`, and
+`sarashina3.2-mini-thinking`; Guard is moderation-only and is excluded. No Sarashina
+requests or API keys are sent by this browser example. Use the Node sample.
+The backend provider supports text, streaming, tools and encrypted reasoning replay.
+It defaults thinking effort to `low` and limits `max_completion_tokens` to 8000;
+keep the returned `assistant_message` unchanged in continuation history.
+See [API docs](https://docs.sarashina.ai/api-reference/chat-completions),
+[models](https://docs.sarashina.ai/models), and the package README for full limits.
+The [service](https://sarashina.ai/) is a free beta; [terms](https://sarashina.ai/terms)
+allow input/output use for training and describe training opt-out for paid plans only.
+Live inference, account access and browser rendering have not been verified.
+
 ### CORS Issues
 
 Named providers in this sample send requests directly to their configured
@@ -278,10 +317,12 @@ native OpenAI, Z.ai, and OpenRouter requests remain direct browser requests.
 Their success depends on the upstream service permitting your origin and
 request headers. Mock transport tests do not verify live CORS behavior.
 
-Sakana AI is shown as a disabled provider in this browser example because direct browser
-requests can fail with CORS unless Sakana enables the required CORS headers for
-your origin. Use `../node-basic/sakana-example.js` from Node.js, or call Sakana through your own
-backend/serverless proxy in a web app.
+Providers that cannot be called directly by this browser example are shown disabled;
+currently Sakana AI and Sarashina. Sakana requests may fail CORS; Sarashina's
+[security guide](https://docs.sarashina.ai/introduction) requires a protected backend
+and forbids exposing API keys in browser/mobile clients. Use
+`../node-basic/sakana-example.js` or `../node-basic/sarashina-example.js` in Node.js,
+or an application backend that keeps provider credentials server-side.
 
 For production, you'll need to:
 1. Use a backend proxy

@@ -1,3 +1,4 @@
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
 import { ChatService } from '../../ChatService';
 import { Message, MessageWithVision } from '../../../types';
 import { ToolDefinition, ToolChatCompletion } from '../../../types';
@@ -20,6 +21,10 @@ import {
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
+  MODEL_OPENAI_GPT_5_MINI,
+  MODEL_OPENAI_GPT_5_NANO,
+  MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   getDefaultOpenRouterReasoningEffort,
   normalizeOpenRouterReasoningEffort,
   isOpenRouterVisionModel,
@@ -351,7 +356,7 @@ export class OpenRouterChatService implements ChatService {
   ): any {
     const body: any = {
       model,
-      messages,
+      messages: stripSarashinaReasoning(messages),
       stream,
     };
 
@@ -409,7 +414,11 @@ export class OpenRouterChatService implements ChatService {
             model !== MODEL_QWEN_QWEN_3_8_MAX_0902 &&
             model !== MODEL_META_MUSE_SPARK_1_3 &&
             model !== MODEL_UPSTAGE_SOLAR_PRO4 &&
-            model !== MODEL_UPSTAGE_SOLAR_MINI4
+            model !== MODEL_UPSTAGE_SOLAR_MINI4 &&
+            model !== MODEL_OPENAI_GPT_5_MINI &&
+            model !== MODEL_OPENAI_GPT_5_NANO &&
+            model !== MODEL_GOOGLE_GEMINI_3_6_FLASH &&
+            model !== MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE
               ? 'low'
               : reasoningEffort;
           body.reasoning.effort = effort;

@@ -2,11 +2,11 @@
 
 ![@aituber-onair/chat logo](https://github.com/shinshin86/aituber-onair/raw/main/packages/chat/images/aituber-onair-chat.png)
 
-Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, Sakana AI, PLaMo, and Agent SDK providers.
+Chat and LLM API integration library for AITuber OnAir. This package provides a unified interface for interacting with various AI chat providers including OpenAI, OpenAI-compatible, Claude, Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, Sakana AI, Sarashina, PLaMo, and Agent SDK providers.
 
 ## Features
 
-- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, Sakana AI, PLaMo, and Agent SDK providers
+- 🤖 **Multiple AI Provider Support**: OpenAI, OpenAI-compatible, Claude (Anthropic), Google Gemini, Gemini Nano (Chrome built-in AI), OpenRouter, Z.ai, xAI, Kimi, DeepSeek, Mistral, Sakana AI, Sarashina, PLaMo, and Agent SDK providers
 - 🔄 **Unified Interface**: Consistent API across different providers
 - 🛠️ **Tool/Function Calling**: Support for AI function calling with automatic iteration
 - 💬 **Streaming Responses**: Real-time streaming chat responses
@@ -718,10 +718,12 @@ const claudeService = ChatServiceFactory.createChatService('claude', {
 ```
 
 `claude-opus-5` and `claude-opus-5-5` are available as explicit high-capability
-options and are not the package default. Opus 5.5 supports image input; the
-package leaves its reasoning effort unspecified because model-specific effort
-values are not documented in the sources used for this integration. Claude
-Opus 5 has adaptive thinking enabled by default.
+options and are not the package default. Opus 5.5 supports image input and
+all five effort levels. The package sends `low` when effort is omitted,
+while the API defaults to `medium`. Adaptive thinking is always on for Opus 5.5;
+this integration does not send a thinking-mode override.
+[Effort reference](https://platform.claude.com/docs/en/build-with-claude/effort).
+Claude Opus 5 has adaptive thinking enabled by default.
 `claude-sonnet-5-5` (`MODEL_CLAUDE_5_5_SONNET`) is an explicit Messages API
 option with images, streaming, and automatic tool selection. It runs adaptive
 thinking by default, supports all five effort levels, and rejects forced tool
@@ -751,11 +753,11 @@ via `chatOnce(..., maxTokens)` when needed, especially at higher efforts.
 Supported Claude models accept `reasoning_effort`, which maps to Anthropic's
 `output_config.effort`. For real-time chat, the package defaults every
 configurable model to `low` and sends it when no effort is set; the Claude API
-itself defaults to `high` (`medium` on Haiku 5.5). Set `reasoning_effort`
+itself defaults to `high` (`medium` on Opus 5.5 and Haiku 5.5). Set `reasoning_effort`
 explicitly to use another level. Requests for an unsupported `xhigh` or `max`
 fall back to `high`:
 
-- Claude Haiku 5.5, Fable 5, Opus 5, Sonnet 5.5, Sonnet 5, Opus 4.8, and Opus 4.7:
+- Claude Haiku 5.5, Opus 5.5, Fable 5, Opus 5, Sonnet 5.5, Sonnet 5, Opus 4.8, and Opus 4.7:
   `low`, `medium`, `high`, `xhigh`, or `max`.
 - Claude Opus 4.6 and Sonnet 4.6:
   `low`, `medium`, `high`, or `max`.
@@ -813,7 +815,10 @@ Gemini 3 models accept `reasoning_effort`, which maps to Gemini
 This uses the lowest supported thinking level for chat and reduces the risk of
 hidden thinking exhausting short output limits. Gemini 2.5 uses
 `thinkingBudget` instead, so `reasoning_effort` is intentionally not sent for
-those models.
+those models. The generateContent
+[ThinkingConfig reference](https://ai.google.dev/api/generate-content#ThinkingConfig)
+limits `thinkingLevel` to Gemini 3 and later; the Interactions API's 2.5
+thinking-level table does not apply to this provider path.
 
 #### OpenRouter
 
@@ -964,6 +969,27 @@ and browser CORS have not been verified. See the
 [endpoint metadata](https://openrouter.ai/api/v1/models/inclusionai/ling-3.1-flash/endpoints),
 [Chat Completions reference](https://openrouter.ai/docs/api/api-reference/chat/create-a-chat-completion),
 and [reasoning replay requirements](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
+
+For catalog-verified effort controls, omitted options send the lightest accepted
+value; heavier efforts remain explicit choices. The following additional
+OpenRouter routes use these package defaults (including aliases as currently
+resolved by the catalog):
+
+| Package effort | Model IDs |
+| --- | --- |
+| `none` | `~openai/gpt-mini-latest`, `openai/gpt-5.6-sol`, `openai/gpt-5.6-terra`, `openai/gpt-5.6-luna`, `openai/gpt-5.5`, `~anthropic/claude-haiku-latest`, `anthropic/claude-opus-5`, `anthropic/claude-opus-4.8`, `~moonshotai/kimi-latest`, `moonshotai/kimi-k3` |
+| `minimal` | `openai/gpt-5-mini`, `openai/gpt-5-nano`, `google/gemini-3.6-flash`, `google/gemini-3.5-flash-lite` |
+| `low` | `openai/gpt-5.1-codex`, `~anthropic/claude-sonnet-latest`, `anthropic/claude-fable-5`, `~google/gemini-pro-latest`, `~google/gemini-flash-latest`, `google/gemini-3.7-flash`, `~x-ai/grok-latest`, `x-ai/grok-4.6`, `x-ai/grok-4.5` |
+| `medium` | `openai/gpt-5.5-pro` |
+
+Models whose minimum effort is `medium` or higher are explicit options, not
+provider defaults; currently `openai/gpt-5.5-pro` requires at least `medium`.
+Dynamic routers, non-reasoning models, and models without documented effort
+selection do not gain an automatic effort setting. In particular, OpenRouter's
+Gemini 2.5, Claude Haiku 4.5, GLM-4.x, and Kimi K2.5/K2.7 Code routes do not
+publish effort levels in the catalog; their upstream thinking defaults remain
+in effect. [Model catalog](https://openrouter.ai/api/v1/models),
+[reasoning controls](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens#discovering-per-model-reasoning-options).
 
 The package favors the lowest supported reasoning level for responsive chat
 with GPT-6.1 Sol, GPT-6 Sol/Luna, Claude 5.5, Grok 4.7, and GLM-5.3 FlashX.
@@ -1222,6 +1248,52 @@ Notes:
 - Sakana recommends `max_completion_tokens` for new Chat Completions integrations, but also accepts legacy `max_tokens`. This provider keeps `max_tokens` to match existing OpenAI-compatible provider behavior.
 - Sakana recommends the Responses API for best performance, but this provider uses Chat Completions because it matches the package's OpenAI-compatible chat path.
 - Direct browser usage may fail with CORS unless Sakana enables CORS for your origin. Use Node.js, a backend/serverless proxy, or `examples/node-basic/sakana-example.js` instead of calling Sakana directly from browser-only apps.
+
+#### Sarashina (beta, backend only)
+
+Providers that cannot be called directly by this browser example are shown
+disabled; currently Sakana AI and Sarashina. Sarashina requires a protected
+backend and must not expose API keys in browser or mobile clients.
+[Authentication and security](https://docs.sarashina.ai/introduction).
+
+```typescript
+const service = ChatServiceFactory.createChatService('sarashina', {
+  apiKey: process.env.SARASHINA_API_KEY,
+  model: 'sarashina3.2-mini-thinking', // Explicit; default is sarashina3-nano
+  reasoning_effort: 'low', // Thinking model only; package default
+});
+const history: Message[] = [{ role: 'user', content: 'Say hello in Japanese.' }];
+const completion = await service.chatOnce(history, true, (text) => console.log(text));
+if (completion.assistant_message) history.push(completion.assistant_message);
+history.push({ role: 'user', content: 'Continue.' });
+// Keep assistant_message.reasoning unchanged; never display or decode it.
+await service.chatOnce(history, false, () => {});
+```
+
+The text-only chat models are `sarashina3-nano` (lightweight conversational
+default), `sarashina3-mini`, and `sarashina3.2-mini-thinking` (explicit).
+All have 128k context; moderation-only `sarashina3-guard` is excluded.
+[Models](https://docs.sarashina.ai/models).
+
+Requests use Bearer-authenticated Chat Completions at
+`https://api.sarashina.ai/v1/chat/completions`. Streaming and automatic function
+tools are supported. `responseLength` maps to `max_completion_tokens`;
+explicit `chatOnce(..., maxTokens)` values are clamped to 1–8000. The shared
+unspecified-length default is 5000. Only the thinking model accepts
+`reasoning_effort: 'low' | 'medium' | 'high'`; omitted effort becomes `low`.
+Passing effort to other models is rejected before sending. Append the returned
+`assistant_message` to preserve encrypted `reasoning` across text and tool turns.
+Incomplete SSE without `[DONE]` throws. Short output budgets can finish during
+thinking without visible text. Vision and structured-output configuration are
+not exposed. [API reference](https://docs.sarashina.ai/api-reference/chat-completions).
+
+The [service](https://sarashina.ai/) is a free beta. The
+[terms](https://sarashina.ai/terms) restrict eligibility to Japan residents or
+companies headquartered in Japan and allow input/output use for training and
+service development; training opt-out is described for paid plans only.
+Check the current terms before sending data. No live inference or account/region
+access test was run. See `examples/node-basic/sarashina-example.js` for a Node
+sample, including optional state-preserving continuation.
 
 #### PLaMo
 
@@ -1672,6 +1744,7 @@ Currently, the following AI providers are built-in:
 - **DeepSeek**: DeepSeek V4.1 Flash 1017 via the rolling `deepseek-flash` ID, plus text-only V4 Pro (`deepseek-v4-pro`), through OpenAI-compatible Chat Completions. Legacy Flash aliases remain available for compatibility. Thinking defaults to disabled for low-latency chat.
 - **Mistral**: Supports the Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models, with streaming and vision support. Adjustable `reasoning_effort` is only sent for supported models. GLM-5.3 (`zai-glm-5-3`) is an explicit text-only option. Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview option; deprecated `mistral-large-2512` is no longer advertised.
 - **Sakana AI**: Supports Fugu (`fugu`), Fugu Ultra (`fugu-ultra-v1.1`), and vision-capable Sakana Namazu (`sakana-namazu`) via OpenAI-compatible Chat Completions. Namazu thinking defaults to disabled for responsive chat.
+- **Sarashina**: Beta backend-only text, streaming, tools and encrypted reasoning replay. Nano is the lightweight chat default; Mini and Mini Thinking are explicit choices. See the Sarashina section for credentials, data-use terms and output limits.
 - **PLaMo**: Supports PLaMo 3.0 Prime (`plamo-3.0-prime`, default) and PLaMo 3.1 Prime (`plamo-3.1-prime`) via OpenAI-compatible Chat Completions; the retiring 2.2 constant remains exported for compatibility.
 - **Gemini Nano**: Chrome built-in AI (LanguageModel API). Runs on-device with no API key required. Web pages require Chrome 148+ on a supported desktop device; no Chrome flags are required. Streams when Chrome exposes `promptStreaming()`; no vision support.
 
