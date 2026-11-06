@@ -17,6 +17,7 @@ const examples = [
   'react-psd-app',
   'react-mesh-avatar-app',
   'react-single-image-avatar-app',
+  'react-media-avatar-app',
 ];
 
 afterEach(() => vi.unstubAllGlobals());

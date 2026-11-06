@@ -5,7 +5,7 @@
 [English version](./avatar.md)
 
 AITuber OnAir は、チャットや音声の裏側だけを扱うツールキットではありません。
-PNG / ぷるぷるPNGTuber / VRM / Live2D / Inochi2D / PSD / Pet / 1枚画像 /
+PNG / ぷるぷるPNGTuber / VRM / Live2D / Inochi2D / PSD / Pet / 1枚画像 / メディア /
 メッシュアバターなどのアバター表現を
 組み合わせて、より豊かな AI キャラクター体験を作るための入口にもなります。
 
@@ -143,6 +143,15 @@ Miko画像を同梱しており、手元の画像にも差し替えられます�
 まずは
 [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
 を参照してください。
+
+### Media Avatar
+
+![Media Avatar サンプルの画面](../packages/core/examples/react-media-avatar-app/images/react-media-avatar-app.png)
+
+返答の6種類の感情に合わせて、画像・GIF・ミュートのループ動画を切り替えます。
+4種類のGIFを同梱し、アップロードはIndexedDBに保存します。
+詳しくは
+[`packages/core/examples/react-media-avatar-app`](../packages/core/examples/react-media-avatar-app)を参照してください。
 
 ### Mesh Avatar
 

@@ -12,6 +12,7 @@ const coreSamples = [
   'react-psd-app',
   'react-purupuru-app',
   'react-single-image-avatar-app',
+  'react-media-avatar-app',
   'react-vrm-app',
 ].map((name) => `packages/core/examples/${name}`);
 const chatSample = 'packages/chat/examples/react-basic';

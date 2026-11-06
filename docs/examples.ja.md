@@ -37,6 +37,9 @@ AITuber OnAir には、フル機能のアプリサンプルと、より小さな
 - 1枚の画像をTTS音声に合わせて動かしたい場合は
   [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app)
   を使います。
+- 感情別に画像・GIF・動画を切り替えたい場合は
+  [`packages/core/examples/react-media-avatar-app`](../packages/core/examples/react-media-avatar-app)
+  を使います。
 - 1枚絵をメッシュ変形で Live2D 風に動かしたい場合は
   [`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app)
   を使います。
@@ -208,6 +211,23 @@ APIキーやTTS設定がなくても「動きをプレビュー」から確認�
 
 ```bash
 cd packages/core/examples/react-single-image-avatar-app
+npm install
+npm run dev
+```
+
+### Media Avatar App
+
+<p align="center">
+  <img src="../packages/core/examples/react-media-avatar-app/images/react-media-avatar-app.png" alt="Media Avatar サンプルアプリ" width="720" />
+</p>
+
+返答の6種類の感情に合わせて、画像・GIF・ミュートのループ動画を切り替えます。
+4種類のGIFを同梱し、アップロードはIndexedDBに保存します。
+詳しくは
+[`packages/core/examples/react-media-avatar-app`](../packages/core/examples/react-media-avatar-app)を参照してください。
+
+```bash
+cd packages/core/examples/react-media-avatar-app
 npm install
 npm run dev
 ```

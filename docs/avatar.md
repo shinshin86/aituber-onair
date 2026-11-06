@@ -6,7 +6,7 @@
 
 AITuber OnAir is not only a chat and voice toolkit. It is also a starting
 point for building richer AI character presentation with PNG, PuruPuru
-PNGTuber, VRM, Live2D, Inochi2D, PSD, animated pet, single-image, and mesh
+PNGTuber, VRM, Live2D, Inochi2D, PSD, animated pet, single-image, media, and mesh
 avatars.
 
 This guide explains which avatar style to start with and where to extend avatar
@@ -135,6 +135,14 @@ can replace them with your own image.
 
 Start from
 [`packages/core/examples/react-single-image-avatar-app`](../packages/core/examples/react-single-image-avatar-app).
+
+### Media Avatar
+
+![Media Avatar example screen](../packages/core/examples/react-media-avatar-app/images/react-media-avatar-app.png)
+
+Display images, animated GIFs or looping muted videos for six response emotions.
+The example includes four GIFs and saves uploads in IndexedDB. See
+[`packages/core/examples/react-media-avatar-app`](../packages/core/examples/react-media-avatar-app).
 
 ### Mesh Avatar
 
