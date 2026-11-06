@@ -1,0 +1,51 @@
+.local-tts-setup {
+  margin-bottom: 10px;
+}
+
+.local-tts-field {
+  min-width: 0;
+}
+
+.local-tts-preview {
+  overflow-wrap: anywhere;
+}
+
+.local-tts-preview code {
+  font-family: monospace;
+}
+
+.local-tts-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.local-tts-status {
+  display: block;
+  margin: 0 0 10px;
+  color: #8899aa;
+  font-size: 0.72rem;
+}
+
+.local-tts-status-ok {
+  color: #79d9ad;
+}
+
+.local-tts-error-help {
+  margin: 5px 0 0;
+}
+
+.local-tts-error-help a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.local-tts-error {
+  margin-bottom: 10px;
+}
+
+.local-tts-field textarea {
+  width: 100%;
+  resize: vertical;
+}

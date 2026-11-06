@@ -39,6 +39,9 @@ to the package examples when you need lower-level integration.
   if you want one image to move with TTS audio instead of swapping mouth
   states.
 - Use
+  [`packages/core/examples/react-media-avatar-app`](../packages/core/examples/react-media-avatar-app)
+  to switch images, GIFs or videos with response emotions.
+- Use
   [`packages/core/examples/react-mesh-avatar-app`](../packages/core/examples/react-mesh-avatar-app)
   if you want one illustration to move Live2D-style with mesh deformation.
 - Use package examples when you want to embed chat, voice, memory, or streaming
@@ -210,6 +213,22 @@ engine.
 
 ```bash
 cd packages/core/examples/react-single-image-avatar-app
+npm install
+npm run dev
+```
+
+### Media Avatar App
+
+<p align="center">
+  <img src="../packages/core/examples/react-media-avatar-app/images/react-media-avatar-app.png" alt="Media Avatar example app" width="720" />
+</p>
+
+Display images, animated GIFs or looping muted videos for six response emotions.
+The example includes four GIFs and saves uploads in IndexedDB. See
+[`packages/core/examples/react-media-avatar-app`](../packages/core/examples/react-media-avatar-app).
+
+```bash
+cd packages/core/examples/react-media-avatar-app
 npm install
 npm run dev
 ```

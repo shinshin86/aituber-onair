@@ -58,6 +58,7 @@ jobs:
           - packages/core/examples/react-basic
           - packages/core/examples/react-inochi2d-app
           - packages/core/examples/react-live2d-app
+          - packages/core/examples/react-media-avatar-app
           - packages/core/examples/react-mesh-avatar-app
           - packages/core/examples/react-pet-app
           - packages/core/examples/react-pngtuber-app

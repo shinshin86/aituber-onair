@@ -17,9 +17,15 @@ import { useSettings as useSettings5 } from '../examples/react-purupuru-app/src/
 import { useSettings as useSettings6 } from '../examples/react-inochi2d-app/src/hooks/useSettings';
 import { useSettings as useSettings7 } from '../examples/react-psd-app/src/hooks/useSettings';
 import { useSettings as useSettings8 } from '../examples/react-live2d-app/src/hooks/useSettings';
+import { useSettings as useSettingsMedia } from '../examples/react-media-avatar-app/src/hooks/useSettings';
 
 vi.mock('@aituber-onair/core', () => import('../src'));
 const examples = [
+  {
+    name: 'react-media-avatar-app',
+    storageKey: 'react-media-avatar-app-settings',
+    useSettings: useSettingsMedia,
+  },
   {
     name: 'react-single-image-avatar-app',
     storageKey: 'react-single-image-avatar-app-settings',

@@ -251,6 +251,20 @@ npm install
 npm run dev
 ```
 
+#### Media Avatar Chat
+
+![Media Avatar example app](./packages/core/examples/react-media-avatar-app/images/react-media-avatar-app.png)
+
+Display images, animated GIFs or looping muted videos for six response emotions.
+The example includes four GIFs and saves uploads in IndexedDB. See
+[`packages/core/examples/react-media-avatar-app`](./packages/core/examples/react-media-avatar-app).
+
+```bash
+cd aituber-onair/packages/core/examples/react-media-avatar-app
+npm install
+npm run dev
+```
+
 #### Mesh Avatar Chat — Live2D-style motion from a single illustration
 
 ![Mesh Avatar example app](./packages/core/examples/react-mesh-avatar-app/images/react-mesh-avatar-app.png)

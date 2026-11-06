@@ -233,6 +233,21 @@ npm install
 npm run dev
 ```
 
+#### Media Avatar Chat
+
+![Media Avatar サンプルアプリ](./packages/core/examples/react-media-avatar-app/images/react-media-avatar-app.png)
+
+返答の6種類の感情に合わせて、画像・GIF・ミュートのループ動画を切り替えます。
+4種類のGIFを同梱し、アップロードはIndexedDBに保存します。
+詳しくは
+[`packages/core/examples/react-media-avatar-app`](./packages/core/examples/react-media-avatar-app)を参照してください。
+
+```bash
+cd aituber-onair/packages/core/examples/react-media-avatar-app
+npm install
+npm run dev
+```
+
 #### Mesh Avatar Chat — 1枚絵を Live2D 風に動かすメッシュアバター
 
 ![Mesh Avatar サンプルアプリ](./packages/core/examples/react-mesh-avatar-app/images/react-mesh-avatar-app.png)
