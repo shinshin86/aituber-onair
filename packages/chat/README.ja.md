@@ -1225,13 +1225,14 @@ await mistralService.processChat(
 - Mistralは`https://api.mistral.ai/v1/chat/completions`のChat Completionsを利用します。
 - デフォルトモデルは`mistral-small-latest`です。低コスト、汎用チャット品質、vision対応、adjustable reasoning対応のバランスがよいためサンプル向けの既定値にしています。
 - `mistral-medium-3-5`は2026-10-31に非推奨となり、2027-04-30に提供終了予定です。定数は`MISTRAL_DEPRECATED_MODELS`に残し、対応一覧と選択UIから除外しています。代わりに`mistral-large-4-0`を使用してください。[Mistralのモデル一覧](https://docs.mistral.ai/models)を参照してください。
-- 対応モデル: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-large-latest`, `mistral-large-4-0`, `mistral-small-2603`, `zai-glm-5-3`
+- 対応モデル: `mistral-small-latest`, `ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`, `mistral-large-latest`, `mistral-large-4-0`, `mistral-small-2603`, `zai-glm-5-3`, `zai-glm-5-3-flash`
 - Mistral Large 4（`mistral-large-4-0`）は、テキスト・画像入力に対応する公開プレビューの明示選択モデルです（Mistral公式の[モデルページ](https://docs.mistral.ai/models/mistral-large-4-0.md)）。推論レベルは`low` / `medium` / `high`のみで、このパッケージではまだ指定できないため`reasoning_effort`は送信しません。応答中のthinkingチャンクは読み飛ばし、回答テキストだけを返します。
 - `mistral-large-2512`（Mistral Large 3）は2026-10-31にMistralで非推奨となり、2027-04-30に提供終了します。ソース互換用に`MISTRAL_DEPRECATED_MODELS`としてexportを残しますが、対応一覧には表示しません。
 - 廃止済みの`mistral-medium-2508`はソース互換用にのみexportを残します。
 - Ministral 3系は同じChat Completions endpointでtext、vision、streaming、function callingに対応します。
+- MistralのChat Completions経路で確認できた機能と推論設定だけを有効にしています。`zai-glm-5-3-flash`（`MODEL_MISTRAL_ZAI_GLM_5_3_FLASH`、GLM-5.3 Flash）は、テキスト・画像入力、ストリーミング、関数呼び出しに対応する明示選択モデルです。推論レベルは`low`・`high`・`max`で、`none`は利用できません。応答速度を考慮し、パッケージの初期値は`low`です。対応する明示値はそのまま送信し、未確認の思考設定は送りません。思考チャンクは回答に表示しません。プロバイダーのデフォルトは`mistral-small-latest`のままです。[モデルの仕様](https://docs.mistral.ai/models/zai-glm-5-3-flash.md)、[画像入力形式](https://docs.mistral.ai/inference/conversations/vision)、[推論の仕様](https://docs.mistral.ai/inference/conversations/reasoning)を参照してください。
 - テキスト専用の明示選択モデルとして`zai-glm-5-3`（GLM-5.3）を利用できます。streamingとfunction callingに対応し、visionや推論レベル指定は有効にしません。利用可否はMistralのサブスクリプションtierによって異なり、利用できないアカウントではHTTP 403（`tier_not_allowed`）が返ります。
-- `reasoning_effort`は`'none' | 'high'`に対応し、Mistral公式docsに合わせて`mistral-small-latest`と`mistral-medium-3-5`にだけ送信します。プロバイダーは応答速度を優先して`none`を既定とし、`high`は明示指定した場合に使います。Mistral Large 4を含むそれ以外のモデルでは省略します。
+- `reasoning_effort`はモデルごとに異なります。`mistral-small-latest`と互換性用IDの`mistral-medium-3-5`は`none`（初期値）・`high`、`zai-glm-5-3-flash`は`low`（初期値）・`high`・`max`に対応します。非対応の値は各モデルの初期値に戻します。Mistral Large 4や既存の`zai-glm-5-3`を含む、それ以外のモデルでは送信しません。
 
 reasoning例:
 
@@ -1750,7 +1751,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 - **xAI**: Grok 4.7、Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 Reasoning/Non-Reasoningをvision対応でサポート。Grok 4.7/4.6/4.5のpackage既定は低遅延向けの`reasoning_effort: 'low'`、Grok 4.3は`none`です
 - **Kimi**: Kimi K3.1 Pro（`kimi-k3.1-pro`、デフォルト）とHighspeed（`kimi-k3.1-pro-highspeed`）は画像・ツール・ストリーミングに対応し、推論設定はK3と共通です。Kimi K3（`kimi-k3`、`low` / `high` / `max` reasoning、パッケージのデフォルトは `low`）もサポートし、いずれもビジョン対応です。K2系列（`kimi-k2.6`、`kimi-k2.7-code`、`kimi-k2.7-code-highspeed`）は2026年12月の提供終了に先立ち非推奨にしています
 - **DeepSeek**: 更新に追従する`deepseek-flash` IDでDeepSeek V4.1 Flash 1017を利用できます。テキスト専用のV4 Pro（`deepseek-v4-pro`）にもOpenAI互換Chat Completions経由で対応し、旧Flash IDは互換用に維持しています。低遅延チャット向けにthinkingはデフォルト無効です。
-- **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します。GLM-5.3 (`zai-glm-5-3`) はテキスト専用の明示選択モデルです。Mistral Large 4（`mistral-large-4-0`）は公開プレビューの明示選択モデルで、非推奨の`mistral-large-2512`は対応一覧に表示しません。
+- **Mistral**: Ministral 3系（`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`）と現行generalist modelをサポートし、streamingとvisionにも対応。adjustable `reasoning_effort`は対応モデルにだけ送信します。GLM-5.3 (`zai-glm-5-3`) はテキスト専用の明示選択モデルです。GLM-5.3 Flash（`zai-glm-5-3-flash`）は画像入力にも対応し、推論レベルは`low`（初期値）・`high`・`max`です。Mistral Large 4（`mistral-large-4-0`）は公開プレビューの明示選択モデルで、非推奨の`mistral-large-2512`は対応一覧に表示しません。
 - **Sakana AI**: Fugu、Fugu Ultra、日本語特化・ビジョン対応のSakana Namazu（`sakana-namazu`）をOpenAI互換Chat Completions経由でサポート。Namazuのthinkingはデフォルト無効です
 - **Sarashina**: ベータのバックエンド専用 API。テキスト、streaming、tools、暗号化 reasoning の再送に対応します。既定モデルは Nano で、Mini と Mini Thinking は明示選択です。認証、データ利用規約、出力上限は Sarashina の節を参照してください。
 - **PLaMo**: PLaMo 3.0 Prime（`plamo-3.0-prime`, デフォルト）とPLaMo 3.1 Prime（`plamo-3.1-prime`）をOpenAI互換Chat Completions経由でサポートし、廃止予定の2.2定数は互換用にexportを残します

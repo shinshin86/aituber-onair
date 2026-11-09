@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   MODEL_MINISTRAL_14B_2512,
   MODEL_MINISTRAL_3B_2512,
   MODEL_MINISTRAL_8B_2512,
@@ -89,6 +90,7 @@ describe('MistralChatServiceProvider', () => {
       MODEL_MISTRAL_LARGE_4_0,
       MODEL_MISTRAL_SMALL_2603,
       MODEL_MISTRAL_ZAI_GLM_5_3,
+      MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
     ]);
   });
 

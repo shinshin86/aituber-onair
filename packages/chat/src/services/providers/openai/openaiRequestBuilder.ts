@@ -8,7 +8,8 @@ import {
   MODEL_GPT_6_ASTRA,
   getDefaultReasoningEffortForOpenAIModel,
   isOpenAIReasoningModel,
-  isMistralReasoningEffort,
+  normalizeMistralReasoningEffort,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   isMistralReasoningEffortModel,
 } from '../../../constants';
 import {
@@ -223,10 +224,12 @@ export function buildOpenAIRequestBody({
   if (
     provider === 'mistral' &&
     isMistralReasoningEffortModel(model) &&
-    reasoning_effort &&
-    isMistralReasoningEffort(reasoning_effort)
+    (reasoning_effort || model === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH)
   ) {
-    body.reasoning_effort = reasoning_effort;
+    body.reasoning_effort = normalizeMistralReasoningEffort(
+      model,
+      reasoning_effort,
+    );
   }
 
   if (provider === 'plamo' && reasoning_effort) {

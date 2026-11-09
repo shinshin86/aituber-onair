@@ -1,6 +1,6 @@
 import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
-  isMistralReasoningEffortModel,
+  normalizeMistralReasoningEffort,
   isMistralVisionModel,
   MISTRAL_SUPPORTED_MODELS,
   MODEL_MISTRAL_SMALL_LATEST,
@@ -32,9 +32,10 @@ export class MistralChatServiceProvider
       validate: 'explicit',
     });
     const tools: ToolDefinition[] | undefined = options.tools;
-    const reasoningEffort = isMistralReasoningEffortModel(model)
-      ? (options.reasoning_effort ?? 'none')
-      : undefined;
+    const reasoningEffort = normalizeMistralReasoningEffort(
+      model,
+      options.reasoning_effort,
+    );
 
     return new MistralChatService(
       options.apiKey,

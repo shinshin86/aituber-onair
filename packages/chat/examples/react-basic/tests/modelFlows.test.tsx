@@ -191,6 +191,15 @@ const modelCases = [
     efforts: ['none', ...mandatoryEfforts],
     initialEffort: 'none',
   },
+  {
+    provider: 'Mistral',
+    label: 'GLM-5.3 Flash (Mistral)',
+    model: 'zai-glm-5-3-flash',
+    endpoint: 'https://api.mistral.ai/v1/chat/completions',
+    control: '#mistral-reasoning-effort',
+    efforts: ['low', 'high', 'max'],
+    initialEffort: 'low',
+  },
   ...remainingOpenRouterReasoningProfiles.map(
     ({ model, efforts, defaultEffort }) => ({
       provider: 'OpenRouter',
@@ -420,7 +429,7 @@ describe('React sample model-to-transport flows (mock network only)', () => {
         expect(requests[0].body.reasoning.effort).toBe('high');
       } else {
         expect(requests[0].body.reasoning_effort).toBe('high');
-        if (model.provider === 'Kimi')
+        if (model.provider === 'Kimi' || model.provider === 'Mistral')
           expect(requests[0].body.thinking).toBeUndefined();
         else expect(requests[0].body.thinking.type).toBe('enabled');
       }
@@ -997,7 +1006,13 @@ describe('React sample model-to-transport flows (mock network only)', () => {
             ]
           : [
               { type: 'text', text: 'Describe image' },
-              { type: 'image_url', image_url: { url: image, detail: 'auto' } },
+              {
+                type: 'image_url',
+                image_url:
+                  model.provider === 'Mistral'
+                    ? image
+                    : { url: image, detail: 'auto' },
+              },
             ],
       );
       expect(container.querySelector('.selected-image-preview')).toBeNull();

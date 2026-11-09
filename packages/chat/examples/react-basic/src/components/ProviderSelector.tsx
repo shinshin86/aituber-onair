@@ -70,6 +70,9 @@ import {
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+  getMistralSupportedReasoningEfforts,
+  normalizeMistralReasoningEffort,
   MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
@@ -1252,6 +1255,12 @@ export const allModels: ProviderModel[] = [
     provider: 'mistral',
     default: false,
   },
+  {
+    id: MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+    name: 'GLM-5.3 Flash (Mistral)',
+    provider: 'mistral',
+    default: false,
+  },
 
   // Sarashina models (provider is disabled in browser UI).
   {
@@ -2154,6 +2163,40 @@ export default function ProviderSelector({
             </div>
           )}
 
+          {provider === 'mistral' &&
+            selectedModel === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH && (
+              <div className="config-group">
+                <label htmlFor="mistral-reasoning-effort">
+                  Reasoning Effort
+                </label>
+                <select
+                  id="mistral-reasoning-effort"
+                  value={normalizeMistralReasoningEffort(
+                    selectedModel,
+                    reasoning_effort,
+                  )}
+                  onChange={(e) =>
+                    onReasoningEffortChange?.(
+                      e.target.value as 'low' | 'high' | 'max',
+                    )
+                  }
+                  disabled={disabled}
+                  className="select-input"
+                >
+                  {getMistralSupportedReasoningEfforts(selectedModel).map(
+                    (effort) => (
+                      <option key={effort} value={effort}>
+                        {effort[0].toUpperCase() + effort.slice(1)}
+                      </option>
+                    ),
+                  )}
+                </select>
+                <span className="helper-text">
+                  Thinking is required. Low is the package default for
+                  responsive chat.
+                </span>
+              </div>
+            )}
           {provider === 'openrouter' && (
             <>
               {selectedModel === MODEL_OPENROUTER_MISTRAL_LARGE_4_0 && (

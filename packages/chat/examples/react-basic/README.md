@@ -265,8 +265,9 @@ rolling ID for the October 17, 2026 update; it follows future provider updates
 as well. Search/Fetch APIs are not exposed by this example.
 
 **Mistral**
-- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Large Latest/4, Mistral Small 2603, GLM-5.3 (Mistral)
-- Vision: Supported except text-only GLM-5.3
+- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Large Latest/4, Mistral Small 2603, GLM-5.3 (Mistral), GLM-5.3 Flash (Mistral)
+- Vision: Supported, including GLM-5.3 Flash; the existing GLM-5.3 option remains text-only.
+- GLM-5.3 Flash (`zai-glm-5-3-flash`) is explicit and uses `low` reasoning by default, with `high` and `max` available. `none` is not supported. The provider default remains Mistral Small Latest. The [official model page](https://docs.mistral.ai/models/zai-glm-5-3-flash.md) documents image input and Chat Completions; the [reasoning guide](https://docs.mistral.ai/inference/conversations/reasoning) lists its effort values.
 - Best for: Mistral Chat Completions with streaming and optional adjustable reasoning
 
 **PLaMo**

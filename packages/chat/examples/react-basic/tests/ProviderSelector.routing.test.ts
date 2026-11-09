@@ -673,3 +673,37 @@ it('configures direct Argon with low thinking and sends a streamed request', asy
     thinkingConfig: { includeThoughts: false, thinkingLevel: 'LOW' },
   });
 });
+
+it('offers Mistral GLM Flash image input and only its supported reasoning efforts', async () => {
+  await renderApp();
+  await click(button('Mistral', 'provider'));
+  expect(
+    button('Mistral Small Latest', 'model').getAttribute('aria-pressed'),
+  ).toBe('true');
+  await click(button('GLM-5.3 Flash (Mistral)', 'model'));
+  await changeInput('#api-key', 'test-ui-key');
+  const select = element<HTMLSelectElement>('#mistral-reasoning-effort');
+  expect(Array.from(select.options, (option) => option.value)).toEqual([
+    'low',
+    'high',
+    'max',
+  ]);
+  expect(select.value).toBe('low');
+  expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
+  for (const effort of ['low', 'high', 'max']) {
+    fetchMock.mockClear();
+    await changeSelect('#mistral-reasoning-effort', effort);
+    await sendMessage();
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
+    );
+    expect(requestBody()).toMatchObject({
+      model: 'zai-glm-5-3-flash',
+      reasoning_effort: effort,
+      stream: true,
+    });
+  }
+  await click(button('GLM-5.3 (Mistral)', 'model'));
+  expect(container.querySelector('#mistral-reasoning-effort')).toBeNull();
+  expect(element<HTMLInputElement>('#image-upload').disabled).toBe(true);
+});
