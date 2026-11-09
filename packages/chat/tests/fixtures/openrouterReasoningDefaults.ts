@@ -1,4 +1,5 @@
-// Official catalog snapshot: https://openrouter.ai/api/v1/models (2026-11-01).
+// Official catalog: https://openrouter.ai/api/v1/models.
+// Original profiles checked 2026-11-01; new family aliases/Hy4/Namazu checked 2026-11-09.
 // Expected values are independent of the implementation profiles.
 export const remainingOpenRouterReasoningProfiles = [
   {
@@ -121,6 +122,36 @@ export const remainingOpenRouterReasoningProfiles = [
     efforts: ['none', 'low', 'high', 'max'],
     defaultEffort: 'none',
   },
+  {
+    model: '~openai/gpt-luna-latest',
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  {
+    model: '~openai/gpt-terra-latest',
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  {
+    model: '~deepseek/deepseek-flash-latest',
+    efforts: ['none', 'low', 'high', 'max'],
+    defaultEffort: 'none',
+  },
+  {
+    model: '~z-ai/glm-flash-latest',
+    efforts: ['low', 'high', 'max'],
+    defaultEffort: 'low',
+  },
+  {
+    model: 'tencent/hy4',
+    efforts: ['none', 'low', 'high'],
+    defaultEffort: 'none',
+  },
+  {
+    model: 'sakana/sakana-namazu',
+    efforts: ['none', 'high'],
+    defaultEffort: 'none',
+  },
 ] as const;
 
 // Routers, non-reasoning models, or catalog entries without effort selection.
@@ -138,4 +169,8 @@ export const openRouterModelsWithoutEffortDefaults = [
   'z-ai/glm-4.5-air',
   'moonshotai/kimi-k2.7-code',
   'moonshotai/kimi-k2.5',
+  'xiaomi/mimo-v2.6-pro',
+  'cohere/command-a-plus',
+  'bytedance-seed/seed-2-1-turbo',
+  'nvidia/nemotron-3.5-super-vl',
 ] as const;

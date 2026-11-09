@@ -395,9 +395,7 @@ export function catalogSupportsReasoning(
 ): boolean {
   const model = snapshot.models.find((entry) => entry.id === modelId);
   return (
-    sdkSupportsReasoning &&
-    !!model?.supportedParameters.includes('reasoning') &&
-    !!model.supportedEfforts.length
+    sdkSupportsReasoning && !!model?.supportedParameters.includes('reasoning')
   );
 }
 export function catalogSupportsTools(

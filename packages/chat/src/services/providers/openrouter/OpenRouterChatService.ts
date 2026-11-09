@@ -25,6 +25,7 @@ import {
   MODEL_OPENAI_GPT_5_NANO,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
   MODEL_GOOGLE_GEMINI_4_ARGON,
+  MODEL_OPENROUTER_SAKANA_NAMAZU,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   getDefaultOpenRouterReasoningEffort,
   normalizeOpenRouterReasoningEffort,
@@ -50,6 +51,7 @@ const isOpenRouterAutoModel = (model: string): boolean =>
 
 const isTokenLimitUnsupportedModel = (model: string): boolean =>
   [
+    MODEL_OPENROUTER_SAKANA_NAMAZU,
     MODEL_GPT_OSS_20B_FREE,
     MODEL_ZAI_GLM_5_3,
     MODEL_ZAI_GLM_5_3_FLASH,
@@ -377,7 +379,9 @@ export class OpenRouterChatService implements ChatService {
 
     if (tokenLimit && shouldOmitTokenLimit) {
       console.warn(
-        `OpenRouter: Token limits are disabled for ${model} because this model can return empty content when a token limit is set.`,
+        model.trim() === MODEL_OPENROUTER_SAKANA_NAMAZU
+          ? `OpenRouter: max_tokens is unsupported for ${model} and is omitted, including explicit caller limits.`
+          : `OpenRouter: Token limits are disabled for ${model} because this model can return empty content when a token limit is set.`,
       );
     } else if (tokenLimit) {
       body.max_tokens = tokenLimit;

@@ -182,6 +182,31 @@ built-in model status is `available`.
 
 **OpenRouter**
 
+Additional curated OpenRouter choices are paid and image-capable, with tools and
+streaming. The default stays Gemma 4 31B IT (Free).
+
+| Model ID | Reasoning efforts (package default) |
+| --- | --- |
+| `~openai/gpt-luna-latest` | none, low, medium, high, xhigh, max (none) |
+| `~openai/gpt-terra-latest` | none, low, medium, high, xhigh, max (none) |
+| `~deepseek/deepseek-flash-latest` | none, low, high, max (none) |
+| `~z-ai/glm-flash-latest` | low, high, max (low) |
+| `xiaomi/mimo-v2.6-pro` | Visibility only; no effort or token budget |
+| `tencent/hy4` | none, low, high (none) |
+| `cohere/command-a-plus` | Visibility only; no effort or token budget |
+| `bytedance-seed/seed-2-1-turbo` | Visibility only; no effort or token budget |
+| `nvidia/nemotron-3.5-super-vl` | Visibility only; no effort or token budget |
+| `sakana/sakana-namazu` | none, high (none) |
+
+Latest-family aliases can change their upstream target. Use the Luna/Terra
+aliases instead of removed `~openai/gpt-latest`. GLM Flash thinking cannot be
+disabled. The paid Nemotron entry is separate from the existing free variant.
+The example exposes text/image input only. Sakana Namazu does not support an
+output token cap on this route: the package omits even explicit `max_tokens`,
+so ask for short replies in your prompt. Its reasoning token-budget control is
+also hidden. See the [live catalog](https://openrouter.ai/api/v1/models) and
+[parameter routing](https://openrouter.ai/docs/guides/routing/provider-selection#requiring-providers-to-support-all-parameters).
+
 Gemini 4 Argon (`google/gemini-4-argon`) is an explicit paid choice for
 text/image input, tools and streaming. Reasoning is mandatory and starts at
 `low`, with `medium` and `high` also selectable. Its implicit output cap is

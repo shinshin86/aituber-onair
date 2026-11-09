@@ -849,6 +849,41 @@ See [Google changelog](https://aistudio.google.com/docs/changelog).
 
 #### OpenRouter
 
+These additional curated options are paid, image-capable Chat Completions models
+with tools and streaming. They are explicit choices; the provider default stays
+`google/gemma-4-31b-it:free`. Only catalog-documented effort values are exposed;
+models without an effort list retain reasoning visibility controls but do not
+receive an effort or reasoning-token budget.
+
+| Model ID | Reasoning efforts (package default) |
+| --- | --- |
+| `~openai/gpt-luna-latest` | none, low, medium, high, xhigh, max (none) |
+| `~openai/gpt-terra-latest` | none, low, medium, high, xhigh, max (none) |
+| `~deepseek/deepseek-flash-latest` | none, low, high, max (none) |
+| `~z-ai/glm-flash-latest` | low, high, max (low) |
+| `xiaomi/mimo-v2.6-pro` | Visibility only; no effort or token-budget control |
+| `tencent/hy4` | none, low, high (none) |
+| `cohere/command-a-plus` | Visibility only; no effort or token-budget control |
+| `bytedance-seed/seed-2-1-turbo` | Visibility only; no effort or token-budget control |
+| `nvidia/nemotron-3.5-super-vl` | Visibility only; no effort or token-budget control |
+| `sakana/sakana-namazu` | none, high (none) |
+
+The `~` IDs follow their latest upstream family model and can change over time.
+The removed `~openai/gpt-latest` constant remains a deprecated compatibility
+export; use `~openai/gpt-luna-latest` or `~openai/gpt-terra-latest` for a tier alias.
+`~z-ai/glm-flash-latest` requires reasoning; its package default is `low`, versus
+the catalog default of `max`. Other new effort-controlled routes default to
+`none` for responsive chat while preserving supported explicit settings.
+
+The paid `nvidia/nemotron-3.5-super-vl` is separate from the existing `:free`
+option. Only text/image input is exposed, even when the catalog lists file,
+audio or video input. Namazu omits unsupported `max_tokens`, including explicit
+caller limits; response-length presets cannot impose an output token cap for
+this route. Request short replies in your prompt. It also omits reasoning-token
+budgets. This matches [OpenRouter's parameter routing policy](https://openrouter.ai/docs/guides/routing/provider-selection#requiring-providers-to-support-all-parameters),
+which ignores unsupported parameters by default. Availability, modalities,
+parameters and pricing were checked against the [live model catalog](https://openrouter.ai/api/v1/models).
+
 `google/gemini-4-argon` (`MODEL_GOOGLE_GEMINI_4_ARGON`) is an explicit paid option
 through OpenRouter Chat Completions, with image input, tools, streaming, and
 mandatory reasoning (`low` by default; `medium` and `high` are also selectable).
@@ -1780,7 +1815,7 @@ Currently, the following AI providers are built-in:
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Gemini 4 Argon (`gemini-4-argon`, explicit paid option, mandatory thinking with package default `low`); Supports recommended models like Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.7 Flash, Gemini 3.5 Flash, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Claude Haiku 5.5 (`claude-haiku-5-5`, explicit), Claude Opus 5.5 (`claude-opus-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), and Claude Fable 5.1 (`claude-fable-5-1`); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.
-- **OpenRouter**: Gemini 4 Argon (`google/gemini-4-argon`, explicit paid option, mandatory reasoning with package default `low`), Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, explicit public preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, Solar Pro 4, MiMo V2.6 Flash, GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input). The default is `google/gemma-4-31b-it:free`; `nvidia/nemotron-3.5-super-vl:free` is also listed as a free model. Additional models: `anthropic/claude-haiku-5.5`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`. `openai/gpt-6.1-terra` is also an explicit option.
+- **OpenRouter**: Additional explicit options: GPT Luna/Terra tier aliases, DeepSeek/GLM Flash aliases, MiMo V2.6 Pro, Hy4, Command A+, Seed 2.1 Turbo, Nemotron 3.5 Super VL (paid), and Sakana Namazu; Gemini 4 Argon (`google/gemini-4-argon`, explicit paid option, mandatory reasoning with package default `low`), Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, explicit public preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, Solar Pro 4, MiMo V2.6 Flash, GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input). The default is `google/gemma-4-31b-it:free`; `nvidia/nemotron-3.5-super-vl:free` is also listed as a free model. Additional models: `anthropic/claude-haiku-5.5`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`. `openai/gpt-6.1-terra` is also an explicit option.
 - **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.7/4.6/4.5 use package-default `reasoning_effort: 'low'`; Grok 4.3 defaults to `none`.
 - **Kimi**: Kimi K3.1 Pro (`kimi-k3.1-pro`, default) and Highspeed (`kimi-k3.1-pro-highspeed`) support image input, tools, streaming, and the same reasoning controls as K3. Also supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `low` as the package default), all with vision support. K2 series models (`kimi-k2.6`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`) are deprecated ahead of Kimi's December 2026 retirement

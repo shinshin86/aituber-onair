@@ -2,6 +2,16 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { OpenRouterChatServiceProvider } from '../../src/services/providers/openrouter/OpenRouterChatServiceProvider';
 import { OpenRouterChatService } from '../../src/services/providers/openrouter/OpenRouterChatService';
 import {
+  MODEL_OPENAI_GPT_LUNA_LATEST,
+  MODEL_OPENAI_GPT_TERRA_LATEST,
+  MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
+  MODEL_ZAI_GLM_FLASH_LATEST,
+  MODEL_XIAOMI_MIMO_V2_6_PRO,
+  MODEL_TENCENT_HY4,
+  MODEL_COHERE_COMMAND_A_PLUS,
+  MODEL_BYTEDANCE_SEED_2_1_TURBO,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
+  MODEL_OPENROUTER_SAKANA_NAMAZU,
   MODEL_OPENAI_GPT_6_1_TERRA,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
   MODEL_INCEPTION_MERCURY_3,
@@ -242,6 +252,16 @@ describe('OpenRouterChatServiceProvider', () => {
         MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
         MODEL_NEX_AGI_NEX_N2_5_PRO,
         MODEL_OPENAI_GPT_6_1_TERRA,
+        MODEL_OPENAI_GPT_LUNA_LATEST,
+        MODEL_OPENAI_GPT_TERRA_LATEST,
+        MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
+        MODEL_ZAI_GLM_FLASH_LATEST,
+        MODEL_XIAOMI_MIMO_V2_6_PRO,
+        MODEL_TENCENT_HY4,
+        MODEL_COHERE_COMMAND_A_PLUS,
+        MODEL_BYTEDANCE_SEED_2_1_TURBO,
+        MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
+        MODEL_OPENROUTER_SAKANA_NAMAZU,
       ]);
     });
 

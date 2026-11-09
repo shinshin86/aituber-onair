@@ -38,6 +38,47 @@ import ProviderSelector, {
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: 'xiaomi/mimo-v2.6-pro',
+    label: 'MiMo V2.6 Pro',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: 'cohere/command-a-plus',
+    label: 'Command A+',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: 'bytedance-seed/seed-2-1-turbo',
+    label: 'Seed 2.1 Turbo',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: 'nvidia/nemotron-3.5-super-vl',
+    label: 'Nemotron 3.5 Super VL (Paid)',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+
   ...[
     [MODEL_UNBIASED_PARETO_26_10, 'Pareto 26.10'],
     [MODEL_INCLUSIONAI_LING_3_0_FLASH_VL, 'Ling 3.0 Flash VL'],
@@ -305,6 +346,16 @@ describe('ProviderSelector rendered configuration for recent models', () => {
         .filter(
           (label) =>
             ![
+              'GPT Luna Latest',
+              'GPT Terra Latest',
+              'DeepSeek Flash Latest (OpenRouter)',
+              'GLM Flash Latest (OpenRouter)',
+              'MiMo V2.6 Pro',
+              'Hy4',
+              'Command A+',
+              'Seed 2.1 Turbo',
+              'Nemotron 3.5 Super VL (Paid)',
+              'Sakana Namazu (OpenRouter)',
               'Claude Haiku 5.5 (OpenRouter)',
               'DeepSeek V4.1 Flash 1017 (OpenRouter)',
               'Kimi K3.1 Pro (OpenRouter)',
@@ -706,4 +757,64 @@ it('offers Mistral GLM Flash image input and only its supported reasoning effort
   await click(button('GLM-5.3 (Mistral)', 'model'));
   expect(container.querySelector('#mistral-reasoning-effort')).toBeNull();
   expect(element<HTMLInputElement>('#image-upload').disabled).toBe(true);
+});
+
+it('keeps reasoning visibility available without inventing catalog effort levels', async () => {
+  const entries = [
+    ['xiaomi/mimo-v2.6-pro', 'MiMo V2.6 Pro'],
+    ['cohere/command-a-plus', 'Command A+'],
+    ['bytedance-seed/seed-2-1-turbo', 'Seed 2.1 Turbo'],
+    ['nvidia/nemotron-3.5-super-vl', 'Nemotron 3.5 Super VL (Paid)'],
+  ];
+  vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+    if (url === 'https://openrouter.ai/api/v1/models') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: [
+              ...catalogFixture.data.filter(
+                (row) => !entries.some(([id]) => id === row.id),
+              ),
+              ...entries.map(([id, name]) => ({
+                ...catalogFixture.data[0],
+                id,
+                name,
+                supported_parameters: [
+                  'reasoning',
+                  'include_reasoning',
+                  'tools',
+                  'tool_choice',
+                  'max_tokens',
+                ],
+                reasoning: { mandatory: false },
+              })),
+            ],
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    return fetchMock(url, init);
+  });
+  await act(async () => {
+    await refreshCatalog(true);
+  });
+  await renderApp();
+  await click(button('OpenRouter', 'provider'));
+  await changeInput('#api-key', 'test-ui-key');
+  for (const [model, label] of entries) {
+    await click(button(label, 'model'));
+    expectNoEffortControls();
+    const visibility = element<HTMLInputElement>(
+      '#openrouter-include-reasoning',
+    );
+    expect(visibility.disabled).toBe(false);
+    if (!visibility.checked) await click(visibility);
+    fetchMock.mockClear();
+    await sendMessage();
+    expect(requestBody().model).toBe(model);
+    expect(requestBody().reasoning?.effort).toBeUndefined();
+    expect(requestBody().reasoning?.max_tokens).toBeUndefined();
+    expect(requestBody().reasoning?.exclude).toBeUndefined();
+  }
 });

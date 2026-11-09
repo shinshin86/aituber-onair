@@ -59,8 +59,27 @@ export const MODEL_INCLUSIONAI_LING_3_0_FLASH_VL =
   'inclusionai/ling-3.0-flash-vl';
 export const MODEL_NEX_AGI_NEX_N2_5_PRO = 'nex-agi/nex-n2.5-pro';
 
+export const MODEL_OPENAI_GPT_LUNA_LATEST = '~openai/gpt-luna-latest';
+export const MODEL_OPENAI_GPT_TERRA_LATEST = '~openai/gpt-terra-latest';
+export const MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST =
+  '~deepseek/deepseek-flash-latest';
+export const MODEL_ZAI_GLM_FLASH_LATEST = '~z-ai/glm-flash-latest';
+export const MODEL_XIAOMI_MIMO_V2_6_PRO = 'xiaomi/mimo-v2.6-pro';
+export const MODEL_TENCENT_HY4 = 'tencent/hy4';
+export const MODEL_COHERE_COMMAND_A_PLUS = 'cohere/command-a-plus';
+export const MODEL_BYTEDANCE_SEED_2_1_TURBO = 'bytedance-seed/seed-2-1-turbo';
+export const MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL =
+  'nvidia/nemotron-3.5-super-vl';
+export const MODEL_OPENROUTER_SAKANA_NAMAZU = 'sakana/sakana-namazu';
+
 // These catalog entries do not document a reasoning token-budget control.
 export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
+  MODEL_XIAOMI_MIMO_V2_6_PRO,
+  MODEL_COHERE_COMMAND_A_PLUS,
+  MODEL_BYTEDANCE_SEED_2_1_TURBO,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
+  MODEL_OPENROUTER_SAKANA_NAMAZU,
+
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_UNBIASED_PARETO_26_10,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
@@ -90,6 +109,7 @@ export const MODEL_MOONSHOTAI_KIMI_K2_6 = 'moonshotai/kimi-k2.6';
 /** @deprecated OpenRouter expires this ID on November 18, 2026. Use MODEL_MOONSHOTAI_KIMI_K3_1_PRO. */
 export const MODEL_MOONSHOTAI_KIMI_K2_5 = 'moonshotai/kimi-k2.5';
 export const MODEL_MOONSHOTAI_KIMI_LATEST = '~moonshotai/kimi-latest';
+/** @deprecated Removed from the OpenRouter catalog. Use MODEL_OPENAI_GPT_LUNA_LATEST or MODEL_OPENAI_GPT_TERRA_LATEST for a tier-specific rolling alias. */
 export const MODEL_OPENAI_GPT_LATEST = '~openai/gpt-latest';
 export const MODEL_OPENAI_GPT_MINI_LATEST = '~openai/gpt-mini-latest';
 export const MODEL_OPENAI_GPT_5_6_SOL = 'openai/gpt-5.6-sol';
@@ -238,6 +258,38 @@ const OPENROUTER_MODEL_REASONING: Record<
     defaultEffort?: OpenRouterReasoningEffort;
   }
 > = {
+  [MODEL_OPENAI_GPT_LUNA_LATEST]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_OPENAI_GPT_TERRA_LATEST]: {
+    efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST]: {
+    efforts: ['none', 'low', 'high', 'max'],
+    defaultEffort: 'none',
+  },
+  [MODEL_ZAI_GLM_FLASH_LATEST]: {
+    efforts: ['low', 'high', 'max'],
+    defaultEffort: 'low',
+  },
+  [MODEL_XIAOMI_MIMO_V2_6_PRO]: { efforts: [], defaultEffort: undefined },
+  [MODEL_TENCENT_HY4]: {
+    efforts: ['none', 'low', 'high'],
+    defaultEffort: 'none',
+  },
+  [MODEL_COHERE_COMMAND_A_PLUS]: { efforts: [], defaultEffort: undefined },
+  [MODEL_BYTEDANCE_SEED_2_1_TURBO]: { efforts: [], defaultEffort: undefined },
+  [MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL]: {
+    efforts: [],
+    defaultEffort: undefined,
+  },
+  [MODEL_OPENROUTER_SAKANA_NAMAZU]: {
+    efforts: ['none', 'high'],
+    defaultEffort: 'none',
+  },
+
   [MODEL_OPENAI_GPT_6_1_TERRA]: {
     efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
     defaultEffort: 'none',
@@ -484,6 +536,17 @@ export const OPENROUTER_FREE_MODELS = [
 
 // Vision supported models on OpenRouter
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
+  MODEL_OPENAI_GPT_LUNA_LATEST,
+  MODEL_OPENAI_GPT_TERRA_LATEST,
+  MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
+  MODEL_ZAI_GLM_FLASH_LATEST,
+  MODEL_XIAOMI_MIMO_V2_6_PRO,
+  MODEL_TENCENT_HY4,
+  MODEL_COHERE_COMMAND_A_PLUS,
+  MODEL_BYTEDANCE_SEED_2_1_TURBO,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
+  MODEL_OPENROUTER_SAKANA_NAMAZU,
+
   MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
   MODEL_MOONSHOTAI_KIMI_K3_1_PRO,

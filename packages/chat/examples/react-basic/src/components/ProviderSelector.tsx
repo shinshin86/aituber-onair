@@ -8,6 +8,16 @@ import {
 import { Provider } from '../App';
 import LocalLlmSetup from './LocalLlmSetup';
 import {
+  MODEL_OPENAI_GPT_LUNA_LATEST,
+  MODEL_OPENAI_GPT_TERRA_LATEST,
+  MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
+  MODEL_ZAI_GLM_FLASH_LATEST,
+  MODEL_XIAOMI_MIMO_V2_6_PRO,
+  MODEL_TENCENT_HY4,
+  MODEL_COHERE_COMMAND_A_PLUS,
+  MODEL_BYTEDANCE_SEED_2_1_TURBO,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
+  MODEL_OPENROUTER_SAKANA_NAMAZU,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
   MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
@@ -1389,6 +1399,66 @@ export const allModels: ProviderModel[] = [
     provider: 'openrouter',
     default: false,
   },
+  {
+    id: MODEL_OPENAI_GPT_LUNA_LATEST,
+    name: 'GPT Luna Latest',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_TERRA_LATEST,
+    name: 'GPT Terra Latest',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
+    name: 'DeepSeek Flash Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ZAI_GLM_FLASH_LATEST,
+    name: 'GLM Flash Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_XIAOMI_MIMO_V2_6_PRO,
+    name: 'MiMo V2.6 Pro',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_TENCENT_HY4,
+    name: 'Hy4',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_COHERE_COMMAND_A_PLUS,
+    name: 'Command A+',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_BYTEDANCE_SEED_2_1_TURBO,
+    name: 'Seed 2.1 Turbo',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
+    name: 'Nemotron 3.5 Super VL (Paid)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_SAKANA_NAMAZU,
+    name: 'Sakana Namazu (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
 ];
 
 export const getProviderForModel = (
@@ -2199,6 +2269,12 @@ export default function ProviderSelector({
             )}
           {provider === 'openrouter' && (
             <>
+              {selectedModel === MODEL_OPENROUTER_SAKANA_NAMAZU && (
+                <p className="helper-text">
+                  This route does not support output token limits. Request short
+                  replies in your prompt.
+                </p>
+              )}
               {selectedModel === MODEL_OPENROUTER_MISTRAL_LARGE_4_0 && (
                 <p className="helper-text">
                   Mistral Large 4 is a public preview and may change. The sample
