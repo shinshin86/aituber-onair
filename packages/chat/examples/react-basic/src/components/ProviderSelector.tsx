@@ -9,7 +9,6 @@ import { Provider } from '../App';
 import LocalLlmSetup from './LocalLlmSetup';
 import {
   MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
-  MODEL_INCEPTION_MERCURY_3,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
   MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
   MODEL_MINIMAX_M3_1_FLASH,
@@ -61,7 +60,6 @@ import {
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
-  MODEL_INCEPTION_MERCURY_2_5,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
@@ -81,10 +79,6 @@ import {
   MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_PRO,
-  MODEL_GPT_4_1,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4O,
   // Claude models
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_4_5_OPUS,
@@ -110,8 +104,6 @@ import {
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_3_7_FLASH,
@@ -137,7 +129,6 @@ import {
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_6,
-  MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
@@ -202,15 +193,12 @@ import {
   // Kimi models
   MODEL_KIMI_K3,
   // DeepSeek models
-  MODEL_DEEPSEEK_V4_FLASH,
-  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_V4_PRO,
   // Mistral models
   MODEL_MINISTRAL_3B_2512,
   MODEL_MINISTRAL_8B_2512,
   MODEL_MINISTRAL_14B_2512,
   MODEL_MISTRAL_SMALL_LATEST,
-  MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_LARGE_LATEST,
   MODEL_MISTRAL_LARGE_4_0,
   MODEL_MISTRAL_SMALL_2603,
@@ -424,7 +412,7 @@ export const allModels: ProviderModel[] = [
     id: MODEL_DEEPSEEK_FLASH,
     name: 'DeepSeek V4.1 Flash 1017',
     provider: 'deepseek',
-    default: false,
+    default: true,
   },
   {
     id: MODEL_OPENAI_GPT_6_1_SOL,
@@ -489,12 +477,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GOOGLE_GEMINI_3_8_FLASH,
     name: 'Gemini 3.8 Flash',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_INCEPTION_MERCURY_2_5,
-    name: 'Mercury 2.5',
     provider: 'openrouter',
     default: false,
   },
@@ -597,30 +579,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GPT_5_4_PRO,
     name: 'GPT-5.4 Pro',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4_1,
-    name: 'GPT-4.1',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4_1_MINI,
-    name: 'GPT-4.1 Mini',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4O_MINI,
-    name: 'GPT-4o Mini',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4O,
-    name: 'GPT-4o',
     provider: 'openai',
     default: false,
   },
@@ -758,18 +716,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GEMINI_3_FLASH_PREVIEW,
     name: 'Gemini 3 Flash Preview',
-    provider: 'gemini',
-    default: false,
-  },
-  {
-    id: MODEL_GEMINI_2_5_PRO,
-    name: 'Gemini 2.5 Pro',
-    provider: 'gemini',
-    default: false,
-  },
-  {
-    id: MODEL_GEMINI_2_5_FLASH,
-    name: 'Gemini 2.5 Flash',
     provider: 'gemini',
     default: false,
   },
@@ -1081,12 +1027,6 @@ export const allModels: ProviderModel[] = [
     provider: 'openrouter',
     default: false,
   },
-  {
-    id: MODEL_MOONSHOTAI_KIMI_K2_5,
-    name: 'Kimi K2.5 (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
 
   {
     id: MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
@@ -1242,20 +1182,8 @@ export const allModels: ProviderModel[] = [
 
   // DeepSeek models
   {
-    id: MODEL_DEEPSEEK_V4_FLASH,
-    name: 'DeepSeek V4 Flash',
-    provider: 'deepseek',
-    default: true,
-  },
-  {
     id: MODEL_DEEPSEEK_V4_PRO,
     name: 'DeepSeek V4 Pro',
-    provider: 'deepseek',
-    default: false,
-  },
-  {
-    id: MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
-    name: 'DeepSeek V4 Flash Vision Exp',
     provider: 'deepseek',
     default: false,
   },
@@ -1282,12 +1210,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_MINISTRAL_14B_2512,
     name: 'Ministral 3 14B',
-    provider: 'mistral',
-    default: false,
-  },
-  {
-    id: MODEL_MISTRAL_MEDIUM_3_5,
-    name: 'Mistral Medium 3.5',
     provider: 'mistral',
     default: false,
   },
@@ -1385,12 +1307,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_INCEPTION_MERCURY_3,
-    name: 'Mercury 3',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
     id: MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
     name: 'DeepSeek V4.1 Flash 1017 (OpenRouter)',
     provider: 'openrouter',
@@ -1469,7 +1385,7 @@ export const getDefaultModelForProvider = (provider: Provider): string => {
     (m) => m.provider === provider && m.default,
   );
   const fallbackModel = allModels.find((m) => m.provider === provider);
-  return defaultModel?.id || fallbackModel?.id || MODEL_GPT_4O_MINI;
+  return defaultModel?.id || fallbackModel?.id || MODEL_GPT_5_6_LUNA;
 };
 
 export const getVisionSupportLevel = (

@@ -14,10 +14,6 @@ import {
   MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_PRO,
-  MODEL_GPT_4_1,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4O,
   VISION_SUPPORTED_MODELS,
   isOpenAIReasoningModel,
   isResponsesOnlyGPT5Model,
@@ -161,10 +157,6 @@ export class OpenAIChatServiceProvider
       MODEL_GPT_5_6_LUNA,
       MODEL_GPT_5_4_MINI,
       MODEL_GPT_5_4_PRO,
-      MODEL_GPT_4_1,
-      MODEL_GPT_4_1_MINI,
-      MODEL_GPT_4O_MINI,
-      MODEL_GPT_4O,
       MODEL_GPT_6_1_TERRA,
     ];
   }

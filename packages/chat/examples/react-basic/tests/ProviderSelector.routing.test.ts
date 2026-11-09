@@ -9,6 +9,10 @@ import {
   MODEL_UNBIASED_PARETO_26_10,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
   ChatServiceFactory,
+  OPENAI_DEPRECATED_MODELS,
+  OPENROUTER_DEPRECATED_MODELS,
+  DEEPSEEK_DEPRECATED_MODELS,
+  MISTRAL_DEPRECATED_MODELS,
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENROUTER_API,
   MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
@@ -24,6 +28,7 @@ import {
 } from '../../../src';
 import { createSseResponse } from '../../../tests/helpers/sse';
 import App from '../src/App';
+import { refreshCatalog } from '../src/openrouterCatalog/catalog';
 import ProviderSelector, {
   allModels,
 } from '../src/components/ProviderSelector';
@@ -301,7 +306,6 @@ describe('ProviderSelector rendered configuration for recent models', () => {
           (label) =>
             ![
               'Claude Haiku 5.5 (OpenRouter)',
-              'Mercury 3',
               'DeepSeek V4.1 Flash 1017 (OpenRouter)',
               'Kimi K3.1 Pro (OpenRouter)',
               'MiniMax M3.1 Flash',
@@ -329,10 +333,12 @@ describe('ProviderSelector rendered configuration for recent models', () => {
     const curatedLabels = allModels
       .filter((model) => model.provider === 'openrouter')
       .map((model) => model.name);
-    expect(curatedLabels.slice(-11, -9)).toEqual([
-      'Mistral Large 4',
-      'Pareto 26.9',
-    ]);
+    expect(
+      curatedLabels.slice(
+        curatedLabels.indexOf('Mistral Large 4'),
+        curatedLabels.indexOf('Mistral Large 4') + 2,
+      ),
+    ).toEqual(['Mistral Large 4', 'Pareto 26.9']);
 
     await renderApp();
     await click(button('OpenRouter', 'provider'));
@@ -570,4 +576,67 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       }
     },
   );
+});
+
+describe('Retired model choices', () => {
+  it.each([
+    ['openai', OPENAI_DEPRECATED_MODELS],
+    ['openrouter', OPENROUTER_DEPRECATED_MODELS],
+    ['gemini', ['gemini-2.5-pro', 'gemini-2.5-flash']],
+    ['deepseek', DEEPSEEK_DEPRECATED_MODELS],
+    ['mistral', MISTRAL_DEPRECATED_MODELS],
+  ] as const)(
+    'omits deprecated %s models from curated choices',
+    (provider, retired) => {
+      const ids = allModels
+        .filter((model) => model.provider === provider)
+        .map((model) => model.id);
+      for (const id of retired) expect(ids).not.toContain(id);
+    },
+  );
+
+  it('selects current Flash by default for DeepSeek', async () => {
+    await renderApp();
+    await click(button('DeepSeek', 'provider'));
+    expect(
+      button('DeepSeek V4.1 Flash 1017', 'model').getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(container.textContent).not.toContain('DeepSeek V4 Flash Vision Exp');
+  });
+});
+
+it('hides retired OpenRouter choices even when a fetched catalog still lists them', async () => {
+  const retired = [
+    'inception/mercury-2.5',
+    'inception/mercury-3',
+    'moonshotai/kimi-k2.5',
+  ];
+  vi.stubGlobal(
+    'fetch',
+    async () =>
+      new Response(
+        JSON.stringify({
+          data: [
+            ...catalogFixture.data,
+            ...retired.map((id) => ({
+              ...catalogFixture.data[0],
+              id,
+              name: id,
+            })),
+          ],
+        }),
+        { status: 200 },
+      ),
+  );
+  await act(async () => {
+    await refreshCatalog(true);
+  });
+  await renderApp();
+  await click(button('OpenRouter', 'provider'));
+  const ids = Array.from(
+    container.querySelectorAll('.model-item .model-id'),
+    (node) => node.textContent,
+  );
+  for (const id of retired) expect(ids).not.toContain(id);
+  expect(button('Gemma 4 31B IT (Free)', 'model')).toBeDefined();
 });

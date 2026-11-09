@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEEPSEEK_DEPRECATED_MODELS,
   ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
   MODEL_DEEPSEEK_FLASH,
   MODEL_DEEPSEEK_V4_FLASH,
@@ -16,17 +17,18 @@ describe('DeepSeekChatServiceProvider', () => {
     expect(provider.getProviderName()).toBe('deepseek');
   });
 
-  it('returns the current Flash API ID and existing compatibility choices', () => {
+  it('returns current models and excludes retired aliases', () => {
     expect(provider.getSupportedModels()).toEqual([
       MODEL_DEEPSEEK_FLASH,
-      MODEL_DEEPSEEK_V4_FLASH,
       MODEL_DEEPSEEK_V4_PRO,
-      MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
     ]);
+    for (const model of DEEPSEEK_DEPRECATED_MODELS) {
+      expect(provider.getSupportedModels()).not.toContain(model);
+    }
   });
 
-  it('returns DeepSeek V4 Flash as the default model', () => {
-    expect(provider.getDefaultModel()).toBe(MODEL_DEEPSEEK_V4_FLASH);
+  it('returns current Flash as the default model', () => {
+    expect(provider.getDefaultModel()).toBe(MODEL_DEEPSEEK_FLASH);
   });
 
   it('reports vision support for current Flash and the legacy vision alias', () => {
@@ -62,8 +64,8 @@ describe('DeepSeekChatServiceProvider', () => {
     const service = provider.createChatService({ apiKey: 'test-key' });
 
     expect(service).toBeInstanceOf(DeepSeekChatService);
-    expect(service.getModel()).toBe(MODEL_DEEPSEEK_V4_FLASH);
-    expect(service.getVisionModel()).toBe(MODEL_DEEPSEEK_V4_FLASH_VISION_EXP);
+    expect(service.getModel()).toBe(MODEL_DEEPSEEK_FLASH);
+    expect(service.getVisionModel()).toBe(MODEL_DEEPSEEK_FLASH);
     expect((service as any).endpoint).toBe(
       ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
     );

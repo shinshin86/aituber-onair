@@ -181,7 +181,7 @@ All examples use optimal default models for cost and performance:
 ```typescript
 // No model specified - uses defaults automatically
 const openaiService = ChatServiceFactory.createChatService('openai', { apiKey });
-// Uses: gpt-4o-mini (fast, cost-effective)
+// Uses: gpt-5.6-luna (fast, cost-effective)
 
 const claudeService = ChatServiceFactory.createChatService('claude', { apiKey });
 // Uses: claude-3-haiku-20240307 (balanced speed/cost)
@@ -248,7 +248,7 @@ The table below focuses on the primary providers used in the core JavaScript run
 
 | Feature | OpenAI | Claude | Gemini |
 |---------|--------|--------|--------|
-| Default Model | `gpt-4o-mini` | `claude-3-haiku-20240307` | `gemini-3.1-flash-lite` |
+| Default Model | `gpt-5.6-luna` | `claude-3-haiku-20240307` | `gemini-3.1-flash-lite` |
 | Text Chat | ✅ GPT-4, GPT-3.5 | ✅ Claude 3 Family | ✅ Gemini Pro |
 | Vision | ✅ GPT-4 Vision | ✅ Claude 3 Vision | ✅ Gemini Pro Vision |
 | Streaming | ✅ Full Support | ✅ Full Support | ✅ Full Support |

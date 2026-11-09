@@ -20,7 +20,7 @@ async function main() {
     try {
       const openaiService = ChatServiceFactory.createChatService('openai', {
         apiKey: process.env.OPENAI_API_KEY,
-        // Using default model (gpt-4o-mini) for optimal cost/performance balance
+        // Using default model (gpt-5.6-luna) for optimal cost/performance balance
         responseLength: 'short',
       });
 

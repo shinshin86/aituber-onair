@@ -110,7 +110,7 @@ async function demonstrateSimpleToolUse() {
 
   const service = ChatServiceFactory.createChatService('openai', {
     apiKey: process.env.OPENAI_API_KEY,
-    // Using default model (gpt-4o-mini) for tool calling
+    // Using default model (gpt-5.6-luna) for tool calling
     tools: toolDefinitions,
     toolHandlers: tools,
   });

@@ -45,7 +45,6 @@ const dataEvent = (data: unknown) => `data: ${JSON.stringify(data)}\n\n`;
 const routerModels = [
   models.MODEL_OPENAI_GPT_6_1_TERRA,
   models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
-  models.MODEL_INCEPTION_MERCURY_3,
   models.MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
   models.MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
   models.MODEL_MINIMAX_M3_1_FLASH,
@@ -58,7 +57,6 @@ const routerModels = [
   models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   models.MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   models.MODEL_GOOGLE_GEMINI_3_8_FLASH,
-  models.MODEL_INCEPTION_MERCURY_2_5,
   models.MODEL_QWEN_QWEN_3_8_MAX_0902,
   models.MODEL_META_MUSE_SPARK_1_3,
 ];

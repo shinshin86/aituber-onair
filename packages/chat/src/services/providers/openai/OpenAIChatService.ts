@@ -5,7 +5,7 @@ import {
   MODEL_GPT_6_ASTRA,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
-  MODEL_GPT_4O_MINI,
+  MODEL_GPT_5_6_LUNA,
   VISION_SUPPORTED_MODELS,
 } from '../../../constants';
 import type { OpenAIReasoningEffort } from '../../../constants';
@@ -64,8 +64,8 @@ export class OpenAIChatService implements ChatService {
    */
   constructor(
     apiKey: string,
-    model: string = MODEL_GPT_4O_MINI,
-    visionModel: string = MODEL_GPT_4O_MINI,
+    model: string = MODEL_GPT_5_6_LUNA,
+    visionModel: string = MODEL_GPT_5_6_LUNA,
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
     mcpServers: MCPServerConfig[] = [],

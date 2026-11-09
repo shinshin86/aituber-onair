@@ -114,12 +114,6 @@ const modelCases = [
       'none',
     ],
     [
-      'Mercury 3',
-      'inception/mercury-3',
-      ['none', 'low', 'medium', 'high'],
-      'none',
-    ],
-    [
       'DeepSeek V4.1 Flash 1017 (OpenRouter)',
       'deepseek/deepseek-v4.1-flash-1017',
       ['none', 'low', 'high', 'max'],

@@ -689,7 +689,12 @@ it.each([
 
 it('appends stable Pareto without changing prior model order or defaults', () => {
   const models = ChatServiceFactory.getSupportedModels('openrouter');
-  expect(models.slice(-13, -9)).toEqual([
+  expect(
+    models.slice(
+      models.indexOf(MODEL_OPENROUTER_MISTRAL_LARGE_4_0),
+      models.indexOf(MODEL_OPENROUTER_MISTRAL_LARGE_4_0) + 4,
+    ),
+  ).toEqual([
     MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
     MODEL_UNBIASED_PARETO_26_9,
     MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,

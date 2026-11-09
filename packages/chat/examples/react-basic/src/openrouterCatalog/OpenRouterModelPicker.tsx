@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { OPENROUTER_DEPRECATED_MODELS } from '@aituber-onair/chat';
 import {
   type CatalogLocale,
   acknowledgeOpenRouterModel,
@@ -56,6 +57,7 @@ export function OpenRouterModelPicker({
   const blockReason = getOpenRouterRequestBlockReason(value, locale);
   const visible = models.filter(
     (model) =>
+      !OPENROUTER_DEPRECATED_MODELS.includes(model.id) &&
       (group === 'all' || model.priceClass === group) &&
       `${model.id} ${model.name}`.toLowerCase().includes(search.toLowerCase()),
   );

@@ -125,10 +125,10 @@ built-in model status is `available`.
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini, GPT-4.1, GPT-4.1 Mini, GPT-4o, GPT-4o Mini
-- Default: GPT-5.6 Luna. Models that OpenAI has deprecated or shut down (GPT-5, GPT-5 Mini/Nano, GPT-5.1, GPT-5.4 Nano, GPT-4.1 Nano, o1, o1-mini, o3-mini) are no longer selectable.
+- Models: GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini
+- Default: GPT-5.6 Luna. Models that OpenAI has deprecated or shut down (GPT-4o, GPT-4o Mini, GPT-4.1, GPT-4.1 Mini, GPT-5, GPT-5 Mini/Nano, GPT-5.1, GPT-5.4 Nano, GPT-4.1 Nano, o1, o1-mini, o3-mini) are no longer selectable.
 - Verbosity: defaults to `low` for concise replies, including after switching providers. Select `medium` or `high` for more detail, or choose a GPT-5 preset to use its verbosity setting.
-- Vision: GPT-4 Vision
+- Vision: Current image-capable OpenAI models
 - Best for: General purpose, code generation, advanced reasoning
 - Reasoning Effort: GPT-5.5 supports None/Low/Medium/High/XHigh and defaults to None in this package, GPT-5.4 supports None/Low/Medium/High/XHigh, GPT-5.4 Pro supports Medium/High/XHigh (Responses API only), and GPT-5.6 supports None/Low/Medium/High/XHigh/Max
 
@@ -167,7 +167,7 @@ built-in model status is `available`.
 - Best for: Long context, tool use + advanced reasoning
 
 **Gemini**
-- Models: Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro/Flash/Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
+- Models: Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models, including Gemini 3.7 Flash and Gemini 3.5 Flash, remain selectable with a deprecated label for explicit compatibility.
 - Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models. The [generateContent reference](https://ai.google.dev/api/generate-content#ThinkingConfig) restricts `thinkingLevel` to Gemini 3 and later; Interactions API settings are not used here.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
@@ -200,7 +200,6 @@ Additional explicit options (provider default unchanged):
 - `openai/gpt-6.1-terra`: GPT-6.1 Terra; image input, tools and streaming; none/low/medium/high/xhigh/max reasoning (package default `none`).
 
 - `anthropic/claude-haiku-5.5`: Claude Haiku 5.5 (OpenRouter); image input; none, low, medium, high, xhigh, max (default `none`).
-- `inception/mercury-3`: Mercury 3; text-only; none, low, medium, high (default `none`).
 - `deepseek/deepseek-v4.1-flash-1017`: DeepSeek V4.1 Flash 1017 (OpenRouter); image input; none, low, high, max (default `none`).
 - `moonshotai/kimi-k3.1-pro`: Kimi K3.1 Pro (OpenRouter); image input; none, low, high, max (default `none`).
 - `minimax/minimax-m3.1-flash`: MiniMax M3.1 Flash; image input; low, medium, high, xhigh, max (default `low`).
@@ -241,7 +240,7 @@ These additions support tools and streaming. MiniMax reasoning cannot be disable
 - The legacy K2 thinking control starts at `disabled` for responsive chat. K2.7 Code models require thinking and keep it enabled; K3 models use reasoning effort instead of this control.
 
 **DeepSeek**
-- Models: DeepSeek V4.1 Flash 1017 (`deepseek-flash`), V4 Pro, and legacy Flash aliases. The existing `deepseek-v4-flash` package default is preserved.
+- Models: DeepSeek V4.1 Flash 1017 (`deepseek-flash`, text/vision default) and V4 Pro. Retired Flash aliases remain exported for explicit compatibility but are not selectable.
 - Vision: Supported for `deepseek-flash` and the legacy vision alias.
 - Reasoning Effort: Current Flash exposes None/Low/High/Max; V4 Pro exposes None/High/Max. None is the package default for responsive chat. Thinking with tool calling is not supported yet.
 - Best for: DeepSeek's OpenAI-compatible API without manually configuring an endpoint
@@ -252,7 +251,7 @@ rolling ID for the October 17, 2026 update; it follows future provider updates
 as well. Search/Fetch APIs are not exposed by this example.
 
 **Mistral**
-- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Medium 3.5, Mistral Large Latest/2512, Mistral Small 2603, GLM-5.3 (Mistral)
+- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Large Latest/4, Mistral Small 2603, GLM-5.3 (Mistral)
 - Vision: Supported except text-only GLM-5.3
 - Best for: Mistral Chat Completions with streaming and optional adjustable reasoning
 
@@ -429,12 +428,12 @@ models, it always thinks and defaults to low reasoning.
 
 OpenRouter also offers GPT-6.1 Sol, GPT-6 Sol/Luna, Claude Sonnet/Opus 5.5,
 Grok 4.7, and GLM-5.3 FlashX, alongside Astra/Pro, Fable 5.1, DeepSeek V4.1
-Flash, Gemini 3.8 Flash, Mercury 2.5, Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
+Flash, Gemini 3.8 Flash, Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
 capabilities. Models with configurable reasoning default to their lowest supported
 effort: `none` where available, otherwise `minimal` or `low`. Qwen3.8 Max (0902)
 and Muse Spark 1.3 default to `minimal`; Astra/Pro, Fable 5.1, and Gemini 3.8
 Flash default to `low`. Tools use OpenRouter Chat Completions. Claude 5.5 tool
-selection stays automatic. Mercury 2.5 is text-only. Provider defaults are
+selection stays automatic. Provider defaults are
 unchanged.
 
 ### Additional explicit Chat Completions models

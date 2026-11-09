@@ -1,7 +1,7 @@
 import {
   ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
   type DeepSeekReasoningEffort,
-  MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_FLASH,
   normalizeDeepSeekReasoningEffort,
 } from '../../../constants/deepseek';
 import { ChatResponseLength } from '../../../constants/chat';
@@ -11,7 +11,7 @@ import { OpenAIChatService } from '../openai/OpenAIChatService';
 export class DeepSeekChatService extends OpenAIChatService {
   constructor(
     apiKey: string,
-    model: string = MODEL_DEEPSEEK_V4_FLASH,
+    model: string = MODEL_DEEPSEEK_FLASH,
     visionModel: string = model,
     tools?: ToolDefinition[],
     endpoint: string = ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,

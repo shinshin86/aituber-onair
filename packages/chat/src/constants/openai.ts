@@ -31,12 +31,16 @@ export const MODEL_GPT_5_4_PRO = 'gpt-5.4-pro';
 // GPT-5.5 Pro is intentionally not listed because OpenAI documents it as
 // non-streaming, while this package's chat flow expects streaming support.
 
+/** @deprecated OpenAI announced dated GPT-4 snapshot shutdowns for January 14, 2027 on October 14, 2026. Use MODEL_GPT_6_LUNA. */
 export const MODEL_GPT_4_1 = 'gpt-4.1';
+/** @deprecated OpenAI announced dated GPT-4 snapshot shutdowns for January 14, 2027 on October 14, 2026. Use MODEL_GPT_6_LUNA. */
 export const MODEL_GPT_4_1_MINI = 'gpt-4.1-mini';
 /** @deprecated Shut down by OpenAI on October 23, 2026. Use MODEL_GPT_5_6_LUNA. */
 export const MODEL_GPT_4_1_NANO = 'gpt-4.1-nano';
 
+/** @deprecated OpenAI announced dated GPT-4 snapshot shutdowns for January 14, 2027 on October 14, 2026. Use MODEL_GPT_6_LUNA. */
 export const MODEL_GPT_4O_MINI = 'gpt-4o-mini';
+/** @deprecated OpenAI announced dated GPT-4 snapshot shutdowns for January 14, 2027 on October 14, 2026. Use MODEL_GPT_6_LUNA. */
 export const MODEL_GPT_4O = 'gpt-4o';
 /** @deprecated Shut down by OpenAI on October 23, 2026. Use MODEL_GPT_5_6_SOL. */
 export const MODEL_O3_MINI = 'o3-mini';
@@ -49,6 +53,10 @@ export const MODEL_O1 = 'o1';
 // Deprecated or shut-down ids remain exported so existing imports continue to
 // compile, but are omitted from the supported model list.
 export const OPENAI_DEPRECATED_MODELS = [
+  MODEL_GPT_4_1,
+  MODEL_GPT_4_1_MINI,
+  MODEL_GPT_4O_MINI,
+  MODEL_GPT_4O,
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_MINI,
   MODEL_GPT_5,
