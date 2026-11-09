@@ -29,6 +29,7 @@ export const MODEL_ANTHROPIC_CLAUDE_FABLE_5_1 = 'anthropic/claude-fable-5.1';
 export const MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH =
   'deepseek/deepseek-v4.1-flash';
 export const MODEL_GOOGLE_GEMINI_3_8_FLASH = 'google/gemini-3.8-flash';
+export const MODEL_GOOGLE_GEMINI_4_ARGON = 'google/gemini-4-argon';
 export const MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE =
   'inclusionai/ling-3.0-flash-vl:free';
 /** @deprecated Absent from the OpenRouter catalog as of November 9, 2026. Use MODEL_GOOGLE_GEMMA_4_31B_IT_FREE. */
@@ -60,6 +61,7 @@ export const MODEL_NEX_AGI_NEX_N2_5_PRO = 'nex-agi/nex-n2.5-pro';
 
 // These catalog entries do not document a reasoning token-budget control.
 export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
+  MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_UNBIASED_PARETO_26_10,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
@@ -440,6 +442,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     efforts: ['max', 'high', 'low', 'none'],
     defaultEffort: 'none',
   },
+  [MODEL_GOOGLE_GEMINI_4_ARGON]: {
+    efforts: ['high', 'medium', 'low'],
+    defaultEffort: 'low',
+  },
   [MODEL_GOOGLE_GEMINI_3_8_FLASH]: {
     efforts: ['high', 'medium', 'low'],
     defaultEffort: 'low',
@@ -501,6 +507,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
+  MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
   MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
   MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,

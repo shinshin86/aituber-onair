@@ -24,6 +24,7 @@ import {
   MODEL_OPENAI_GPT_5_MINI,
   MODEL_OPENAI_GPT_5_NANO,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   getDefaultOpenRouterReasoningEffort,
   normalizeOpenRouterReasoningEffort,
@@ -364,7 +365,9 @@ export class OpenRouterChatService implements ChatService {
     const tokenLimit =
       maxTokens !== undefined
         ? maxTokens
-        : getMaxTokensForResponseLength(this.responseLength);
+        : model === MODEL_GOOGLE_GEMINI_4_ARGON
+          ? Math.max(32_768, getMaxTokensForResponseLength(this.responseLength))
+          : getMaxTokensForResponseLength(this.responseLength);
 
     // Dynamic routers and some reasoning models can spend the whole budget on
     // reasoning tokens before emitting visible content.

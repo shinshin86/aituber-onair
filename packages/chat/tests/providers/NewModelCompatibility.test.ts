@@ -57,6 +57,7 @@ const routerModels = [
   models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
   models.MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   models.MODEL_GOOGLE_GEMINI_3_8_FLASH,
+  models.MODEL_GOOGLE_GEMINI_4_ARGON,
   models.MODEL_QWEN_QWEN_3_8_MAX_0902,
   models.MODEL_META_MUSE_SPARK_1_3,
 ];
@@ -620,6 +621,9 @@ describe('New model endpoint compatibility', () => {
     [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, undefined, 'low'],
     [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, 'high', 'high'],
     [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, undefined, 'low'],
+    [models.MODEL_GOOGLE_GEMINI_4_ARGON, undefined, 'low'],
+    [models.MODEL_GOOGLE_GEMINI_4_ARGON, 'none', 'low'],
+    [models.MODEL_GOOGLE_GEMINI_4_ARGON, 'high', 'high'],
     [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, 'high', 'high'],
     [models.MODEL_QWEN_QWEN_3_8_MAX_0902, undefined, 'minimal'],
     [models.MODEL_QWEN_QWEN_3_8_MAX_0902, 'high', 'high'],

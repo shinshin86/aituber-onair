@@ -640,3 +640,36 @@ it('hides retired OpenRouter choices even when a fetched catalog still lists the
   for (const id of retired) expect(ids).not.toContain(id);
   expect(button('Gemma 4 31B IT (Free)', 'model')).toBeDefined();
 });
+
+it('configures direct Argon with low thinking and sends a streamed request', async () => {
+  fetchMock.mockResolvedValue({
+    ...createSseResponse([
+      'data: {"candidates":[{"content":{"parts":[{"text":"Hello from the provider"}]}}]}\n\n',
+    ]),
+    ok: true,
+    status: 200,
+  });
+  await renderApp();
+  await click(button('Gemini', 'provider'));
+  expect(
+    button('Gemini 3.1 Flash-Lite', 'model').getAttribute('aria-pressed'),
+  ).toBe('true');
+  await click(button('Gemini 4 Argon', 'model'));
+  await changeInput('#api-key', 'test-ui-key');
+  const effort = element<HTMLSelectElement>('#gemini-reasoning-effort');
+  expect(Array.from(effort.options, (option) => option.value)).toEqual([
+    'low',
+    'medium',
+    'high',
+  ]);
+  expect(effort.value).toBe('low');
+  expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
+  await sendMessage();
+  expect(fetchMock.mock.calls[0][0]).toContain(
+    '/v1beta/models/gemini-4-argon:streamGenerateContent?alt=sse&',
+  );
+  expect(requestBody().generationConfig).toEqual({
+    maxOutputTokens: 32768,
+    thinkingConfig: { includeThoughts: false, thinkingLevel: 'LOW' },
+  });
+});

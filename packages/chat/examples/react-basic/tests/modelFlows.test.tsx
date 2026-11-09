@@ -137,6 +137,12 @@ const modelCases = [
       ['none', 'medium', 'high'],
       'none',
     ],
+    [
+      'Gemini 4 Argon (OpenRouter)',
+      'google/gemini-4-argon',
+      ['high', 'medium', 'low'],
+      'low',
+    ],
   ].map(([label, model, efforts, initialEffort]) => ({
     provider: 'OpenRouter',
     label: label as string,
