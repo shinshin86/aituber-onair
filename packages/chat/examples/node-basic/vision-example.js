@@ -238,7 +238,7 @@ async function main() {
   ) {
     console.error('❌ Please set at least one API key:');
     console.log('- OPENAI_API_KEY for GPT-4 Vision');
-    console.log('- ANTHROPIC_API_KEY for Claude 3 Vision');
+    console.log('- ANTHROPIC_API_KEY for Claude vision');
     console.log('- GOOGLE_API_KEY for Gemini Pro Vision');
     return;
   }

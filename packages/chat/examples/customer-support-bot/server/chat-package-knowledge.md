@@ -133,9 +133,9 @@ Representative exported Claude constants include:
 - `MODEL_CLAUDE_4_6_OPUS` = `claude-opus-4-6`
 - `MODEL_CLAUDE_4_6_SONNET` = `claude-sonnet-4-6`
 - `MODEL_CLAUDE_4_5_OPUS` = `claude-opus-4-5-20251101`
-- `MODEL_CLAUDE_4_5_SONNET` = `claude-sonnet-4-5-20250929`
+- `MODEL_CLAUDE_4_5_SONNET` = `claude-sonnet-4-5-20250929` (deprecated compatibility export; use `claude-sonnet-5-5`)
 - `MODEL_CLAUDE_4_5_HAIKU` = `claude-haiku-4-5-20251001`
-- `MODEL_CLAUDE_3_HAIKU` = `claude-3-haiku-20240307`
+- `MODEL_CLAUDE_3_HAIKU` = `claude-3-haiku-20240307` (deprecated compatibility export; use `claude-haiku-4-5-20251001`)
 Create a Claude service with the same factory:
 ```typescript
 const claudeService = ChatServiceFactory.createChatService('claude', {

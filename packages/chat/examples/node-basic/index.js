@@ -57,7 +57,7 @@ async function main() {
     try {
       const claudeService = ChatServiceFactory.createChatService('claude', {
         apiKey: process.env.ANTHROPIC_API_KEY,
-        // Using default model (claude-3-haiku-20240307) for cost efficiency
+        // Using default model (claude-haiku-4-5-20251001) for cost efficiency
         responseLength: 'short',
       });
 

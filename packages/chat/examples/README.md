@@ -30,7 +30,7 @@ Simple JavaScript runtime examples demonstrating core functionality:
 
 - **Basic Usage** (`index.js`) - Getting started with all providers
 - **OpenAI Example** (`openai-example.js`) - GPT-4, o1 models, response formats
-- **Claude Example** (`claude-example.js`) - Claude 3 models, advanced features
+- **Claude Example** (`claude-example.js`) - Current Claude models, advanced features
 - **Gemini Example** (`gemini-example.js`) - Gemini Pro, safety settings
 - **Vision Chat** (`vision-example.js`) - Image analysis with vision models
 - **Tool Calling** (`tool-calling-example.js`) - Function calling demonstration
@@ -184,7 +184,7 @@ const openaiService = ChatServiceFactory.createChatService('openai', { apiKey })
 // Uses: gpt-5.6-luna (fast, cost-effective)
 
 const claudeService = ChatServiceFactory.createChatService('claude', { apiKey });
-// Uses: claude-3-haiku-20240307 (balanced speed/cost)
+// Uses: claude-haiku-4-5-20251001 (balanced speed/cost)
 
 const geminiService = ChatServiceFactory.createChatService('gemini', { apiKey });
 // Uses: gemini-3.1-flash-lite (stable, efficient)
@@ -248,9 +248,9 @@ The table below focuses on the primary providers used in the core JavaScript run
 
 | Feature | OpenAI | Claude | Gemini |
 |---------|--------|--------|--------|
-| Default Model | `gpt-5.6-luna` | `claude-3-haiku-20240307` | `gemini-3.1-flash-lite` |
-| Text Chat | ✅ GPT-4, GPT-3.5 | ✅ Claude 3 Family | ✅ Gemini Pro |
-| Vision | ✅ GPT-4 Vision | ✅ Claude 3 Vision | ✅ Gemini Pro Vision |
+| Default Model | `gpt-5.6-luna` | `claude-haiku-4-5-20251001` | `gemini-3.1-flash-lite` |
+| Text Chat | ✅ GPT-4, GPT-3.5 | ✅ Current Claude models | ✅ Gemini Pro |
+| Vision | ✅ GPT-4 Vision | ✅ Claude vision | ✅ Gemini Pro Vision |
 | Streaming | ✅ Full Support | ✅ Full Support | ✅ Full Support |
 | Tools | ✅ Function Calling | ✅ Tool Use | ✅ Function Calling |
 | MCP | ✅ Supported | ✅ Supported | ❌ Not Supported |
