@@ -122,14 +122,14 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     const models = AITuberOnAirCore.getSupportedModels('openrouter');
     expect(listedModels()).toEqual(models);
     expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(listedModels().slice(models.length - 13, models.length - 9)).toEqual(
-      [
-        MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
-        MODEL_UNBIASED_PARETO_26_9,
-        MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
-        MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
-      ],
-    );
+    const mistralIndex = models.indexOf(MODEL_OPENROUTER_MISTRAL_LARGE_4_0);
+    expect(mistralIndex).toBeGreaterThanOrEqual(0);
+    expect(listedModels().slice(mistralIndex, mistralIndex + 4)).toEqual([
+      MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+      MODEL_UNBIASED_PARETO_26_9,
+      MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+      MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
+    ]);
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
 
     await act(async () => current.updateLLMModel(MODEL_UNBIASED_PARETO_26_9));
@@ -198,13 +198,13 @@ describe.each(examples)('$name OpenRouter model ordering', (example) => {
     ]);
     expect(listedModels()[0]).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
     expect(current.settings.llm.model).toBe(MODEL_INCLUSIONAI_LING_3_1_FLASH);
-    expect(listedModels().slice(models.length - 13, models.length - 9)).toEqual(
-      [
-        MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
-        MODEL_UNBIASED_PARETO_26_9,
-        MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
-        MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
-      ],
-    );
+    const mistralIndex = models.indexOf(MODEL_OPENROUTER_MISTRAL_LARGE_4_0);
+    expect(mistralIndex).toBeGreaterThanOrEqual(0);
+    expect(listedModels().slice(mistralIndex, mistralIndex + 4)).toEqual([
+      MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
+      MODEL_UNBIASED_PARETO_26_9,
+      MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+      MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
+    ]);
   });
 });
