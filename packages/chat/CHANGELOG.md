@@ -1,5 +1,64 @@
 # @aituber-onair/chat
 
+## 0.69.0
+
+### Minor Changes
+
+- Added Claude Fable 5.2 as an explicit option on the Claude provider
+  (`claude-fable-5-2`, `MODEL_CLAUDE_5_2_FABLE`) and on OpenRouter
+  (`anthropic/claude-fable-5.2`, `MODEL_ANTHROPIC_CLAUDE_FABLE_5_2`). Both
+  accept images and all five effort levels (`low` to `max`); the package
+  default is `low` for responsive chat while the API default is `high`.
+  Native requests omit `thinking` and sampling parameters and use automatic
+  tool selection; the OpenRouter route omits `tool_choice`, matching Fable
+  5.1. Fable 5.1 remains supported. Claude Mythos 5.2 is not added because
+  access is limited to verified organizations.
+- Added Gemini 4 Argon (`gemini-4-argon`, `MODEL_GEMINI_4_ARGON`) as an
+  explicit recommended Gemini option over v1beta, and
+  `google/gemini-4-argon` on OpenRouter. Thinking cannot be disabled and
+  defaults to `low`. Because Argon counts thinking tokens toward
+  `maxOutputTokens`, implicit `responseLength` caps are floored at 32,768
+  tokens; explicit caps are clamped to 32,768 (non-streaming) and 65,536
+  (streaming). Ask for short replies in the prompt when needed.
+- Added Mistral-hosted GLM-5.3 Flash (`zai-glm-5-3-flash`,
+  `MODEL_MISTRAL_ZAI_GLM_5_3_FLASH`) with image input and function calling.
+  It supports `low`, `high`, and `max` reasoning, defaults to `low`, and
+  normalizes `none` or unsupported values to `low`. `MistralReasoningEffort`
+  now includes `low` and `max`, and `getMistralSupportedReasoningEfforts` /
+  `normalizeMistralReasoningEffort` are exported.
+- Added ten explicit OpenRouter options: `~openai/gpt-luna-latest`,
+  `~openai/gpt-terra-latest`, `~deepseek/deepseek-flash-latest`,
+  `~z-ai/glm-flash-latest`, `xiaomi/mimo-v2.6-pro`, `tencent/hy4`,
+  `cohere/command-a-plus`, `bytedance-seed/seed-2-1-turbo`, the paid
+  `nvidia/nemotron-3.5-super-vl`, and `sakana/sakana-namazu`. Token limits
+  are omitted for `sakana/sakana-namazu` because it does not accept
+  `max_tokens`. [OpenRouter catalog](https://openrouter.ai/api/v1/models).
+
+### Behavior Changes
+
+- Models that were shut down or announced as deprecated moved from the
+  supported lists to the `*_DEPRECATED_MODELS` arrays. Their constants stay
+  exported and services can still be created with these IDs, but they no
+  longer appear in `getSupportedModels()` or the example selectors.
+  - OpenAI: `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `gpt-4.1-mini`
+  - Gemini: `gemini-2.5-pro`, `gemini-2.5-flash`
+  - DeepSeek: `deepseek-v4-flash`, `deepseek-v4-flash-vision-exp`
+  - Mistral: `mistral-medium-3-5`
+  - OpenRouter: `inception/mercury-2.5`, `inception/mercury-3`,
+    `moonshotai/kimi-k2.5`, `~openai/gpt-latest`
+- The DeepSeek provider default text and vision model changed from
+  `deepseek-v4-flash` / `deepseek-v4-flash-vision-exp` to `deepseek-flash`.
+- Constructing `OpenAIChatService` directly without a model now defaults to
+  `gpt-5.6-luna` instead of `gpt-4o-mini`. The factory default is unchanged.
+- The react-basic example's OpenRouter catalog picker hides deprecated IDs
+  and shows the reasoning toggle for models that expose reasoning without
+  documented effort levels.
+
+### Patch Changes
+
+- Examples and docs that still used the retired Claude 3 Haiku now use the
+  provider default `claude-haiku-4-5-20251001`.
+
 ## 0.68.0
 
 ### Minor Changes
