@@ -1,5 +1,36 @@
 # AITuber OnAir Core
 
+### Chat 0.69.0
+
+Core 0.26.28 uses published Chat 0.69.0 and Voice 0.30.0. Claude Fable 5.2
+(`claude-fable-5-2`, OpenRouter `anthropic/claude-fable-5.2`), Gemini 4 Argon
+(`gemini-4-argon`, OpenRouter `google/gemini-4-argon`), and Mistral-hosted
+GLM-5.3 Flash (`zai-glm-5-3-flash`) are explicit image-capable options.
+Fable and Argon support low/medium/high effort; Fable also supports xhigh/max.
+Mistral GLM Flash supports low/high/max. All three start at low for responsive
+chat. Fable keeps automatic tool selection and requires preserving signed
+thinking with its preceding history unchanged. Argon counts thinking against
+its output cap: implicit caps start at 32,768 tokens, and explicit caps are
+clamped to 32,768 (non-streaming) or 65,536 (streaming). Ask for short replies
+in the prompt.
+
+OpenRouter also adds the paid image-capable options `~openai/gpt-luna-latest`,
+`~openai/gpt-terra-latest`, `~deepseek/deepseek-flash-latest`,
+`~z-ai/glm-flash-latest`, `xiaomi/mimo-v2.6-pro`, `tencent/hy4`,
+`cohere/command-a-plus`, `bytedance-seed/seed-2-1-turbo`,
+`nvidia/nemotron-3.5-super-vl`, and `sakana/sakana-namazu`. The Nemotron free
+route remains separate. Namazu omits output-token limits; responseLength is
+not a hard cap for that route. Unsupported reasoning levels are not exposed.
+
+New configurations use the current supported lists; DeepSeek now starts at
+`deepseek-flash` for text and vision. Newly retired OpenAI GPT-4o/GPT-4.1,
+Gemini 2.5 Pro/Flash, DeepSeek V4 Flash/Vision Exp, Mistral Medium 3.5, and
+OpenRouter Mercury 2.5/3, Kimi K2.5, and GPT Latest are excluded from new
+selection. Their exported constants and saved IDs remain compatible. The
+OpenRouter picker hides deprecated catalog rows while retaining a saved
+selection. Other provider defaults are unchanged.
+
+
 ![AITuber OnAir Core - logo](https://raw.githubusercontent.com/shinshin86/aituber-onair/refs/heads/main/packages/core/images/aituber-onair-core.png)
 
 [AITuber OnAir Core](https://www.npmjs.com/package/@aituber-onair/core) is a TypeScript library developed to provide functionality for the [AITuber OnAir](https://aituberonair.com) web service, designed for AI-based virtual streaming (AITuber).  
@@ -54,7 +85,7 @@ Existing provider defaults are unchanged.
   `microsoft/mai-voice-2.1` and `microsoft/mai-voice-2.1-flash` models. See
   [OpenRouter TTS setup](#openrouter-tts-setup).
 
-- Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1, Opus 5.5, and
+- Native models: GPT-6 Astra, Sol, and Luna; Claude Fable 5.1/5.2, Opus 5.5, and
   Sonnet 5.5;
   DeepSeek V4.1 Flash 1017; and Grok 4.7.
 - OpenAI-compatible endpoint helpers: `resolveOpenAICompatibleEndpoint`,
@@ -65,8 +96,8 @@ Existing provider defaults are unchanged.
   `listOpenAICompatibleSpeechModels`, `listOpenAICompatibleSpeechVoices`,
   `getOpenAICompatibleSpeechServerInfo`, and `testOpenAICompatibleSpeech` for
   local TTS servers. See the [local TTS guide](../../docs/local-tts.md).
-- OpenRouter: GPT-6 Astra / Astra Pro, Claude Fable 5.1, DeepSeek V4.1 Flash,
-  Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Mercury 2.5, Nex N2.5 Mini / Pro
+- OpenRouter: GPT-6 Astra / Astra Pro, Claude Fable 5.1/5.2, DeepSeek V4.1 Flash,
+  Gemini 3.8 Flash, Ling 3.0 Flash VL (free), Nex N2.5 Mini / Pro
   (free), Qwen3.8 Max 0902, and Muse Spark 1.3.
 - Models with required reasoning use their supported effort values. Native
   Astra uses the Responses API and starts at `low`; use
@@ -1550,7 +1581,7 @@ Currently, the following AI provider is built-in:
 - **Claude**: Supports current Claude API model IDs including Claude Haiku 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Retired IDs remain exported for source compatibility but are not advertised in selectors. Supported models accept `reasoning_effort`, which maps to Anthropic's `output_config.effort`; the package defaults these models to `low` (the API default is `high`).
 - **xAI**: Supports Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 model families. Grok 4.6 supports `low`, `medium`, `high`, and `xhigh` reasoning effort and defaults to `low`; Grok 4.5 also defaults to `low`, while Grok 4.3 defaults to `none` for lower latency. Retired Grok 4.1 Fast IDs remain compatibility exports only.
 - **DeepSeek**: Supports DeepSeek V4 Flash, DeepSeek V4 Pro, and the vision-capable DeepSeek V4 Flash Vision Exp through the first-class `deepseek` provider. These models expose model-aware `reasoning_effort`; Core keeps Chat's low-latency `none` default, while higher supported efforts remain selectable. Thinking and tool calling cannot currently be combined in one request.
-- **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `mistral-medium-3-5`, and `mistral-large-latest`, including adjustable reasoning for supported models. Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview; its reasoning levels are not exposed by this package.
+- **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `zai-glm-5-3-flash`, and `mistral-large-latest`, including adjustable reasoning for supported models. Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview; its reasoning levels are not exposed by this package.
 Providers whose APIs must not be called directly from this browser example are
 shown disabled: currently Sakana AI and Sarashina. Sarashina API keys must stay
 on a protected backend; use a Node/backend integration.
@@ -2230,9 +2261,9 @@ Core re-exports `MODEL_PLAMO_3_1_PRIME` and `MODEL_MISTRAL_LARGE_4_0` (public pr
 
 Deepgram Japanese presets are `flux-ayumi-ja`, `flux-hayato-ja`, `flux-nozomi-ja`, and `flux-sayaka-ja`. All ten React TTS examples offer them alongside Haley without a catalog lookup. `language: 'en'` or `language: 'ja'` filters the public voice list. Japanese MP3 output and speed have not been live-verified; speed support varies by language/model.
 
-### Chat 0.68.0
+### Sarashina and reasoning defaults
 
-This Core release uses Core 0.26.27 with Chat 0.68.0 and Voice 0.30.0. Sarashina is
+This Core release uses Core 0.26.28 with Chat 0.69.0 and Voice 0.30.0. Sarashina is
 shown but disabled for new browser selections, like Sakana AI. Avatar apps preserve saved provider, model and key values;
 the Basic example persists only catalog settings. The backend provider offers text-only
 `sarashina3-nano` (default), `sarashina3-mini`, and `sarashina3.2-mini-thinking`;

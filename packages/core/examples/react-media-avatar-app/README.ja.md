@@ -1,12 +1,38 @@
 # Media Avatar Chat
 
+### Chat 0.69.0
+
+Core 0.26.28は公開済みのChat 0.69.0とVoice 0.30.0を利用します。
+Claude Fable 5.2（`claude-fable-5-2`、OpenRouterでは`anthropic/claude-fable-5.2`）、
+Gemini 4 Argon（`gemini-4-argon`、OpenRouterでは`google/gemini-4-argon`）、
+Mistral版GLM-5.3 Flash（`zai-glm-5-3-flash`）を明示選択できます。いずれも画像入力に対応し、
+effort初期値は会話の応答時間を抑えるため`low`です。Fableはlow/medium/high/xhigh/max、
+Argonはlow/medium/high、Mistral版GLM Flashはlow/high/maxに対応します。
+Fableではツールを自動選択し、返された署名付きthinkingとその前の履歴を変更せず保持してください。
+Argonは思考トークンも出力上限に含めます。暗黙の上限は32,768以上、明示上限も非ストリーミングで
+32,768以上、ストリーミングで65,536以上に補正されます。短い返答が必要ならプロンプトで指定してください。
+
+OpenRouterには有料・画像対応の`~openai/gpt-luna-latest`、`~openai/gpt-terra-latest`、
+`~deepseek/deepseek-flash-latest`、`~z-ai/glm-flash-latest`、`xiaomi/mimo-v2.6-pro`、
+`tencent/hy4`、`cohere/command-a-plus`、`bytedance-seed/seed-2-1-turbo`、
+`nvidia/nemotron-3.5-super-vl`、`sakana/sakana-namazu`も追加されました。
+Nemotronの無料版は別の選択肢として残ります。Namazuには出力トークン上限を送らないため、
+responseLengthは厳密な上限になりません。未対応の推論レベルは選択肢に出しません。
+
+新規設定には現在の対応モデル一覧を使い、DeepSeekのテキスト・画像モデルは`deepseek-flash`から始めます。
+新たに非推奨となったOpenAI GPT-4o/GPT-4.1、Gemini 2.5 Pro/Flash、DeepSeek V4 Flash/Vision Exp、
+Mistral Medium 3.5、OpenRouter Mercury 2.5/3・Kimi K2.5・GPT Latestは新規選択肢から除外します。
+互換用の定数と保存済みIDは保持します。OpenRouterのカタログでも非推奨の行を隠し、保存済みの選択は保持します。
+ほかのプロバイダーの既定モデルは変更しません。
+
+
 ![Media Avatar Chat](./images/react-media-avatar-app.png)
 
 このブラウザ例から API を直接呼び出せないプロバイダーは、選択を無効にしています。
 現在は Sakana AI と Sarashina が該当します。Sarashina の API キーは保護された
 バックエンドで管理し、Node.js などのサーバー環境から利用してください。
 
-Core 0.26.27、Chat 0.68.0、Voice 0.30.0 を使用します。
+Core 0.26.28、Chat 0.69.0、Voice 0.30.0 を使用します。
 
 `@aituber-onair/core` を使い、返答の感情に合わせて画像・GIF・動画を
 切り替えるReactチャットサンプルです。

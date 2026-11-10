@@ -12,6 +12,7 @@ import React, {
 } from 'react';
 import {
   AITuberOnAirCore,
+  OPENROUTER_DEPRECATED_MODELS,
   AITuberOnAirCoreEvent,
   AITuberOnAirCoreOptions,
   type Message as ChatMessage,
@@ -43,6 +44,10 @@ import {
   getDeepSeekSupportedReasoningEfforts,
   getGeminiSupportedReasoningEfforts,
   getKimiSupportedReasoningEfforts,
+  getMistralSupportedReasoningEfforts,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+  normalizeMistralReasoningEffort,
+  type MistralReasoningEffort,
   getOpenRouterSupportedReasoningEfforts,
   getXaiSupportedReasoningEfforts,
   getZaiSupportedReasoningEfforts,
@@ -54,7 +59,6 @@ import {
   isKimiReasoningEffortModel,
   isResponsesOnlyGPT5Model,
   MODEL_GPT_6_1_SOL,
-  OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   MODEL_GPT_6_ASTRA,
   isXaiReasoningEffortModel,
   normalizeClaudeReasoningEffort,
@@ -1649,6 +1653,9 @@ const App: React.FC = () => {
         break;
       case 'mistral':
         setModel(mistralModels[0]);
+        setReasoningEffort(
+          normalizeMistralReasoningEffort(mistralModels[0]) ?? 'none',
+        );
         break;
       case 'sarashina':
         setModel(sarashinaModels[0]);
@@ -1674,6 +1681,13 @@ const App: React.FC = () => {
         break;
     }
   }, [chatProvider]);
+
+  useEffect(() => {
+    if (chatProvider !== 'mistral') return;
+    const normalized = normalizeMistralReasoningEffort(model, reasoning_effort);
+    if (normalized && normalized !== reasoning_effort)
+      setReasoningEffort(normalized);
+  }, [chatProvider, model, reasoning_effort]);
 
   useEffect(() => {
     if (!isMcpSupportedProvider && enableDeepWikiMcp) {
@@ -2036,11 +2050,14 @@ const App: React.FC = () => {
       providerOptions.reasoning_effort =
         normalizeReasoningEffortForDeepSeekModel(model, reasoning_effort);
     }
+    if (chatProvider === 'mistral') {
+      providerOptions.reasoning_effort = normalizeMistralReasoningEffort(
+        model,
+        reasoning_effort,
+      );
+    }
     if (chatProvider === 'openrouter') {
-      if (
-        catalogSupportsReasoning(model, openrouterModels.includes(model)) &&
-        !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(model)
-      ) {
+      if (catalogSupportsReasoning(model, openrouterModels.includes(model))) {
         const normalized = normalizeReasoningEffortForOpenRouterModel(
           model,
           reasoning_effort,
@@ -3270,6 +3287,14 @@ const App: React.FC = () => {
   const geminiReasoningEffortValue = model
     ? normalizeGeminiReasoningEffort(model, requestedGeminiReasoningEffort)
     : undefined;
+  const mistralSupportedReasoningEfforts =
+    chatProvider === 'mistral'
+      ? getMistralSupportedReasoningEfforts(model)
+      : [];
+  const mistralReasoningEffortValue = normalizeMistralReasoningEffort(
+    model,
+    reasoning_effort,
+  );
   const kimiSupportedReasoningEfforts =
     chatProvider === 'kimi' && model
       ? getKimiSupportedReasoningEfforts(model)
@@ -3628,6 +3653,7 @@ const App: React.FC = () => {
                     />
                   ) : chatProvider === 'openrouter' ? (
                     <OpenRouterModelPicker
+                      hiddenModelIds={OPENROUTER_DEPRECATED_MODELS}
                       value={model}
                       onChange={setModel}
                       curatedModels={[
@@ -3871,6 +3897,39 @@ const App: React.FC = () => {
                     </>
                   )}
 
+                  {chatProvider === 'mistral' &&
+                    mistralSupportedReasoningEfforts.length > 0 && (
+                      <div>
+                        <label htmlFor="mistralReasoningEffort">
+                          Mistral Reasoning Effort:
+                        </label>
+                        <select
+                          id="mistralReasoningEffort"
+                          value={mistralReasoningEffortValue ?? ''}
+                          onChange={(e) =>
+                            setReasoningEffort(
+                              e.target.value as MistralReasoningEffort,
+                            )
+                          }
+                        >
+                          {mistralSupportedReasoningEfforts.map((effort) => (
+                            <option key={effort} value={effort}>
+                              {effort === 'none'
+                                ? 'None (fastest)'
+                                : effort.charAt(0).toUpperCase() +
+                                  effort.slice(1)}
+                            </option>
+                          ))}
+                        </select>
+                        {model === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH && (
+                          <p>
+                            GLM-5.3
+                            Flashは思考を無効にできません。初期値はLowです。
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                   {chatProvider === 'deepseek' && (
                     <>
                       <label htmlFor="deepSeekReasoningEffort">
@@ -3923,9 +3982,7 @@ const App: React.FC = () => {
                         model,
                         openrouterModels.includes(model),
                       ) &&
-                        !OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET.includes(
-                          model,
-                        ) && (
+                        openRouterSupportedReasoningEfforts.length > 0 && (
                           <>
                             <label htmlFor="openRouterReasoningEffort">
                               Reasoning Effort:

@@ -43,6 +43,41 @@ const response = (ids: string[]) => ({
   }),
 });
 describe('OpenRouter settings integration', () => {
+  it('hides retired catalog rows while preserving the selected saved ID', async () => {
+    const retired = 'inception/mercury-2.5';
+    const current = 'anthropic/claude-fable-5.2';
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        llm: {
+          provider: 'openrouter',
+          model: retired,
+          apiKeys: { openrouter: 'saved-key' },
+          openRouterDynamicFreeModels: {
+            models: [retired],
+            fetchedAt: 1,
+            maxCandidates: 1,
+          },
+        },
+      }),
+    );
+    vi.mocked(fetch).mockResolvedValue(
+      new Response(JSON.stringify(await response([retired, current]).json()), {
+        status: 200,
+      }),
+    );
+    await act(async () => root.render(<Harness />));
+    await act(async () => {
+      await refreshCatalog(true);
+    });
+    const rows = [...container.querySelectorAll('.model-list button')];
+    expect(rows.some((row) => row.textContent?.includes(retired))).toBe(false);
+    expect(rows.some((row) => row.textContent?.includes(current))).toBe(true);
+    const saved = JSON.parse(localStorage.getItem(storageKey)!);
+    expect(saved.llm.model).toBe(retired);
+    expect(saved.llm.apiKeys.openrouter).toBe('saved-key');
+  });
+
   beforeEach(() => {
     (
       globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }

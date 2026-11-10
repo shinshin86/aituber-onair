@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MODEL_CLAUDE_5_2_FABLE,
+  MODEL_GEMINI_4_ARGON,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+  getMistralSupportedReasoningEfforts,
+  normalizeMistralReasoningEffort,
+  type MistralReasoningEffort,
   MODEL_SARASHINA_3_NANO,
   MODEL_SARASHINA_3_MINI,
   MODEL_SARASHINA_3_2_MINI_THINKING,
@@ -189,6 +195,33 @@ import {
 } from '../src/index';
 
 describe('Core index chat re-exports', () => {
+  it('exposes Chat 0.69 model-specific reasoning through Core', () => {
+    const effort: MistralReasoningEffort = 'max';
+    expect(MODEL_CLAUDE_5_2_FABLE).toBe('claude-fable-5-2');
+    expect(getClaudeSupportedReasoningEfforts(MODEL_CLAUDE_5_2_FABLE)).toEqual([
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+    ]);
+    expect(getDefaultClaudeReasoningEffort(MODEL_CLAUDE_5_2_FABLE)).toBe('low');
+    expect(getGeminiSupportedReasoningEfforts(MODEL_GEMINI_4_ARGON)).toEqual([
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(getDefaultGeminiReasoningEffort(MODEL_GEMINI_4_ARGON)).toBe('low');
+    expect(
+      getMistralSupportedReasoningEfforts(MODEL_MISTRAL_ZAI_GLM_5_3_FLASH),
+    ).toEqual(['low', 'high', 'max']);
+    expect(
+      normalizeMistralReasoningEffort(MODEL_MISTRAL_ZAI_GLM_5_3_FLASH, 'none'),
+    ).toBe('low');
+    expect(
+      normalizeMistralReasoningEffort(MODEL_MISTRAL_ZAI_GLM_5_3_FLASH, effort),
+    ).toBe('max');
+  });
   it('re-exports refreshOpenRouterFreeModels', () => {
     expect(typeof refreshOpenRouterFreeModels).toBe('function');
   });

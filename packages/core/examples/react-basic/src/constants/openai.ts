@@ -12,10 +12,6 @@ import {
   MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_PRO,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4O,
 } from '@aituber-onair/core';
 
 // OpenAI models list
@@ -25,8 +21,6 @@ export const openaiModels = [
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_SOL,
   MODEL_GPT_6_LUNA,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4_1,
   MODEL_GPT_5_4,
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
@@ -34,8 +28,6 @@ export const openaiModels = [
   MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_PRO,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4O,
   MODEL_GPT_6_1_TERRA,
 ];
 

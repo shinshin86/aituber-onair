@@ -1,5 +1,25 @@
 # @aituber-onair/core
 
+## 0.26.28
+
+### Patch Changes
+
+- Propagate published Chat 0.69.0 and re-export Claude Fable 5.2, Gemini 4
+  Argon, Mistral-hosted GLM-5.3 Flash, ten additional OpenRouter options,
+  and the model-specific Mistral reasoning helpers and expanded effort type.
+- Update Basic model selectors and Mistral effort controls. All React
+  examples inherit current supported lists and the DeepSeek Flash text/vision
+  default. Preserve compatibility exports and saved deprecated selections;
+  hide deprecated OpenRouter catalog rows at picker call sites.
+- Document mandatory reasoning, Argon output budgets, Namazu token-limit
+  omission, and Fable thinking-history requirements.
+- Refresh all embedded Core example metadata and starter version expectations.
+
+### Known Limitations
+
+- No live inference was performed; provider compatibility follows the
+  published Chat release and mocked transport tests.
+
 ## 0.26.27
 
 ### Patch Changes
