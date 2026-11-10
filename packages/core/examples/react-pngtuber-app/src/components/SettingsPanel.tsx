@@ -6,6 +6,7 @@ import {
 } from '../lib/ttsModels';
 import {
   AITuberOnAirCore,
+  OPENROUTER_DEPRECATED_MODELS,
   type OpenRouterTtsModel,
   type VoiceEngineVoice,
   type XaiReasoningEffort,
@@ -1028,6 +1029,7 @@ export function SettingsPanel({
             ) : settings.llm.provider === 'openrouter' ? (
               <div className="settings-field">
                 <OpenRouterModelPicker
+                  hiddenModelIds={OPENROUTER_DEPRECATED_MODELS}
                   value={settings.llm.model}
                   legacyModels={
                     settings.llm.openRouterDynamicFreeModels?.models

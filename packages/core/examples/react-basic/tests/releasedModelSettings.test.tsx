@@ -63,6 +63,51 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 describe('released model settings', () => {
+  it('propagates Chat 0.69 selectors and model-specific effort choices', async () => {
+    await act(async () => root.render(<App />));
+    await button('設定');
+    const options = () =>
+      [...container.querySelectorAll<HTMLOptionElement>('#model option')].map(
+        (option) => option.value,
+      );
+    for (const retired of ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini'])
+      expect(options()).not.toContain(retired);
+    await choose('chatProvider', 'deepseek');
+    expect(container.querySelector<HTMLSelectElement>('#model')!.value).toBe(
+      'deepseek-flash',
+    );
+    expect(options()).toEqual(['deepseek-flash', 'deepseek-v4-pro']);
+    await choose('chatProvider', 'gemini');
+    expect(options()).toContain('gemini-4-argon');
+    expect(options()).not.toContain('gemini-2.5-pro');
+    expect(options()).not.toContain('gemini-2.5-flash');
+    await choose('model', 'gemini-4-argon');
+    expect(
+      container.querySelector<HTMLSelectElement>('#geminiReasoningEffort')!
+        .value,
+    ).toBe('low');
+    await choose('chatProvider', 'claude');
+    await choose('model', 'claude-fable-5-2');
+    expect(
+      container.querySelector<HTMLSelectElement>('#claudeReasoningEffort')!
+        .value,
+    ).toBe('low');
+    await choose('chatProvider', 'mistral');
+    expect(options()).not.toContain('mistral-medium-3-5');
+    await choose('model', 'zai-glm-5-3-flash');
+    const effort = container.querySelector<HTMLSelectElement>(
+      '#mistralReasoningEffort',
+    )!;
+    expect(effort.value).toBe('low');
+    expect([...effort.options].map((option) => option.value)).toEqual([
+      'low',
+      'high',
+      'max',
+    ]);
+    await choose('mistralReasoningEffort', 'max');
+    expect(effort.value).toBe('max');
+  });
+
   it('shows Sarashina disabled and labels Claude Opus 5.5 effort correctly', async () => {
     await act(async () => root.render(<App />));
     await button('設定');

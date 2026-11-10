@@ -1,5 +1,31 @@
 # AITuber OnAir Core
 
+### Chat 0.69.0
+
+Core 0.26.28は公開済みのChat 0.69.0とVoice 0.30.0を利用します。
+Claude Fable 5.2（`claude-fable-5-2`、OpenRouterでは`anthropic/claude-fable-5.2`）、
+Gemini 4 Argon（`gemini-4-argon`、OpenRouterでは`google/gemini-4-argon`）、
+Mistral版GLM-5.3 Flash（`zai-glm-5-3-flash`）を明示選択できます。いずれも画像入力に対応し、
+effort初期値は会話の応答時間を抑えるため`low`です。Fableはlow/medium/high/xhigh/max、
+Argonはlow/medium/high、Mistral版GLM Flashはlow/high/maxに対応します。
+Fableではツールを自動選択し、返された署名付きthinkingとその前の履歴を変更せず保持してください。
+Argonは思考トークンも出力上限に含めます。暗黙の上限は32,768以上、明示上限も非ストリーミングで
+32,768以上、ストリーミングで65,536以上に補正されます。短い返答が必要ならプロンプトで指定してください。
+
+OpenRouterには有料・画像対応の`~openai/gpt-luna-latest`、`~openai/gpt-terra-latest`、
+`~deepseek/deepseek-flash-latest`、`~z-ai/glm-flash-latest`、`xiaomi/mimo-v2.6-pro`、
+`tencent/hy4`、`cohere/command-a-plus`、`bytedance-seed/seed-2-1-turbo`、
+`nvidia/nemotron-3.5-super-vl`、`sakana/sakana-namazu`も追加されました。
+Nemotronの無料版は別の選択肢として残ります。Namazuには出力トークン上限を送らないため、
+responseLengthは厳密な上限になりません。未対応の推論レベルは選択肢に出しません。
+
+新規設定には現在の対応モデル一覧を使い、DeepSeekのテキスト・画像モデルは`deepseek-flash`から始めます。
+新たに非推奨となったOpenAI GPT-4o/GPT-4.1、Gemini 2.5 Pro/Flash、DeepSeek V4 Flash/Vision Exp、
+Mistral Medium 3.5、OpenRouter Mercury 2.5/3・Kimi K2.5・GPT Latestは新規選択肢から除外します。
+互換用の定数と保存済みIDは保持します。OpenRouterのカタログでも非推奨の行を隠し、保存済みの選択は保持します。
+ほかのプロバイダーの既定モデルは変更しません。
+
+
 ![AITuber OnAir Core - logo](./images/aituber-onair-core.png)
 
 [AITuber OnAir Core](https://www.npmjs.com/package/@aituber-onair/core)は、AITuber配信のためのWebサービスである [AITuber OnAir](https://aituberonair.com) で機能提供を行うために開発されたTypeScript製のライブラリです。
@@ -26,10 +52,10 @@ Chat 0.65.0のモデル・能力判定ヘルパーと、Voice 0.28.0の音声エ
 - OpenRouter の既定モデルは変わりません。ただし `AITuberOnAirCore.getSupportedModels('openrouter')` の先頭が Ling 3.1 Flash になりました。アバターサンプルは OpenRouter に切り替えたときに先頭のモデルを選ぶため、Ling 3.1 Flash が選ばれます。
 - Voice 0.26.0 では、公開プレビュー版の `microsoft/mai-voice-2.1` と `microsoft/mai-voice-2.1-flash` を使う `openRouter` エンジンが加わりました。[OpenRouter TTS の設定](#openrouter-tts-の設定)を参照してください。
 
-- ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1 / Opus 5.5 / Sonnet 5.5、DeepSeek V4.1 Flash 1017、Grok 4.7。
+- ネイティブモデル: GPT-6 Astra / Sol / Luna、Claude Fable 5.1/5.2 / Opus 5.5 / Sonnet 5.5、DeepSeek V4.1 Flash 1017、Grok 4.7。
 - OpenAI 互換エンドポイント用ヘルパー: `resolveOpenAICompatibleEndpoint`、`listOpenAICompatibleModels`、`testOpenAICompatibleConnection`、`OPENAI_COMPATIBLE_LOCAL_PRESETS`（Ollama、LM Studio、llama.cpp、vLLM）。[ローカル LLM ガイド](../../docs/local-llm.ja.md)も参照してください。
 - OpenAI 互換の音声合成用ヘルパー: `resolveOpenAICompatibleSpeechEndpoint`、`listOpenAICompatibleSpeechModels`、`listOpenAICompatibleSpeechVoices`、`getOpenAICompatibleSpeechServerInfo`、`testOpenAICompatibleSpeech`（ローカル TTS サーバー向け）。[ローカル TTS ガイド](../../docs/local-tts.ja.md)も参照してください。
-- OpenRouter: GPT-6 Astra / Astra Pro、Claude Fable 5.1、DeepSeek V4.1 Flash、Gemini 3.8 Flash、Ling 3.0 Flash VL（free）、Mercury 2.5、Nex N2.5 Mini / Pro（free）、Qwen3.8 Max 0902、Muse Spark 1.3。
+- OpenRouter: GPT-6 Astra / Astra Pro、Claude Fable 5.1/5.2、DeepSeek V4.1 Flash、Gemini 3.8 Flash、Ling 3.0 Flash VL（free）、Nex N2.5 Mini / Pro（free）、Qwen3.8 Max 0902、Muse Spark 1.3。
 - 推論が必須のモデルでは対応する推論強度を使います。ネイティブのAstraはResponses APIを使用し、最小値は`low`です。`isOpenAIReasoningModel`と`getDefaultReasoningEffortForOpenAIModel`で新しいOpenAIモデルも判定できます。既存のGPT-5ヘルパーは維持しています。
 - ネイティブDeepSeekでツールを使う場合は非推論モード（`reasoning_effort: 'none'`）を指定してください。OpenRouterの推論・画像対応は、選択モデルのChat能力情報に従います。
 - Gemini TTSの`gemini-3.8-flash-lite-tts`と`gemini-3.8-flash-tts`を全Reactサンプルで選択できます。既定のTTSモデルは維持します。3.8モデルではスタイル指定を音声メタデータとして送り、言語コードは指定できません。
@@ -1451,7 +1477,7 @@ OpenRouter API、DeepSeek API、Mistral API、Sakana AI、Sarashina、PLaMo が�
 - **Claude**: Claude Haiku 5.5、Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Opus 4.8、Claude Opus 4.7、Claude Opus 4.6、Claude Opus 4.5、Claude Sonnet 4.6、Claude Sonnet 4.5、Claude Haiku 4.5 をサポートします。retired ID は source compatibility export として残しますが selector では案内しません。対応モデルでは `reasoning_effort` を Anthropic の `output_config.effort` として送信でき、パッケージの既定値は `low` です（API のデフォルトは `high`）
 - **xAI**: Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 系をサポート。Grok 4.6 は `low`、`medium`、`high`、`xhigh` を利用でき、既定は `low` です。Grok 4.5 も `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです。Grok 4.1 Fast は compatibility export のみです
 - **DeepSeek**: first-class `deepseek` provider として DeepSeek V4 Flash / V4 Pro / Vision 対応の DeepSeek V4 Flash Vision Exp をサポート。各モデルでモデル別の `reasoning_effort` を利用でき、Core でも Chat の低レイテンシ向けデフォルト `none` を維持しつつ、対応する高い effort へ切り替えられます。現時点では thinking と tool calling を同一リクエストで併用できません
-- **Mistral**: Vision 対応の Ministral 3 系（`ministral-3b-2512`、`ministral-8b-2512`、`ministral-14b-2512`）と、`mistral-small-latest`、`mistral-medium-3-5`、`mistral-large-latest` などの現行 generalist model をサポート。対応モデルでは adjustable reasoning も利用可能
+- **Mistral**: Vision 対応の Ministral 3 系（`ministral-3b-2512`、`ministral-8b-2512`、`ministral-14b-2512`）と、`mistral-small-latest`、`zai-glm-5-3-flash`、`mistral-large-latest` などの現行 generalist model をサポート。対応モデルでは adjustable reasoning も利用可能
 このブラウザ例から API を直接呼び出せないプロバイダーは、選択を無効にしています。
 現在は Sakana AI と Sarashina が該当します。Sarashina の API キーは保護された
 バックエンドで管理し、Node.js などのサーバー環境から利用してください。
@@ -2129,9 +2155,9 @@ OpenRouter 経由の ElevenLabs v4/v4 Turbo の音声一覧と MP3 再生に対�
 
 Deepgramの日本語音声は`flux-ayumi-ja`、`flux-hayato-ja`、`flux-nozomi-ja`、`flux-sayaka-ja`です。TTS設定を持つ全10 Reactサンプルでは、Haleyと日本語4音声をカタログ取得前から選べます。音声一覧は`language: 'en'`または`language: 'ja'`で絞り込めます。日本語音声のMP3出力と話速は実APIでは未検証で、話速の対応は言語・モデルによって異なります。
 
-### Chat 0.68.0
+### Sarashina and reasoning defaults
 
-Core 0.26.27、Chat 0.68.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
+Core 0.26.28、Chat 0.69.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
 ブラウザで新しく選べない状態で表示します。アバター例の保存済みプロバイダー、モデル、キーは維持します。Basic はカタログ設定だけを保存します。
 バックエンドではテキスト専用の `sarashina3-nano`（既定）、`sarashina3-mini`、
 `sarashina3.2-mini-thinking` を利用できます。Guard はモデレーション専用なので含めません。

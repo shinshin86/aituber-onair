@@ -11,6 +11,23 @@ import type {
 
 describe('Released Chat and Voice model exports', () => {
   it.each([
+    'MODEL_CLAUDE_5_2_FABLE',
+    'MODEL_GEMINI_4_ARGON',
+    'MODEL_MISTRAL_ZAI_GLM_5_3_FLASH',
+    'getMistralSupportedReasoningEfforts',
+    'normalizeMistralReasoningEffort',
+    'MODEL_ANTHROPIC_CLAUDE_FABLE_5_2',
+    'MODEL_GOOGLE_GEMINI_4_ARGON',
+    'MODEL_OPENAI_GPT_LUNA_LATEST',
+    'MODEL_OPENAI_GPT_TERRA_LATEST',
+    'MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST',
+    'MODEL_ZAI_GLM_FLASH_LATEST',
+    'MODEL_XIAOMI_MIMO_V2_6_PRO',
+    'MODEL_TENCENT_HY4',
+    'MODEL_COHERE_COMMAND_A_PLUS',
+    'MODEL_BYTEDANCE_SEED_2_1_TURBO',
+    'MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL',
+    'MODEL_OPENROUTER_SAKANA_NAMAZU',
     'MODEL_GPT_6_1_TERRA',
     'OPENAI_DEPRECATED_MODELS',
     'MODEL_KIMI_K3_1_PRO',
@@ -119,6 +136,7 @@ describe('Released Chat and Voice model exports', () => {
 describe('Published provider defaults through Core', () => {
   it.each([
     ['openai', 'gpt-5.6-luna'],
+    ['deepseek', 'deepseek-flash'],
     ['openrouter', 'google/gemma-4-31b-it:free'],
   ] as const)(
     'uses the published %s default without network calls',
