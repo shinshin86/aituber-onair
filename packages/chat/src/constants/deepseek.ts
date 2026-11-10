@@ -5,8 +5,10 @@ export const ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API = `${DEEPSEEK_API_BASE_URL}/
 export const MODEL_DEEPSEEK_FLASH = 'deepseek-flash';
 
 // DeepSeek V4 models
+/** @deprecated Original model retired on October 17, 2026; requests route to DeepSeek-V4.1-Flash-1017. Use MODEL_DEEPSEEK_FLASH. */
 export const MODEL_DEEPSEEK_V4_FLASH = 'deepseek-v4-flash';
 export const MODEL_DEEPSEEK_V4_PRO = 'deepseek-v4-pro';
+/** @deprecated Original model retired on October 17, 2026; requests route to DeepSeek-V4.1-Flash-1017. Use MODEL_DEEPSEEK_FLASH. */
 export const MODEL_DEEPSEEK_V4_FLASH_VISION_EXP =
   'deepseek-v4-flash-vision-exp';
 
@@ -33,9 +35,7 @@ export const MODEL_DEEPSEEK_REASONER = 'deepseek-reasoner';
 
 export const DEEPSEEK_SUPPORTED_MODELS = [
   MODEL_DEEPSEEK_FLASH,
-  MODEL_DEEPSEEK_V4_FLASH,
   MODEL_DEEPSEEK_V4_PRO,
-  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
 ];
 
 export const DEEPSEEK_VISION_SUPPORTED_MODELS = [
@@ -44,6 +44,8 @@ export const DEEPSEEK_VISION_SUPPORTED_MODELS = [
 ];
 
 export const DEEPSEEK_DEPRECATED_MODELS = [
+  MODEL_DEEPSEEK_V4_FLASH,
+  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_CHAT,
   MODEL_DEEPSEEK_REASONER,
 ];

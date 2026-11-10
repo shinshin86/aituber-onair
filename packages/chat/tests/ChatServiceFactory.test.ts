@@ -331,12 +331,7 @@ describe('ChatServiceFactory', () => {
       expect(geminiNanoModels).toEqual(['gemini-nano']);
 
       const deepSeekModels = ChatServiceFactory.getSupportedModels('deepseek');
-      expect(deepSeekModels).toEqual([
-        MODEL_DEEPSEEK_FLASH,
-        'deepseek-v4-flash',
-        'deepseek-v4-pro',
-        'deepseek-v4-flash-vision-exp',
-      ]);
+      expect(deepSeekModels).toEqual([MODEL_DEEPSEEK_FLASH, 'deepseek-v4-pro']);
 
       const mistralModels = ChatServiceFactory.getSupportedModels('mistral');
       expect(mistralModels).toEqual([
@@ -344,11 +339,11 @@ describe('ChatServiceFactory', () => {
         'ministral-3b-2512',
         'ministral-8b-2512',
         'ministral-14b-2512',
-        'mistral-medium-3-5',
         'mistral-large-latest',
         'mistral-large-4-0',
         'mistral-small-2603',
         'zai-glm-5-3',
+        'zai-glm-5-3-flash',
       ]);
 
       const sakanaModels = ChatServiceFactory.getSupportedModels('sakana');

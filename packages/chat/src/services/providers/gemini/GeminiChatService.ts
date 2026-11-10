@@ -10,6 +10,7 @@ import {
 import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_3_1_FLASH_LITE,
+  MODEL_GEMINI_4_ARGON,
   GEMINI_VISION_SUPPORTED_MODELS,
   normalizeGeminiReasoningEffort,
   type GeminiReasoningEffort,
@@ -349,13 +350,22 @@ export class GeminiChatService implements ChatService {
           functionCallContextMap: this.functionCallContextMap,
         });
 
+    // Argon includes thinking in its output budget. Follow Google's 32K
+    // recommendation for implicit caps; preserve lower explicit caller limits.
+    const implicitMaxTokens = getMaxTokensForResponseLength(
+      this.responseLength,
+    );
+    const maxOutputTokens =
+      model === MODEL_GEMINI_4_ARGON
+        ? Math.min(
+            maxTokens ?? Math.max(32_768, implicitMaxTokens),
+            stream ? 65_536 : 32_768,
+          )
+        : (maxTokens ?? implicitMaxTokens);
     const body: any = {
       contents,
       generationConfig: {
-        maxOutputTokens:
-          maxTokens !== undefined
-            ? maxTokens
-            : getMaxTokensForResponseLength(this.responseLength),
+        maxOutputTokens,
       },
     };
     const systemInstruction = extractGeminiSystemInstruction(messages);
@@ -394,7 +404,12 @@ export class GeminiChatService implements ChatService {
     const isGemma4 = this.isGemma4Model(model);
     const isGemini25 = /gemini-2\.5/.test(model);
     const isGemini3 = /^gemini-3(?:\.[0-9]+)?-/.test(model);
-    const requiresV1beta = isLite || isGemma4 || isGemini25 || isGemini3;
+    const requiresV1beta =
+      isLite ||
+      isGemma4 ||
+      isGemini25 ||
+      isGemini3 ||
+      model === MODEL_GEMINI_4_ARGON;
     const firstVer: 'v1' | 'v1beta' = requiresV1beta ? 'v1beta' : 'v1';
 
     const tryApi = async (): Promise<Response> => {

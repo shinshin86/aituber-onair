@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   ChatServiceFactory,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+  normalizeMistralReasoningEffort,
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   ChatService,
   allowsReasoningLow,
@@ -349,6 +351,16 @@ function App() {
           options.initialPrompts = GEMINI_NANO_SHORT_INITIAL_PROMPTS;
         }
 
+        if (
+          provider === 'mistral' &&
+          selectedModel === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH
+        ) {
+          options.reasoning_effort = normalizeMistralReasoningEffort(
+            selectedModel,
+            reasoning_effort,
+          );
+        }
+
         if (provider === 'openrouter') {
           if (openRouterAllowsReasoning) {
             const efforts = catalogSupportedReasoningEfforts(
@@ -456,6 +468,7 @@ function App() {
     effectiveApiKey,
     responseLength,
     selectedModel,
+    reasoning_effort,
     gpt5Preset,
     normalizedReasoningEffort,
     claudeReasoningEffort,
@@ -742,6 +755,11 @@ function App() {
                 setReasoningEffort(
                   getDefaultKimiReasoningEffort(modelId) ?? 'low',
                 );
+              } else if (
+                newProvider === 'mistral' &&
+                modelId === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH
+              ) {
+                setReasoningEffort('low');
               } else if (newProvider === 'deepseek') {
                 setReasoningEffort(
                   normalizeDeepSeekReasoningEffort(

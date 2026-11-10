@@ -9,6 +9,10 @@ import {
   MODEL_UNBIASED_PARETO_26_10,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
   ChatServiceFactory,
+  OPENAI_DEPRECATED_MODELS,
+  OPENROUTER_DEPRECATED_MODELS,
+  DEEPSEEK_DEPRECATED_MODELS,
+  MISTRAL_DEPRECATED_MODELS,
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENROUTER_API,
   MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
@@ -24,6 +28,7 @@ import {
 } from '../../../src';
 import { createSseResponse } from '../../../tests/helpers/sse';
 import App from '../src/App';
+import { refreshCatalog } from '../src/openrouterCatalog/catalog';
 import ProviderSelector, {
   allModels,
 } from '../src/components/ProviderSelector';
@@ -33,6 +38,47 @@ import ProviderSelector, {
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: 'xiaomi/mimo-v2.6-pro',
+    label: 'MiMo V2.6 Pro',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: 'cohere/command-a-plus',
+    label: 'Command A+',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: 'bytedance-seed/seed-2-1-turbo',
+    label: 'Seed 2.1 Turbo',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+  {
+    provider: 'openrouter',
+    providerLabel: 'OpenRouter',
+    model: 'nvidia/nemotron-3.5-super-vl',
+    label: 'Nemotron 3.5 Super VL (Paid)',
+    defaultModel: MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
+    defaultLabel: 'Gemma 4 31B IT (Free)',
+    endpoint: ENDPOINT_OPENROUTER_API,
+    vision: true,
+  },
+
   ...[
     [MODEL_UNBIASED_PARETO_26_10, 'Pareto 26.10'],
     [MODEL_INCLUSIONAI_LING_3_0_FLASH_VL, 'Ling 3.0 Flash VL'],
@@ -300,8 +346,17 @@ describe('ProviderSelector rendered configuration for recent models', () => {
         .filter(
           (label) =>
             ![
+              'GPT Luna Latest',
+              'GPT Terra Latest',
+              'DeepSeek Flash Latest (OpenRouter)',
+              'GLM Flash Latest (OpenRouter)',
+              'MiMo V2.6 Pro',
+              'Hy4',
+              'Command A+',
+              'Seed 2.1 Turbo',
+              'Nemotron 3.5 Super VL (Paid)',
+              'Sakana Namazu (OpenRouter)',
               'Claude Haiku 5.5 (OpenRouter)',
-              'Mercury 3',
               'DeepSeek V4.1 Flash 1017 (OpenRouter)',
               'Kimi K3.1 Pro (OpenRouter)',
               'MiniMax M3.1 Flash',
@@ -329,10 +384,12 @@ describe('ProviderSelector rendered configuration for recent models', () => {
     const curatedLabels = allModels
       .filter((model) => model.provider === 'openrouter')
       .map((model) => model.name);
-    expect(curatedLabels.slice(-11, -9)).toEqual([
-      'Mistral Large 4',
-      'Pareto 26.9',
-    ]);
+    expect(
+      curatedLabels.slice(
+        curatedLabels.indexOf('Mistral Large 4'),
+        curatedLabels.indexOf('Mistral Large 4') + 2,
+      ),
+    ).toEqual(['Mistral Large 4', 'Pareto 26.9']);
 
     await renderApp();
     await click(button('OpenRouter', 'provider'));
@@ -570,4 +627,194 @@ describe('ProviderSelector rendered configuration for recent models', () => {
       }
     },
   );
+});
+
+describe('Retired model choices', () => {
+  it.each([
+    ['openai', OPENAI_DEPRECATED_MODELS],
+    ['openrouter', OPENROUTER_DEPRECATED_MODELS],
+    ['gemini', ['gemini-2.5-pro', 'gemini-2.5-flash']],
+    ['deepseek', DEEPSEEK_DEPRECATED_MODELS],
+    ['mistral', MISTRAL_DEPRECATED_MODELS],
+  ] as const)(
+    'omits deprecated %s models from curated choices',
+    (provider, retired) => {
+      const ids = allModels
+        .filter((model) => model.provider === provider)
+        .map((model) => model.id);
+      for (const id of retired) expect(ids).not.toContain(id);
+    },
+  );
+
+  it('selects current Flash by default for DeepSeek', async () => {
+    await renderApp();
+    await click(button('DeepSeek', 'provider'));
+    expect(
+      button('DeepSeek V4.1 Flash 1017', 'model').getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(container.textContent).not.toContain('DeepSeek V4 Flash Vision Exp');
+  });
+});
+
+it('hides retired OpenRouter choices even when a fetched catalog still lists them', async () => {
+  const retired = [
+    'inception/mercury-2.5',
+    'inception/mercury-3',
+    'moonshotai/kimi-k2.5',
+  ];
+  vi.stubGlobal(
+    'fetch',
+    async () =>
+      new Response(
+        JSON.stringify({
+          data: [
+            ...catalogFixture.data,
+            ...retired.map((id) => ({
+              ...catalogFixture.data[0],
+              id,
+              name: id,
+            })),
+          ],
+        }),
+        { status: 200 },
+      ),
+  );
+  await act(async () => {
+    await refreshCatalog(true);
+  });
+  await renderApp();
+  await click(button('OpenRouter', 'provider'));
+  const ids = Array.from(
+    container.querySelectorAll('.model-item .model-id'),
+    (node) => node.textContent,
+  );
+  for (const id of retired) expect(ids).not.toContain(id);
+  expect(button('Gemma 4 31B IT (Free)', 'model')).toBeDefined();
+});
+
+it('configures direct Argon with low thinking and sends a streamed request', async () => {
+  fetchMock.mockResolvedValue({
+    ...createSseResponse([
+      'data: {"candidates":[{"content":{"parts":[{"text":"Hello from the provider"}]}}]}\n\n',
+    ]),
+    ok: true,
+    status: 200,
+  });
+  await renderApp();
+  await click(button('Gemini', 'provider'));
+  expect(
+    button('Gemini 3.1 Flash-Lite', 'model').getAttribute('aria-pressed'),
+  ).toBe('true');
+  await click(button('Gemini 4 Argon', 'model'));
+  await changeInput('#api-key', 'test-ui-key');
+  const effort = element<HTMLSelectElement>('#gemini-reasoning-effort');
+  expect(Array.from(effort.options, (option) => option.value)).toEqual([
+    'low',
+    'medium',
+    'high',
+  ]);
+  expect(effort.value).toBe('low');
+  expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
+  await sendMessage();
+  expect(fetchMock.mock.calls[0][0]).toContain(
+    '/v1beta/models/gemini-4-argon:streamGenerateContent?alt=sse&',
+  );
+  expect(requestBody().generationConfig).toEqual({
+    maxOutputTokens: 32768,
+    thinkingConfig: { includeThoughts: false, thinkingLevel: 'LOW' },
+  });
+});
+
+it('offers Mistral GLM Flash image input and only its supported reasoning efforts', async () => {
+  await renderApp();
+  await click(button('Mistral', 'provider'));
+  expect(
+    button('Mistral Small Latest', 'model').getAttribute('aria-pressed'),
+  ).toBe('true');
+  await click(button('GLM-5.3 Flash (Mistral)', 'model'));
+  await changeInput('#api-key', 'test-ui-key');
+  const select = element<HTMLSelectElement>('#mistral-reasoning-effort');
+  expect(Array.from(select.options, (option) => option.value)).toEqual([
+    'low',
+    'high',
+    'max',
+  ]);
+  expect(select.value).toBe('low');
+  expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
+  for (const effort of ['low', 'high', 'max']) {
+    fetchMock.mockClear();
+    await changeSelect('#mistral-reasoning-effort', effort);
+    await sendMessage();
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
+    );
+    expect(requestBody()).toMatchObject({
+      model: 'zai-glm-5-3-flash',
+      reasoning_effort: effort,
+      stream: true,
+    });
+  }
+  await click(button('GLM-5.3 (Mistral)', 'model'));
+  expect(container.querySelector('#mistral-reasoning-effort')).toBeNull();
+  expect(element<HTMLInputElement>('#image-upload').disabled).toBe(true);
+});
+
+it('keeps reasoning visibility available without inventing catalog effort levels', async () => {
+  const entries = [
+    ['xiaomi/mimo-v2.6-pro', 'MiMo V2.6 Pro'],
+    ['cohere/command-a-plus', 'Command A+'],
+    ['bytedance-seed/seed-2-1-turbo', 'Seed 2.1 Turbo'],
+    ['nvidia/nemotron-3.5-super-vl', 'Nemotron 3.5 Super VL (Paid)'],
+  ];
+  vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+    if (url === 'https://openrouter.ai/api/v1/models') {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            data: [
+              ...catalogFixture.data.filter(
+                (row) => !entries.some(([id]) => id === row.id),
+              ),
+              ...entries.map(([id, name]) => ({
+                ...catalogFixture.data[0],
+                id,
+                name,
+                supported_parameters: [
+                  'reasoning',
+                  'include_reasoning',
+                  'tools',
+                  'tool_choice',
+                  'max_tokens',
+                ],
+                reasoning: { mandatory: false },
+              })),
+            ],
+          }),
+          { status: 200 },
+        ),
+      );
+    }
+    return fetchMock(url, init);
+  });
+  await act(async () => {
+    await refreshCatalog(true);
+  });
+  await renderApp();
+  await click(button('OpenRouter', 'provider'));
+  await changeInput('#api-key', 'test-ui-key');
+  for (const [model, label] of entries) {
+    await click(button(label, 'model'));
+    expectNoEffortControls();
+    const visibility = element<HTMLInputElement>(
+      '#openrouter-include-reasoning',
+    );
+    expect(visibility.disabled).toBe(false);
+    if (!visibility.checked) await click(visibility);
+    fetchMock.mockClear();
+    await sendMessage();
+    expect(requestBody().model).toBe(model);
+    expect(requestBody().reasoning?.effort).toBeUndefined();
+    expect(requestBody().reasoning?.max_tokens).toBeUndefined();
+    expect(requestBody().reasoning?.exclude).toBeUndefined();
+  }
 });

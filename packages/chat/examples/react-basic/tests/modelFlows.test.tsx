@@ -58,6 +58,12 @@ const modelCases = [
       'low',
     ],
     [
+      'Claude Fable 5.2',
+      'anthropic/claude-fable-5.2',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
       'Gemini 3.8 Flash',
       'google/gemini-3.8-flash',
       ['high', 'medium', 'low'],
@@ -114,12 +120,6 @@ const modelCases = [
       'none',
     ],
     [
-      'Mercury 3',
-      'inception/mercury-3',
-      ['none', 'low', 'medium', 'high'],
-      'none',
-    ],
-    [
       'DeepSeek V4.1 Flash 1017 (OpenRouter)',
       'deepseek/deepseek-v4.1-flash-1017',
       ['none', 'low', 'high', 'max'],
@@ -142,6 +142,12 @@ const modelCases = [
       'nex-agi/nex-n2.5-pro',
       ['none', 'medium', 'high'],
       'none',
+    ],
+    [
+      'Gemini 4 Argon (OpenRouter)',
+      'google/gemini-4-argon',
+      ['high', 'medium', 'low'],
+      'low',
     ],
   ].map(([label, model, efforts, initialEffort]) => ({
     provider: 'OpenRouter',
@@ -190,6 +196,15 @@ const modelCases = [
     control: '#openrouter-reasoning-effort',
     efforts: ['none', ...mandatoryEfforts],
     initialEffort: 'none',
+  },
+  {
+    provider: 'Mistral',
+    label: 'GLM-5.3 Flash (Mistral)',
+    model: 'zai-glm-5-3-flash',
+    endpoint: 'https://api.mistral.ai/v1/chat/completions',
+    control: '#mistral-reasoning-effort',
+    efforts: ['low', 'high', 'max'],
+    initialEffort: 'low',
   },
   ...remainingOpenRouterReasoningProfiles.map(
     ({ model, efforts, defaultEffort }) => ({
@@ -420,7 +435,7 @@ describe('React sample model-to-transport flows (mock network only)', () => {
         expect(requests[0].body.reasoning.effort).toBe('high');
       } else {
         expect(requests[0].body.reasoning_effort).toBe('high');
-        if (model.provider === 'Kimi')
+        if (model.provider === 'Kimi' || model.provider === 'Mistral')
           expect(requests[0].body.thinking).toBeUndefined();
         else expect(requests[0].body.thinking.type).toBe('enabled');
       }
@@ -997,7 +1012,13 @@ describe('React sample model-to-transport flows (mock network only)', () => {
             ]
           : [
               { type: 'text', text: 'Describe image' },
-              { type: 'image_url', image_url: { url: image, detail: 'auto' } },
+              {
+                type: 'image_url',
+                image_url:
+                  model.provider === 'Mistral'
+                    ? image
+                    : { url: image, detail: 'auto' },
+              },
             ],
       );
       expect(container.querySelector('.selected-image-preview')).toBeNull();

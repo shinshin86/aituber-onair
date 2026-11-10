@@ -1,8 +1,7 @@
 import {
   DEEPSEEK_SUPPORTED_MODELS,
   ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
-  MODEL_DEEPSEEK_V4_FLASH,
-  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+  MODEL_DEEPSEEK_FLASH,
   isDeepSeekVisionModel,
 } from '../../../constants/deepseek';
 import { ChatService } from '../../ChatService';
@@ -26,7 +25,7 @@ export class DeepSeekChatServiceProvider
       model,
       visionModel: options.visionModel,
       defaultModel: this.getDefaultModel(),
-      defaultVisionModel: MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
+      defaultVisionModel: MODEL_DEEPSEEK_FLASH,
       supportsVisionForModel: (visionModel) =>
         this.supportsVisionForModel(visionModel),
       validate: 'explicit',
@@ -53,7 +52,7 @@ export class DeepSeekChatServiceProvider
   }
 
   getDefaultModel(): string {
-    return MODEL_DEEPSEEK_V4_FLASH;
+    return MODEL_DEEPSEEK_FLASH;
   }
 
   supportsVision(): boolean {

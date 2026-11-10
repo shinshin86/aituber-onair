@@ -9,7 +9,7 @@ async function demonstrateBasicStreaming() {
 
   const service = ChatServiceFactory.createChatService('openai', {
     apiKey: process.env.OPENAI_API_KEY,
-    // Using default model (gpt-4o-mini) for streaming demo
+    // Using default model (gpt-5.6-luna) for streaming demo
     maxTokens: 150,
   });
 

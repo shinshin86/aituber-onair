@@ -1,17 +1,21 @@
 /**
  * Claude-specific example for @aituber-onair/chat
- * Demonstrates Claude 3 models and Anthropic-specific features
+ * Demonstrates current Claude models and Anthropic-specific features
  */
 const {
   ChatServiceFactory,
-  MODEL_CLAUDE_3_HAIKU,
+  MODEL_CLAUDE_4_5_HAIKU,
+  MODEL_CLAUDE_5_5_SONNET,
+  MODEL_CLAUDE_5_5_OPUS,
 } = require('../../dist/cjs/index.js');
 
 async function demonstrateClaudeModels() {
-  console.log('=== Claude 3 Model Family ===\n');
+  console.log('=== Current Claude Models ===\n');
 
   const models = [
-    { name: MODEL_CLAUDE_3_HAIKU, description: 'Fast and efficient' },
+    { name: MODEL_CLAUDE_4_5_HAIKU, description: 'Fast chat option' },
+    { name: MODEL_CLAUDE_5_5_SONNET, description: 'General-purpose option' },
+    { name: MODEL_CLAUDE_5_5_OPUS, description: 'Complex reasoning option' },
   ];
 
   const testPrompt = 'Write a one-sentence summary of quantum computing.';
@@ -50,7 +54,7 @@ async function demonstrateSystemPrompts() {
 
   const service = ChatServiceFactory.createChatService('claude', {
     apiKey: process.env.ANTHROPIC_API_KEY,
-    model: MODEL_CLAUDE_3_HAIKU,
+    model: MODEL_CLAUDE_4_5_HAIKU,
     responseLength: 'medium',
   });
 
@@ -97,7 +101,7 @@ async function demonstrateMultiTurn() {
 
   const service = ChatServiceFactory.createChatService('claude', {
     apiKey: process.env.ANTHROPIC_API_KEY,
-    model: MODEL_CLAUDE_3_HAIKU,
+    model: MODEL_CLAUDE_4_5_HAIKU,
     responseLength: 'short',
   });
 
@@ -142,7 +146,7 @@ async function demonstrateAdvancedFeatures() {
 
   const service = ChatServiceFactory.createChatService('claude', {
     apiKey: process.env.ANTHROPIC_API_KEY,
-    model: MODEL_CLAUDE_3_HAIKU,
+    model: MODEL_CLAUDE_4_5_HAIKU,
     temperature: 0.7,
     maxTokens: 500,
   });
@@ -196,7 +200,7 @@ async function main() {
     console.log('\n=== All Examples Complete ===');
     console.log('\nKey Features of Claude:');
     console.log(
-      '- claude-3-haiku-20240307 provides the most cost-effective Claude experience',
+      '- claude-haiku-4-5-20251001 is the package default for fast chat',
     );
     console.log('- Strong system prompt adherence');
     console.log('- Excellent at complex reasoning');

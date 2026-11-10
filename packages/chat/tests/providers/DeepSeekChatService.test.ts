@@ -86,7 +86,7 @@ describe('DeepSeekChatService', () => {
     await service.chatOnce(messages, false);
 
     const body = postSpy.mock.calls[0][1] as Record<string, unknown>;
-    expect(body.model).toBe(MODEL_DEEPSEEK_V4_FLASH);
+    expect(body.model).toBe(MODEL_DEEPSEEK_FLASH);
     expect(body.thinking).toEqual({ type: 'disabled' });
     expect(body.reasoning_effort).toBeUndefined();
   });

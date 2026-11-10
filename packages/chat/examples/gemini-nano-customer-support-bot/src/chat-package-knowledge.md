@@ -114,8 +114,8 @@ Representative exported OpenAI constants include:
 - `MODEL_GPT_5` = `gpt-5`
 - `MODEL_GPT_5_MINI` = `gpt-5-mini`
 - `MODEL_GPT_5_NANO` = `gpt-5-nano`
-- `MODEL_GPT_4_1` = `gpt-4.1`
-- `MODEL_GPT_4O_MINI` = `gpt-4o-mini`
+- `MODEL_GPT_4_1` = `gpt-4.1` (deprecated compatibility export; use `gpt-6-luna`)
+- `MODEL_GPT_4O_MINI` = `gpt-4o-mini` (deprecated compatibility export; use `gpt-6-luna`)
 `gpt-5.6` is an alias that routes to the Sol tier.
 Terra balances GPT-5.6 intelligence and cost.
 Luna is intended for cost-sensitive, high-volume workloads.
@@ -133,9 +133,9 @@ Representative exported Claude constants include:
 - `MODEL_CLAUDE_4_6_OPUS` = `claude-opus-4-6`
 - `MODEL_CLAUDE_4_6_SONNET` = `claude-sonnet-4-6`
 - `MODEL_CLAUDE_4_5_OPUS` = `claude-opus-4-5-20251101`
-- `MODEL_CLAUDE_4_5_SONNET` = `claude-sonnet-4-5-20250929`
+- `MODEL_CLAUDE_4_5_SONNET` = `claude-sonnet-4-5-20250929` (deprecated compatibility export; use `claude-sonnet-5-5`)
 - `MODEL_CLAUDE_4_5_HAIKU` = `claude-haiku-4-5-20251001`
-- `MODEL_CLAUDE_3_HAIKU` = `claude-3-haiku-20240307`
+- `MODEL_CLAUDE_3_HAIKU` = `claude-3-haiku-20240307` (deprecated compatibility export; use `claude-haiku-4-5-20251001`)
 Create a Claude service with the same factory:
 ```typescript
 const claudeService = ChatServiceFactory.createChatService('claude', {
@@ -149,8 +149,8 @@ Representative exported Gemini constants include:
 - `MODEL_GEMINI_3_1_FLASH_LITE` = `gemini-3.1-flash-lite`
 - `MODEL_GEMINI_3_1_PRO_PREVIEW` = `gemini-3.1-pro-preview`
 - `MODEL_GEMINI_3_FLASH_PREVIEW` = `gemini-3-flash-preview`
-- `MODEL_GEMINI_2_5_PRO` = `gemini-2.5-pro`
-- `MODEL_GEMINI_2_5_FLASH` = `gemini-2.5-flash`
+- `MODEL_GEMINI_2_5_PRO` = `gemini-2.5-pro` (deprecated compatibility export; use `gemini-3.8-flash`)
+- `MODEL_GEMINI_2_5_FLASH` = `gemini-2.5-flash` (deprecated compatibility export; use `gemini-3.5-flash-lite`)
 - `MODEL_GEMINI_2_5_FLASH_LITE` = `gemini-2.5-flash-lite`
 - `MODEL_GEMMA_4_31B_IT` = `gemma-4-31b-it`
 - `MODEL_GEMMA_4_26B_A4B_IT` = `gemma-4-26b-a4b-it`

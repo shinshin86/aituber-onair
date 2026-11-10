@@ -8,8 +8,18 @@ import {
 import { Provider } from '../App';
 import LocalLlmSetup from './LocalLlmSetup';
 import {
+  OPENROUTER_DEPRECATED_MODELS,
+  MODEL_OPENAI_GPT_LUNA_LATEST,
+  MODEL_OPENAI_GPT_TERRA_LATEST,
+  MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
+  MODEL_ZAI_GLM_FLASH_LATEST,
+  MODEL_XIAOMI_MIMO_V2_6_PRO,
+  MODEL_TENCENT_HY4,
+  MODEL_COHERE_COMMAND_A_PLUS,
+  MODEL_BYTEDANCE_SEED_2_1_TURBO,
+  MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
+  MODEL_OPENROUTER_SAKANA_NAMAZU,
   MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
-  MODEL_INCEPTION_MERCURY_3,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
   MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
   MODEL_MINIMAX_M3_1_FLASH,
@@ -59,9 +69,11 @@ import {
   MODEL_OPENAI_GPT_6_ASTRA,
   MODEL_OPENAI_GPT_6_ASTRA_PRO,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
-  MODEL_INCEPTION_MERCURY_2_5,
+  MODEL_GOOGLE_GEMINI_4_ARGON,
+  MODEL_GEMINI_4_ARGON,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
@@ -70,21 +82,21 @@ import {
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+  getMistralSupportedReasoningEfforts,
+  normalizeMistralReasoningEffort,
   MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
   MODEL_CLAUDE_5_1_FABLE,
+  MODEL_CLAUDE_5_2_FABLE,
   MODEL_DEEPSEEK_FLASH,
   MODEL_GPT_5_6_SOL,
   MODEL_GPT_5_6_TERRA,
   MODEL_GPT_5_6_LUNA,
   MODEL_GPT_5_4_MINI,
   MODEL_GPT_5_4_PRO,
-  MODEL_GPT_4_1,
-  MODEL_GPT_4_1_MINI,
-  MODEL_GPT_4O_MINI,
-  MODEL_GPT_4O,
   // Claude models
   MODEL_CLAUDE_4_5_HAIKU,
   MODEL_CLAUDE_4_5_OPUS,
@@ -110,8 +122,6 @@ import {
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
   MODEL_GEMINI_3_PRO_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE,
   MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17,
   MODEL_GEMINI_3_7_FLASH,
@@ -137,7 +147,6 @@ import {
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
   MODEL_MOONSHOTAI_KIMI_K3,
   MODEL_MOONSHOTAI_KIMI_K2_6,
-  MODEL_MOONSHOTAI_KIMI_K2_5,
   MODEL_MOONSHOTAI_KIMI_LATEST,
   MODEL_OPENROUTER_AUTO,
   MODEL_OPENROUTER_AUTO_BETA,
@@ -202,15 +211,12 @@ import {
   // Kimi models
   MODEL_KIMI_K3,
   // DeepSeek models
-  MODEL_DEEPSEEK_V4_FLASH,
-  MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
   MODEL_DEEPSEEK_V4_PRO,
   // Mistral models
   MODEL_MINISTRAL_3B_2512,
   MODEL_MINISTRAL_8B_2512,
   MODEL_MINISTRAL_14B_2512,
   MODEL_MISTRAL_SMALL_LATEST,
-  MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_LARGE_LATEST,
   MODEL_MISTRAL_LARGE_4_0,
   MODEL_MISTRAL_SMALL_2603,
@@ -377,6 +383,18 @@ const providerInfo: Record<Provider, ProviderInfo> = {
 };
 
 export const allModels: ProviderModel[] = [
+  {
+    id: MODEL_GEMINI_4_ARGON,
+    name: 'Gemini 4 Argon',
+    provider: 'gemini',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_4_ARGON,
+    name: 'Gemini 4 Argon (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
   // OpenAI models
   {
     id: MODEL_GPT_5_4,
@@ -421,10 +439,16 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_CLAUDE_5_2_FABLE,
+    name: 'Claude Fable 5.2',
+    provider: 'claude',
+    default: false,
+  },
+  {
     id: MODEL_DEEPSEEK_FLASH,
     name: 'DeepSeek V4.1 Flash 1017',
     provider: 'deepseek',
-    default: false,
+    default: true,
   },
   {
     id: MODEL_OPENAI_GPT_6_1_SOL,
@@ -481,6 +505,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
+    name: 'Claude Fable 5.2',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
     id: MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
     name: 'DeepSeek V4.1 Flash',
     provider: 'openrouter',
@@ -489,12 +519,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GOOGLE_GEMINI_3_8_FLASH,
     name: 'Gemini 3.8 Flash',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
-    id: MODEL_INCEPTION_MERCURY_2_5,
-    name: 'Mercury 2.5',
     provider: 'openrouter',
     default: false,
   },
@@ -597,30 +621,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GPT_5_4_PRO,
     name: 'GPT-5.4 Pro',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4_1,
-    name: 'GPT-4.1',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4_1_MINI,
-    name: 'GPT-4.1 Mini',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4O_MINI,
-    name: 'GPT-4o Mini',
-    provider: 'openai',
-    default: false,
-  },
-  {
-    id: MODEL_GPT_4O,
-    name: 'GPT-4o',
     provider: 'openai',
     default: false,
   },
@@ -758,18 +758,6 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GEMINI_3_FLASH_PREVIEW,
     name: 'Gemini 3 Flash Preview',
-    provider: 'gemini',
-    default: false,
-  },
-  {
-    id: MODEL_GEMINI_2_5_PRO,
-    name: 'Gemini 2.5 Pro',
-    provider: 'gemini',
-    default: false,
-  },
-  {
-    id: MODEL_GEMINI_2_5_FLASH,
-    name: 'Gemini 2.5 Flash',
     provider: 'gemini',
     default: false,
   },
@@ -1081,12 +1069,6 @@ export const allModels: ProviderModel[] = [
     provider: 'openrouter',
     default: false,
   },
-  {
-    id: MODEL_MOONSHOTAI_KIMI_K2_5,
-    name: 'Kimi K2.5 (OpenRouter)',
-    provider: 'openrouter',
-    default: false,
-  },
 
   {
     id: MODEL_OPENROUTER_MISTRAL_LARGE_4_0,
@@ -1242,20 +1224,8 @@ export const allModels: ProviderModel[] = [
 
   // DeepSeek models
   {
-    id: MODEL_DEEPSEEK_V4_FLASH,
-    name: 'DeepSeek V4 Flash',
-    provider: 'deepseek',
-    default: true,
-  },
-  {
     id: MODEL_DEEPSEEK_V4_PRO,
     name: 'DeepSeek V4 Pro',
-    provider: 'deepseek',
-    default: false,
-  },
-  {
-    id: MODEL_DEEPSEEK_V4_FLASH_VISION_EXP,
-    name: 'DeepSeek V4 Flash Vision Exp',
     provider: 'deepseek',
     default: false,
   },
@@ -1286,12 +1256,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_MISTRAL_MEDIUM_3_5,
-    name: 'Mistral Medium 3.5',
-    provider: 'mistral',
-    default: false,
-  },
-  {
     id: MODEL_MISTRAL_LARGE_LATEST,
     name: 'Mistral Large Latest',
     provider: 'mistral',
@@ -1313,6 +1277,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_MISTRAL_ZAI_GLM_5_3,
     name: 'GLM-5.3 (Mistral)',
+    provider: 'mistral',
+    default: false,
+  },
+  {
+    id: MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+    name: 'GLM-5.3 Flash (Mistral)',
     provider: 'mistral',
     default: false,
   },
@@ -1385,12 +1355,6 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
-    id: MODEL_INCEPTION_MERCURY_3,
-    name: 'Mercury 3',
-    provider: 'openrouter',
-    default: false,
-  },
-  {
     id: MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
     name: 'DeepSeek V4.1 Flash 1017 (OpenRouter)',
     provider: 'openrouter',
@@ -1450,6 +1414,66 @@ export const allModels: ProviderModel[] = [
     provider: 'openrouter',
     default: false,
   },
+  {
+    id: MODEL_OPENAI_GPT_LUNA_LATEST,
+    name: 'GPT Luna Latest',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENAI_GPT_TERRA_LATEST,
+    name: 'GPT Terra Latest',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
+    name: 'DeepSeek Flash Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ZAI_GLM_FLASH_LATEST,
+    name: 'GLM Flash Latest (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_XIAOMI_MIMO_V2_6_PRO,
+    name: 'MiMo V2.6 Pro',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_TENCENT_HY4,
+    name: 'Hy4',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_COHERE_COMMAND_A_PLUS,
+    name: 'Command A+',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_BYTEDANCE_SEED_2_1_TURBO,
+    name: 'Seed 2.1 Turbo',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
+    name: 'Nemotron 3.5 Super VL (Paid)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_OPENROUTER_SAKANA_NAMAZU,
+    name: 'Sakana Namazu (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
 ];
 
 export const getProviderForModel = (
@@ -1469,7 +1493,7 @@ export const getDefaultModelForProvider = (provider: Provider): string => {
     (m) => m.provider === provider && m.default,
   );
   const fallbackModel = allModels.find((m) => m.provider === provider);
-  return defaultModel?.id || fallbackModel?.id || MODEL_GPT_4O_MINI;
+  return defaultModel?.id || fallbackModel?.id || MODEL_GPT_5_6_LUNA;
 };
 
 export const getVisionSupportLevel = (
@@ -1744,6 +1768,7 @@ export default function ProviderSelector({
               value={selectedModel}
               onChange={onModelChange}
               curatedModels={baseModelsForProvider}
+              hiddenModelIds={OPENROUTER_DEPRECATED_MODELS}
               disabled={disabled}
             />
           ) : (
@@ -2224,8 +2249,48 @@ export default function ProviderSelector({
             </div>
           )}
 
+          {provider === 'mistral' &&
+            selectedModel === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH && (
+              <div className="config-group">
+                <label htmlFor="mistral-reasoning-effort">
+                  Reasoning Effort
+                </label>
+                <select
+                  id="mistral-reasoning-effort"
+                  value={normalizeMistralReasoningEffort(
+                    selectedModel,
+                    reasoning_effort,
+                  )}
+                  onChange={(e) =>
+                    onReasoningEffortChange?.(
+                      e.target.value as 'low' | 'high' | 'max',
+                    )
+                  }
+                  disabled={disabled}
+                  className="select-input"
+                >
+                  {getMistralSupportedReasoningEfforts(selectedModel).map(
+                    (effort) => (
+                      <option key={effort} value={effort}>
+                        {effort[0].toUpperCase() + effort.slice(1)}
+                      </option>
+                    ),
+                  )}
+                </select>
+                <span className="helper-text">
+                  Thinking is required. Low is the package default for
+                  responsive chat.
+                </span>
+              </div>
+            )}
           {provider === 'openrouter' && (
             <>
+              {selectedModel === MODEL_OPENROUTER_SAKANA_NAMAZU && (
+                <p className="helper-text">
+                  This route does not support output token limits. Request short
+                  replies in your prompt.
+                </p>
+              )}
               {selectedModel === MODEL_OPENROUTER_MISTRAL_LARGE_4_0 && (
                 <p className="helper-text">
                   Mistral Large 4 is a public preview and may change. The sample

@@ -5,6 +5,7 @@ export const ENDPOINT_GEMINI_API = 'https://generativelanguage.googleapis.com';
 export const MODEL_GEMMA_4_31B_IT = 'gemma-4-31b-it';
 export const MODEL_GEMMA_4_26B_A4B_IT = 'gemma-4-26b-a4b-it';
 export const MODEL_GEMINI_3_8_FLASH = 'gemini-3.8-flash';
+export const MODEL_GEMINI_4_ARGON = 'gemini-4-argon';
 /** @deprecated Google routes requests to gemini-3.8-flash. Use MODEL_GEMINI_3_8_FLASH. */
 export const MODEL_GEMINI_3_7_FLASH = 'gemini-3.7-flash';
 export const MODEL_GEMINI_3_6_FLASH = 'gemini-3.6-flash';
@@ -19,7 +20,9 @@ export const MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW =
 /** @deprecated Use MODEL_GEMINI_3_1_PRO_PREVIEW instead. */
 export const MODEL_GEMINI_3_PRO_PREVIEW = 'gemini-3-pro-preview';
 export const MODEL_GEMINI_3_FLASH_PREVIEW = 'gemini-3-flash-preview';
+/** @deprecated Deprecated on November 2, 2026; routes to gemini-3.8-flash from December 1, 2026. Use MODEL_GEMINI_3_8_FLASH. */
 export const MODEL_GEMINI_2_5_PRO = 'gemini-2.5-pro';
+/** @deprecated Deprecated on November 2, 2026; routes to gemini-3.5-flash-lite from December 1, 2026. Use MODEL_GEMINI_3_5_FLASH_LITE. */
 export const MODEL_GEMINI_2_5_FLASH = 'gemini-2.5-flash';
 export const MODEL_GEMINI_2_5_FLASH_LITE = 'gemini-2.5-flash-lite';
 /** @deprecated Use MODEL_GEMINI_3_1_FLASH_LITE instead. */
@@ -27,20 +30,21 @@ export const MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17 =
   'gemini-2.5-flash-lite-preview-06-17';
 
 export const GEMINI_RECOMMENDED_MODELS = [
+  MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH_LITE,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
   MODEL_GEMINI_3_FLASH_PREVIEW,
-  MODEL_GEMINI_2_5_PRO,
-  MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_2_5_FLASH_LITE,
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
 ];
 
 export const GEMINI_DEPRECATED_MODELS = [
+  MODEL_GEMINI_2_5_PRO,
+  MODEL_GEMINI_2_5_FLASH,
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_5_FLASH,
   MODEL_GEMINI_3_1_FLASH_LITE_PREVIEW,
@@ -80,6 +84,7 @@ const GEMINI_FLASH_REASONING_EFFORT_MODELS = [
 ];
 
 const GEMINI_LOW_MINIMUM_REASONING_EFFORT_MODELS = [
+  MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_1_PRO_PREVIEW,
@@ -87,7 +92,7 @@ const GEMINI_LOW_MINIMUM_REASONING_EFFORT_MODELS = [
 ];
 
 /**
- * Return the reasoning effort values supported by a Gemini 3 model.
+ * Return the reasoning effort values supported by Gemini 3 and later models.
  * Gemini 2.5 uses thinkingBudget instead and is intentionally excluded.
  */
 export function getGeminiSupportedReasoningEfforts(

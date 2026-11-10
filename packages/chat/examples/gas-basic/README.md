@@ -126,7 +126,7 @@ setup described above. It creates a **"thank-you + key-points"** reply as a
 ### Recipe Notes
 
 - **Model**: defaults to `gpt-4.1-nano`; use a date-pinned alias for
-  deterministic behavior, or add a fallback (e.g., `gpt-4.1-mini`) if rate
+  deterministic behavior, or add a fallback (e.g., `gpt-6-luna`) if rate
   limits occur.
 - **No draft created**: ensure the trigger is attached to the **Form**
   (installable onFormSubmit) and the script was authorized on first run.

@@ -9,6 +9,7 @@ export const MODEL_MINISTRAL_14B_2512 = 'ministral-14b-2512';
 // Mistral generalist models
 export const MODEL_MISTRAL_SMALL_LATEST = 'mistral-small-latest';
 export const MODEL_MISTRAL_SMALL_2603 = 'mistral-small-2603';
+/** @deprecated Deprecated on October 31, 2026; retires on April 30, 2027. Use MODEL_MISTRAL_LARGE_4_0. */
 export const MODEL_MISTRAL_MEDIUM_3_5 = 'mistral-medium-3-5';
 /** @deprecated Deprecated on May 22, 2026 and retired by Mistral on August 31, 2026. */
 export const MODEL_MISTRAL_MEDIUM_2508 = 'mistral-medium-2508';
@@ -20,32 +21,37 @@ export const MODEL_MISTRAL_LARGE_4_0 = 'mistral-large-4-0';
 
 // Text-only model hosted by Mistral.
 export const MODEL_MISTRAL_ZAI_GLM_5_3 = 'zai-glm-5-3';
+// Image-capable explicit option; reasoning cannot be disabled.
+export const MODEL_MISTRAL_ZAI_GLM_5_3_FLASH = 'zai-glm-5-3-flash';
 
-export type MistralReasoningEffort = 'none' | 'high';
+export type MistralReasoningEffort = 'none' | 'low' | 'high' | 'max';
 
 export const MISTRAL_SUPPORTED_MODELS = [
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MINISTRAL_3B_2512,
   MODEL_MINISTRAL_8B_2512,
   MODEL_MINISTRAL_14B_2512,
-  MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_LARGE_LATEST,
   MODEL_MISTRAL_LARGE_4_0,
   MODEL_MISTRAL_SMALL_2603,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
 ];
 
 export const MISTRAL_DEPRECATED_MODELS = [
+  MODEL_MISTRAL_MEDIUM_3_5,
   MODEL_MISTRAL_MEDIUM_2508,
   MODEL_MISTRAL_LARGE_2512,
 ];
 
 export const MISTRAL_REASONING_EFFORT_SUPPORTED_MODELS = [
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_MEDIUM_3_5,
 ];
 
 export const MISTRAL_VISION_SUPPORTED_MODELS = [
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MINISTRAL_3B_2512,
   MODEL_MINISTRAL_8B_2512,
@@ -64,9 +70,28 @@ export function isMistralReasoningEffortModel(model: string): boolean {
 export function isMistralReasoningEffort(
   effort: string,
 ): effort is MistralReasoningEffort {
-  return effort === 'none' || effort === 'high';
+  return ['none', 'low', 'high', 'max'].includes(effort);
 }
 
 export function isMistralVisionModel(model: string): boolean {
   return MISTRAL_VISION_SUPPORTED_MODELS.includes(model);
+}
+
+/** Model-specific controls; Flash requires thinking while older models allow none. */
+export function getMistralSupportedReasoningEfforts(
+  model: string,
+): readonly MistralReasoningEffort[] {
+  if (model === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH) return ['low', 'high', 'max'];
+  return isMistralReasoningEffortModel(model) ? ['none', 'high'] : [];
+}
+
+/** Use the lowest supported effort for responsive chat. */
+export function normalizeMistralReasoningEffort(
+  model: string,
+  effort?: string,
+): MistralReasoningEffort | undefined {
+  const supported = getMistralSupportedReasoningEfforts(model);
+  return supported.includes(effort as MistralReasoningEffort)
+    ? (effort as MistralReasoningEffort)
+    : supported[0];
 }

@@ -3,8 +3,8 @@
 This directory contains Node.js examples demonstrating how to use the @aituber-onair/chat package.
 
 **Note**: All examples use default models for optimal cost and performance:
-- **OpenAI**: `gpt-4o-mini`
-- **Claude**: `claude-3-haiku-20240307`  
+- **OpenAI**: `gpt-5.6-luna`
+- **Claude**: `claude-haiku-4-5-20251001`
 - **Gemini**: `gemini-3.1-flash-lite`
 
 ## Prerequisites
@@ -34,7 +34,7 @@ node index.js
 ### Provider-Specific Examples
 
 #### OpenAI (`openai-example.js`)
-- Default model (gpt-4o-mini) usage
+- Default model (gpt-5.6-luna) usage
 - o1 series models (reasoning)
 - Response format control
 - Temperature and creativity settings
@@ -43,8 +43,8 @@ node openai-example.js
 ```
 
 #### Claude (`claude-example.js`)
-- Default model (claude-3-haiku-20240307) usage
-- Claude 3 model comparison
+- Default model (claude-haiku-4-5-20251001) usage
+- Current Claude model comparison
 - System prompts
 - Advanced prompt engineering
 ```bash

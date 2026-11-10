@@ -20,6 +20,10 @@ import { getGeminiSupportedReasoningEfforts } from '../constants/gemini';
 import { getKimiSupportedReasoningEfforts } from '../constants/kimi';
 import { getDeepSeekSupportedReasoningEfforts } from '../constants/deepseek';
 import { getOpenRouterSupportedReasoningEfforts } from '../constants/openrouter';
+import {
+  getMistralSupportedReasoningEfforts,
+  MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+} from '../constants/mistral';
 import { getXaiSupportedReasoningEfforts } from '../constants/xai';
 import { getZaiSupportedReasoningEfforts } from '../constants/zai';
 import { getChatBackendProviderCapabilities } from '../backend';
@@ -164,8 +168,11 @@ export class ChatServiceFactory {
                           ? [...getXaiSupportedReasoningEfforts(model)]
                           : providerName === 'zai' && model
                             ? [...getZaiSupportedReasoningEfforts(model)]
-                            : (REASONING_EFFORT_BY_PROVIDER[providerName] ??
-                              []),
+                            : providerName === 'mistral' &&
+                                model === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH
+                              ? [...getMistralSupportedReasoningEfforts(model)]
+                              : (REASONING_EFFORT_BY_PROVIDER[providerName] ??
+                                []),
     };
   }
 

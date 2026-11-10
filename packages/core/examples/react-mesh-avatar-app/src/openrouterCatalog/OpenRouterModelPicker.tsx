@@ -19,6 +19,7 @@ export function OpenRouterModelPicker({
   onChange,
   curatedModels,
   legacyModels = [],
+  hiddenModelIds = [],
   disabled = false,
   locale = 'en',
 }: {
@@ -27,6 +28,8 @@ export function OpenRouterModelPicker({
   curatedModels: readonly CuratedModel[];
   disabled?: boolean;
   legacyModels?: readonly string[];
+  /** Model IDs to hide from the list, such as deprecated models. */
+  hiddenModelIds?: readonly string[];
   /** UI language; samples pass the language of their surrounding UI. */
   locale?: CatalogLocale;
 }) {
@@ -56,6 +59,7 @@ export function OpenRouterModelPicker({
   const blockReason = getOpenRouterRequestBlockReason(value, locale);
   const visible = models.filter(
     (model) =>
+      !hiddenModelIds.includes(model.id) &&
       (group === 'all' || model.priceClass === group) &&
       `${model.id} ${model.name}`.toLowerCase().includes(search.toLowerCase()),
   );

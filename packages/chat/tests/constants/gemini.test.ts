@@ -6,6 +6,7 @@ import {
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_8_FLASH,
+  MODEL_GEMINI_4_ARGON,
   getDefaultGeminiReasoningEffort,
   getGeminiSupportedReasoningEfforts,
   isGeminiReasoningEffortModel,
@@ -26,18 +27,19 @@ describe('Gemini reasoning effort helpers', () => {
     },
   );
 
-  it.each([MODEL_GEMINI_3_8_FLASH, MODEL_GEMINI_3_7_FLASH])(
-    'excludes unsupported minimal thinking for %s',
-    (model) => {
-      expect(getGeminiSupportedReasoningEfforts(model)).toEqual([
-        'low',
-        'medium',
-        'high',
-      ]);
-      expect(getDefaultGeminiReasoningEffort(model)).toBe('low');
-      expect(normalizeGeminiReasoningEffort(model, 'minimal')).toBe('low');
-    },
-  );
+  it.each([
+    MODEL_GEMINI_4_ARGON,
+    MODEL_GEMINI_3_8_FLASH,
+    MODEL_GEMINI_3_7_FLASH,
+  ])('excludes unsupported minimal thinking for %s', (model) => {
+    expect(getGeminiSupportedReasoningEfforts(model)).toEqual([
+      'low',
+      'medium',
+      'high',
+    ]);
+    expect(getDefaultGeminiReasoningEffort(model)).toBe('low');
+    expect(normalizeGeminiReasoningEffort(model, 'minimal')).toBe('low');
+  });
 
   it('uses low as the minimum supported Gemini Pro effort', () => {
     expect(

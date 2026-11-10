@@ -45,7 +45,6 @@ const dataEvent = (data: unknown) => `data: ${JSON.stringify(data)}\n\n`;
 const routerModels = [
   models.MODEL_OPENAI_GPT_6_1_TERRA,
   models.MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5,
-  models.MODEL_INCEPTION_MERCURY_3,
   models.MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH_1017,
   models.MODEL_MOONSHOTAI_KIMI_K3_1_PRO,
   models.MODEL_MINIMAX_M3_1_FLASH,
@@ -56,9 +55,10 @@ const routerModels = [
   models.MODEL_OPENAI_GPT_6_ASTRA,
   models.MODEL_OPENAI_GPT_6_ASTRA_PRO,
   models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
   models.MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   models.MODEL_GOOGLE_GEMINI_3_8_FLASH,
-  models.MODEL_INCEPTION_MERCURY_2_5,
+  models.MODEL_GOOGLE_GEMINI_4_ARGON,
   models.MODEL_QWEN_QWEN_3_8_MAX_0902,
   models.MODEL_META_MUSE_SPARK_1_3,
 ];
@@ -484,82 +484,115 @@ describe('New model endpoint compatibility', () => {
     ).toEqual(['low', 'medium', 'high', 'xhigh']);
   });
 
-  it('keeps Fable 5.1 thinking and tool blocks for continuation through Messages', async () => {
-    const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
-      createSseResponse([
-        dataEvent({
-          type: 'content_block_start',
-          index: 0,
-          content_block: { type: 'thinking', thinking: '' },
-        }),
-        dataEvent({
-          type: 'content_block_delta',
-          index: 0,
-          delta: { type: 'thinking_delta', thinking: 'Reasoning' },
-        }),
-        dataEvent({
-          type: 'content_block_delta',
-          index: 0,
-          delta: { type: 'signature_delta', signature: 'test-signature' },
-        }),
-        dataEvent({
-          type: 'content_block_start',
-          index: 1,
-          content_block: {
-            type: 'tool_use',
-            id: 'call-1',
-            name: 'lookup',
-            input: {},
-          },
-        }),
-        dataEvent({
-          type: 'content_block_delta',
-          index: 1,
-          delta: { type: 'input_json_delta', partial_json: '{}' },
-        }),
-        dataEvent({ type: 'content_block_stop', index: 1 }),
-      ]),
-    );
-    const provider = new ClaudeChatServiceProvider();
-    const service = provider.createChatService({
-      apiKey: 'test-key',
-      model: models.MODEL_CLAUDE_5_1_FABLE,
-      reasoning_effort: 'max',
-      tools,
-    });
-    const result = await service.chatOnce!(messages, true);
-    expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_CLAUDE_API);
-    expect(post.mock.calls[0][1]).toMatchObject({
-      model: models.MODEL_CLAUDE_5_1_FABLE,
-      tool_choice: { type: 'auto' },
-      output_config: { effort: 'max' },
-    });
-    expect(post.mock.calls[0][1].thinking).toBeUndefined();
-    expect(result.assistant_message?.provider_content).toContainEqual({
-      type: 'thinking',
-      thinking: 'Reasoning',
-      signature: 'test-signature',
-    });
-    post.mockResolvedValue(
-      jsonResponse({ content: [{ type: 'text', text: 'Done' }] }),
-    );
-    await service.chatOnce!(
-      [
-        ...messages,
-        result.assistant_message!,
-        { role: 'tool', tool_call_id: 'call-1', content: 'value' },
-      ],
-      false,
-    );
-    expect(post.mock.calls[1][1].messages[1].content).toContainEqual({
-      type: 'thinking',
-      thinking: 'Reasoning',
-      signature: 'test-signature',
-    });
-    expect(provider.supportsVisionForModel(models.MODEL_CLAUDE_5_1_FABLE)).toBe(
-      true,
-    );
-  });
+  it.each([undefined, 'low', 'medium', 'high', 'xhigh', 'max'] as const)(
+    'sends Fable 5.2 effort %s without unsupported Messages parameters',
+    async (effort) => {
+      const post = vi
+        .spyOn(ChatServiceHttpClient, 'post')
+        .mockResolvedValue(
+          jsonResponse({ content: [{ type: 'text', text: 'Done' }] }),
+        );
+      const provider = new ClaudeChatServiceProvider();
+      const service = provider.createChatService({
+        apiKey: 'test-key',
+        model: models.MODEL_CLAUDE_5_2_FABLE,
+        reasoning_effort: effort,
+        tools,
+      });
+      const result = await service.chatOnce!(messages, false);
+      expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_CLAUDE_API);
+      expect(post.mock.calls[0][1]).toMatchObject({
+        model: 'claude-fable-5-2',
+        output_config: { effort: effort ?? 'low' },
+        tool_choice: { type: 'auto' },
+        stream: false,
+      });
+      for (const key of ['thinking', 'temperature', 'top_p', 'top_k']) {
+        expect(post.mock.calls[0][1]).not.toHaveProperty(key);
+      }
+      expect(result.blocks).toContainEqual({ type: 'text', text: 'Done' });
+    },
+  );
+
+  it.each([models.MODEL_CLAUDE_5_1_FABLE, models.MODEL_CLAUDE_5_2_FABLE])(
+    'keeps %s thinking and tool blocks for continuation through Messages',
+    async (model) => {
+      const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
+        createSseResponse([
+          dataEvent({
+            type: 'content_block_start',
+            index: 0,
+            content_block: { type: 'thinking', thinking: '' },
+          }),
+          dataEvent({
+            type: 'content_block_delta',
+            index: 0,
+            delta: { type: 'thinking_delta', thinking: 'Reasoning' },
+          }),
+          dataEvent({
+            type: 'content_block_delta',
+            index: 0,
+            delta: { type: 'signature_delta', signature: 'test-signature' },
+          }),
+          dataEvent({
+            type: 'content_block_start',
+            index: 1,
+            content_block: {
+              type: 'tool_use',
+              id: 'call-1',
+              name: 'lookup',
+              input: {},
+            },
+          }),
+          dataEvent({
+            type: 'content_block_delta',
+            index: 1,
+            delta: { type: 'input_json_delta', partial_json: '{}' },
+          }),
+          dataEvent({ type: 'content_block_stop', index: 1 }),
+        ]),
+      );
+      const provider = new ClaudeChatServiceProvider();
+      const service = provider.createChatService({
+        apiKey: 'test-key',
+        model,
+        reasoning_effort: 'max',
+        tools,
+      });
+      const result = await service.chatOnce!(messages, true);
+      expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_CLAUDE_API);
+      expect(post.mock.calls[0][1]).toMatchObject({
+        model,
+        tool_choice: { type: 'auto' },
+        output_config: { effort: 'max' },
+      });
+      for (const key of ['thinking', 'temperature', 'top_p', 'top_k']) {
+        expect(post.mock.calls[0][1]).not.toHaveProperty(key);
+      }
+      expect(result.assistant_message?.provider_content).toContainEqual({
+        type: 'thinking',
+        thinking: 'Reasoning',
+        signature: 'test-signature',
+      });
+      post.mockResolvedValue(
+        jsonResponse({ content: [{ type: 'text', text: 'Done' }] }),
+      );
+      await service.chatOnce!(
+        [
+          ...messages,
+          result.assistant_message!,
+          { role: 'tool', tool_call_id: 'call-1', content: 'value' },
+        ],
+        false,
+      );
+      expect(post.mock.calls[1][1].messages[1].content).toContainEqual({
+        type: 'thinking',
+        thinking: 'Reasoning',
+        signature: 'test-signature',
+      });
+      expect(provider.supportsVisionForModel(model)).toBe(true);
+    },
+  );
 
   it('sends DeepSeek Flash image input and parses non-thinking tool calls', async () => {
     const post = vi.spyOn(ChatServiceHttpClient, 'post').mockResolvedValue(
@@ -620,8 +653,13 @@ describe('New model endpoint compatibility', () => {
     [models.MODEL_OPENAI_GPT_6_ASTRA_PRO, undefined, 'low'],
     [models.MODEL_OPENAI_GPT_6_ASTRA_PRO, 'high', 'high'],
     [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, undefined, 'low'],
+    [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_2, undefined, 'low'],
     [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, 'high', 'high'],
+    [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_2, 'high', 'high'],
     [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, undefined, 'low'],
+    [models.MODEL_GOOGLE_GEMINI_4_ARGON, undefined, 'low'],
+    [models.MODEL_GOOGLE_GEMINI_4_ARGON, 'none', 'low'],
+    [models.MODEL_GOOGLE_GEMINI_4_ARGON, 'high', 'high'],
     [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, 'high', 'high'],
     [models.MODEL_QWEN_QWEN_3_8_MAX_0902, undefined, 'minimal'],
     [models.MODEL_QWEN_QWEN_3_8_MAX_0902, 'high', 'high'],
@@ -630,6 +668,7 @@ describe('New model endpoint compatibility', () => {
     [models.MODEL_OPENAI_GPT_6_ASTRA, 'none', 'low'],
     [models.MODEL_OPENAI_GPT_6_ASTRA_PRO, 'none', 'low'],
     [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, 'none', 'low'],
+    [models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_2, 'none', 'low'],
     [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, 'none', 'low'],
     [models.MODEL_QWEN_QWEN_3_8_MAX_0902, 'none', 'minimal'],
     [models.MODEL_META_MUSE_SPARK_1_3, 'none', 'minimal'],
@@ -718,7 +757,12 @@ describe('New model endpoint compatibility', () => {
       const allowed = models.getOpenRouterSupportedReasoningEfforts(model);
       if (allowed.length) expect(allowed).toContain(body.reasoning.effort);
       else expect(body.reasoning?.effort).toBeUndefined();
-      if (model === models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1)
+      if (
+        [
+          models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+          models.MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
+        ].includes(model)
+      )
         expect(body.tool_choice).toBeUndefined();
     },
   );

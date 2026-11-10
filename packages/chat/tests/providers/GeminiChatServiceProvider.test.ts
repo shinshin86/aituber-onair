@@ -7,6 +7,7 @@ import {
   MODEL_GEMMA_4_31B_IT,
   MODEL_GEMMA_4_26B_A4B_IT,
   MODEL_GEMINI_3_8_FLASH,
+  MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
@@ -44,14 +45,13 @@ describe('GeminiChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GEMINI_4_ARGON,
         MODEL_GEMINI_3_8_FLASH,
         MODEL_GEMINI_3_6_FLASH,
         MODEL_GEMINI_3_5_FLASH_LITE,
         MODEL_GEMINI_3_1_FLASH_LITE,
         MODEL_GEMINI_3_1_PRO_PREVIEW,
         MODEL_GEMINI_3_FLASH_PREVIEW,
-        MODEL_GEMINI_2_5_PRO,
-        MODEL_GEMINI_2_5_FLASH,
         MODEL_GEMINI_2_5_FLASH_LITE,
         MODEL_GEMMA_4_31B_IT,
         MODEL_GEMMA_4_26B_A4B_IT,
@@ -65,6 +65,8 @@ describe('GeminiChatServiceProvider', () => {
       expect(models).not.toContain(MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17);
       expect(models).not.toContain(MODEL_GEMINI_3_7_FLASH);
       expect(models).not.toContain(MODEL_GEMINI_3_5_FLASH);
+      expect(models).not.toContain(MODEL_GEMINI_2_5_PRO);
+      expect(models).not.toContain(MODEL_GEMINI_2_5_FLASH);
     });
   });
 

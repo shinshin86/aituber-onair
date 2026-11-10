@@ -15,6 +15,7 @@ import {
   MODEL_OPENAI_GPT_6_ASTRA,
   MODEL_OPENAI_GPT_6_ASTRA_PRO,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
@@ -43,11 +44,18 @@ describe('isOpenRouterFreeModel', () => {
 });
 
 describe('OpenRouter reasoning effort helpers', () => {
+  it('exports the Fable 5.2 route with all five documented efforts', () => {
+    expect(MODEL_ANTHROPIC_CLAUDE_FABLE_5_2).toBe('anthropic/claude-fable-5.2');
+    expect(
+      getOpenRouterSupportedReasoningEfforts(MODEL_ANTHROPIC_CLAUDE_FABLE_5_2),
+    ).toEqual(['max', 'xhigh', 'high', 'medium', 'low']);
+  });
   it.each([
     [MODEL_ANTHROPIC_CLAUDE_HAIKU_5_5, 'none'],
     [MODEL_OPENAI_GPT_6_ASTRA, 'low'],
     [MODEL_OPENAI_GPT_6_ASTRA_PRO, 'low'],
     [MODEL_ANTHROPIC_CLAUDE_FABLE_5_1, 'low'],
+    [MODEL_ANTHROPIC_CLAUDE_FABLE_5_2, 'low'],
     [MODEL_GOOGLE_GEMINI_3_8_FLASH, 'low'],
     [MODEL_QWEN_QWEN_3_8_MAX_0902, 'minimal'],
     [MODEL_META_MUSE_SPARK_1_3, 'minimal'],

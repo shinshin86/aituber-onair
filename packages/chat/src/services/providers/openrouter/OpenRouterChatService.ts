@@ -7,6 +7,7 @@ import {
   MODEL_UNBIASED_PARETO_26_10,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
   ENDPOINT_OPENROUTER_API,
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   MODEL_GPT_OSS_20B_FREE,
@@ -24,6 +25,8 @@ import {
   MODEL_OPENAI_GPT_5_MINI,
   MODEL_OPENAI_GPT_5_NANO,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
+  MODEL_GOOGLE_GEMINI_4_ARGON,
+  MODEL_OPENROUTER_SAKANA_NAMAZU,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   getDefaultOpenRouterReasoningEffort,
   normalizeOpenRouterReasoningEffort,
@@ -49,6 +52,7 @@ const isOpenRouterAutoModel = (model: string): boolean =>
 
 const isTokenLimitUnsupportedModel = (model: string): boolean =>
   [
+    MODEL_OPENROUTER_SAKANA_NAMAZU,
     MODEL_GPT_OSS_20B_FREE,
     MODEL_ZAI_GLM_5_3,
     MODEL_ZAI_GLM_5_3_FLASH,
@@ -364,7 +368,9 @@ export class OpenRouterChatService implements ChatService {
     const tokenLimit =
       maxTokens !== undefined
         ? maxTokens
-        : getMaxTokensForResponseLength(this.responseLength);
+        : model === MODEL_GOOGLE_GEMINI_4_ARGON
+          ? Math.max(32_768, getMaxTokensForResponseLength(this.responseLength))
+          : getMaxTokensForResponseLength(this.responseLength);
 
     // Dynamic routers and some reasoning models can spend the whole budget on
     // reasoning tokens before emitting visible content.
@@ -374,7 +380,9 @@ export class OpenRouterChatService implements ChatService {
 
     if (tokenLimit && shouldOmitTokenLimit) {
       console.warn(
-        `OpenRouter: Token limits are disabled for ${model} because this model can return empty content when a token limit is set.`,
+        model.trim() === MODEL_OPENROUTER_SAKANA_NAMAZU
+          ? `OpenRouter: max_tokens is unsupported for ${model} and is omitted, including explicit caller limits.`
+          : `OpenRouter: Token limits are disabled for ${model} because this model can return empty content when a token limit is set.`,
       );
     } else if (tokenLimit) {
       body.max_tokens = tokenLimit;
@@ -443,7 +451,10 @@ export class OpenRouterChatService implements ChatService {
     // Add tools if available
     if (this.tools.length > 0) {
       body.tools = buildOpenAICompatibleTools(this.tools, 'chat-completions');
-      if (model !== MODEL_ANTHROPIC_CLAUDE_FABLE_5_1) {
+      if (
+        model !== MODEL_ANTHROPIC_CLAUDE_FABLE_5_1 &&
+        model !== MODEL_ANTHROPIC_CLAUDE_FABLE_5_2
+      ) {
         body.tool_choice = 'auto';
       }
     }
