@@ -5,6 +5,7 @@ import {
   MODEL_CLAUDE_4_6_OPUS,
   MODEL_CLAUDE_4_7_OPUS,
   MODEL_CLAUDE_5_1_FABLE,
+  MODEL_CLAUDE_5_2_FABLE,
   MODEL_CLAUDE_5_FABLE,
   MODEL_CLAUDE_5_OPUS,
   MODEL_CLAUDE_5_SONNET,
@@ -17,9 +18,13 @@ import {
 } from '../../src/constants';
 
 describe('Claude reasoning effort helpers', () => {
+  it('exports the Fable 5.2 Messages model ID', () => {
+    expect(MODEL_CLAUDE_5_2_FABLE).toBe('claude-fable-5-2');
+  });
   it.each([
     MODEL_CLAUDE_4_7_OPUS,
     MODEL_CLAUDE_5_1_FABLE,
+    MODEL_CLAUDE_5_2_FABLE,
     MODEL_CLAUDE_5_FABLE,
     MODEL_CLAUDE_5_SONNET,
     MODEL_CLAUDE_5_OPUS,

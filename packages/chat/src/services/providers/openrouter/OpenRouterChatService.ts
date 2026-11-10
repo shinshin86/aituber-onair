@@ -7,6 +7,7 @@ import {
   MODEL_UNBIASED_PARETO_26_10,
   MODEL_UNBIASED_PARETO_26_10_PREVIEW,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
   ENDPOINT_OPENROUTER_API,
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   MODEL_GPT_OSS_20B_FREE,
@@ -450,7 +451,10 @@ export class OpenRouterChatService implements ChatService {
     // Add tools if available
     if (this.tools.length > 0) {
       body.tools = buildOpenAICompatibleTools(this.tools, 'chat-completions');
-      if (model !== MODEL_ANTHROPIC_CLAUDE_FABLE_5_1) {
+      if (
+        model !== MODEL_ANTHROPIC_CLAUDE_FABLE_5_1 &&
+        model !== MODEL_ANTHROPIC_CLAUDE_FABLE_5_2
+      ) {
         body.tool_choice = 'auto';
       }
     }

@@ -26,6 +26,7 @@ export const MODEL_XAI_GROK_4_7 = 'x-ai/grok-4.7';
 export const MODEL_OPENAI_GPT_6_ASTRA = 'openai/gpt-6-astra';
 export const MODEL_OPENAI_GPT_6_ASTRA_PRO = 'openai/gpt-6-astra-pro';
 export const MODEL_ANTHROPIC_CLAUDE_FABLE_5_1 = 'anthropic/claude-fable-5.1';
+export const MODEL_ANTHROPIC_CLAUDE_FABLE_5_2 = 'anthropic/claude-fable-5.2';
 export const MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH =
   'deepseek/deepseek-v4.1-flash';
 export const MODEL_GOOGLE_GEMINI_3_8_FLASH = 'google/gemini-3.8-flash';
@@ -490,6 +491,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
     defaultEffort: 'low',
   },
+  [MODEL_ANTHROPIC_CLAUDE_FABLE_5_2]: {
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'low',
+  },
   [MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH]: {
     efforts: ['max', 'high', 'low', 'none'],
     defaultEffort: 'none',
@@ -568,6 +573,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_OPENAI_GPT_6_ASTRA,
   MODEL_OPENAI_GPT_6_ASTRA_PRO,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
   MODEL_GOOGLE_GEMINI_4_ARGON,

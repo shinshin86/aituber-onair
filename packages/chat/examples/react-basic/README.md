@@ -445,9 +445,9 @@ Common extensions:
 ### Additional model options
 
 The model selector includes GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, and GPT-6 Luna (native
-OpenAI), Claude Fable 5.1, and DeepSeek V4.1 Flash 1017 (`deepseek-flash`). Astra
+OpenAI), Claude Fable 5.1/5.2, and DeepSeek V4.1 Flash 1017 (`deepseek-flash`). Astra
 uses Responses and starts at low reasoning; GPT-6 Sol and GPT-6 Luna use Responses
-and default to none for responsive chat. Fable 5.1 always thinks and uses automatic
+and default to none for responsive chat. Fable 5.1/5.2 always thinks and uses automatic
 tool selection. DeepSeek tools require reasoning to be set to none.
 
 GPT-6.1 Terra is an explicit native option with image input, streaming, and
@@ -467,11 +467,11 @@ Model API key and endpoint, not the Coding Plan endpoint. Like other GLM-5.3
 models, it always thinks and defaults to low reasoning.
 
 OpenRouter also offers GPT-6.1 Sol, GPT-6 Sol/Luna, Claude Sonnet/Opus 5.5,
-Grok 4.7, and GLM-5.3 FlashX, alongside Astra/Pro, Fable 5.1, DeepSeek V4.1
+Grok 4.7, and GLM-5.3 FlashX, alongside Astra/Pro, Fable 5.1/5.2, DeepSeek V4.1
 Flash, Gemini 3.8 Flash, Qwen3.8 Max (0902), and Muse Spark 1.3. Reasoning choices follow each model's
 capabilities. Models with configurable reasoning default to their lowest supported
 effort: `none` where available, otherwise `minimal` or `low`. Qwen3.8 Max (0902)
-and Muse Spark 1.3 default to `minimal`; Astra/Pro, Fable 5.1, and Gemini 3.8
+and Muse Spark 1.3 default to `minimal`; Astra/Pro, Fable 5.1/5.2, and Gemini 3.8
 Flash default to `low`. Tools use OpenRouter Chat Completions. Claude 5.5 tool
 selection stays automatic. Provider defaults are
 unchanged.
@@ -582,3 +582,10 @@ Audio/video input and enforced structured output are not enabled here.
 Rendered-DOM tests use fake credentials and mocked SSE to cover None/High,
 streaming, image requests, repeated sends, and HTTP/in-stream error recovery.
 These checks do not prove live inference, account access, or browser CORS.
+
+Fable 5.2 is selectable as `claude-fable-5-2` (Claude) or
+`anthropic/claude-fable-5.2` (OpenRouter), with low reasoning by default.
+Native requests omit thinking and sampling parameters and use automatic tool
+selection; OpenRouter omits `tool_choice`, matching Fable 5.1. Keep returned
+signed thinking and its preceding history unchanged. Both routes accept images;
+Fable 5.1 remains available and provider defaults are unchanged.

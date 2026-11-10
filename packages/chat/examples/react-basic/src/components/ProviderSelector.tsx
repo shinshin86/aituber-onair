@@ -68,6 +68,7 @@ import {
   MODEL_OPENAI_GPT_6_ASTRA,
   MODEL_OPENAI_GPT_6_ASTRA_PRO,
   MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
+  MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
   MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH,
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
   MODEL_GOOGLE_GEMINI_4_ARGON,
@@ -88,6 +89,7 @@ import {
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
   MODEL_CLAUDE_5_1_FABLE,
+  MODEL_CLAUDE_5_2_FABLE,
   MODEL_DEEPSEEK_FLASH,
   MODEL_GPT_5_6_SOL,
   MODEL_GPT_5_6_TERRA,
@@ -436,6 +438,12 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_CLAUDE_5_2_FABLE,
+    name: 'Claude Fable 5.2',
+    provider: 'claude',
+    default: false,
+  },
+  {
     id: MODEL_DEEPSEEK_FLASH,
     name: 'DeepSeek V4.1 Flash 1017',
     provider: 'deepseek',
@@ -492,6 +500,12 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_ANTHROPIC_CLAUDE_FABLE_5_1,
     name: 'Claude Fable 5.1',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_ANTHROPIC_CLAUDE_FABLE_5_2,
+    name: 'Claude Fable 5.2',
     provider: 'openrouter',
     default: false,
   },

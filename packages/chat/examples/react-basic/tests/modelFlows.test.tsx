@@ -58,6 +58,12 @@ const modelCases = [
       'low',
     ],
     [
+      'Claude Fable 5.2',
+      'anthropic/claude-fable-5.2',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
       'Gemini 3.8 Flash',
       'google/gemini-3.8-flash',
       ['high', 'medium', 'low'],
