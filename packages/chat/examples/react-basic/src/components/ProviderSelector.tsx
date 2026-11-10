@@ -8,6 +8,7 @@ import {
 import { Provider } from '../App';
 import LocalLlmSetup from './LocalLlmSetup';
 import {
+  OPENROUTER_DEPRECATED_MODELS,
   MODEL_OPENAI_GPT_LUNA_LATEST,
   MODEL_OPENAI_GPT_TERRA_LATEST,
   MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
@@ -1767,6 +1768,7 @@ export default function ProviderSelector({
               value={selectedModel}
               onChange={onModelChange}
               curatedModels={baseModelsForProvider}
+              hiddenModelIds={OPENROUTER_DEPRECATED_MODELS}
               disabled={disabled}
             />
           ) : (
