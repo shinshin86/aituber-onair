@@ -1,5 +1,23 @@
 # @aituber-onair/chat
 
+## 0.70.0
+
+### Minor Changes
+
+- Added Gemini 4 Carbon (`gemini-4-carbon`, `MODEL_GEMINI_4_CARBON`) as an
+  explicit recommended Gemini option over v1beta, and
+  `google/gemini-4-carbon` (`MODEL_GOOGLE_GEMINI_4_CARBON`) on OpenRouter.
+  Google documents the same request schema as Gemini 4 Argon. Thinking
+  cannot be disabled; `low`, `medium`, and `high` are supported and the
+  package default is `low` (Google default: `medium`). Carbon spends more
+  thinking tokens per turn than Argon, so expect higher latency and token
+  usage; it is not available on the Gemini API free tier.
+- Gemini 4 models (currently Argon and Carbon) share the same output-cap
+  handling: implicit `responseLength` caps are floored at 32,768 tokens
+  because thinking counts toward `maxOutputTokens`, and explicit caps are
+  clamped to 32,768 (non-streaming) and 65,536 (streaming). Provider
+  defaults are unchanged.
+
 ## 0.69.0
 
 ### Minor Changes
