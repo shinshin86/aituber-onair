@@ -26,6 +26,7 @@ import {
   MODEL_OPENAI_GPT_5_NANO,
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
   MODEL_GOOGLE_GEMINI_4_ARGON,
+  MODEL_GOOGLE_GEMINI_4_CARBON,
   MODEL_OPENROUTER_SAKANA_NAMAZU,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   getDefaultOpenRouterReasoningEffort,
@@ -368,7 +369,8 @@ export class OpenRouterChatService implements ChatService {
     const tokenLimit =
       maxTokens !== undefined
         ? maxTokens
-        : model === MODEL_GOOGLE_GEMINI_4_ARGON
+        : model === MODEL_GOOGLE_GEMINI_4_ARGON ||
+            model === MODEL_GOOGLE_GEMINI_4_CARBON
           ? Math.max(32_768, getMaxTokensForResponseLength(this.responseLength))
           : getMaxTokensForResponseLength(this.responseLength);
 

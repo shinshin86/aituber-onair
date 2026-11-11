@@ -171,11 +171,14 @@ built-in model status is `available`.
 - Gemini 4 Argon (`gemini-4-argon`) is an explicit paid, image-capable option;
   the provider default is unchanged. Thinking cannot be disabled. Select
   `low` (package default), `medium`, or `high`; Google defaults to `medium`.
-- Argon output caps include thinking. Even short response-length presets use
+- Gemini 4 Carbon (`gemini-4-carbon`) is an explicit paid option with the
+  same thinking controls and caps as Argon. It spends more thinking tokens per
+  turn, so expect slower replies than Argon.
+- Gemini 4 output caps (Argon and Carbon) include thinking. Even short response-length presets use
   an implicit cap of at least 32,768; request short answers in your prompt.
   Direct Gemini requests are capped at 32,768 non-streaming / 65,536 streaming.
   Automatic continuation and long decode are not implemented.
-- Models: Gemini 4 Argon (explicit paid option), Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
+- Models: Gemini 4 Carbon (explicit paid option), Gemini 4 Argon (explicit paid option), Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models, including Gemini 3.7 Flash and Gemini 3.5 Flash, remain selectable with a deprecated label for explicit compatibility.
 - Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models. The [generateContent reference](https://ai.google.dev/api/generate-content#ThinkingConfig) restricts `thinkingLevel` to Gemini 3 and later; Interactions API settings are not used here.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
@@ -211,7 +214,9 @@ Gemini 4 Argon (`google/gemini-4-argon`) is an explicit paid choice for
 text/image input, tools and streaming. Reasoning is mandatory and starts at
 `low`, with `medium` and `high` also selectable. Its implicit output cap is
 at least 32,768, including thinking. No reasoning token-budget control is
-offered; the default provider model is unchanged.
+offered; the default provider model is unchanged. Gemini 4 Carbon
+(`google/gemini-4-carbon`) is an explicit paid choice with the same
+reasoning controls and output cap.
 
 For catalog-verified effort controls, omitted options send the lightest accepted
 value; heavier efforts remain explicit choices. The following additional

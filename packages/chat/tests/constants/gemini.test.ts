@@ -7,6 +7,7 @@ import {
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_4_ARGON,
+  MODEL_GEMINI_4_CARBON,
   getDefaultGeminiReasoningEffort,
   getGeminiSupportedReasoningEfforts,
   isGeminiReasoningEffortModel,
@@ -28,6 +29,7 @@ describe('Gemini reasoning effort helpers', () => {
   );
 
   it.each([
+    MODEL_GEMINI_4_CARBON,
     MODEL_GEMINI_4_ARGON,
     MODEL_GEMINI_3_8_FLASH,
     MODEL_GEMINI_3_7_FLASH,
