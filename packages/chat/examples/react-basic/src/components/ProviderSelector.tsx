@@ -74,6 +74,8 @@ import {
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GEMINI_4_ARGON,
+  MODEL_GOOGLE_GEMINI_4_CARBON,
+  MODEL_GEMINI_4_CARBON,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
@@ -383,6 +385,18 @@ const providerInfo: Record<Provider, ProviderInfo> = {
 };
 
 export const allModels: ProviderModel[] = [
+  {
+    id: MODEL_GEMINI_4_CARBON,
+    name: 'Gemini 4 Carbon',
+    provider: 'gemini',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_4_CARBON,
+    name: 'Gemini 4 Carbon (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
   {
     id: MODEL_GEMINI_4_ARGON,
     name: 'Gemini 4 Argon',

@@ -11,6 +11,7 @@ import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_4_ARGON,
+  MODEL_GEMINI_4_CARBON,
   GEMINI_VISION_SUPPORTED_MODELS,
   normalizeGeminiReasoningEffort,
   type GeminiReasoningEffort,
@@ -59,6 +60,10 @@ export class GeminiChatService implements ChatService {
 
   private isGemma4Model(model: string): boolean {
     return /^gemma-4-/.test(model);
+  }
+
+  private isGemini4Model(model: string): boolean {
+    return model === MODEL_GEMINI_4_ARGON || model === MODEL_GEMINI_4_CARBON;
   }
 
   private resolveThinkingConfig(model: string):
@@ -350,18 +355,18 @@ export class GeminiChatService implements ChatService {
           functionCallContextMap: this.functionCallContextMap,
         });
 
-    // Argon includes thinking in its output budget. Follow Google's 32K
-    // recommendation for implicit caps; preserve lower explicit caller limits.
+    // Gemini 4 models include thinking in their output budget. Follow Google's
+    // 32K recommendation for implicit caps; preserve lower explicit caller
+    // limits.
     const implicitMaxTokens = getMaxTokensForResponseLength(
       this.responseLength,
     );
-    const maxOutputTokens =
-      model === MODEL_GEMINI_4_ARGON
-        ? Math.min(
-            maxTokens ?? Math.max(32_768, implicitMaxTokens),
-            stream ? 65_536 : 32_768,
-          )
-        : (maxTokens ?? implicitMaxTokens);
+    const maxOutputTokens = this.isGemini4Model(model)
+      ? Math.min(
+          maxTokens ?? Math.max(32_768, implicitMaxTokens),
+          stream ? 65_536 : 32_768,
+        )
+      : (maxTokens ?? implicitMaxTokens);
     const body: any = {
       contents,
       generationConfig: {
@@ -409,7 +414,7 @@ export class GeminiChatService implements ChatService {
       isGemma4 ||
       isGemini25 ||
       isGemini3 ||
-      model === MODEL_GEMINI_4_ARGON;
+      this.isGemini4Model(model);
     const firstVer: 'v1' | 'v1beta' = requiresV1beta ? 'v1beta' : 'v1';
 
     const tryApi = async (): Promise<Response> => {
