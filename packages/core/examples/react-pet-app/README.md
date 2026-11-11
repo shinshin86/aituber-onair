@@ -1,17 +1,25 @@
 # Pet Chat
 
-### Chat 0.69.0
+### Chat 0.70.0
 
-Core 0.26.28 uses published Chat 0.69.0 and Voice 0.30.0. Claude Fable 5.2
+Core 0.26.29 uses published Chat 0.70.0 and Voice 0.30.0.
+Gemini 4 models accept images and require thinking; currently these are Argon
+and Carbon. Carbon (`gemini-4-carbon`, OpenRouter `google/gemini-4-carbon`)
+is an explicit option with low/medium/high effort, defaulting to low
+(Google default: medium). Carbon uses more thinking tokens than Argon, so
+expect higher latency and token usage. It is not available on the Gemini API
+free tier. Provider default models are unchanged.
+
+Claude Fable 5.2
 (`claude-fable-5-2`, OpenRouter `anthropic/claude-fable-5.2`), Gemini 4 Argon
 (`gemini-4-argon`, OpenRouter `google/gemini-4-argon`), and Mistral-hosted
 GLM-5.3 Flash (`zai-glm-5-3-flash`) are explicit image-capable options.
 Fable and Argon support low/medium/high effort; Fable also supports xhigh/max.
 Mistral GLM Flash supports low/high/max. All three start at low for responsive
 chat. Fable keeps automatic tool selection and requires preserving signed
-thinking with its preceding history unchanged. Argon counts thinking against
-its output cap: implicit caps start at 32,768 tokens, and explicit caps are
-clamped to 32,768 (non-streaming) or 65,536 (streaming). Ask for short replies
+thinking with its preceding history unchanged. Gemini 4 counts thinking against
+its output cap: implicit caps start at 32,768 tokens, and explicit caps cannot
+exceed 32,768 (non-streaming) or 65,536 (streaming). Ask for short replies
 in the prompt.
 
 OpenRouter also adds the paid image-capable options `~openai/gpt-luna-latest`,
@@ -35,7 +43,7 @@ Providers whose APIs must not be called directly from this browser example are
 shown disabled: currently Sakana AI and Sarashina. Sarashina API keys must stay
 on a protected backend; use a Node/backend integration.
 
-Core 0.26.28 uses published Chat 0.69.0 and Voice 0.30.0. Select
+Core 0.26.29 uses published Chat 0.70.0 and Voice 0.30.0. Select
 `deepseek-flash` for DeepSeek-V4.1-Flash-1017; this rolling API ID follows
 provider updates. Fish Audio's Model selector includes `drama-3` and
 `drama-3-preview` for one-shot, single-speaker speech. The preview may change;
@@ -332,7 +340,7 @@ Deepgram offers Haley (English) and Ayumi, Hayato, Nozomi, and Sayaka (Japanese)
 
 ### Sarashina and reasoning defaults
 
-This example uses Core 0.26.28 with Chat 0.69.0 and Voice 0.30.0. Sarashina is
+This example uses Core 0.26.29 with Chat 0.70.0 and Voice 0.30.0. Sarashina is
 shown but disabled for new browser selections, like Sakana AI. Saved provider,
 model and key values remain intact. The backend provider offers text-only
 `sarashina3-nano` (default), `sarashina3-mini`, and `sarashina3.2-mini-thinking`;

@@ -13,11 +13,13 @@ describe('Released Chat and Voice model exports', () => {
   it.each([
     'MODEL_CLAUDE_5_2_FABLE',
     'MODEL_GEMINI_4_ARGON',
+    'MODEL_GEMINI_4_CARBON',
     'MODEL_MISTRAL_ZAI_GLM_5_3_FLASH',
     'getMistralSupportedReasoningEfforts',
     'normalizeMistralReasoningEffort',
     'MODEL_ANTHROPIC_CLAUDE_FABLE_5_2',
     'MODEL_GOOGLE_GEMINI_4_ARGON',
+    'MODEL_GOOGLE_GEMINI_4_CARBON',
     'MODEL_OPENAI_GPT_LUNA_LATEST',
     'MODEL_OPENAI_GPT_TERRA_LATEST',
     'MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST',

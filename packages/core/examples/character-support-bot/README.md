@@ -241,7 +241,7 @@ explicitly excluded by this admin example; see its provider exclusion reasons.
 
 ### Sarashina on the protected backend
 
-Core 0.26.28 uses published Chat 0.69.0. This sample enumerates providers on
+Core 0.26.29 uses published Chat 0.70.0. This sample enumerates providers on
 its protected server, so Sarashina is usable in the admin provider list like
 Sakana AI; the browser sends requests only to the sample server. Direct-browser
 examples disable those providers. Choose Sarashina3 Nano for the lightweight

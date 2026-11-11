@@ -63,7 +63,26 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 describe('released model settings', () => {
-  it('propagates Chat 0.69 selectors and model-specific effort choices', async () => {
+  it('propagates released selectors and model-specific effort choices', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              id: 'google/gemini-4-carbon',
+              architecture: {
+                input_modalities: ['text', 'image'],
+                output_modalities: ['text'],
+              },
+              supported_parameters: ['reasoning'],
+              reasoning: { supported_efforts: ['low', 'medium', 'high'] },
+            },
+          ],
+        }),
+      }),
+    );
     await act(async () => root.render(<App />));
     await button('設定');
     const options = () =>
@@ -79,13 +98,41 @@ describe('released model settings', () => {
     expect(options()).toEqual(['deepseek-flash', 'deepseek-v4-pro']);
     await choose('chatProvider', 'gemini');
     expect(options()).toContain('gemini-4-argon');
+    expect(options()).toContain('gemini-4-carbon');
     expect(options()).not.toContain('gemini-2.5-pro');
     expect(options()).not.toContain('gemini-2.5-flash');
-    await choose('model', 'gemini-4-argon');
+    for (const model of ['gemini-4-argon', 'gemini-4-carbon']) {
+      await choose('model', model);
+      const effort = container.querySelector<HTMLSelectElement>(
+        '#geminiReasoningEffort',
+      )!;
+      expect(effort.value).toBe('low');
+      expect([...effort.options].map((option) => option.value)).toEqual([
+        'low',
+        'medium',
+        'high',
+      ]);
+    }
+    await choose('chatProvider', 'openrouter');
+    const carbon = [
+      ...container.querySelectorAll<HTMLButtonElement>('.model-item'),
+    ].find(
+      (entry) =>
+        entry.querySelector('.model-id')?.textContent ===
+        'google/gemini-4-carbon',
+    );
+    expect(carbon).toBeTruthy();
+    await act(async () => carbon!.click());
+    const openRouterEffort = container.querySelector<HTMLSelectElement>(
+      '#openRouterReasoningEffort',
+    )!;
+    expect(openRouterEffort.value).toBe('low');
     expect(
-      container.querySelector<HTMLSelectElement>('#geminiReasoningEffort')!
-        .value,
-    ).toBe('low');
+      [...openRouterEffort.options].map((option) => option.value).sort(),
+    ).toEqual(['high', 'low', 'medium']);
+    await choose('openRouterReasoningEffort', 'high');
+    expect(openRouterEffort.value).toBe('high');
+    await choose('openRouterReasoningEffort', 'low');
     await choose('chatProvider', 'claude');
     await choose('model', 'claude-fable-5-2');
     expect(
