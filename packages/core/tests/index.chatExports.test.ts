@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   MODEL_CLAUDE_5_2_FABLE,
   MODEL_GEMINI_4_ARGON,
+  MODEL_GEMINI_4_CARBON,
+  MODEL_GOOGLE_GEMINI_4_CARBON,
   MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   getMistralSupportedReasoningEfforts,
   normalizeMistralReasoningEffort,
@@ -195,6 +197,29 @@ import {
 } from '../src/index';
 
 describe('Core index chat re-exports', () => {
+  it.each([
+    ['gemini', MODEL_GEMINI_4_CARBON],
+    ['openrouter', MODEL_GOOGLE_GEMINI_4_CARBON],
+  ] as const)(
+    'exposes Carbon capabilities for %s through Core',
+    (provider, model) => {
+      expect(AITuberOnAirCore.getSupportedModels(provider)).toContain(model);
+      expect(
+        AITuberOnAirCore.getVisionSupportLevelForModel(provider, model),
+      ).toBe('supported');
+      const efforts =
+        provider === 'gemini'
+          ? getGeminiSupportedReasoningEfforts(model)
+          : getOpenRouterSupportedReasoningEfforts(model);
+      expect([...efforts].sort()).toEqual(['high', 'low', 'medium']);
+      const defaultEffort =
+        provider === 'gemini'
+          ? getDefaultGeminiReasoningEffort(model)
+          : getDefaultOpenRouterReasoningEffort(model);
+      expect(defaultEffort).toBe('low');
+    },
+  );
+
   it('exposes Chat 0.69 model-specific reasoning through Core', () => {
     const effort: MistralReasoningEffort = 'max';
     expect(MODEL_CLAUDE_5_2_FABLE).toBe('claude-fable-5-2');

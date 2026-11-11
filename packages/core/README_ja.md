@@ -1,16 +1,22 @@
 # AITuber OnAir Core
 
-### Chat 0.69.0
+### Chat 0.70.0
 
-Core 0.26.28は公開済みのChat 0.69.0とVoice 0.30.0を利用します。
+Core 0.26.29は公開済みのChat 0.70.0とVoice 0.30.0を利用します。
+Gemini 4モデルは画像入力に対応し、思考を無効にできません。現在はArgonとCarbonが該当します。
+Carbon（`gemini-4-carbon`、OpenRouterでは`google/gemini-4-carbon`）も明示選択でき、
+推論設定はlow/medium/high、初期値は`low`です（Googleの初期値は`medium`）。
+CarbonはArgonより思考トークンを多く使うため、応答時間とトークン使用量が増える見込みです。
+Gemini APIの無料枠では利用できません。プロバイダーの初期モデルは変わりません。
+
 Claude Fable 5.2（`claude-fable-5-2`、OpenRouterでは`anthropic/claude-fable-5.2`）、
 Gemini 4 Argon（`gemini-4-argon`、OpenRouterでは`google/gemini-4-argon`）、
 Mistral版GLM-5.3 Flash（`zai-glm-5-3-flash`）を明示選択できます。いずれも画像入力に対応し、
 effort初期値は会話の応答時間を抑えるため`low`です。Fableはlow/medium/high/xhigh/max、
 Argonはlow/medium/high、Mistral版GLM Flashはlow/high/maxに対応します。
 Fableではツールを自動選択し、返された署名付きthinkingとその前の履歴を変更せず保持してください。
-Argonは思考トークンも出力上限に含めます。暗黙の上限は32,768以上、明示上限も非ストリーミングで
-32,768以上、ストリーミングで65,536以上に補正されます。短い返答が必要ならプロンプトで指定してください。
+Gemini 4モデルは思考トークンも出力上限に含めます。暗黙の上限は32,768以上に補正されます。
+明示上限は非ストリーミングで32,768以下、ストリーミングで65,536以下に制限されます。短い返答が必要ならプロンプトで指定してください。
 
 OpenRouterには有料・画像対応の`~openai/gpt-luna-latest`、`~openai/gpt-terra-latest`、
 `~deepseek/deepseek-flash-latest`、`~z-ai/glm-flash-latest`、`xiaomi/mimo-v2.6-pro`、
@@ -2157,7 +2163,7 @@ Deepgramの日本語音声は`flux-ayumi-ja`、`flux-hayato-ja`、`flux-nozomi-j
 
 ### Sarashina and reasoning defaults
 
-Core 0.26.28、Chat 0.69.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
+Core 0.26.29、Chat 0.70.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
 ブラウザで新しく選べない状態で表示します。アバター例の保存済みプロバイダー、モデル、キーは維持します。Basic はカタログ設定だけを保存します。
 バックエンドではテキスト専用の `sarashina3-nano`（既定）、`sarashina3-mini`、
 `sarashina3.2-mini-thinking` を利用できます。Guard はモデレーション専用なので含めません。

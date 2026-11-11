@@ -1,5 +1,23 @@
 # @aituber-onair/core
 
+## 0.26.29
+
+### Patch Changes
+
+- Propagate published Chat 0.70.0 and re-export Gemini 4 Carbon for Gemini
+  and OpenRouter as explicit image-capable options. Provider defaults remain
+  unchanged; reasoning supports low/medium/high and defaults to low.
+- Add Carbon to Basic model selectors; other React examples inherit the
+  released model lists and reasoning helpers through Core.
+- Document Gemini 4 output budgets and Carbon latency, token usage, and
+  Gemini API free-tier limitations. Refresh embedded Core example metadata
+  and starter version expectations.
+
+### Known Limitations
+
+- No live inference was performed; provider compatibility follows the
+  published Chat release and mocked transport tests.
+
 ## 0.26.28
 
 ### Patch Changes
