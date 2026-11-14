@@ -32,6 +32,7 @@ export const MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH =
 export const MODEL_GOOGLE_GEMINI_3_8_FLASH = 'google/gemini-3.8-flash';
 export const MODEL_GOOGLE_GEMINI_4_ARGON = 'google/gemini-4-argon';
 export const MODEL_GOOGLE_GEMINI_4_CARBON = 'google/gemini-4-carbon';
+export const MODEL_GOOGLE_GEMINI_4_HYDROGEN = 'google/gemini-4-hydrogen';
 export const MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE =
   'inclusionai/ling-3.0-flash-vl:free';
 /** @deprecated Absent from the OpenRouter catalog as of November 9, 2026. Use MODEL_GOOGLE_GEMMA_4_31B_IT_FREE. */
@@ -74,8 +75,20 @@ export const MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL =
   'nvidia/nemotron-3.5-super-vl';
 export const MODEL_OPENROUTER_SAKANA_NAMAZU = 'sakana/sakana-namazu';
 
+export const MODEL_META_MUSE_EMBER = 'meta/muse-ember';
+export const MODEL_THINKINGMACHINES_INKLING_2_SMALL =
+  'thinkingmachines/inkling-2-small';
+export const MODEL_NEX_AGI_NEX_N2_6 = 'nex-agi/nex-n2.6';
+export const MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE =
+  'inclusionai/ling-3.2-flash:free';
+
 // These catalog entries do not document a reasoning token-budget control.
 export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
+  MODEL_META_MUSE_EMBER,
+  MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+  MODEL_NEX_AGI_NEX_N2_6,
+  MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
+
   MODEL_XIAOMI_MIMO_V2_6_PRO,
   MODEL_COHERE_COMMAND_A_PLUS,
   MODEL_BYTEDANCE_SEED_2_1_TURBO,
@@ -84,6 +97,7 @@ export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
 
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
+  MODEL_GOOGLE_GEMINI_4_HYDROGEN,
   MODEL_UNBIASED_PARETO_26_10,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
@@ -261,6 +275,22 @@ const OPENROUTER_MODEL_REASONING: Record<
     defaultEffort?: OpenRouterReasoningEffort;
   }
 > = {
+  [MODEL_META_MUSE_EMBER]: {
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
+    defaultEffort: 'minimal',
+  },
+  [MODEL_THINKINGMACHINES_INKLING_2_SMALL]: {
+    efforts: ['max', 'high', 'medium', 'low', 'minimal'],
+    defaultEffort: 'minimal',
+  },
+  [MODEL_NEX_AGI_NEX_N2_6]: {
+    efforts: ['high', 'medium'],
+    defaultEffort: 'medium',
+  },
+  [MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE]: {
+    efforts: [],
+    defaultEffort: undefined,
+  },
   [MODEL_OPENAI_GPT_LUNA_LATEST]: {
     efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
     defaultEffort: 'none',
@@ -509,6 +539,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     efforts: ['high', 'medium', 'low'],
     defaultEffort: 'low',
   },
+  [MODEL_GOOGLE_GEMINI_4_HYDROGEN]: {
+    efforts: ['high', 'medium', 'low'],
+    defaultEffort: 'low',
+  },
   [MODEL_GOOGLE_GEMINI_3_8_FLASH]: {
     efforts: ['high', 'medium', 'low'],
     defaultEffort: 'low',
@@ -541,12 +575,18 @@ const OPENROUTER_MODEL_REASONING: Record<
 
 // Free tier models
 export const OPENROUTER_FREE_MODELS = [
+  MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
   MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
 ];
 
 // Vision supported models on OpenRouter
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
+  MODEL_META_MUSE_EMBER,
+  MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+  MODEL_NEX_AGI_NEX_N2_6,
+  MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
+
   MODEL_OPENAI_GPT_LUNA_LATEST,
   MODEL_OPENAI_GPT_TERRA_LATEST,
   MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST,
@@ -584,6 +624,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
+  MODEL_GOOGLE_GEMINI_4_HYDROGEN,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
   MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
   MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,

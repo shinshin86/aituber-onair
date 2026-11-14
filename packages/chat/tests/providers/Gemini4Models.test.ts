@@ -3,8 +3,10 @@ import {
   ChatServiceFactory,
   MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_4_CARBON,
+  MODEL_GEMINI_4_HYDROGEN,
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
+  MODEL_GOOGLE_GEMINI_4_HYDROGEN,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
   type ChatResponseLength,
@@ -18,11 +20,19 @@ const GEMINI_4_MODELS = [
     label: 'Argon',
     model: MODEL_GEMINI_4_ARGON,
     openRouterModel: MODEL_GOOGLE_GEMINI_4_ARGON,
+    nonStreamingCap: 32_768,
   },
   {
     label: 'Carbon',
     model: MODEL_GEMINI_4_CARBON,
     openRouterModel: MODEL_GOOGLE_GEMINI_4_CARBON,
+    nonStreamingCap: 32_768,
+  },
+  {
+    label: 'Hydrogen',
+    model: MODEL_GEMINI_4_HYDROGEN,
+    openRouterModel: MODEL_GOOGLE_GEMINI_4_HYDROGEN,
+    nonStreamingCap: 65_536,
   },
 ] as const;
 const payload = (parts = [{ text: 'Hello from Gemini 4' }] as any[]) => ({
@@ -53,7 +63,7 @@ afterEach(() => {
 
 describe.each(GEMINI_4_MODELS)(
   'Gemini 4 $label',
-  ({ model, openRouterModel }) => {
+  ({ model, openRouterModel, nonStreamingCap }) => {
     const service = (
       responseLength?: ChatResponseLength,
       reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high',
@@ -132,7 +142,8 @@ describe.each(GEMINI_4_MODELS)(
     it.each([
       [false, undefined, 32_768],
       [true, undefined, 32_768],
-      [false, 100_000, 32_768],
+      [false, 100_000, nonStreamingCap],
+      [false, 50_000, Math.min(50_000, nonStreamingCap)],
       [true, 100_000, 65_536],
       [false, 1234, 1234],
       [true, 1234, 1234],

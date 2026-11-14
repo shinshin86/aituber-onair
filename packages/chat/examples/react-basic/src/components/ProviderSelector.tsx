@@ -75,9 +75,15 @@ import {
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
+  MODEL_GOOGLE_GEMINI_4_HYDROGEN,
   MODEL_GEMINI_4_CARBON,
+  MODEL_GEMINI_4_HYDROGEN,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
+  MODEL_META_MUSE_EMBER,
+  MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+  MODEL_NEX_AGI_NEX_N2_6,
+  MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING,
   MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
   MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL_FREE,
@@ -385,6 +391,43 @@ const providerInfo: Record<Provider, ProviderInfo> = {
 };
 
 export const allModels: ProviderModel[] = [
+  {
+    id: MODEL_GEMINI_4_HYDROGEN,
+    name: 'Gemini 4 Hydrogen',
+    provider: 'gemini',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_4_HYDROGEN,
+    name: 'Gemini 4 Hydrogen (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_META_MUSE_EMBER,
+    name: 'Muse Ember (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+    name: 'Inkling 2 Small (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_NEX_AGI_NEX_N2_6,
+    name: 'Nex N2.6 (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
+    name: 'Ling 3.2 Flash Free (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+
   {
     id: MODEL_GEMINI_4_CARBON,
     name: 'Gemini 4 Carbon',

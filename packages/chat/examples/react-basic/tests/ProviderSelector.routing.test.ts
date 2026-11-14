@@ -695,6 +695,7 @@ it('hides retired OpenRouter choices even when a fetched catalog still lists the
 it.each([
   ['Gemini 4 Argon', 'gemini-4-argon'],
   ['Gemini 4 Carbon', 'gemini-4-carbon'],
+  ['Gemini 4 Hydrogen', 'gemini-4-hydrogen'],
 ])(
   'configures direct %s with low thinking and sends a streamed request',
   async (label, modelId) => {

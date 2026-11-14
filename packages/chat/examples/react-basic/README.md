@@ -168,17 +168,22 @@ built-in model status is `available`.
 
 **Gemini**
 
-- Gemini 4 Argon (`gemini-4-argon`) is an explicit paid, image-capable option;
+- Gemini 4 models (currently Argon, Carbon, and Hydrogen) are explicit image-capable options.
+- Gemini 4 Argon (`gemini-4-argon`) is a paid option;
   the provider default is unchanged. Thinking cannot be disabled. Select
   `low` (package default), `medium`, or `high`; Google defaults to `medium`.
 - Gemini 4 Carbon (`gemini-4-carbon`) is an explicit paid option with the
   same thinking controls and caps as Argon. It spends more thinking tokens per
   turn, so expect slower replies than Argon.
-- Gemini 4 output caps (Argon and Carbon) include thinking. Even short response-length presets use
+- Gemini 4 Hydrogen (`gemini-4-hydrogen`) is available on the rate-limited free tier.
+  Google defaults to `high`; the package exposes `low` (default), `medium`, and `high`.
+  The undocumented REST enum for `xhigh` is not exposed.
+- Gemini 4 output caps include thinking. Even short response-length presets use
   an implicit cap of at least 32,768; request short answers in your prompt.
-  Direct Gemini requests are capped at 32,768 non-streaming / 65,536 streaming.
+  Direct Argon/Carbon requests are capped at 32,768 non-streaming / 65,536 streaming;
+  Hydrogen permits 65,536 in both modes. Explicit lower caller limits are preserved.
   Automatic continuation and long decode are not implemented.
-- Models: Gemini 4 Carbon (explicit paid option), Gemini 4 Argon (explicit paid option), Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
+- Models: Gemini 4 Hydrogen (explicit, free tier available), Gemini 4 Carbon (explicit paid option), Gemini 4 Argon (explicit paid option), Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, Gemma 4 26B A4B IT
 - Vision: Supported for all listed Gemini models. Deprecated lifecycle models, including Gemini 3.7 Flash and Gemini 3.5 Flash, remain selectable with a deprecated label for explicit compatibility.
 - Reasoning Effort: Gemini 3 models default to their lowest supported effort. Minimal-capable Flash/Flash-Lite models expose Minimal/Low/Medium/High; models without Minimal expose Low/Medium/High. The latter currently includes Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro. Gemini 2.5 uses `thinkingBudget`, so this control is disabled for 2.5 models. The [generateContent reference](https://ai.google.dev/api/generate-content#ThinkingConfig) restricts `thinkingLevel` to Gemini 3 and later; Interactions API settings are not used here.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
@@ -216,7 +221,9 @@ text/image input, tools and streaming. Reasoning is mandatory and starts at
 at least 32,768, including thinking. No reasoning token-budget control is
 offered; the default provider model is unchanged. Gemini 4 Carbon
 (`google/gemini-4-carbon`) is an explicit paid choice with the same
-reasoning controls and output cap.
+reasoning controls and output cap. Hydrogen (`google/gemini-4-hydrogen`) uses
+the same controls and implicit 32,768 floor; it is paid on OpenRouter.
+See the [Hydrogen migration guide](https://aistudio.google.com/docs/whats-new-gemini-4-hydrogen).
 
 For catalog-verified effort controls, omitted options send the lightest accepted
 value; heavier efforts remain explicit choices. The following additional
@@ -241,6 +248,18 @@ in effect. [Model catalog](https://openrouter.ai/api/v1/models),
 
 Additional explicit options (provider default unchanged):
 
+- `meta/muse-ember`: Muse Ember; image input, tools, streaming; mandatory max/xhigh/high/medium/low/minimal reasoning (default `minimal`).
+- `thinkingmachines/inkling-2-small`: Inkling 2 Small; image input, tools, streaming; mandatory max/high/medium/low/minimal reasoning (default `minimal`).
+- `nex-agi/nex-n2.6`: Nex N2.6; image input, tools, streaming; mandatory high/medium reasoning (default `medium`, unlike optional Nex N2.5 reasoning).
+- `inclusionai/ling-3.2-flash:free`: Ling 3.2 Flash Free; image input, tools, streaming; no effort selector or reasoning token budget. Only the exact `:free` ID is listed.
+
+These four routes expose no reasoning token budget. Ling retains the provider's
+reasoning defaults; `includeReasoning` remains available. This package supports
+text and image inputs only. Official API examples: [Muse Ember](https://openrouter.ai/meta/muse-ember?view=api),
+[Inkling 2 Small](https://openrouter.ai/thinkingmachines/inkling-2-small?view=api),
+[Nex N2.6](https://openrouter.ai/nex-agi/nex-n2.6?view=api),
+[Ling 3.2 Flash Free](https://openrouter.ai/inclusionai/ling-3.2-flash:free?view=api).
+
 - `openai/gpt-6.1-terra`: GPT-6.1 Terra; image input, tools and streaming; none/low/medium/high/xhigh/max reasoning (package default `none`).
 
 - `anthropic/claude-haiku-5.5`: Claude Haiku 5.5 (OpenRouter); image input; none, low, medium, high, xhigh, max (default `none`).
@@ -258,7 +277,7 @@ These additions support tools and streaming. MiniMax reasoning cannot be disable
 - Reasoning Effort: The intersection of catalog-advertised and SDK-supported values. Controls stay disabled when the catalog does not publish the required metadata.
 - Best for: Flexible model routing and unified API usage
 - Auto Beta: Selects a model per request and charges the selected model's rate
-- Default: Gemma 4 31B IT (Free) (`google/gemma-4-31b-it:free`). Nemotron 3.5 Super VL (Free) is also listed. IDs removed from the OpenRouter catalog, such as GPT OSS 20B (Free), Apodex 1.1 Mini (Free), Pareto 26.10 Preview, and KAT-Coder V2.5, are no longer in the curated fallback list.
+- Default: Gemma 4 31B IT (Free) (`google/gemma-4-31b-it:free`). Nemotron 3.5 Super VL (Free) and Ling 3.2 Flash Free are also listed. IDs removed from the OpenRouter catalog, such as GPT OSS 20B (Free), Apodex 1.1 Mini (Free), Pareto 26.10 Preview, and KAT-Coder V2.5, are no longer in the curated fallback list.
 - Fusion Cost: `openrouter/fusion` bills the combined underlying model calls and any enabled web search/fetch usage
 - Catalog discovery: Automatic anonymous GET, with search and published-price filters; refreshing never generates a completion
 - Persistence: A separate versioned catalog cache retains last-good metadata. Legacy dynamic-model IDs remain unverified fallback choices. API keys are not stored in the catalog cache.

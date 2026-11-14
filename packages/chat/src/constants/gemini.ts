@@ -7,6 +7,7 @@ export const MODEL_GEMMA_4_26B_A4B_IT = 'gemma-4-26b-a4b-it';
 export const MODEL_GEMINI_3_8_FLASH = 'gemini-3.8-flash';
 export const MODEL_GEMINI_4_ARGON = 'gemini-4-argon';
 export const MODEL_GEMINI_4_CARBON = 'gemini-4-carbon';
+export const MODEL_GEMINI_4_HYDROGEN = 'gemini-4-hydrogen';
 /** @deprecated Google routes requests to gemini-3.8-flash. Use MODEL_GEMINI_3_8_FLASH. */
 export const MODEL_GEMINI_3_7_FLASH = 'gemini-3.7-flash';
 export const MODEL_GEMINI_3_6_FLASH = 'gemini-3.6-flash';
@@ -32,6 +33,7 @@ export const MODEL_GEMINI_2_5_FLASH_LITE_PREVIEW_06_17 =
 
 export const GEMINI_RECOMMENDED_MODELS = [
   MODEL_GEMINI_4_CARBON,
+  MODEL_GEMINI_4_HYDROGEN,
   MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_6_FLASH,
@@ -87,6 +89,7 @@ const GEMINI_FLASH_REASONING_EFFORT_MODELS = [
 
 const GEMINI_LOW_MINIMUM_REASONING_EFFORT_MODELS = [
   MODEL_GEMINI_4_CARBON,
+  MODEL_GEMINI_4_HYDROGEN,
   MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_3_8_FLASH,
   MODEL_GEMINI_3_7_FLASH,

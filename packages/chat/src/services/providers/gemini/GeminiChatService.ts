@@ -12,6 +12,7 @@ import {
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_4_CARBON,
+  MODEL_GEMINI_4_HYDROGEN,
   GEMINI_VISION_SUPPORTED_MODELS,
   normalizeGeminiReasoningEffort,
   type GeminiReasoningEffort,
@@ -63,7 +64,11 @@ export class GeminiChatService implements ChatService {
   }
 
   private isGemini4Model(model: string): boolean {
-    return model === MODEL_GEMINI_4_ARGON || model === MODEL_GEMINI_4_CARBON;
+    return (
+      model === MODEL_GEMINI_4_ARGON ||
+      model === MODEL_GEMINI_4_CARBON ||
+      model === MODEL_GEMINI_4_HYDROGEN
+    );
   }
 
   private resolveThinkingConfig(model: string):
@@ -364,7 +369,7 @@ export class GeminiChatService implements ChatService {
     const maxOutputTokens = this.isGemini4Model(model)
       ? Math.min(
           maxTokens ?? Math.max(32_768, implicitMaxTokens),
-          stream ? 65_536 : 32_768,
+          stream || model === MODEL_GEMINI_4_HYDROGEN ? 65_536 : 32_768,
         )
       : (maxTokens ?? implicitMaxTokens);
     const body: any = {
