@@ -1,13 +1,34 @@
 # VRM Chat
 
-### Chat 0.70.0
+### Chat 0.71.0
 
-Core 0.26.29は公開済みのChat 0.70.0とVoice 0.30.0を利用します。
-Gemini 4モデルは画像入力に対応し、思考を無効にできません。現在はArgonとCarbonが該当します。
-Carbon（`gemini-4-carbon`、OpenRouterでは`google/gemini-4-carbon`）も明示選択でき、
-推論設定はlow/medium/high、初期値は`low`です（Googleの初期値は`medium`）。
-CarbonはArgonより思考トークンを多く使うため、応答時間とトークン使用量が増える見込みです。
-Gemini APIの無料枠では利用できません。プロバイダーの初期モデルは変わりません。
+Core 0.26.30は公開済みのChat 0.71.0とVoice 0.30.0を利用します。
+Gemini 4モデル（現在はArgon・Carbon・Hydrogen）は画像入力に対応する明示選択肢で、思考は必須です。
+`low`（パッケージの初期値）・`medium`・`high`を選べます。プロバイダーの初期モデルは変わりません。
+Hydrogen（`gemini-4-hydrogen`、OpenRouterでは`google/gemini-4-hydrogen`）は、
+直接Gemini APIのレート制限付き無料枠で利用できます。OpenRouter版は有料です。
+Google側の初期値は`high`です。追加の`xhigh`はGenerateContent RESTの列挙値の表記が公開されていないため選択肢に含めていません。
+Argon・Carbonは有料枠が必要で、Google側の初期値は`medium`です。
+CarbonはArgonより思考トークンを多く使い、応答時間とトークン使用量が増えます。
+
+思考も出力上限に含まれます。Gemini 4の暗黙の上限はOpenRouter版も含め最低32,768トークンです。
+直接Gemini APIで明示した上限はモデル別に制限されます。
+Argon・Carbonは非ストリーミング32,768／ストリーミング65,536、Hydrogenは両方式とも65,536です。
+それより小さな明示上限は保持します。短い返答はプロンプトでも指定してください。
+long decodeと自動継続生成は実装していません。
+
+追加のOpenRouterモデルはテキスト・画像入力、ツール、ストリーミングに対応します。既定モデルは変更していません。
+
+| モデルID | 推論レベル（パッケージ初期値） |
+| --- | --- |
+| `meta/muse-ember` | max, xhigh, high, medium, low, minimal（`minimal`） |
+| `thinkingmachines/inkling-2-small` | max, high, medium, low, minimal（`minimal`） |
+| `nex-agi/nex-n2.6` | high, medium（`medium`）。思考は無効化できません |
+| `inclusionai/ling-3.2-flash:free` | 推論レベルの選択なし。プロバイダー既定を使用 |
+
+これらのモデルに推論トークン予算は設定できません。Lingは`:free`付きの正確なIDを使い、
+`includeReasoning`による表示設定は維持します。音声・動画・ファイル入力は追加していません。
+詳しくは[Chatのドキュメント](../../../chat/README.ja.md)を参照してください。
 
 Claude Fable 5.2（`claude-fable-5-2`、OpenRouterでは`anthropic/claude-fable-5.2`）、
 Gemini 4 Argon（`gemini-4-argon`、OpenRouterでは`google/gemini-4-argon`）、
@@ -15,8 +36,7 @@ Mistral版GLM-5.3 Flash（`zai-glm-5-3-flash`）を明示選択できます。�
 effort初期値は会話の応答時間を抑えるため`low`です。Fableはlow/medium/high/xhigh/max、
 Argonはlow/medium/high、Mistral版GLM Flashはlow/high/maxに対応します。
 Fableではツールを自動選択し、返された署名付きthinkingとその前の履歴を変更せず保持してください。
-Gemini 4モデルは思考トークンも出力上限に含めます。暗黙の上限は32,768以上に補正されます。
-明示上限は非ストリーミングで32,768以下、ストリーミングで65,536以下に制限されます。短い返答が必要ならプロンプトで指定してください。
+Gemini 4の出力上限は、上記のモデル別の制限に従います。
 
 OpenRouterには有料・画像対応の`~openai/gpt-luna-latest`、`~openai/gpt-terra-latest`、
 `~deepseek/deepseek-flash-latest`、`~z-ai/glm-flash-latest`、`xiaomi/mimo-v2.6-pro`、
@@ -36,7 +56,7 @@ Mistral Medium 3.5、OpenRouter Mercury 2.5/3・Kimi K2.5・GPT Latestは新規�
 現在は Sakana AI と Sarashina が該当します。Sarashina の API キーは保護された
 バックエンドで管理し、Node.js などのサーバー環境から利用してください。
 
-Core 0.26.29は、公開済みのChat 0.70.0とVoice 0.30.0を利用します。
+Core 0.26.30は、公開済みのChat 0.71.0とVoice 0.30.0を利用します。
 DeepSeek-V4.1-Flash-1017には`deepseek-flash`を指定してください。
 同じIDのまま、提供元の更新によって利用するモデルが変わる場合があります。
 Fish AudioのModel欄では、単一話者・一括生成向けの`drama-3`と
@@ -376,7 +396,7 @@ Fish Audio S1 は 2026-12-31 に提供終了、S2.1 Pro Free の無料期間は
 
 ### Sarashina and reasoning defaults
 
-Core 0.26.29、Chat 0.70.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
+Core 0.26.30、Chat 0.71.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
 ブラウザで新しく選べない状態で表示します。保存済みのプロバイダー、モデル、キーは維持します。
 バックエンドではテキスト専用の `sarashina3-nano`（既定）、`sarashina3-mini`、
 `sarashina3.2-mini-thinking` を利用できます。Guard はモデレーション専用なので含めません。

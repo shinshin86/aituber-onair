@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as core from '../src';
 import * as chat from '@aituber-onair/chat';
 import * as voice from '@aituber-onair/voice';
@@ -14,12 +14,18 @@ describe('Released Chat and Voice model exports', () => {
     'MODEL_CLAUDE_5_2_FABLE',
     'MODEL_GEMINI_4_ARGON',
     'MODEL_GEMINI_4_CARBON',
+    'MODEL_GEMINI_4_HYDROGEN',
     'MODEL_MISTRAL_ZAI_GLM_5_3_FLASH',
     'getMistralSupportedReasoningEfforts',
     'normalizeMistralReasoningEffort',
     'MODEL_ANTHROPIC_CLAUDE_FABLE_5_2',
     'MODEL_GOOGLE_GEMINI_4_ARGON',
     'MODEL_GOOGLE_GEMINI_4_CARBON',
+    'MODEL_GOOGLE_GEMINI_4_HYDROGEN',
+    'MODEL_META_MUSE_EMBER',
+    'MODEL_THINKINGMACHINES_INKLING_2_SMALL',
+    'MODEL_NEX_AGI_NEX_N2_6',
+    'MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE',
     'MODEL_OPENAI_GPT_LUNA_LATEST',
     'MODEL_OPENAI_GPT_TERRA_LATEST',
     'MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST',
@@ -156,4 +162,59 @@ describe('Published provider defaults through Core', () => {
       'nvidia/nemotron-3.5-super-vl:free',
     ]);
   });
+});
+
+describe('Published Gemini 4 transport through Core', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([
+    [core.MODEL_GEMINI_4_ARGON, false, 32_768],
+    [core.MODEL_GEMINI_4_CARBON, false, 32_768],
+    [core.MODEL_GEMINI_4_HYDROGEN, false, 65_536],
+    [core.MODEL_GEMINI_4_ARGON, true, 65_536],
+    [core.MODEL_GEMINI_4_CARBON, true, 65_536],
+    [core.MODEL_GEMINI_4_HYDROGEN, true, 65_536],
+  ] as const)(
+    'preserves %s per-model cap (stream=%s)',
+    async (model, stream, cap) => {
+      const payload = {
+        candidates: [
+          {
+            content: { role: 'model', parts: [{ text: 'Hello' }] },
+            finishReason: 'STOP',
+          },
+        ],
+      };
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            stream
+              ? `data: ${JSON.stringify(payload)}\n\n`
+              : JSON.stringify(payload),
+          ),
+        );
+      vi.stubGlobal('fetch', fetchMock);
+      const service = core.ChatServiceFactory.createChatService('gemini', {
+        apiKey: 'mock-key',
+        model,
+        responseLength: 'short',
+      });
+      const result = await service.chatOnce!(
+        [{ role: 'user', content: 'Hello' }],
+        stream,
+        undefined,
+        100_000,
+      );
+      const [url, request] = fetchMock.mock.calls[0];
+      expect(url).toContain(
+        `/v1beta/models/${model}:${stream ? 'streamGenerateContent' : 'generateContent'}`,
+      );
+      expect(JSON.parse(request.body).generationConfig).toEqual({
+        maxOutputTokens: cap,
+        thinkingConfig: { includeThoughts: false, thinkingLevel: 'LOW' },
+      });
+      expect(result.blocks).toEqual([{ type: 'text', text: 'Hello' }]);
+    },
+  );
 });

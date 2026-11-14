@@ -2,6 +2,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
+import { refreshCatalog } from '../src/openrouterCatalog';
 
 vi.mock('@aituber-onair/voice', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
@@ -63,6 +64,70 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 describe('released model settings', () => {
+  it.each([
+    ['google/gemini-4-hydrogen', ['low', 'medium', 'high'], 'low'],
+    [
+      'meta/muse-ember',
+      ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    [
+      'thinkingmachines/inkling-2-small',
+      ['max', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    ['nex-agi/nex-n2.6', ['high', 'medium'], 'medium'],
+    ['inclusionai/ling-3.2-flash:free', [], undefined],
+  ] as const)(
+    'propagates %s and only its supported reasoning controls',
+    async (model, efforts, defaultEffort) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                id: model,
+                architecture: {
+                  input_modalities: ['text', 'image'],
+                  output_modalities: ['text'],
+                },
+                supported_parameters: ['reasoning', 'tools'],
+                reasoning: { supported_efforts: [...efforts] },
+              },
+            ],
+          }),
+        }),
+      );
+      await refreshCatalog(true);
+      await act(async () => root.render(<App />));
+      await button('設定');
+      await choose('chatProvider', 'openrouter');
+      const modelButton = [
+        ...container.querySelectorAll<HTMLButtonElement>('.model-item'),
+      ].find(
+        (entry) => entry.querySelector('.model-id')?.textContent === model,
+      );
+      expect(modelButton).toBeTruthy();
+      await act(async () => modelButton!.click());
+      const effort = container.querySelector<HTMLSelectElement>(
+        '#openRouterReasoningEffort',
+      );
+      if (!efforts.length) {
+        expect(effort).toBeNull();
+      } else {
+        expect(effort).toBeTruthy();
+        expect(
+          [...effort!.options].map((option) => option.value).sort(),
+        ).toEqual([...efforts].sort());
+        expect(effort!.value).toBe(defaultEffort);
+        await choose('openRouterReasoningEffort', 'high');
+        expect(effort!.value).toBe('high');
+      }
+    },
+  );
+
   it('propagates released selectors and model-specific effort choices', async () => {
     vi.stubGlobal(
       'fetch',
@@ -83,6 +148,7 @@ describe('released model settings', () => {
         }),
       }),
     );
+    await refreshCatalog(true);
     await act(async () => root.render(<App />));
     await button('設定');
     const options = () =>
@@ -99,9 +165,14 @@ describe('released model settings', () => {
     await choose('chatProvider', 'gemini');
     expect(options()).toContain('gemini-4-argon');
     expect(options()).toContain('gemini-4-carbon');
+    expect(options()).toContain('gemini-4-hydrogen');
     expect(options()).not.toContain('gemini-2.5-pro');
     expect(options()).not.toContain('gemini-2.5-flash');
-    for (const model of ['gemini-4-argon', 'gemini-4-carbon']) {
+    for (const model of [
+      'gemini-4-argon',
+      'gemini-4-carbon',
+      'gemini-4-hydrogen',
+    ]) {
       await choose('model', model);
       const effort = container.querySelector<HTMLSelectElement>(
         '#geminiReasoningEffort',
@@ -156,6 +227,7 @@ describe('released model settings', () => {
   });
 
   it('shows Sarashina disabled and labels Claude Opus 5.5 effort correctly', async () => {
+    await refreshCatalog(true);
     await act(async () => root.render(<App />));
     await button('設定');
     const provider =
@@ -203,6 +275,7 @@ describe('released model settings', () => {
         openRouterDynamicFreeModels: { models: ['sample/saved-model'] },
       }),
     );
+    await refreshCatalog(true);
     await act(async () => root.render(<App />));
     await button('設定');
     const model = container.querySelector<HTMLSelectElement>('#model')!;
@@ -215,6 +288,7 @@ describe('released model settings', () => {
     expect(model.value).toBe('gpt-5.6-luna');
   });
   it('renders the new speech guidance in Japanese throughout the basic modal', async () => {
+    await refreshCatalog(true);
     await act(async () => root.render(<App />));
     await button('設定');
     await button('音声設定');
