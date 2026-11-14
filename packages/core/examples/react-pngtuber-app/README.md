@@ -1,14 +1,38 @@
 # PNGTuber Chat
 
-### Chat 0.70.0
+### Chat 0.71.0
 
-Core 0.26.29 uses published Chat 0.70.0 and Voice 0.30.0.
-Gemini 4 models accept images and require thinking; currently these are Argon
-and Carbon. Carbon (`gemini-4-carbon`, OpenRouter `google/gemini-4-carbon`)
-is an explicit option with low/medium/high effort, defaulting to low
-(Google default: medium). Carbon uses more thinking tokens than Argon, so
-expect higher latency and token usage. It is not available on the Gemini API
-free tier. Provider default models are unchanged.
+Core 0.26.30 uses published Chat 0.71.0 and Voice 0.30.0.
+Gemini 4 models (currently Argon, Carbon, and Hydrogen) are explicit,
+image-capable choices with mandatory thinking. Select `low` (package default),
+`medium`, or `high`; provider default models are unchanged.
+Hydrogen (`gemini-4-hydrogen`, OpenRouter `google/gemini-4-hydrogen`) is
+available on the rate-limited direct Gemini API free tier; its OpenRouter route
+is paid. Google defaults Hydrogen to `high`. Its additional `xhigh` level is
+not exposed because the GenerateContent REST enum spelling is undocumented.
+Argon and Carbon require the paid tier and default to `medium` upstream.
+Carbon uses more thinking tokens than Argon, with higher latency and token use.
+
+Thinking counts toward output limits. All Gemini 4 models keep an implicit
+32,768-token floor, including on OpenRouter. For direct Gemini calls, explicit
+limits are capped per model: Argon/Carbon at 32,768 non-streaming / 65,536
+streaming; Hydrogen at 65,536 in both modes. Smaller explicit limits are
+preserved. Request short replies in the prompt. Long decode and automatic
+continuation are not implemented.
+
+New OpenRouter text/image routes support tools and streaming without changing
+the provider default:
+
+| Model ID | Reasoning efforts (package default) |
+| --- | --- |
+| `meta/muse-ember` | max, xhigh, high, medium, low, minimal (`minimal`) |
+| `thinkingmachines/inkling-2-small` | max, high, medium, low, minimal (`minimal`) |
+| `nex-agi/nex-n2.6` | high, medium (`medium`); thinking cannot be disabled |
+| `inclusionai/ling-3.2-flash:free` | No effort selector; provider default |
+
+These routes expose no reasoning token-budget control. Ling uses its exact
+`:free` ID and retains `includeReasoning` display control. Audio, video, and
+file inputs are not added. See the [Chat documentation](../../../chat/README.md).
 
 Claude Fable 5.2
 (`claude-fable-5-2`, OpenRouter `anthropic/claude-fable-5.2`), Gemini 4 Argon
@@ -17,10 +41,7 @@ GLM-5.3 Flash (`zai-glm-5-3-flash`) are explicit image-capable options.
 Fable and Argon support low/medium/high effort; Fable also supports xhigh/max.
 Mistral GLM Flash supports low/high/max. All three start at low for responsive
 chat. Fable keeps automatic tool selection and requires preserving signed
-thinking with its preceding history unchanged. Gemini 4 counts thinking against
-its output cap: implicit caps start at 32,768 tokens, and explicit caps cannot
-exceed 32,768 (non-streaming) or 65,536 (streaming). Ask for short replies
-in the prompt.
+thinking with its preceding history unchanged. Gemini 4 output budgets follow the per-model limits above.
 
 OpenRouter also adds the paid image-capable options `~openai/gpt-luna-latest`,
 `~openai/gpt-terra-latest`, `~deepseek/deepseek-flash-latest`,
@@ -43,7 +64,7 @@ Providers whose APIs must not be called directly from this browser example are
 shown disabled: currently Sakana AI and Sarashina. Sarashina API keys must stay
 on a protected backend; use a Node/backend integration.
 
-Core 0.26.29 uses published Chat 0.70.0 and Voice 0.30.0. Select
+Core 0.26.30 uses published Chat 0.71.0 and Voice 0.30.0. Select
 `deepseek-flash` for DeepSeek-V4.1-Flash-1017; this rolling API ID follows
 provider updates. Fish Audio's Model selector includes `drama-3` and
 `drama-3-preview` for one-shot, single-speaker speech. The preview may change;
@@ -539,7 +560,7 @@ Deepgram offers Haley (English) and Ayumi, Hayato, Nozomi, and Sayaka (Japanese)
 
 ### Sarashina and reasoning defaults
 
-This example uses Core 0.26.29 with Chat 0.70.0 and Voice 0.30.0. Sarashina is
+This example uses Core 0.26.30 with Chat 0.71.0 and Voice 0.30.0. Sarashina is
 shown but disabled for new browser selections, like Sakana AI. Saved provider,
 model and key values remain intact. The backend provider offers text-only
 `sarashina3-nano` (default), `sarashina3-mini`, and `sarashina3.2-mini-thinking`;

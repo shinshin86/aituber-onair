@@ -1,5 +1,26 @@
 # @aituber-onair/core
 
+## 0.26.30
+
+### Patch Changes
+
+- Propagate published Chat 0.71.0 and re-export Gemini 4 Hydrogen for
+  Gemini and OpenRouter, plus Muse Ember, Inkling 2 Small, Nex N2.6, and
+  Ling 3.2 Flash Free on OpenRouter as explicit image-capable options.
+- Add these models to Basic selectors and preserve model-specific reasoning
+  controls: low for Hydrogen, minimal for Muse Ember and Inkling, medium for
+  Nex N2.6, and no effort or budget control for Ling. Provider defaults are
+  unchanged; other React examples inherit the supported lists through Core.
+- Document the direct Hydrogen free tier and its 65,536-token caps in both
+  modes. Argon and Carbon retain 32,768 non-streaming / 65,536 streaming;
+  all Gemini 4 models retain the implicit 32,768-token floor.
+- Refresh embedded Core example metadata and starter version expectations.
+
+### Known Limitations
+
+- No live inference was performed; provider compatibility follows the
+  published Chat release and mocked transport tests.
+
 ## 0.26.29
 
 ### Patch Changes
