@@ -155,6 +155,25 @@ const modelCases = [
       ['high', 'medium', 'low'],
       'low',
     ],
+    [
+      'Gemini 4 Hydrogen (OpenRouter)',
+      'google/gemini-4-hydrogen',
+      ['high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'Muse Ember (OpenRouter)',
+      'meta/muse-ember',
+      ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    [
+      'Inkling 2 Small (OpenRouter)',
+      'thinkingmachines/inkling-2-small',
+      ['max', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    ['Nex N2.6 (OpenRouter)', 'nex-agi/nex-n2.6', ['high', 'medium'], 'medium'],
   ].map(([label, model, efforts, initialEffort]) => ({
     provider: 'OpenRouter',
     label: label as string,
@@ -582,6 +601,56 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     for (const { url, body } of requests) {
       expect(url).toBe(OPENROUTER);
       expect(body.model).toBe('inclusionai/ling-3.1-flash');
+      expect(body.stream).toBe(true);
+      expect(body.reasoning).toEqual({ exclude: true });
+      expect(body.reasoning_effort).toBeUndefined();
+    }
+    expect(requests[2].body.messages).toEqual([
+      { role: 'user', content: 'Rejected prompt' },
+      { role: 'user', content: 'Retry prompt' },
+      { role: 'assistant', content: 'こんにちは world' },
+      { role: 'user', content: 'Again' },
+    ]);
+    expect(container.querySelectorAll('.message.assistant')).toHaveLength(2);
+  });
+
+  it('Ling 3.2 Flash Free streams repeated replies and recovers from HTTP errors without unsupported settings', async () => {
+    await chooseButton('.provider-item', 'OpenRouter');
+    await chooseButton('.model-item', 'Ling 3.2 Flash Free (OpenRouter)');
+    await change('#api-key', FAKE_KEY);
+    expect(container.querySelector('#openrouter-reasoning-effort')).toBeNull();
+    expect(
+      container.querySelector('#openrouter-reasoning-max-tokens'),
+    ).toBeNull();
+    expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
+    pending.push({
+      endpoint: OPENROUTER,
+      response: new Response('{"error":{"message":"Mock rate limit"}}', {
+        status: 429,
+        statusText: 'Too Many Requests',
+      }),
+    });
+    await send('Rejected prompt');
+    expect(element('.error-message').textContent).toContain('429');
+    expect(container.querySelectorAll('.message.assistant')).toHaveLength(0);
+    expect(element<HTMLInputElement>('.chat-input').disabled).toBe(false);
+
+    const stream = streamResponse(OPENROUTER);
+    await send('Retry prompt');
+    await stream.text('こんにちは ');
+    expect(element('.assistant .message-text').textContent).toBe('こんにちは ');
+    expect(container.querySelector('.streaming-indicator')).not.toBeNull();
+    await stream.text('world');
+    await stream.finish();
+    expect(container.querySelector('.error-message')).toBeNull();
+    expect(element('.assistant .message-text').textContent).toBe(
+      'こんにちは world',
+    );
+    await completeReply(OPENROUTER, 'Again', 'Second reply');
+    expect(requests).toHaveLength(3);
+    for (const { url, body } of requests) {
+      expect(url).toBe(OPENROUTER);
+      expect(body.model).toBe('inclusionai/ling-3.2-flash:free');
       expect(body.stream).toBe(true);
       expect(body.reasoning).toEqual({ exclude: true });
       expect(body.reasoning_effort).toBeUndefined();

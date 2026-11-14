@@ -151,6 +151,7 @@ describe('Published provider defaults through Core', () => {
   );
   it('exposes the current free OpenRouter models', () => {
     expect(new core.OpenRouterChatServiceProvider().getFreeModels()).toEqual([
+      'inclusionai/ling-3.2-flash:free',
       'google/gemma-4-31b-it:free',
       'nvidia/nemotron-3.5-super-vl:free',
     ]);

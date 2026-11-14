@@ -20,6 +20,8 @@ import {
   type OpenRouterReasoningEffort,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
+  MODEL_META_MUSE_EMBER,
+  MODEL_THINKINGMACHINES_INKLING_2_SMALL,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_OPENAI_GPT_5_MINI,
@@ -27,6 +29,7 @@ import {
   MODEL_GOOGLE_GEMINI_3_6_FLASH,
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
+  MODEL_GOOGLE_GEMINI_4_HYDROGEN,
   MODEL_OPENROUTER_SAKANA_NAMAZU,
   MODEL_GOOGLE_GEMINI_3_5_FLASH_LITE,
   getDefaultOpenRouterReasoningEffort,
@@ -370,7 +373,8 @@ export class OpenRouterChatService implements ChatService {
       maxTokens !== undefined
         ? maxTokens
         : model === MODEL_GOOGLE_GEMINI_4_ARGON ||
-            model === MODEL_GOOGLE_GEMINI_4_CARBON
+            model === MODEL_GOOGLE_GEMINI_4_CARBON ||
+            model === MODEL_GOOGLE_GEMINI_4_HYDROGEN
           ? Math.max(32_768, getMaxTokensForResponseLength(this.responseLength))
           : getMaxTokensForResponseLength(this.responseLength);
 
@@ -423,6 +427,8 @@ export class OpenRouterChatService implements ChatService {
             reasoningEffort === 'minimal' &&
             model !== MODEL_QWEN_QWEN_3_8_MAX_0902 &&
             model !== MODEL_META_MUSE_SPARK_1_3 &&
+            model !== MODEL_META_MUSE_EMBER &&
+            model !== MODEL_THINKINGMACHINES_INKLING_2_SMALL &&
             model !== MODEL_UPSTAGE_SOLAR_PRO4 &&
             model !== MODEL_UPSTAGE_SOLAR_MINI4 &&
             model !== MODEL_OPENAI_GPT_5_MINI &&

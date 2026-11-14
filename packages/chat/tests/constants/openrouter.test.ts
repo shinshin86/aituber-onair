@@ -19,6 +19,10 @@ import {
   MODEL_GOOGLE_GEMINI_3_8_FLASH,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_META_MUSE_SPARK_1_3,
+  MODEL_META_MUSE_EMBER,
+  MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+  MODEL_NEX_AGI_NEX_N2_6,
+  MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
   getDefaultOpenRouterReasoningEffort,
   getOpenRouterSupportedReasoningEfforts,
   isOpenRouterFreeModel,
@@ -194,5 +198,46 @@ describe('Ling 3.1 Flash explicit profile', () => {
         normalizeOpenRouterReasoningEffort(`  ${model}  `, effort),
       ).toBeUndefined();
     }
+  });
+});
+
+describe('New explicit OpenRouter reasoning profiles', () => {
+  it.each([
+    [
+      MODEL_META_MUSE_EMBER,
+      ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    [
+      MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+      ['max', 'high', 'medium', 'low', 'minimal'],
+      'minimal',
+    ],
+    [MODEL_NEX_AGI_NEX_N2_6, ['high', 'medium'], 'medium'],
+    [MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE, [], undefined],
+  ] as const)(
+    'uses documented effort controls for %s',
+    (model, efforts, defaultEffort) => {
+      expect(getOpenRouterSupportedReasoningEfforts(model)).toEqual(efforts);
+      expect(getDefaultOpenRouterReasoningEffort(model)).toBe(defaultEffort);
+      expect(normalizeOpenRouterReasoningEffort(model, 'none')).toBe(
+        defaultEffort,
+      );
+      for (const effort of efforts)
+        expect(normalizeOpenRouterReasoningEffort(model, effort)).toBe(effort);
+      expect(OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET).toContain(model);
+    },
+  );
+
+  it('lists only the exact free Ling 3.2 ID', () => {
+    expect(MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE).toBe(
+      'inclusionai/ling-3.2-flash:free',
+    );
+    expect(OPENROUTER_FREE_MODELS).toContain(
+      MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
+    );
+    expect(isOpenRouterFreeModel(MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE)).toBe(
+      true,
+    );
   });
 });

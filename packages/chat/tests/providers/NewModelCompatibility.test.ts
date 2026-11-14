@@ -60,8 +60,13 @@ const routerModels = [
   models.MODEL_GOOGLE_GEMINI_3_8_FLASH,
   models.MODEL_GOOGLE_GEMINI_4_ARGON,
   models.MODEL_GOOGLE_GEMINI_4_CARBON,
+  models.MODEL_GOOGLE_GEMINI_4_HYDROGEN,
   models.MODEL_QWEN_QWEN_3_8_MAX_0902,
   models.MODEL_META_MUSE_SPARK_1_3,
+  models.MODEL_META_MUSE_EMBER,
+  models.MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+  models.MODEL_NEX_AGI_NEX_N2_6,
+  models.MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
 ];
 
 describe('New model endpoint compatibility', () => {
@@ -662,11 +667,23 @@ describe('New model endpoint compatibility', () => {
     [models.MODEL_GOOGLE_GEMINI_4_ARGON, 'none', 'low'],
     [models.MODEL_GOOGLE_GEMINI_4_ARGON, 'high', 'high'],
     [models.MODEL_GOOGLE_GEMINI_4_CARBON, undefined, 'low'],
+    [models.MODEL_GOOGLE_GEMINI_4_HYDROGEN, undefined, 'low'],
     [models.MODEL_GOOGLE_GEMINI_4_CARBON, 'none', 'low'],
+    [models.MODEL_GOOGLE_GEMINI_4_HYDROGEN, 'none', 'low'],
     [models.MODEL_GOOGLE_GEMINI_4_CARBON, 'high', 'high'],
+    [models.MODEL_GOOGLE_GEMINI_4_HYDROGEN, 'high', 'high'],
     [models.MODEL_GOOGLE_GEMINI_3_8_FLASH, 'high', 'high'],
     [models.MODEL_QWEN_QWEN_3_8_MAX_0902, undefined, 'minimal'],
     [models.MODEL_QWEN_QWEN_3_8_MAX_0902, 'high', 'high'],
+    [models.MODEL_META_MUSE_EMBER, undefined, 'minimal'],
+    [models.MODEL_META_MUSE_EMBER, 'none', 'minimal'],
+    [models.MODEL_META_MUSE_EMBER, 'max', 'max'],
+    [models.MODEL_THINKINGMACHINES_INKLING_2_SMALL, undefined, 'minimal'],
+    [models.MODEL_THINKINGMACHINES_INKLING_2_SMALL, 'none', 'minimal'],
+    [models.MODEL_THINKINGMACHINES_INKLING_2_SMALL, 'max', 'max'],
+    [models.MODEL_NEX_AGI_NEX_N2_6, undefined, 'medium'],
+    [models.MODEL_NEX_AGI_NEX_N2_6, 'none', 'medium'],
+    [models.MODEL_NEX_AGI_NEX_N2_6, 'high', 'high'],
     [models.MODEL_META_MUSE_SPARK_1_3, undefined, 'minimal'],
     [models.MODEL_META_MUSE_SPARK_1_3, 'high', 'high'],
     [models.MODEL_OPENAI_GPT_6_ASTRA, 'none', 'low'],
@@ -864,6 +881,41 @@ describe('October explicit OpenRouter reasoning profiles', () => {
       }
     },
   );
+});
+
+describe('New OpenRouter model controls', () => {
+  beforeEach(() => vi.restoreAllMocks());
+
+  it.each([
+    models.MODEL_META_MUSE_EMBER,
+    models.MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+    models.MODEL_NEX_AGI_NEX_N2_6,
+    models.MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
+  ])('preserves text and omits undocumented budgets for %s', async (model) => {
+    const post = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValue(
+        jsonResponse({ choices: [{ message: { content: 'Hello' } }] }),
+      );
+    const service = ChatServiceFactory.createChatService('openrouter', {
+      apiKey: 'test-key',
+      model,
+      reasoning_effort: 'none',
+      reasoningMaxTokens: 2048,
+      includeReasoning: true,
+    });
+    const result = await service.chatOnce!(messages, false);
+    expect(post.mock.calls[0][0]).toBe(models.ENDPOINT_OPENROUTER_API);
+    const body = post.mock.calls[0][1];
+    expect(body).toMatchObject({ model, messages, stream: false });
+    expect(body.reasoning).not.toHaveProperty('max_tokens');
+    expect(body.reasoning.effort).toBe(
+      models.getDefaultOpenRouterReasoningEffort(model),
+    );
+    expect(body.reasoning.exclude).toBeUndefined();
+    expect(body).not.toHaveProperty('reasoning_effort');
+    expect(result.blocks).toEqual([{ type: 'text', text: 'Hello' }]);
+  });
 });
 
 describe('OpenRouter routes without verified effort defaults', () => {

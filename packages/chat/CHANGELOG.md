@@ -1,5 +1,32 @@
 # @aituber-onair/chat
 
+## 0.71.0
+
+### Minor Changes
+
+- Added Gemini 4 Hydrogen (`gemini-4-hydrogen`, `MODEL_GEMINI_4_HYDROGEN`) as
+  an explicit recommended Gemini option over v1beta, and
+  `google/gemini-4-hydrogen` (`MODEL_GOOGLE_GEMINI_4_HYDROGEN`) on OpenRouter.
+  Google documents the same request schema as Gemini 4 Argon and Carbon.
+  Thinking cannot be disabled; `low`, `medium`, and `high` are supported and
+  the package default is `low` (Google default: `high`). The additional
+  `xhigh` level is not exposed because its GenerateContent REST enum is not
+  documented. Unlike Argon and Carbon, Hydrogen is available on the Gemini
+  API free tier (rate-limited).
+- Gemini 4 output caps are now per model: direct Hydrogen requests allow up to
+  65,536 tokens for both streaming and non-streaming calls, while Argon and
+  Carbon keep 32,768 (non-streaming) and 65,536 (streaming). The implicit
+  32,768-token floor applies to all Gemini 4 models on both providers.
+- Added OpenRouter routes `meta/muse-ember` (`MODEL_META_MUSE_EMBER`),
+  `thinkingmachines/inkling-2-small`
+  (`MODEL_THINKINGMACHINES_INKLING_2_SMALL`), `nex-agi/nex-n2.6`
+  (`MODEL_NEX_AGI_NEX_N2_6`), and `inclusionai/ling-3.2-flash:free`
+  (`MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE`) as explicit image-capable options
+  with tools and streaming. Reasoning defaults use the lightest documented
+  level (`minimal` for Muse Ember and Inkling 2 Small, `medium` for Nex N2.6);
+  Ling 3.2 Flash Free sends no effort or budget and is listed as a free model.
+  Provider defaults are unchanged.
+
 ## 0.70.0
 
 ### Minor Changes
