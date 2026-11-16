@@ -90,6 +90,7 @@ import {
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
   MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   getMistralSupportedReasoningEfforts,
   normalizeMistralReasoningEffort,
@@ -1320,7 +1321,7 @@ export const allModels: ProviderModel[] = [
   },
   {
     id: MODEL_MISTRAL_LARGE_4_0,
-    name: 'Mistral Large 4 (Preview)',
+    name: 'Mistral Large 4',
     provider: 'mistral',
     default: false,
   },
@@ -1340,6 +1341,13 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
     name: 'GLM-5.3 Flash (Mistral)',
+    provider: 'mistral',
+    default: false,
+  },
+
+  {
+    id: MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
+    name: 'DeepSeek V4.1 Flash 1017 (Mistral Preview)',
     provider: 'mistral',
     default: false,
   },
@@ -2305,6 +2313,15 @@ export default function ProviderSelector({
               </span>
             </div>
           )}
+
+          {provider === 'mistral' &&
+            selectedModel === MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017 && (
+              <p className="helper-text">
+                Public preview hosted by Mistral. Model-specific reasoning
+                controls are not documented for this route, so no reasoning
+                setting is sent.
+              </p>
+            )}
 
           {provider === 'mistral' &&
             selectedModel === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH && (
