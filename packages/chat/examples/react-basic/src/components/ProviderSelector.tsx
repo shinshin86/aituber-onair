@@ -95,6 +95,10 @@ import {
   getMistralSupportedReasoningEfforts,
   normalizeMistralReasoningEffort,
   MODEL_GPT_6_1_SOL,
+  MODEL_GPT_6_2_SOL,
+  MODEL_GPT_6_2_ASTRA,
+  isGPT62Model,
+  normalizeGPT62ReasoningEffort,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
@@ -463,6 +467,18 @@ export const allModels: ProviderModel[] = [
   {
     id: MODEL_GPT_5_5,
     name: 'GPT-5.5',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_6_2_SOL,
+    name: 'GPT-6.2 Sol',
+    provider: 'openai',
+    default: false,
+  },
+  {
+    id: MODEL_GPT_6_2_ASTRA,
+    name: 'GPT-6.2 Astra',
     provider: 'openai',
     default: false,
   },
@@ -1641,6 +1657,7 @@ export default function ProviderSelector({
       selectedModel === MODEL_GPT_6_ASTRA);
   const isResponsesPreferredModel =
     isResponsesOnlyModel ||
+    isGPT62Model(selectedModel) ||
     selectedModel === MODEL_GPT_6_1_SOL ||
     selectedModel === MODEL_GPT_6_1_TERRA ||
     selectedModel === MODEL_GPT_6_SOL ||
@@ -1761,6 +1778,9 @@ export default function ProviderSelector({
       return reasoning_effort;
     }
 
+    if (isGPT62Model(selectedModel)) {
+      return normalizeGPT62ReasoningEffort(reasoning_effort);
+    }
     if (!reasoning_effort) {
       return getDefaultReasoningEffortForOpenAIModel(selectedModel);
     }
@@ -2136,11 +2156,13 @@ export default function ProviderSelector({
                     This model uses Responses API for full tool support.
                   </span>
                 )}
-                {(selectedModel === MODEL_GPT_6_1_SOL ||
+                {(isGPT62Model(selectedModel) ||
+                  selectedModel === MODEL_GPT_6_1_SOL ||
                   selectedModel === MODEL_GPT_6_1_TERRA) && (
                   <span className="helper-text">
                     Responses API is the default and is required for tools.
-                    Tool-free Chat Completions supports all reasoning levels.
+                    Tool-free Chat Completions supports the available reasoning
+                    settings.
                   </span>
                 )}
                 {(selectedModel === MODEL_GPT_6_SOL ||
@@ -2170,6 +2192,12 @@ export default function ProviderSelector({
                 </span>
               </div>
 
+              {isGPT62Model(selectedModel) && (
+                <p className="helper-text">
+                  GPT-6.2 exposes Low and Medium pending confirmation of higher
+                  effort levels. Presets are normalized to this range.
+                </p>
+              )}
               <div className="config-group">
                 <label htmlFor="gpt5-preset">GPT-5 Preset</label>
                 <select
@@ -2221,7 +2249,9 @@ export default function ProviderSelector({
                   ) : null}
                   {allowsLow && <option value="low">Low</option>}
                   <option value="medium">Medium</option>
-                  <option value="high">High</option>
+                  {!isGPT62Model(selectedModel) && (
+                    <option value="high">High</option>
+                  )}
                   {allowsXHigh && <option value="xhigh">XHigh</option>}
                   {allowsMax && <option value="max">Max</option>}
                 </select>

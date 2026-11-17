@@ -3,6 +3,9 @@ export const ENDPOINT_OPENAI_CHAT_COMPLETIONS_API =
 export const ENDPOINT_OPENAI_RESPONSES_API =
   'https://api.openai.com/v1/responses';
 
+export const MODEL_GPT_6_2_SOL = 'gpt-6.2-sol';
+export const MODEL_GPT_6_2_ASTRA = 'gpt-6.2-astra';
+
 export const MODEL_GPT_6_1_SOL = 'gpt-6.1-sol';
 export const MODEL_GPT_6_1_TERRA = 'gpt-6.1-terra';
 export const MODEL_GPT_6_ASTRA = 'gpt-6-astra';
@@ -70,6 +73,8 @@ export const OPENAI_DEPRECATED_MODELS = [
 
 // Vision support for models
 export const VISION_SUPPORTED_MODELS = [
+  MODEL_GPT_6_2_SOL,
+  MODEL_GPT_6_2_ASTRA,
   MODEL_GPT_6_1_SOL,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_SOL,
@@ -135,6 +140,7 @@ export function isGPT5Model(model: string): boolean {
 /** OpenAI models using the reasoning and verbosity request options. */
 export function isOpenAIReasoningModel(model: string): boolean {
   return (
+    isGPT62Model(model) ||
     model === MODEL_GPT_6_1_SOL ||
     model === MODEL_GPT_6_1_TERRA ||
     model === MODEL_GPT_6_ASTRA ||
@@ -255,7 +261,26 @@ export function getDefaultReasoningEffortForGPT5Model(
 export function getDefaultReasoningEffortForOpenAIModel(
   model: string,
 ): 'none' | 'minimal' | 'low' | 'medium' {
-  return model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_ASTRA
+  return isGPT62Model(model) ||
+    model === MODEL_GPT_6_1_SOL ||
+    model === MODEL_GPT_6_ASTRA
     ? 'low'
     : getDefaultReasoningEffortForGPT5Model(model);
+}
+
+/** Models covered by the GPT-6.2 migration contract. */
+export function isGPT62Model(model: string): boolean {
+  return model === MODEL_GPT_6_2_SOL || model === MODEL_GPT_6_2_ASTRA;
+}
+
+/** Only expose effort levels explicitly documented for GPT-6.2. */
+export function normalizeGPT62ReasoningEffort(
+  effort?: OpenAIReasoningEffort,
+): 'low' | 'medium' {
+  return effort === 'medium' ||
+    effort === 'high' ||
+    effort === 'xhigh' ||
+    effort === 'max'
+    ? 'medium'
+    : 'low';
 }

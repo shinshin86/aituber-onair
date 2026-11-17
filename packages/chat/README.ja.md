@@ -297,6 +297,19 @@ Chat Completions形式を維持し、認証情報を別URLへ転送せず、こ�
 [Model API reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol)、
 [API guide](https://developers.openai.com/api/docs/guides/latest-model)。
 
+ツールにResponsesが必要なモデルは、既定でResponsesを使います。
+GPT-6.2 Sol（`gpt-6.2-sol`、`MODEL_GPT_6_2_SOL`）とAstra
+（`gpt-6.2-astra`、`MODEL_GPT_6_2_ASTRA`）は明示選択でき、画像入力、
+ストリーミング、関数呼び出しに対応します。OpenAI APIキーで利用でき、既定モデルは変更しません。
+推論設定は移行ガイドで確認できた`low`と`medium`を公開し、会話の応答速度を優先して
+既定を`low`にします。`none`/`minimal`は`low`へ、上位設定はモデル固有の対応が
+確認できるまで`medium`へ正規化します。ツールなしならChat Completionsも指定できます。
+ツール/MCPはResponsesが必須で、カスタムエンドポイントでは送信前に拒否します。
+サンプリング設定は送信しません。公式仕様とモック通信テストによる確認であり、実API生成は未検証です。
+[Sol仕様](https://developers.openai.com/api/docs/models/gpt-6.2-sol)、
+[Astra仕様](https://developers.openai.com/api/docs/models/gpt-6.2-astra)、
+[移行ガイド](https://developers.openai.com/api/docs/guides/latest-model)。
+
 画像入力・ストリーミングに対応し、ツール利用にResponses APIが必要なモデルは、既定でResponsesを使います。`gpt-6.1-terra`（`MODEL_GPT_6_1_TERRA`）もこのグループの明示選択モデルです。`reasoning_effort`は `none`、`low`、`medium`、`high`、`xhigh`、`max` に対応します。API既定は `medium`、パッケージ既定は `none` です。ツールを使わない場合はChat Completionsも選べます。標準エンドポイントでのツール・MCP利用はResponsesへ切り替え、カスタムエンドポイントでのツール利用は送信前にエラーにします。
 
 このパッケージは `temperature`、`top_p`、`logprobs` などのサンプリング項目を送信しません。OpenRouter版の `openai/gpt-6.1-terra` はChat Completionsを使い、推論設定のパッケージ既定は `none` です。プロバイダーの既定モデルは変更しません。
@@ -1810,7 +1823,7 @@ vision、JSON mode、reasoning 設定を使うべきかを provider 固有ロジ
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-6.1 Terra (`gpt-6.1-terra`, 明示選択、ツールはResponses経由), GPT-6.1 Sol (`gpt-6.1-sol`, ツールはResponses経由)、GPT-6 Astra (`gpt-6-astra`)、GPT-6 Sol (`gpt-6-sol`)、GPT-6 Luna (`gpt-6-luna`, 既定でResponses API); GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Miniのモデルをサポート
+- **OpenAI**: GPT-6.2 Sol (`gpt-6.2-sol`)、GPT-6.2 Astra (`gpt-6.2-astra`、明示選択、推論low既定、ツールはResponses)、GPT-6.1 Terra (`gpt-6.1-terra`, 明示選択、ツールはResponses経由), GPT-6.1 Sol (`gpt-6.1-sol`, ツールはResponses経由)、GPT-6 Astra (`gpt-6-astra`)、GPT-6 Sol (`gpt-6-sol`)、GPT-6 Luna (`gpt-6-luna`, 既定でResponses API); GPT-5.6（Sol/Terra/Luna）、GPT-5.5、GPT-5.4 Pro、GPT-5.4、GPT-5.4 Miniのモデルをサポート
 - **OpenAI-Compatible**: OpenAI互換 endpoint 経由で任意のローカル/セルフホスト model ID を利用できます。vision 対応可否は endpoint ごとに差があるため、原則 `unknown` 扱いです
 - **Gemini**: Gemini 4 Hydrogen（`gemini-4-hydrogen`、レート制限付き無料枠ありの明示選択肢）、Gemini 4 Carbon（`gemini-4-carbon`）とGemini 4 Argon（`gemini-4-argon`）に対応。Argon・Carbonは有料枠が必要です。Gemini 4はいずれも思考必須・初期値`low`です。Gemini 3.8 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などの推奨モデルをサポート。Gemini 3 はチャット用途向けに利用可能な最小の thinking を既定値にします。`minimal` 非対応の Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3 Pro は `low`、その他の Gemini 3 Flash は `minimal` を使います。Gemini 3.7 Flash、Gemini 3.5 Flash、Gemini 3.1 Flash-Lite Preview、Gemini 3 Pro Preview、Gemini 2.5 Flash Lite Preview などの lifecycle 上 deprecated なモデルは明示指定用に export を残しています
 - **Claude**: Claude Haiku 5.5 (`claude-haiku-5-5`、明示選択)、Claude Opus 5.5 (`claude-opus-5-5`)、Claude Sonnet 5.5 (`claude-sonnet-5-5`)、Claude Fable 5.1 (`claude-fable-5-1`)、Claude Fable 5.2 (`claude-fable-5-2`、明示選択); Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Haiku 4.5 をサポート。調整可能な`reasoning_effort`は対応モデルに限り`output_config.effort`として送信し、refusal metadataは終端completionとして保持します

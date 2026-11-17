@@ -1,6 +1,7 @@
 import { ChatService } from '../../ChatService';
 import {
   MODEL_GPT_6_1_SOL,
+  isGPT62Model,
   MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
@@ -86,7 +87,9 @@ export class OpenAIChatService implements ChatService {
     // Never rewrite a custom endpoint to avoid redirecting credentials.
     const modelToolsRequireResponses =
       provider === 'openai' &&
-      (model === MODEL_GPT_6_1_SOL ||
+      (isGPT62Model(model) ||
+        isGPT62Model(visionModel) ||
+        model === MODEL_GPT_6_1_SOL ||
         visionModel === MODEL_GPT_6_1_SOL ||
         model === MODEL_GPT_6_1_TERRA ||
         visionModel === MODEL_GPT_6_1_TERRA) &&

@@ -10,6 +10,7 @@ import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
 import type { ChatProviderCapabilities } from '../types/capabilities';
 import {
   MODEL_GPT_6_1_SOL,
+  isGPT62Model,
   MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
@@ -147,35 +148,41 @@ export class ChatServiceFactory {
       jsonMode: JSON_MODE_SUPPORTED_PROVIDERS.has(providerName),
       responseLength: true,
       reasoningEffort:
-        providerName === 'openai' &&
-        (model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_ASTRA)
-          ? ['low', 'medium', 'high', 'xhigh', 'max']
-          : providerName === 'openai' && model === MODEL_GPT_6_SOL
-            ? ['none', 'low', 'medium', 'high', 'xhigh', 'max']
-            : providerName === 'openai' &&
-                (model === MODEL_GPT_6_LUNA || model === MODEL_GPT_6_1_TERRA)
+        providerName === 'openai' && model && isGPT62Model(model)
+          ? ['low', 'medium']
+          : providerName === 'openai' &&
+              (model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_ASTRA)
+            ? ['low', 'medium', 'high', 'xhigh', 'max']
+            : providerName === 'openai' && model === MODEL_GPT_6_SOL
               ? ['none', 'low', 'medium', 'high', 'xhigh', 'max']
-              : providerName === 'claude' && model
-                ? [...getClaudeSupportedReasoningEfforts(model)]
-                : providerName === 'gemini' && model
-                  ? [...getGeminiSupportedReasoningEfforts(model)]
-                  : providerName === 'kimi' && model
-                    ? [...getKimiSupportedReasoningEfforts(model)]
-                    : providerName === 'deepseek' && model
-                      ? [...getDeepSeekSupportedReasoningEfforts(model)]
-                      : providerName === 'openrouter' && model
-                        ? [...getOpenRouterSupportedReasoningEfforts(model)]
-                        : providerName === 'xai' && model
-                          ? [...getXaiSupportedReasoningEfforts(model)]
-                          : providerName === 'zai' && model
-                            ? [...getZaiSupportedReasoningEfforts(model)]
-                            : providerName === 'mistral' &&
-                                (model === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH ||
-                                  model ===
-                                    MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017)
-                              ? [...getMistralSupportedReasoningEfforts(model)]
-                              : (REASONING_EFFORT_BY_PROVIDER[providerName] ??
-                                []),
+              : providerName === 'openai' &&
+                  (model === MODEL_GPT_6_LUNA || model === MODEL_GPT_6_1_TERRA)
+                ? ['none', 'low', 'medium', 'high', 'xhigh', 'max']
+                : providerName === 'claude' && model
+                  ? [...getClaudeSupportedReasoningEfforts(model)]
+                  : providerName === 'gemini' && model
+                    ? [...getGeminiSupportedReasoningEfforts(model)]
+                    : providerName === 'kimi' && model
+                      ? [...getKimiSupportedReasoningEfforts(model)]
+                      : providerName === 'deepseek' && model
+                        ? [...getDeepSeekSupportedReasoningEfforts(model)]
+                        : providerName === 'openrouter' && model
+                          ? [...getOpenRouterSupportedReasoningEfforts(model)]
+                          : providerName === 'xai' && model
+                            ? [...getXaiSupportedReasoningEfforts(model)]
+                            : providerName === 'zai' && model
+                              ? [...getZaiSupportedReasoningEfforts(model)]
+                              : providerName === 'mistral' &&
+                                  (model === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH ||
+                                    model ===
+                                      MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017)
+                                ? [
+                                    ...getMistralSupportedReasoningEfforts(
+                                      model,
+                                    ),
+                                  ]
+                                : (REASONING_EFFORT_BY_PROVIDER[providerName] ??
+                                  []),
     };
   }
 

@@ -303,6 +303,20 @@ rather than the API's `medium` default. The provider's default model is unchange
 [Model API reference](https://developers.openai.com/api/docs/models/gpt-6.1-sol),
 [API guide](https://developers.openai.com/api/docs/guides/latest-model).
 
+Models that require Responses for tools use it by default. Native GPT-6.2 Sol
+(`gpt-6.2-sol`, `MODEL_GPT_6_2_SOL`) and Astra (`gpt-6.2-astra`,
+`MODEL_GPT_6_2_ASTRA`) are explicit text/image options with streaming and function
+calling. Use an OpenAI API key; the provider default model is unchanged.
+The package exposes the migration guide's documented `low` and `medium` effort
+settings, defaulting to `low` for conversational latency. `none`/`minimal` map
+to `low`; higher settings map to `medium` pending model-specific confirmation.
+Tool-free requests may use Chat Completions. Tools/MCP require Responses;
+custom endpoints with tools fail before sending rather than redirecting keys.
+Sampling parameters are omitted. Tests use mocked transports, not live inference.
+See the [Sol model](https://developers.openai.com/api/docs/models/gpt-6.2-sol),
+[Astra model](https://developers.openai.com/api/docs/models/gpt-6.2-astra), and
+[migration guide](https://developers.openai.com/api/docs/guides/latest-model).
+
 Models with image input and streaming whose tools require Responses use Responses by default. `gpt-6.1-terra` (`MODEL_GPT_6_1_TERRA`) is an explicit option in this group. It supports `none`, `low`, `medium`, `high`, `xhigh`, and `max` reasoning effort. The API default is `medium`; the package default is `none`. Tool-free requests may use Chat Completions. Tools and MCP at the standard endpoint always use Responses, while custom endpoints with tools are rejected before sending.
 
 This package does not send sampling fields such as `temperature`, `top_p`, or `logprobs`. The OpenRouter variant, `openai/gpt-6.1-terra`, uses Chat Completions with package-default reasoning effort `none`. Provider default models are unchanged.
@@ -1852,7 +1866,7 @@ without hard-coding provider-specific rules.
 
 Currently, the following AI providers are built-in:
 
-- **OpenAI**: GPT-6.1 Terra (`gpt-6.1-terra`, explicit, tools via Responses), GPT-6.1 Sol (`gpt-6.1-sol`, tools via Responses), GPT-6 Astra (`gpt-6-astra`), GPT-6 Sol (`gpt-6-sol`), and GPT-6 Luna (`gpt-6-luna`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini
+- **OpenAI**: GPT-6.2 Sol (`gpt-6.2-sol`) and GPT-6.2 Astra (`gpt-6.2-astra`, explicit, low reasoning by default, tools via Responses), GPT-6.1 Terra (`gpt-6.1-terra`, explicit, tools via Responses), GPT-6.1 Sol (`gpt-6.1-sol`, tools via Responses), GPT-6 Astra (`gpt-6-astra`), GPT-6 Sol (`gpt-6-sol`), and GPT-6 Luna (`gpt-6-luna`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
 - **Gemini**: Gemini 4 Hydrogen (`gemini-4-hydrogen`, explicit option with a rate-limited free tier), Gemini 4 Carbon (`gemini-4-carbon`) and Gemini 4 Argon (`gemini-4-argon`). Argon/Carbon require the paid tier. All three require thinking and default to `low`; Supports recommended models like Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.7 Flash, Gemini 3.5 Flash, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Claude Haiku 5.5 (`claude-haiku-5-5`, explicit), Claude Opus 5.5 (`claude-opus-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), Claude Fable 5.1 (`claude-fable-5-1`), and Claude Fable 5.2 (`claude-fable-5-2`, explicit); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.

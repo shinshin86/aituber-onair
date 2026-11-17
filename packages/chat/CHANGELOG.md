@@ -4,6 +4,13 @@
 
 ### Added
 
+- Added native GPT-6.2 Sol and Astra as explicit image-capable Chat options and
+  React example selections. Reasoning defaults to `low`; the documented
+  `low`/`medium` settings are exposed, and unsupported selections normalize to
+  that range. Responses is the default and required for tools/MCP. Tool-free
+  Chat Completions remains available; custom tool endpoints fail before sending.
+- Added transport and example regression coverage for model selection, effort
+  normalization, streaming, vision, tool continuation, and endpoint safety.
 - Add Mistral-hosted DeepSeek V4.1 Flash 1017 (`deepseek-v4-1-flash-1017`)
   as an explicit public-preview option with image input, streaming, and tools.
   Export `MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017` and expose it in the Chat

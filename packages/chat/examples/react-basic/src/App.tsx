@@ -6,6 +6,8 @@ import {
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   ChatService,
   allowsReasoningLow,
+  isGPT62Model,
+  normalizeGPT62ReasoningEffort,
   allowsReasoningMax,
   allowsReasoningMinimal,
   allowsReasoningNone,
@@ -113,6 +115,9 @@ const normalizeReasoningEffortForModel = (
     return effort;
   }
 
+  if (isGPT62Model(modelId)) {
+    return normalizeGPT62ReasoningEffort(effort);
+  }
   if (!effort) {
     return getDefaultReasoningEffortForOpenAIModel(modelId);
   }
