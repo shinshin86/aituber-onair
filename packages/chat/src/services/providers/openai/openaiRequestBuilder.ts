@@ -4,6 +4,8 @@ import {
   ENDPOINT_OPENAI_RESPONSES_API,
   OpenAIReasoningEffort,
   MODEL_GPT_6_1_SOL,
+  isGPT62Model,
+  normalizeGPT62ReasoningEffort,
   MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   getDefaultReasoningEffortForOpenAIModel,
@@ -104,6 +106,9 @@ export function buildOpenAIRequestBody({
   chatTemplateThinking,
   maxTokens,
 }: BuildOpenAIRequestBodyOptions): any {
+  if (provider === 'openai' && isGPT62Model(model)) {
+    reasoning_effort = normalizeGPT62ReasoningEffort(reasoning_effort);
+  }
   if (
     (model === MODEL_GPT_6_ASTRA ||
       (provider === 'openai' && model === MODEL_GPT_6_1_SOL)) &&
@@ -121,12 +126,20 @@ export function buildOpenAIRequestBody({
 
   if (
     provider === 'openai' &&
-    (model === MODEL_GPT_6_1_SOL || model === MODEL_GPT_6_1_TERRA) &&
+    (isGPT62Model(model) ||
+      model === MODEL_GPT_6_1_SOL ||
+      model === MODEL_GPT_6_1_TERRA) &&
     (tools.length > 0 || mcpServers.length > 0) &&
     !isResponsesAPI
   ) {
+    const modelLabel: Record<string, string> = {
+      'gpt-6.1-sol': 'GPT-6.1 Sol',
+      'gpt-6.1-terra': 'GPT-6.1 Terra',
+      'gpt-6.2-sol': 'GPT-6.2 Sol',
+      'gpt-6.2-astra': 'GPT-6.2 Astra',
+    };
     throw new Error(
-      `${model === MODEL_GPT_6_1_TERRA ? 'GPT-6.1 Terra' : 'GPT-6.1 Sol'} tool calling requires the OpenAI Responses API endpoint: ` +
+      `${modelLabel[model]} tool calling requires the OpenAI Responses API endpoint: ` +
         ENDPOINT_OPENAI_RESPONSES_API +
         ". Custom endpoints use Chat Completions and cannot be used with this model's tools.",
     );

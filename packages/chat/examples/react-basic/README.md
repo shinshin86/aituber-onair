@@ -125,7 +125,7 @@ built-in model status is `available`.
 ### Provider-Specific Features
 
 **OpenAI**
-- Models: GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini
+- Models: GPT-6.2 Sol, GPT-6.2 Astra, GPT-6.1 Terra, GPT-6.1 Sol, GPT-6 Astra, GPT-6 Sol, GPT-6 Luna, GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini
 - Default: GPT-5.6 Luna. Models that OpenAI has deprecated or shut down (GPT-4o, GPT-4o Mini, GPT-4.1, GPT-4.1 Mini, GPT-5, GPT-5 Mini/Nano, GPT-5.1, GPT-5.4 Nano, GPT-4.1 Nano, o1, o1-mini, o3-mini) are no longer selectable.
 - Verbosity: defaults to `low` for concise replies, including after switching providers. Select `medium` or `high` for more detail, or choose a GPT-5 preset to use its verbosity setting.
 - Vision: Current image-capable OpenAI models
@@ -481,6 +481,20 @@ available at every supported effort. Tools and MCP require Responses at the
 standard endpoint, and custom endpoints reject tools before sending. Sampling
 fields are not sent. The OpenRouter variant defaults to None effort and uses
 Chat Completions. Existing provider defaults are preserved.
+
+Models that require Responses for tools use it by default. Native GPT-6.2 Sol
+(`gpt-6.2-sol`, `MODEL_GPT_6_2_SOL`) and Astra (`gpt-6.2-astra`,
+`MODEL_GPT_6_2_ASTRA`) are explicit text/image options with streaming and function
+calling. Use an OpenAI API key; the provider default model is unchanged.
+The package exposes the migration guide's documented `low` and `medium` effort
+settings, defaulting to `low` for conversational latency. `none`/`minimal` map
+to `low`; higher settings map to `medium` pending model-specific confirmation.
+Tool-free requests may use Chat Completions. Tools/MCP require Responses;
+custom endpoints with tools fail before sending rather than redirecting keys.
+Sampling parameters are omitted. Tests use mocked transports, not live inference.
+See the [Sol model](https://developers.openai.com/api/docs/models/gpt-6.2-sol),
+[Astra model](https://developers.openai.com/api/docs/models/gpt-6.2-astra), and
+[migration guide](https://developers.openai.com/api/docs/guides/latest-model).
 
 GPT-6.1 Sol defaults to low reasoning and Responses. Its tools require Responses;
 Chat Completions is available only without tools. Unsupported none/minimal

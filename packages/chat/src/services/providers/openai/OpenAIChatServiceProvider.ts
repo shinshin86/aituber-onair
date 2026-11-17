@@ -5,6 +5,10 @@ import {
   MODEL_GPT_5_5,
   MODEL_GPT_5_6,
   MODEL_GPT_6_1_SOL,
+  isGPT62Model,
+  MODEL_GPT_6_2_SOL,
+  MODEL_GPT_6_2_ASTRA,
+  normalizeGPT62ReasoningEffort,
   MODEL_GPT_6_1_TERRA,
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
@@ -90,12 +94,14 @@ export class OpenAIChatServiceProvider
       // GPT-5.4 Pro is Responses API only
       shouldUseResponsesAPI = true;
     } else if (
+      isGPT62Model(modelName) ||
+      isGPT62Model(visionModel) ||
       modelName === MODEL_GPT_6_1_SOL ||
       visionModel === MODEL_GPT_6_1_SOL ||
       modelName === MODEL_GPT_6_1_TERRA ||
       visionModel === MODEL_GPT_6_1_TERRA
     ) {
-      // These GPT-6.1 models require Responses for tools; text-only calls may use Chat Completions.
+      // These models require Responses for tools; text-only calls may use Chat Completions.
       const preference = optimizedOptions.gpt5EndpointPreference || 'responses';
       shouldUseResponsesAPI = (tools?.length ?? 0) > 0 || preference !== 'chat';
     } else if (isOpenAIReasoningModel(modelName)) {
@@ -148,6 +154,8 @@ export class OpenAIChatServiceProvider
       MODEL_GPT_5_4,
       MODEL_GPT_5_5,
       MODEL_GPT_5_6,
+      MODEL_GPT_6_2_SOL,
+      MODEL_GPT_6_2_ASTRA,
       MODEL_GPT_6_1_SOL,
       MODEL_GPT_6_ASTRA,
       MODEL_GPT_6_SOL,
@@ -248,6 +256,9 @@ export class OpenAIChatServiceProvider
     modelName: string,
     effort?: OpenAIReasoningEffort,
   ): OpenAIReasoningEffort | undefined {
+    if (isGPT62Model(modelName)) {
+      return normalizeGPT62ReasoningEffort(effort);
+    }
     if (!effort) {
       return undefined;
     }

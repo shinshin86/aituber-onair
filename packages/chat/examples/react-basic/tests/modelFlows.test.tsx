@@ -245,6 +245,15 @@ const modelCases = [
       initialEffort: defaultEffort,
     }),
   ),
+  ...['Sol', 'Astra'].map((name) => ({
+    provider: 'OpenAI',
+    label: `GPT-6.2 ${name}`,
+    model: `gpt-6.2-${name.toLowerCase()}`,
+    endpoint: OPENAI_RESPONSES,
+    control: '#reasoning-effort',
+    efforts: ['low', 'medium'],
+    initialEffort: 'low',
+  })),
 ];
 
 type ModelCase = (typeof modelCases)[number];
@@ -444,7 +453,8 @@ describe('React sample model-to-transport flows (mock network only)', () => {
           'inception/mercury-3',
         ].includes(model.model),
       );
-      await change(model.control, 'high');
+      const selectedEffort = model.efforts.includes('high') ? 'high' : 'medium';
+      await change(model.control, selectedEffort);
       await change('#response-length', 'long');
       const stream = streamResponse(model.endpoint);
       await send('First prompt');
@@ -457,9 +467,9 @@ describe('React sample model-to-transport flows (mock network only)', () => {
         model.endpoint === OPENAI_RESPONSES ||
         model.endpoint === OPENROUTER
       ) {
-        expect(requests[0].body.reasoning.effort).toBe('high');
+        expect(requests[0].body.reasoning.effort).toBe(selectedEffort);
       } else {
-        expect(requests[0].body.reasoning_effort).toBe('high');
+        expect(requests[0].body.reasoning_effort).toBe(selectedEffort);
         if (model.provider === 'Kimi' || model.provider === 'Mistral')
           expect(requests[0].body.thinking).toBeUndefined();
         else expect(requests[0].body.thinking.type).toBe('enabled');

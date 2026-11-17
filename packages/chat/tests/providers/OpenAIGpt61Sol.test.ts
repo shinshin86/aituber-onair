@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ChatServiceFactory,
   MODEL_GPT_6_1_SOL,
+  MODEL_GPT_6_2_SOL,
+  MODEL_GPT_6_2_ASTRA,
+  isGPT62Model,
   MODEL_GPT_6_1_TERRA,
   MODEL_GPT_5_NANO,
   MODEL_GPT_5_6_LUNA,
@@ -61,6 +64,18 @@ const textOutput = [
 // Mocked transports only: no provider API requests are made by these tests.
 describe.each([
   {
+    model: MODEL_GPT_6_2_SOL,
+    id: 'gpt-6.2-sol',
+    label: 'GPT-6.2 Sol',
+    none: false,
+  },
+  {
+    model: MODEL_GPT_6_2_ASTRA,
+    id: 'gpt-6.2-astra',
+    label: 'GPT-6.2 Astra',
+    none: false,
+  },
+  {
     model: MODEL_GPT_6_1_SOL,
     id: 'gpt-6.1-sol',
     label: 'GPT-6.1 Sol',
@@ -74,6 +89,14 @@ describe.each([
   },
 ])('$label compatibility', ({ model, id, label, none }) => {
   const normalized = (effort?: OpenAIReasoningEffort) => {
+    if (isGPT62Model(model)) {
+      return effort === 'medium' ||
+        effort === 'high' ||
+        effort === 'xhigh' ||
+        effort === 'max'
+        ? 'medium'
+        : 'low';
+    }
     if (effort === undefined) return none ? 'none' : 'low';
     if (effort === 'minimal') return none ? 'none' : 'low';
     if (effort === 'none' && !none) return 'low';
@@ -93,8 +116,8 @@ describe.each([
     expect(allowsReasoningNone(model)).toBe(none);
     expect(allowsReasoningMinimal(model)).toBe(false);
     expect(allowsReasoningLow(model)).toBe(true);
-    expect(allowsReasoningXHigh(model)).toBe(true);
-    expect(allowsReasoningMax(model)).toBe(true);
+    expect(allowsReasoningXHigh(model)).toBe(!isGPT62Model(model));
+    expect(allowsReasoningMax(model)).toBe(!isGPT62Model(model));
     expect(getDefaultReasoningEffortForOpenAIModel(model)).toBe(
       none ? 'none' : 'low',
     );
@@ -104,14 +127,9 @@ describe.each([
       vision: 'supported',
       streaming: true,
       tools: true,
-      reasoningEffort: [
-        ...(none ? ['none'] : []),
-        'low',
-        'medium',
-        'high',
-        'xhigh',
-        'max',
-      ],
+      reasoningEffort: isGPT62Model(model)
+        ? ['low', 'medium']
+        : [...(none ? ['none'] : []), 'low', 'medium', 'high', 'xhigh', 'max'],
     });
   });
 
@@ -237,7 +255,7 @@ describe.each([
       expect(post.mock.calls[0][1]).toMatchObject({
         model,
         messages: images,
-        reasoning_effort: 'max',
+        reasoning_effort: normalized('max'),
         stream,
       });
       expect(post.mock.calls[0][1].tools).toBeUndefined();
