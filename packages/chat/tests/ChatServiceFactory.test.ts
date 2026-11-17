@@ -344,6 +344,7 @@ describe('ChatServiceFactory', () => {
         'mistral-small-2603',
         'zai-glm-5-3',
         'zai-glm-5-3-flash',
+        'deepseek-v4-1-flash-1017',
       ]);
 
       const sakanaModels = ChatServiceFactory.getSupportedModels('sakana');

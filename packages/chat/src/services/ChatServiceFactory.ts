@@ -23,6 +23,7 @@ import { getOpenRouterSupportedReasoningEfforts } from '../constants/openrouter'
 import {
   getMistralSupportedReasoningEfforts,
   MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+  MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
 } from '../constants/mistral';
 import { getXaiSupportedReasoningEfforts } from '../constants/xai';
 import { getZaiSupportedReasoningEfforts } from '../constants/zai';
@@ -169,7 +170,9 @@ export class ChatServiceFactory {
                           : providerName === 'zai' && model
                             ? [...getZaiSupportedReasoningEfforts(model)]
                             : providerName === 'mistral' &&
-                                model === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH
+                                (model === MODEL_MISTRAL_ZAI_GLM_5_3_FLASH ||
+                                  model ===
+                                    MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017)
                               ? [...getMistralSupportedReasoningEfforts(model)]
                               : (REASONING_EFFORT_BY_PROVIDER[providerName] ??
                                 []),

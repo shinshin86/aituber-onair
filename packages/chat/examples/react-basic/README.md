@@ -314,9 +314,11 @@ rolling ID for the October 17, 2026 update; it follows future provider updates
 as well. Search/Fetch APIs are not exposed by this example.
 
 **Mistral**
-- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Large Latest/4, Mistral Small 2603, GLM-5.3 (Mistral), GLM-5.3 Flash (Mistral)
+- Models: Mistral Small Latest, Ministral 3 3B/8B/14B, Mistral Large Latest/4, Mistral Small 2603, GLM-5.3 (Mistral), GLM-5.3 Flash (Mistral), DeepSeek V4.1 Flash 1017 (Mistral Preview)
 - Vision: Supported, including GLM-5.3 Flash; the existing GLM-5.3 option remains text-only.
 - GLM-5.3 Flash (`zai-glm-5-3-flash`) is explicit and uses `low` reasoning by default, with `high` and `max` available. `none` is not supported. The provider default remains Mistral Small Latest. The [official model page](https://docs.mistral.ai/models/zai-glm-5-3-flash.md) documents image input and Chat Completions; the [reasoning guide](https://docs.mistral.ai/inference/conversations/reasoning) lists its effort values.
+- DeepSeek V4.1 Flash 1017 (`deepseek-v4-1-flash-1017`) is a public-preview option hosted by Mistral with text/image input, streaming, and tools. Select it under **Mistral** and supply a Mistral API key. No reasoning control is shown or sent because model-specific settings are not documented for this route; direct DeepSeek settings do not apply. See the [official model card](https://docs.mistral.ai/models/deepseek-v4-flash-1017). The default remains Mistral Small Latest.
+- Mistral Large 4 is generally available; its existing package reasoning behavior is unchanged.
 - Best for: Mistral Chat Completions with streaming and optional adjustable reasoning
 
 **PLaMo**
