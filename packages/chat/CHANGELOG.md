@@ -11,6 +11,17 @@
   Chat Completions remains available; custom tool endpoints fail before sending.
 - Added transport and example regression coverage for model selection, effort
   normalization, streaming, vision, tool continuation, and endpoint safety.
+- Add Mistral-hosted DeepSeek V4.1 Flash 1017 (`deepseek-v4-1-flash-1017`)
+  as an explicit public-preview option with image input, streaming, and tools.
+  Export `MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017` and expose it in the Chat
+  React example. Undocumented reasoning controls are omitted; defaults are unchanged.
+
+### Fixed
+
+- Preserve Mistral assistant tool calls and tool-result references in follow-up
+  requests so function-calling conversations can continue.
+- Update direct Mistral Large 4 documentation and selector labeling to reflect
+  general availability, without changing its reasoning behavior.
 
 ## 0.71.0
 

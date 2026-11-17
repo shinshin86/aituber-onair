@@ -16,13 +16,17 @@ export const MODEL_MISTRAL_MEDIUM_2508 = 'mistral-medium-2508';
 export const MODEL_MISTRAL_LARGE_LATEST = 'mistral-large-latest';
 /** @deprecated Deprecated on October 31, 2026 and retired by Mistral on April 30, 2027. Use MODEL_MISTRAL_LARGE_4_0. */
 export const MODEL_MISTRAL_LARGE_2512 = 'mistral-large-2512';
-/** Public preview. Reasoning levels are not exposed by this package yet. */
+/** Generally available. Reasoning levels are not exposed by this package yet. */
 export const MODEL_MISTRAL_LARGE_4_0 = 'mistral-large-4-0';
 
 // Text-only model hosted by Mistral.
 export const MODEL_MISTRAL_ZAI_GLM_5_3 = 'zai-glm-5-3';
 // Image-capable explicit option; reasoning cannot be disabled.
 export const MODEL_MISTRAL_ZAI_GLM_5_3_FLASH = 'zai-glm-5-3-flash';
+
+/** Public preview hosted by Mistral; reasoning controls are not documented. */
+export const MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017 =
+  'deepseek-v4-1-flash-1017';
 
 export type MistralReasoningEffort = 'none' | 'low' | 'high' | 'max';
 
@@ -36,6 +40,7 @@ export const MISTRAL_SUPPORTED_MODELS = [
   MODEL_MISTRAL_SMALL_2603,
   MODEL_MISTRAL_ZAI_GLM_5_3,
   MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
+  MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
 ];
 
 export const MISTRAL_DEPRECATED_MODELS = [
@@ -51,6 +56,7 @@ export const MISTRAL_REASONING_EFFORT_SUPPORTED_MODELS = [
 ];
 
 export const MISTRAL_VISION_SUPPORTED_MODELS = [
+  MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
   MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MINISTRAL_3B_2512,

@@ -18,6 +18,7 @@ import {
   MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
   MODEL_MISTRAL_SMALL_LATEST,
   MODEL_MISTRAL_ZAI_GLM_5_3,
+  MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
   MODEL_XIAOMI_MIMO_V2_6_FLASH,
   MODEL_UNBIASED_PARETO_26_9,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
@@ -38,6 +39,16 @@ import ProviderSelector, {
 vi.mock('@aituber-onair/chat', () => import('../../../src'));
 
 const additions = [
+  {
+    provider: 'mistral',
+    providerLabel: 'Mistral',
+    model: MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
+    label: 'DeepSeek V4.1 Flash 1017 (Mistral Preview)',
+    defaultModel: MODEL_MISTRAL_SMALL_LATEST,
+    defaultLabel: 'Mistral Small Latest',
+    endpoint: ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
+    vision: true,
+  },
   {
     provider: 'openrouter',
     providerLabel: 'OpenRouter',
@@ -543,7 +554,7 @@ describe('ProviderSelector rendered configuration for recent models', () => {
   );
 
   it.each(additions.filter((addition) => addition.vision))(
-    '$label sends an uploaded image through the same OpenRouter model',
+    '$label sends an uploaded image through the same provider model',
     async (addition) => {
       await renderApp();
       await selectAddition(addition);
@@ -582,13 +593,16 @@ describe('ProviderSelector rendered configuration for recent models', () => {
               { type: 'text', text: 'Describe this image' },
               {
                 type: 'image_url',
-                image_url: { url: 'data:image/png;base64,dGVzdC1pbWFnZQ==' },
+                image_url:
+                  addition.provider === 'mistral'
+                    ? 'data:image/png;base64,dGVzdC1pbWFnZQ=='
+                    : { url: 'data:image/png;base64,dGVzdC1pbWFnZQ==' },
               },
             ],
           },
         ],
       });
-      expect(fetchMock.mock.calls[0][0]).toBe(ENDPOINT_OPENROUTER_API);
+      expect(fetchMock.mock.calls[0][0]).toBe(addition.endpoint);
     },
   );
 
@@ -824,4 +838,18 @@ it('keeps reasoning visibility available without inventing catalog effort levels
     expect(requestBody().reasoning?.max_tokens).toBeUndefined();
     expect(requestBody().reasoning?.exclude).toBeUndefined();
   }
+});
+
+it('labels Mistral DeepSeek as preview without inheriting GLM reasoning controls', async () => {
+  await renderApp();
+  await click(button('Mistral', 'provider'));
+  await click(button('GLM-5.3 Flash (Mistral)', 'model'));
+  await changeSelect('#mistral-reasoning-effort', 'max');
+  await click(button('DeepSeek V4.1 Flash 1017 (Mistral Preview)', 'model'));
+  expectNoEffortControls();
+  expect(container.textContent).toContain('Public preview hosted by Mistral.');
+  await changeInput('#api-key', 'test-ui-key');
+  await sendMessage();
+  expect(requestBody()).not.toHaveProperty('reasoning_effort');
+  expect(requestBody()).not.toHaveProperty('thinking');
 });

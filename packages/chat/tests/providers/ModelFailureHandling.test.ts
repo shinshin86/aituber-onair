@@ -11,6 +11,7 @@ import { createSseResponse } from '../helpers/sse';
 const messages = [{ role: 'user' as const, content: 'Hello' }];
 const error = { message: 'Mock provider failure' };
 const routes = [
+  { provider: 'mistral', model: 'deepseek-v4-1-flash-1017', responses: false },
   { provider: 'openrouter', model: 'unbiased/pareto-26.9', responses: false },
   {
     provider: 'openrouter',

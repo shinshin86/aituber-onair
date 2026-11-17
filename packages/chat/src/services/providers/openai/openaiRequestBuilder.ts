@@ -415,6 +415,16 @@ export function cleanMessagesForMistralChatCompletions(
       role: msg.role,
     };
 
+    // Preserve the identifiers required to continue a function-calling turn.
+    if (msg.role === 'assistant' && msg.tool_calls) {
+      cleanMsg.tool_calls = msg.tool_calls;
+    }
+    if (msg.role === 'tool') {
+      if (msg.tool_call_id !== undefined)
+        cleanMsg.tool_call_id = msg.tool_call_id;
+      if (msg.name !== undefined) cleanMsg.name = msg.name;
+    }
+
     if (!Array.isArray(msg.content)) {
       cleanMsg.content = msg.content;
       return cleanMsg;
