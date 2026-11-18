@@ -59,6 +59,8 @@ import {
   isKimiReasoningEffortModel,
   isResponsesOnlyGPT5Model,
   MODEL_GPT_6_1_SOL,
+  isGPT62Model,
+  normalizeGPT62ReasoningEffort,
   MODEL_GPT_6_ASTRA,
   isXaiReasoningEffortModel,
   normalizeClaudeReasoningEffort,
@@ -648,6 +650,9 @@ const App: React.FC = () => {
       return effort;
     }
 
+    if (isGPT62Model(targetModel)) {
+      return normalizeGPT62ReasoningEffort(effort);
+    }
     if (!effort) {
       return getDefaultReasoningEffortForOpenAIModel(targetModel);
     }
@@ -1834,7 +1839,10 @@ const App: React.FC = () => {
   }, [chatProvider, model, reasoning_effort]);
 
   useEffect(() => {
-    if (chatProvider === 'openai' && model === MODEL_GPT_6_1_SOL) {
+    if (
+      chatProvider === 'openai' &&
+      (model === MODEL_GPT_6_1_SOL || isGPT62Model(model))
+    ) {
       setGpt5EndpointPreference('responses');
     }
   }, [chatProvider, model]);
@@ -3731,7 +3739,7 @@ const App: React.FC = () => {
                         {chatProvider === 'mistral' &&
                           mistralModels.map((m) => (
                             <option key={m} value={m}>
-                              {m === 'mistral-large-4-0' ? `${m} (preview)` : m}
+                              {m === 'deepseek-v4-1-flash-1017' ? `${m} (preview)` : m}
                             </option>
                           ))}
                         {chatProvider === 'sarashina' &&
@@ -4301,7 +4309,9 @@ const App: React.FC = () => {
                                 <option value="low">Low</option>
                               )}
                               <option value="medium">Medium</option>
-                              <option value="high">High</option>
+                              {!isGPT62Model(model) && (
+                                <option value="high">High</option>
+                              )}
                               {allowsXHighReasoningEffort && (
                                 <option value="xhigh">XHigh</option>
                               )}
@@ -4337,6 +4347,13 @@ const App: React.FC = () => {
                             Responses API is the default and is required for
                             tools. Tool-free Chat Completions supports low,
                             medium, high, xhigh, and max reasoning.
+                          </p>
+                        )}
+                        {isGPT62Model(model) && (
+                          <p>
+                            Responses API is the default and is required for
+                            tools. GPT-6.2 exposes Low and Medium reasoning;
+                            other levels are normalized to this range.
                           </p>
                         )}
                         {isResponsesOnlyOpenAIGPT5ModelSelected && (

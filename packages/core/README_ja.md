@@ -1,8 +1,16 @@
 # AITuber OnAir Core
 
-### Chat 0.71.0
+### Chat 0.72.0
 
-Core 0.26.30は公開済みのChat 0.71.0とVoice 0.30.0を利用します。
+Core 0.26.31は公開済みのChat 0.72.0とVoice 0.30.0を利用します。
+OpenAI公式のGPT-6.2 Sol（`gpt-6.2-sol`）とGPT-6.2 Astra（`gpt-6.2-astra`）は画像入力に対応する明示選択肢です。
+推論は`low`から始まり、選べるのは`low`と`medium`のみです。保存済みのそれ以外のレベルはこの範囲に丸めます。
+Responses APIが既定で、ツールとMCPを使う場合は必須です。ツールなしならChat Completionsも使えますが、
+ツール付きでカスタムエンドポイントを指定すると送信前にエラーになります。
+Mistral経由のDeepSeek V4.1 Flash 1017（`deepseek-v4-1-flash-1017`）は、画像入力・ストリーミング・ツールに対応するパブリックプレビューの明示選択肢です。
+推論の制御は公開ドキュメントがないため送信しません。Mistralのツール呼び出しは後続リクエストでも継続できるよう修正しました。
+プロバイダーの初期モデルは変わりません。
+
 Gemini 4モデル（現在はArgon・Carbon・Hydrogen）は画像入力に対応する明示選択肢で、思考は必須です。
 `low`（パッケージの初期値）・`medium`・`high`を選べます。プロバイダーの初期モデルは変わりません。
 Hydrogen（`gemini-4-hydrogen`、OpenRouterでは`google/gemini-4-hydrogen`）は、
@@ -1497,13 +1505,13 @@ OpenRouter API、DeepSeek API、Mistral API、Sakana AI、Sarashina、PLaMo が�
 
 現在、以下のAIプロバイダーが組み込まれています：
 
-- **OpenAI**: GPT-5系（Nano/Mini/Standard/5.1/5.4/5.5/5.6 Sol/Terra/Luna/5.4 Mini/5.4 Nano/5.4 Pro）、GPT-4.1（Mini/Nano含む）、GPT-4o、GPT-4o-mini、O3-mini、o1、o1-miniのモデルをサポート。GPT-5.6 系では `max` reasoning effort も利用可能
+- **OpenAI**: GPT-6.2 Sol/Astra、GPT-6.1 Sol/Terra、GPT-6 Astra/Sol/Luna、GPT-5系（Nano/Mini/Standard/5.1/5.4/5.5/5.6 Sol/Terra/Luna/5.4 Mini/5.4 Nano/5.4 Pro）、GPT-4.1（Mini/Nano含む）、GPT-4o、GPT-4o-mini、O3-mini、o1、o1-miniのモデルをサポート。GPT-5.6 系では `max` reasoning effort も利用可能。GPT-6.2 は `low`（初期値）と `medium` のみ選択可能
 - **Gemini**: Gemini 3.8 Flash、Gemini 3.7 Flash、Gemini 3.6 Flash、Gemini 3.5 Flash / Flash-Lite、Gemini 3.1 Flash-Lite、Gemini 3.1 Pro Preview、Gemini 3 Flash Preview、Gemini 2.5 Pro、Gemini 2.5 Flash、Gemini 2.5 Flash Lite、Gemma 4 31B IT、Gemma 4 26B A4B IT などをサポート。Gemini 3.8 Flash と Gemini 3.7 Flash の `reasoning_effort` は `low`、従来の Flash 系は `minimal`、Pro 系は `low` をチャット向けのデフォルトにします。Gemini 3.8 Flash はネイティブ Gemini プロバイダー経由の Vision と tool calling にも対応します。Gemini 2.5 は引き続き `thinkingBudget` を使用します
 - **Gemini Nano**: Chrome内蔵の `gemini-nano` モデルを API キー不要でサポート（Chrome 138+ かつ Prompt API のフラグ有効化が必要）
 - **Claude**: Claude Haiku 5.5、Claude Fable 5、Claude Opus 5、Claude Sonnet 5、Claude Opus 4.8、Claude Opus 4.7、Claude Opus 4.6、Claude Opus 4.5、Claude Sonnet 4.6、Claude Sonnet 4.5、Claude Haiku 4.5 をサポートします。retired ID は source compatibility export として残しますが selector では案内しません。対応モデルでは `reasoning_effort` を Anthropic の `output_config.effort` として送信でき、パッケージの既定値は `low` です（API のデフォルトは `high`）
 - **xAI**: Grok 4.6、Grok 4.5、Grok 4.3、Grok 4.20 系をサポート。Grok 4.6 は `low`、`medium`、`high`、`xhigh` を利用でき、既定は `low` です。Grok 4.5 も `low`、Grok 4.3 は低レイテンシ向けに `none` がデフォルトです。Grok 4.1 Fast は compatibility export のみです
 - **DeepSeek**: first-class `deepseek` provider として DeepSeek V4 Flash / V4 Pro / Vision 対応の DeepSeek V4 Flash Vision Exp をサポート。各モデルでモデル別の `reasoning_effort` を利用でき、Core でも Chat の低レイテンシ向けデフォルト `none` を維持しつつ、対応する高い effort へ切り替えられます。現時点では thinking と tool calling を同一リクエストで併用できません
-- **Mistral**: Vision 対応の Ministral 3 系（`ministral-3b-2512`、`ministral-8b-2512`、`ministral-14b-2512`）と、`mistral-small-latest`、`zai-glm-5-3-flash`、`mistral-large-latest` などの現行 generalist model をサポート。対応モデルでは adjustable reasoning も利用可能
+- **Mistral**: Vision 対応の Ministral 3 系（`ministral-3b-2512`、`ministral-8b-2512`、`ministral-14b-2512`）と、`mistral-small-latest`、`zai-glm-5-3-flash`、`mistral-large-latest` などの現行 generalist model をサポート。対応モデルでは adjustable reasoning も利用可能。Mistral Large 4（`mistral-large-4-0`）は一般提供で、推論レベルは公開していません。Mistral 経由の DeepSeek V4.1 Flash 1017（`deepseek-v4-1-flash-1017`）は画像入力対応のパブリックプレビューで、推論の制御はありません
 このブラウザ例から API を直接呼び出せないプロバイダーは、選択を無効にしています。
 現在は Sakana AI と Sarashina が該当します。Sarashina の API キーは保護された
 バックエンドで管理し、Node.js などのサーバー環境から利用してください。
@@ -2183,7 +2191,7 @@ Deepgramの日本語音声は`flux-ayumi-ja`、`flux-hayato-ja`、`flux-nozomi-j
 
 ### Sarashina and reasoning defaults
 
-Core 0.26.30、Chat 0.71.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
+Core 0.26.31、Chat 0.72.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
 ブラウザで新しく選べない状態で表示します。アバター例の保存済みプロバイダー、モデル、キーは維持します。Basic はカタログ設定だけを保存します。
 バックエンドではテキスト専用の `sarashina3-nano`（既定）、`sarashina3-mini`、
 `sarashina3.2-mini-thinking` を利用できます。Guard はモデレーション専用なので含めません。

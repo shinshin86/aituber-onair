@@ -147,9 +147,19 @@ The bundled Miko PuruPuru avatar is included under its own asset terms. Read
 [`MIKO_ASSET_TERMS.md`](./MIKO_ASSET_TERMS.md) before redistributing or adapting
 the example.
 
-### Chat 0.71.0
+### Chat 0.72.0
 
-Core 0.26.30 uses published Chat 0.71.0 and Voice 0.30.0.
+Core 0.26.31 uses published Chat 0.72.0 and Voice 0.30.0.
+Native OpenAI GPT-6.2 Sol (`gpt-6.2-sol`) and GPT-6.2 Astra (`gpt-6.2-astra`)
+are explicit image-capable options. Reasoning starts at `low`; only `low` and
+`medium` are exposed, and other saved levels are normalized to that range.
+Responses is the default endpoint and is required for tools and MCP. Tool-free
+Chat Completions remains available; custom endpoints with tools fail before
+sending. Mistral-hosted DeepSeek V4.1 Flash 1017 (`deepseek-v4-1-flash-1017`)
+is an explicit public-preview option with image input, streaming, and tools;
+no reasoning control is sent because none is documented. Mistral tool calls
+now continue correctly in follow-up requests. Provider defaults are unchanged.
+
 Gemini 4 models (currently Argon, Carbon, and Hydrogen) are explicit,
 image-capable choices with mandatory thinking. Select `low` (package default),
 `medium`, or `high`; provider default models are unchanged.

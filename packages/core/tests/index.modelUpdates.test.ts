@@ -15,6 +15,11 @@ describe('Released Chat and Voice model exports', () => {
     'MODEL_GEMINI_4_ARGON',
     'MODEL_GEMINI_4_CARBON',
     'MODEL_GEMINI_4_HYDROGEN',
+    'MODEL_GPT_6_2_SOL',
+    'MODEL_GPT_6_2_ASTRA',
+    'isGPT62Model',
+    'normalizeGPT62ReasoningEffort',
+    'MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017',
     'MODEL_MISTRAL_ZAI_GLM_5_3_FLASH',
     'getMistralSupportedReasoningEfforts',
     'normalizeMistralReasoningEffort',
@@ -217,4 +222,66 @@ describe('Published Gemini 4 transport through Core', () => {
       expect(result.blocks).toEqual([{ type: 'text', text: 'Hello' }]);
     },
   );
+});
+
+describe('Published Chat 0.72 transport through Core', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([
+    [core.MODEL_GPT_6_2_SOL, 'max', 'medium'],
+    [core.MODEL_GPT_6_2_SOL, undefined, 'low'],
+    [core.MODEL_GPT_6_2_ASTRA, 'none', 'low'],
+    [core.MODEL_GPT_6_2_ASTRA, 'medium', 'medium'],
+  ] as const)(
+    'sends %s with effort %s normalized to %s over Responses',
+    async (model, requested, expected) => {
+      const fetchMock = vi.fn().mockRejectedValue(new Error('stop'));
+      vi.stubGlobal('fetch', fetchMock);
+      const service = core.ChatServiceFactory.createChatService('openai', {
+        apiKey: 'mock-key',
+        model,
+        ...(requested ? { reasoning_effort: requested } : {}),
+      });
+      await expect(
+        service.chatOnce!([{ role: 'user', content: 'Hello' }], false),
+      ).rejects.toThrow();
+      const [url, request] = fetchMock.mock.calls[0];
+      expect(url).toBe(core.ENDPOINT_OPENAI_RESPONSES_API);
+      expect(JSON.parse(request.body).reasoning).toEqual({ effort: expected });
+    },
+  );
+
+  it('exposes GPT-6.2 and Mistral DeepSeek capabilities through Core', () => {
+    for (const model of [core.MODEL_GPT_6_2_SOL, core.MODEL_GPT_6_2_ASTRA]) {
+      expect(core.AITuberOnAirCore.getSupportedModels('openai')).toContain(
+        model,
+      );
+      expect(core.isGPT62Model(model)).toBe(true);
+      expect(
+        core.AITuberOnAirCore.getVisionSupportLevelForModel('openai', model),
+      ).toBe('supported');
+    }
+    const deepseek = core.MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017;
+    expect(deepseek).toBe('deepseek-v4-1-flash-1017');
+    expect(core.MISTRAL_SUPPORTED_MODELS).toContain(deepseek);
+    expect(core.getMistralSupportedReasoningEfforts(deepseek)).toEqual([]);
+    expect(
+      core.AITuberOnAirCore.getVisionSupportLevelForModel('mistral', deepseek),
+    ).toBe('supported');
+  });
+
+  it('sends no reasoning control for Mistral DeepSeek V4.1 Flash', async () => {
+    const fetchMock = vi.fn().mockRejectedValue(new Error('stop'));
+    vi.stubGlobal('fetch', fetchMock);
+    const service = core.ChatServiceFactory.createChatService('mistral', {
+      apiKey: 'mock-key',
+      model: core.MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
+    });
+    await expect(
+      service.chatOnce!([{ role: 'user', content: 'Hello' }], false),
+    ).rejects.toThrow();
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.model).toBe('deepseek-v4-1-flash-1017');
+    expect(body).not.toHaveProperty('reasoning_effort');
+  });
 });
