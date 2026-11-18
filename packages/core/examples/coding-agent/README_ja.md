@@ -59,9 +59,17 @@ E2E はローカル OpenAI 互換モックサーバーで実行し、
 - 機密パス（`.env`, `*.pem`, `id_rsa` など）を遮断
 - `-c`, `--command`, `| sh` など危険引数を遮断
 
-### Chat 0.71.0
+### Chat 0.72.0
 
-Core 0.26.30は公開済みのChat 0.71.0とVoice 0.30.0を利用します。
+Core 0.26.31は公開済みのChat 0.72.0とVoice 0.30.0を利用します。
+OpenAI公式のGPT-6.2 Sol（`gpt-6.2-sol`）とGPT-6.2 Astra（`gpt-6.2-astra`）は画像入力に対応する明示選択肢です。
+推論は`low`から始まり、選べるのは`low`と`medium`のみです。保存済みのそれ以外のレベルはこの範囲に丸めます。
+Responses APIが既定で、ツールとMCPを使う場合は必須です。ツールなしならChat Completionsも使えますが、
+ツール付きでカスタムエンドポイントを指定すると送信前にエラーになります。
+Mistral経由のDeepSeek V4.1 Flash 1017（`deepseek-v4-1-flash-1017`）は、画像入力・ストリーミング・ツールに対応するパブリックプレビューの明示選択肢です。
+推論の制御は公開ドキュメントがないため送信しません。Mistralのツール呼び出しは後続リクエストでも継続できるよう修正しました。
+プロバイダーの初期モデルは変わりません。
+
 Gemini 4モデル（現在はArgon・Carbon・Hydrogen）は画像入力に対応する明示選択肢で、思考は必須です。
 `low`（パッケージの初期値）・`medium`・`high`を選べます。プロバイダーの初期モデルは変わりません。
 Hydrogen（`gemini-4-hydrogen`、OpenRouterでは`google/gemini-4-hydrogen`）は、

@@ -1,8 +1,18 @@
 # AITuber OnAir Core
 
-### Chat 0.71.0
+### Chat 0.72.0
 
-Core 0.26.30 uses published Chat 0.71.0 and Voice 0.30.0.
+Core 0.26.31 uses published Chat 0.72.0 and Voice 0.30.0.
+Native OpenAI GPT-6.2 Sol (`gpt-6.2-sol`) and GPT-6.2 Astra (`gpt-6.2-astra`)
+are explicit image-capable options. Reasoning starts at `low`; only `low` and
+`medium` are exposed, and other saved levels are normalized to that range.
+Responses is the default endpoint and is required for tools and MCP. Tool-free
+Chat Completions remains available; custom endpoints with tools fail before
+sending. Mistral-hosted DeepSeek V4.1 Flash 1017 (`deepseek-v4-1-flash-1017`)
+is an explicit public-preview option with image input, streaming, and tools;
+no reasoning control is sent because none is documented. Mistral tool calls
+now continue correctly in follow-up requests. Provider defaults are unchanged.
+
 Gemini 4 models (currently Argon, Carbon, and Hydrogen) are explicit,
 image-capable choices with mandatory thinking. Select `low` (package default),
 `medium`, or `high`; provider default models are unchanged.
@@ -1604,13 +1614,13 @@ would like to use any other API, please submit a PR or send us a message.
 
 Currently, the following AI provider is built-in:
 
-- **OpenAI**: Supports models like GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.5/5.6 Sol/Terra/Luna/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini. GPT-5.6 models also support `max` reasoning effort.
+- **OpenAI**: Supports models like GPT-6.2 Sol/Astra, GPT-6.1 Sol/Terra, GPT-6 Astra/Sol/Luna, GPT-5 family (Nano/Mini/Standard/5.1/5.4/5.5/5.6 Sol/Terra/Luna/5.4 Mini/5.4 Nano/5.4 Pro), GPT-4.1 (including Mini/Nano), GPT-4o, GPT-4o-mini, O3-mini, o1, o1-mini. GPT-5.6 models also support `max` reasoning effort. GPT-6.2 exposes only `low` (default) and `medium`.
 - **Gemini**: Supports models like Gemini 3.8 Flash, Gemini 3.7 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash / Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 Flash-family models support configurable `reasoning_effort`; Gemini 3.8 Flash and Gemini 3.7 Flash start at `low`, while earlier Flash models start at `minimal` and Pro models at `low`. Gemini 3.8 Flash also supports Vision and tool calling through the native Gemini provider. Gemini 2.5 continues to use `thinkingBudget` instead.
 - **Gemini Nano**: Supports the built-in Chrome `gemini-nano` model without an API key (Chrome 138+ with Prompt API flags enabled)
 - **Claude**: Supports current Claude API model IDs including Claude Haiku 5.5, Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, Claude Sonnet 4.5, and Claude Haiku 4.5. Retired IDs remain exported for source compatibility but are not advertised in selectors. Supported models accept `reasoning_effort`, which maps to Anthropic's `output_config.effort`; the package defaults these models to `low` (the API default is `high`).
 - **xAI**: Supports Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 model families. Grok 4.6 supports `low`, `medium`, `high`, and `xhigh` reasoning effort and defaults to `low`; Grok 4.5 also defaults to `low`, while Grok 4.3 defaults to `none` for lower latency. Retired Grok 4.1 Fast IDs remain compatibility exports only.
 - **DeepSeek**: Supports DeepSeek V4 Flash, DeepSeek V4 Pro, and the vision-capable DeepSeek V4 Flash Vision Exp through the first-class `deepseek` provider. These models expose model-aware `reasoning_effort`; Core keeps Chat's low-latency `none` default, while higher supported efforts remain selectable. Thinking and tool calling cannot currently be combined in one request.
-- **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `zai-glm-5-3-flash`, and `mistral-large-latest`, including adjustable reasoning for supported models. Mistral Large 4 (`mistral-large-4-0`) is an explicit public preview; its reasoning levels are not exposed by this package.
+- **Mistral**: Supports the vision-capable Ministral 3 family (`ministral-3b-2512`, `ministral-8b-2512`, `ministral-14b-2512`) and current Mistral generalist models such as `mistral-small-latest`, `zai-glm-5-3-flash`, and `mistral-large-latest`, including adjustable reasoning for supported models. Mistral Large 4 (`mistral-large-4-0`) is generally available; its reasoning levels are not exposed by this package. Mistral-hosted DeepSeek V4.1 Flash 1017 (`deepseek-v4-1-flash-1017`) is an image-capable public preview without reasoning controls.
 Providers whose APIs must not be called directly from this browser example are
 shown disabled: currently Sakana AI and Sarashina. Sarashina API keys must stay
 on a protected backend; use a Node/backend integration.
@@ -2292,7 +2302,7 @@ Deepgram Japanese presets are `flux-ayumi-ja`, `flux-hayato-ja`, `flux-nozomi-ja
 
 ### Sarashina and reasoning defaults
 
-This Core release uses Core 0.26.30 with Chat 0.71.0 and Voice 0.30.0. Sarashina is
+This Core release uses Core 0.26.31 with Chat 0.72.0 and Voice 0.30.0. Sarashina is
 shown but disabled for new browser selections, like Sakana AI. Avatar apps preserve saved provider, model and key values;
 the Basic example persists only catalog settings. The backend provider offers text-only
 `sarashina3-nano` (default), `sarashina3-mini`, and `sarashina3.2-mini-thinking`;

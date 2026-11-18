@@ -1,5 +1,28 @@
 # @aituber-onair/core
 
+## 0.26.31
+
+### Patch Changes
+
+- Propagate published Chat 0.72.0 and re-export native GPT-6.2 Sol and Astra
+  (`MODEL_GPT_6_2_SOL`, `MODEL_GPT_6_2_ASTRA`) with the `isGPT62Model` and
+  `normalizeGPT62ReasoningEffort` helpers, plus Mistral-hosted DeepSeek V4.1
+  Flash 1017 (`MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017`).
+- Add these models to Basic selectors. GPT-6.2 starts at `low`, exposes only
+  `low` and `medium`, normalizes other saved levels to that range, and
+  defaults to the Responses endpoint required for tools. DeepSeek V4.1 Flash
+  is labeled as a preview and sends no reasoning control. Mistral Large 4 is
+  no longer labeled as a preview. Provider defaults are unchanged.
+- Mistral tool calls continue correctly in follow-up requests through the
+  published Chat fix.
+- Refresh Core and example READMEs (EN/JA), embedded example lockfile
+  metadata, and starter version expectations.
+
+### Known Limitations
+
+- No live inference was performed; provider compatibility follows the
+  published Chat release and mocked transport tests.
+
 ## 0.26.30
 
 ### Patch Changes

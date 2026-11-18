@@ -1,8 +1,16 @@
 # PNGTuber Chat
 
-### Chat 0.71.0
+### Chat 0.72.0
 
-Core 0.26.30は公開済みのChat 0.71.0とVoice 0.30.0を利用します。
+Core 0.26.31は公開済みのChat 0.72.0とVoice 0.30.0を利用します。
+OpenAI公式のGPT-6.2 Sol（`gpt-6.2-sol`）とGPT-6.2 Astra（`gpt-6.2-astra`）は画像入力に対応する明示選択肢です。
+推論は`low`から始まり、選べるのは`low`と`medium`のみです。保存済みのそれ以外のレベルはこの範囲に丸めます。
+Responses APIが既定で、ツールとMCPを使う場合は必須です。ツールなしならChat Completionsも使えますが、
+ツール付きでカスタムエンドポイントを指定すると送信前にエラーになります。
+Mistral経由のDeepSeek V4.1 Flash 1017（`deepseek-v4-1-flash-1017`）は、画像入力・ストリーミング・ツールに対応するパブリックプレビューの明示選択肢です。
+推論の制御は公開ドキュメントがないため送信しません。Mistralのツール呼び出しは後続リクエストでも継続できるよう修正しました。
+プロバイダーの初期モデルは変わりません。
+
 Gemini 4モデル（現在はArgon・Carbon・Hydrogen）は画像入力に対応する明示選択肢で、思考は必須です。
 `low`（パッケージの初期値）・`medium`・`high`を選べます。プロバイダーの初期モデルは変わりません。
 Hydrogen（`gemini-4-hydrogen`、OpenRouterでは`google/gemini-4-hydrogen`）は、
@@ -56,7 +64,7 @@ Mistral Medium 3.5、OpenRouter Mercury 2.5/3・Kimi K2.5・GPT Latestは新規�
 現在は Sakana AI と Sarashina が該当します。Sarashina の API キーは保護された
 バックエンドで管理し、Node.js などのサーバー環境から利用してください。
 
-Core 0.26.30は、公開済みのChat 0.71.0とVoice 0.30.0を利用します。
+Core 0.26.31は、公開済みのChat 0.72.0とVoice 0.30.0を利用します。
 DeepSeek-V4.1-Flash-1017には`deepseek-flash`を指定してください。
 同じIDのまま、提供元の更新によって利用するモデルが変わる場合があります。
 Fish AudioのModel欄では、単一話者・一括生成向けの`drama-3`と
@@ -383,7 +391,7 @@ Fish Audio S1 は 2026-12-31 に提供終了、S2.1 Pro Free の無料期間は
 
 ### Sarashina and reasoning defaults
 
-Core 0.26.30、Chat 0.71.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
+Core 0.26.31、Chat 0.72.0、Voice 0.30.0 を使用します。Sarashina は Sakana AI と同様、
 ブラウザで新しく選べない状態で表示します。保存済みのプロバイダー、モデル、キーは維持します。
 バックエンドではテキスト専用の `sarashina3-nano`（既定）、`sarashina3-mini`、
 `sarashina3.2-mini-thinking` を利用できます。Guard はモデレーション専用なので含めません。

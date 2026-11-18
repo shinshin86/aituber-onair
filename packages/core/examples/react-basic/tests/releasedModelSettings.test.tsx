@@ -226,6 +226,37 @@ describe('released model settings', () => {
     expect(effort.value).toBe('max');
   });
 
+  it('propagates Chat 0.72 GPT-6.2 and Mistral DeepSeek selections', async () => {
+    await refreshCatalog(true);
+    await act(async () => root.render(<App />));
+    await button('設定');
+    const options = () =>
+      [...container.querySelectorAll<HTMLOptionElement>('#model option')].map(
+        (option) => option.value,
+      );
+    expect(options()).toEqual(
+      expect.arrayContaining(['gpt-6.2-sol', 'gpt-6.2-astra']),
+    );
+    for (const model of ['gpt-6.2-sol', 'gpt-6.2-astra']) {
+      await choose('model', model);
+      expect(
+        container.querySelector<HTMLSelectElement>('#gpt5EndpointPreference')!
+          .value,
+      ).toBe('responses');
+      expect(container.textContent).toContain(
+        'GPT-6.2 exposes Low and Medium reasoning',
+      );
+    }
+    await choose('chatProvider', 'mistral');
+    expect(options()).toContain('deepseek-v4-1-flash-1017');
+    await choose('model', 'deepseek-v4-1-flash-1017');
+    expect(container.querySelector('#mistralReasoningEffort')).toBeNull();
+    const label = [
+      ...container.querySelectorAll<HTMLOptionElement>('#model option'),
+    ].find((option) => option.value === 'deepseek-v4-1-flash-1017');
+    expect(label?.textContent).toBe('deepseek-v4-1-flash-1017 (preview)');
+  });
+
   it('shows Sarashina disabled and labels Claude Opus 5.5 effort correctly', async () => {
     await refreshCatalog(true);
     await act(async () => root.render(<App />));
