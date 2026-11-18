@@ -7,19 +7,13 @@ const QUESTION_LIMITS = {
   google: 1000,
 } as const;
 
-// Future transport limits are prepared here without advertising API support.
-type TransportWithLimit =
-  | DecisionsTransport
-  | 'microsoft'
-  | keyof typeof QUESTION_LIMITS;
-
 /**
  * Reserve the worst-case number of questions, regardless of current context.
  * Reject explicit oversized batches at creation; reduce only the default 20.
  * Transports without a question limit retain the existing 50-comment ceiling.
  */
 export function resolveMaxComments(
-  transport: TransportWithLimit,
+  transport: DecisionsTransport,
   requested: number | undefined,
   responsePlan: boolean
 ): number {

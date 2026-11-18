@@ -8,13 +8,20 @@ import {
 } from '../jev/commentDecisions.js';
 import type { DecisionsCommentDecision } from '../jev/commentDecisions.js';
 import { resolveMaxComments } from '../jev/questionLimits.js';
-import type { DecisionsTransport } from '../jev/types.js';
+import type {
+  CloudflareDecisionsBinding,
+  DecisionsRequestHandler,
+} from '../jev/types.js';
+import { createMicrosoftDecisionTransport } from '../jev/microsoftTransport.js';
+import { createLiquidDecisionTransport } from '../jev/liquidTransport.js';
+import { createGoogleDecisionTransport } from '../jev/googleTransport.js';
+import { createOpenAIDecisionTransport } from '../jev/openAITransport.js';
+import { createCloudflareDecisionTransport } from '../jev/cloudflareTransport.js';
 import { createOpenRouterDecisionTransport } from '../jev/openRouterTransport.js';
 import { createTypeSafeDecisionTransport } from '../jev/typeSafeTransport.js';
 
-export type DecisionsCommentAnalysisOptions = {
-  transport: DecisionsTransport;
-  apiKey: string;
+type CommonDecisionsCommentAnalysisOptions = {
+  /** Model override; each transport supplies a default except Microsoft. */
   model?: string;
   /** Uncalibrated starting threshold; tune against your own comment data. */
   minConfidence?: number;
@@ -22,10 +29,10 @@ export type DecisionsCommentAnalysisOptions = {
    * First N eligible comments in caller order. Explicit values exceeding the
    * transport ceiling are rejected at creation, reserving 3 questions per
    * comment (7 with responsePlan). Default: the smaller of 20 and the ceiling.
-   * TypeSafe and OpenRouter retain their 50-comment ceiling.
+   * Microsoft, TypeSafe and OpenRouter retain their 50-comment ceiling.
    */
   maxComments?: number;
-  /** Cancels the HTTP request; default 2500 ms. */
+  /** Cancels HTTP or ends the wait for a binding request; default 2500 ms. */
   timeoutMs?: number;
   /**
    * Also asks how much thought each reply needs and whether a moderator
@@ -34,6 +41,35 @@ export type DecisionsCommentAnalysisOptions = {
   responsePlan?: boolean | DecisionsResponsePlanOptions;
   fetch?: typeof globalThis.fetch;
 };
+
+type ApiKeyDecisionsOptions = {
+  transport: 'typesafe' | 'openrouter' | 'liquid' | 'google' | 'openai';
+  apiKey: string;
+};
+
+type MicrosoftDecisionsOptions = {
+  transport: 'microsoft';
+  /** HTTPS Foundry resource endpoint. */
+  endpoint: string;
+  /** Deployment name, not the underlying model ID. */
+  model: string;
+} & (
+  | { apiKey: string; bearerToken?: never }
+  | { apiKey?: never; bearerToken: string }
+);
+
+type CloudflareDecisionsOptions = { transport: 'cloudflare' } & (
+  | { apiKey: string; accountId: string; binding?: never }
+  | { binding: CloudflareDecisionsBinding; apiKey?: never; accountId?: never }
+);
+
+export type DecisionsCommentAnalysisOptions =
+  CommonDecisionsCommentAnalysisOptions &
+    (
+      | ApiKeyDecisionsOptions
+      | MicrosoftDecisionsOptions
+      | CloudflareDecisionsOptions
+    );
 
 export type DecisionsResponsePlanOptions = {
   /**
@@ -64,13 +100,22 @@ export type DecisionsCommentAnalysisProvider = Omit<
 export function createDecisionsCommentAnalysisProvider(
   options: DecisionsCommentAnalysisOptions
 ): DecisionsCommentAnalysisProvider {
-  if (options.transport !== 'openrouter' && options.transport !== 'typesafe')
+  if (
+    ![
+      'typesafe',
+      'openrouter',
+      'microsoft',
+      'liquid',
+      'google',
+      'openai',
+      'cloudflare',
+    ].includes(options.transport)
+  )
     throw new Error('Unsupported Jev transport');
-  const errorPrefix =
-    options.transport === 'typesafe' || options.transport === 'openrouter'
-      ? 'Jev'
-      : 'Decisions';
-  if (!options.apiKey?.trim())
+  const legacy =
+    options.transport === 'typesafe' || options.transport === 'openrouter';
+  const errorPrefix = legacy ? 'Jev' : 'Decisions';
+  if (legacy && !options.apiKey?.trim())
     throw new Error(
       `${errorPrefix} requires a ${options.transport === 'typesafe' ? 'TypeSafe AI' : 'OpenRouter'} API key`
     );
@@ -97,19 +142,7 @@ export function createDecisionsCommentAnalysisProvider(
     if (!Number.isFinite(value) || value < 0 || value > 1)
       throw new Error(`${errorPrefix} ${name} must be between 0 and 1`);
   }
-  const model =
-    options.model ??
-    (options.transport === 'typesafe' ? 'jev-latest' : '~typesafe/jev-latest');
-  if (!model.trim()) throw new Error(`${errorPrefix} model must not be empty`);
-  const createTransport =
-    options.transport === 'typesafe'
-      ? createTypeSafeDecisionTransport
-      : createOpenRouterDecisionTransport;
-  const request = createTransport({
-    apiKey: options.apiKey.trim(),
-    model,
-    fetch: options.fetch,
-  });
+  const request = createTransport(options);
 
   return {
     inputScope: 'eligible-comments',
@@ -149,11 +182,51 @@ export function createDecisionsCommentAnalysisProvider(
   };
 }
 
+function createTransport(
+  options: DecisionsCommentAnalysisOptions
+): DecisionsRequestHandler {
+  switch (options.transport) {
+    case 'typesafe':
+    case 'openrouter': {
+      const model =
+        options.model ??
+        (options.transport === 'typesafe'
+          ? 'jev-latest'
+          : '~typesafe/jev-latest');
+      if (!model.trim()) throw new Error('Jev model must not be empty');
+      const create =
+        options.transport === 'typesafe'
+          ? createTypeSafeDecisionTransport
+          : createOpenRouterDecisionTransport;
+      return create({
+        apiKey: options.apiKey?.trim() ?? '',
+        model,
+        fetch: options.fetch,
+      });
+    }
+    case 'microsoft':
+      return createMicrosoftDecisionTransport(options);
+    case 'liquid':
+      return createLiquidDecisionTransport(options);
+    case 'google':
+      return createGoogleDecisionTransport(options);
+    case 'openai':
+      return createOpenAIDecisionTransport(options);
+    case 'cloudflare':
+      return createCloudflareDecisionTransport(options);
+  }
+}
+
 /** Backwards-compatible alias with identical options and behavior. */
 export const createJevCommentAnalysisProvider =
   createDecisionsCommentAnalysisProvider;
 
-export type JevCommentAnalysisOptions = DecisionsCommentAnalysisOptions;
+/** Legacy configuration shape remains assignable to the generic factory. */
+export type JevCommentAnalysisOptions =
+  CommonDecisionsCommentAnalysisOptions & {
+    transport: 'typesafe' | 'openrouter';
+    apiKey: string;
+  };
 export type JevResponsePlanOptions = DecisionsResponsePlanOptions;
 export type JevCommentAnalysisResult = DecisionsCommentAnalysisResult;
 export type JevCommentAnalysisProvider = DecisionsCommentAnalysisProvider;

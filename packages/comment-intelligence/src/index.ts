@@ -24,7 +24,10 @@ export type {
   JevCommentAnalysisResult,
   JevResponsePlanOptions,
 } from './llm/createDecisionsCommentAnalysisProvider.js';
-export type { DecisionsTransport } from './jev/types.js';
+export type {
+  CloudflareDecisionsBinding,
+  DecisionsTransport,
+} from './jev/types.js';
 export type {
   DecisionsChoiceAnswer,
   DecisionsCommentDecision,

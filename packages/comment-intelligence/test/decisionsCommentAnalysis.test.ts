@@ -72,7 +72,7 @@ function answerFor(key: string): unknown {
 
 function provider(
   answer: (key: string) => unknown = answerFor,
-  options: Partial<DecisionsCommentAnalysisOptions> = {}
+  options: Partial<JevCommentAnalysisOptions> = {}
 ) {
   const fetchFn = vi
     .fn<[RequestInfo | URL, RequestInit?], Promise<Response>>()
@@ -102,7 +102,7 @@ describe('generic Decisions API compatibility', () => {
       createDecisionsCommentAnalysisProvider
     );
     expect(legacyModuleFactory).toBe(createDecisionsCommentAnalysisProvider);
-    expectTypeOf<JevCommentAnalysisOptions>().toEqualTypeOf<DecisionsCommentAnalysisOptions>();
+    expectTypeOf<JevCommentAnalysisOptions>().toMatchTypeOf<DecisionsCommentAnalysisOptions>();
     expectTypeOf<JevCommentAnalysisProvider>().toEqualTypeOf<DecisionsCommentAnalysisProvider>();
     expectTypeOf<JevCommentAnalysisResult>().toEqualTypeOf<DecisionsCommentAnalysisResult>();
     expectTypeOf<JevResponsePlanOptions>().toEqualTypeOf<DecisionsResponsePlanOptions>();
@@ -161,7 +161,9 @@ describe.each(['typesafe', 'openrouter'] as const)(
         new RegExp(`^Jev requires a ${name} API key$`)
       );
       expect(() =>
-        provider(answerFor, { transport: 'unsupported' as DecisionsTransport })
+        provider(answerFor, {
+          transport: 'unsupported' as JevCommentAnalysisOptions['transport'],
+        })
       ).toThrow(/^Unsupported Jev transport$/);
     });
 

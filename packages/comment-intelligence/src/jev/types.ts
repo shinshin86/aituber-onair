@@ -1,4 +1,21 @@
-export type DecisionsTransport = 'openrouter' | 'typesafe';
+export type DecisionsTransport =
+  | 'openrouter'
+  | 'typesafe'
+  | 'microsoft'
+  | 'liquid'
+  | 'google'
+  | 'openai'
+  | 'cloudflare';
+
+/** Workers AI binding; the consuming application supplies its own instance. */
+export type CloudflareDecisionsBinding = {
+  run(model: string, input: unknown): Promise<unknown>;
+};
+
+export type DecisionsRequestHandler = (
+  request: DecisionsRequest,
+  signal: AbortSignal
+) => Promise<unknown>;
 
 export type DecisionsChoiceQuestion = {
   type: 'choice';
