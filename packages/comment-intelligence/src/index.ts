@@ -10,14 +10,26 @@ export {
 } from './tools.js';
 export type { AgentToolDefinition } from './tools.js';
 export { createChatServiceCommentAnalysisProvider } from './llm/createChatServiceCommentAnalysisProvider.js';
-export { createJevCommentAnalysisProvider } from './llm/createJevCommentAnalysisProvider.js';
+export {
+  createDecisionsCommentAnalysisProvider,
+  createJevCommentAnalysisProvider,
+} from './llm/createDecisionsCommentAnalysisProvider.js';
 export type {
+  DecisionsCommentAnalysisOptions,
+  DecisionsCommentAnalysisProvider,
+  DecisionsCommentAnalysisResult,
+  DecisionsResponsePlanOptions,
   JevCommentAnalysisOptions,
   JevCommentAnalysisProvider,
   JevCommentAnalysisResult,
   JevResponsePlanOptions,
-} from './llm/createJevCommentAnalysisProvider.js';
+} from './llm/createDecisionsCommentAnalysisProvider.js';
+export type { DecisionsTransport } from './jev/types.js';
 export type {
+  DecisionsChoiceAnswer,
+  DecisionsCommentDecision,
+  DecisionsNoulAnswer,
+  DecisionsScoreAnswer,
   JevChoiceAnswer,
   JevCommentDecision,
   JevNoulAnswer,
