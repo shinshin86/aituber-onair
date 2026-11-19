@@ -1,6 +1,8 @@
 # @aituber-onair/comment-intelligence
 
-## Unreleased
+## 0.0.9
+
+### Patch Changes
 
 - Adds `createDecisionsCommentAnalysisProvider()` as the generic Decisions API
   entry point. `createJevCommentAnalysisProvider` remains a compatible alias;
