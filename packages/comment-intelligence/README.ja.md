@@ -71,7 +71,9 @@ if (selected) {
 
 ルールベースのライブコメントフィルターを試せる小さなブラウザサンプルを含めています。
 AIが拾うコメント、ブロックする危険コメント、要約される文脈を確認できます。
-このサンプル単体では `@aituber-onair/core` への送信や LLM 呼び出しは行いません。
+`@aituber-onair/core` への送信は行いません。「ルールのみ」ではAPIを呼びません。
+OpenAI LLMアシストまたはDecisions / Jevを選び、認証情報を入力して実行すると
+外部APIで分析します。詳しくは[比較サンプルと検証](#比較サンプルと検証)を参照してください。
 
 ```sh
 npm -w @aituber-onair/comment-intelligence run example:live-comment-filter-sample
@@ -219,7 +221,7 @@ answered memory 全体を消せます。`getAnsweredState(commentId)` と
 
 ## hybrid / llm-assisted mode
 
-LLM補助は optional です。APIキーは分析設定に直接渡さず、アプリ側で provider を作って注入します。Jev用アダプターには、選んだ接続先のAPIキーを渡します。
+LLM補助は optional です。APIキーは分析設定に直接渡さず、アプリ側で provider を作って注入します。Decisions用アダプターには、接続先の認証情報またはWorkers AI bindingを渡します。
 
 ```ts
 import { createChatServiceCommentAnalysisProvider } from '@aituber-onair/comment-intelligence';
@@ -235,21 +237,25 @@ const intelligence = createCommentIntelligence({
 
 provider が失敗しても、`fallbackToRules` が `false` でなければ rules mode の結果に戻ります。
 
-## Jevを使う
+## Decisions APIを使う（Jevを含む）
 
-`createJevCommentAnalysisProvider()` は、Jevでコメントの意味を評価し、
-既存の優先順位付けを補う任意のプロバイダーです。
-接続先はTypeSafe AI公式APIとOpenRouterから選べます。
-`transport` と、そのサービスで発行したAPIキーを指定してください。
-どちらも同じ評価項目・ランキング処理を使います。
-初期設定は従来どおり、通信しない `rules` モードです。
+`createDecisionsCommentAnalysisProvider()` は、複数サービスのDecisions APIを
+共通の設定で使うための関数です。コメントの意味を評価し、既存の優先順位付けを補います。
+`createJevCommentAnalysisProvider` は同じ関数を指す互換エイリアスとして残ります。
+既存のTypeSafe AI・OpenRouter設定もそのまま使えます。初期設定は通信しない
+`rules` モードです。chatパッケージや各サービスのSDKには依存しません。
+
+新しい接続先は公式資料で仕様を確認し、通信モックでテストしていますが、
+認証付きの実APIでは検証していません。対象は `microsoft`、`liquid`、`google`、
+`openai`、`cloudflare` です。通信形式・応答変換・入力検証・フォールバック・中断の
+テストは、実サービスの稼働、ブラウザのCORS、処理時間、判定精度を保証しません。
 
 ### 何が変わるか
 
 ルール分析は高速でAPI料金もかかりませんが、質問や配信テーマとの関連を主に
 語句で判定します。例えばテーマが「音声合成」なら、「声をもっと自然にできる？」
 はテーマの語句を含まず、「ローカル実行の手順を知りたい」は疑問符を含みません。
-Jevは、こうした言い換えや文脈上の質問を分類するために使います。
+Decisions APIは、こうした言い換えや文脈上の質問を分類するために使います。
 
 | 評価 | コメント選択への反映 |
 | --- | --- |
@@ -262,32 +268,54 @@ Jevは、こうした言い換えや文脈上の質問を分類するために�
 渡した履歴内だけの推定です。履歴を渡さなければ、この評価は行いません。
 
 通常のLLMを使う既存の分析プロバイダーも、意味に基づく選択に対応しています。
-Jev版は選択肢を定めた判断APIを使い、複数コメントの評価を1回の通信で求めます。
+このアダプターは選択肢を定めた判断APIを使い、複数コメントの評価を1回の通信で求めます。
 自由文のJSON生成や解析を必要とせず、候補ごとの確信度を扱えるのが違いです。
 料金・処理時間・日本語の判定精度が既存LLMより優れるかは、利用する会話で
 比較してください。精度向上や発話の高速化を保証する機能ではありません。
 
 ### 接続先を選ぶ
 
-| `transport` | 必要なAPIキー | 既定モデル | 接続先 |
-| --- | --- | --- | --- |
-| `typesafe` | TypeSafe AI | `jev-latest` | `https://api.typesafe.ai/v1/systemone` |
-| `openrouter` | OpenRouter | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` |
+| `transport` | 認証ヘッダー | 既定モデル | 接続先 | 質問数上限 | コメント数上限（通常 / responsePlan） | 提供段階 |
+| --- | --- | --- | --- | --- | --- | --- |
+| [`typesafe`](https://docs.typesafe.ai/models) | `Authorization: Bearer <apiKey>` | `jev-latest` | `https://api.typesafe.ai/v1/systemone` | 未設定 | 50 / 50 | 安定版モデル。GA/Beta表記なし |
+| [`openrouter`](https://openrouter.ai/docs/guides/features/decisions) | `Authorization: Bearer <apiKey>` | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` | 未設定 | 50 / 50 | alpha |
+| [`microsoft`](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-microsoft-decision) | `api-key: <apiKey>` または `Authorization: Bearer <bearerToken>` | デプロイ名を必ず指定。既定値なし | `<endpoint>/providers/microsoft/v1/systemone` | 未設定 | 50 / 50 | GA（Microsoft-Decision-1.1） |
+| [`liquid`](https://docs.liquid.ai/api/reference/decision-models/make-decisions) | `Authorization: Bearer <apiKey>` | `d1.1` | `https://api.liquid.ai/decisions/v1/systemone` | 128 | 42 / 18 | 公開API。GA/Beta表記なし |
+| [`google`](https://aistudio.google.com/api-reference/decisions/create-decision.md) | `x-goog-api-key: <apiKey>` | `gemini-decision-1` | `https://generativelanguage.googleapis.com/v1beta/decisions` | 1,000 | 333 / 142 | Beta |
+| [`openai`](https://developers.openai.com/api/docs/guides/decisions) | `Authorization: Bearer <apiKey>` | `gpt-6-luna` | `https://api.openai.com/v1/decisions` | 400 | 133 / 57 | GA |
+| [`cloudflare`](https://developers.cloudflare.com/workers-ai/models/clef/) | REST: `Authorization: Bearer <apiKey>`; binding: ヘッダー不要 | `clef` | REST: `https://api.cloudflare.com/client/v4/accounts/<accountId>/ai/run/@cf/cloudflare/<model>`; binding: `run('@cf/cloudflare/<model>', body)` | 64 | 21 / 9 | 掲載モデル。GA/Beta表記なし |
 
-既存のOpenRouter設定はそのまま使えます。モデルIDは接続先ごとに異なります。
-`model` を省略すると、それぞれの既定モデルを使います。
+提供段階はサービス側のAPI・モデルの表記であり、この実装の検証状況とは別です。
+リンク先の公式資料は2026-11-19に確認しました。GA/Betaが明記されていないものは、
+表でも未指定としています。質問数上限の「未設定」は、この実装が従来の50コメント上限だけを
+適用することを示します。サービスの入力が無制限という意味ではありません。
+
+質問数に上限のある接続先では、1コメントあたり通常は最大3問、`responsePlan` 有効時は
+最大7問として、`floor(質問数上限 / 1コメントの最大質問数)` をコメント数上限にします。
+文脈がなく一部の質問を省略する場合も、この上限は増えません。Microsoft・TypeSafe AI・
+OpenRouterは、どちらのモードでも50件のままです。
+`maxComments` の既定値は `min(20, 上限)` です。通常は20件で、`responsePlan` 有効時は
+Liquidが18件、Cloudflareが9件になります。上限超過、1未満、整数以外の値を明示すると、
+プロバイダーの作成時にエラーになります。上限内への自動補正は行いません。
+[上限の実装](./src/jev/questionLimits.ts)も参照できます。
+
+モデルIDは接続先ごとに異なります。Microsoftではデプロイ名を必ず指定し、ほかの接続先は
+`model` を省略すると表の既定値を使います。上記確認時点で、TypeSafeの `jev-latest` は
+`jev-1.14.0` を指します。Jev 1.14ではBox形式が追加されましたが、このアダプターが使うのは
+Choice・Score・Noulで、Boxや画像入力は使いません。
+[TypeSafeのモデルとエイリアス](https://docs.typesafe.ai/models)。
 
 ```ts
 import {
   createCommentIntelligence,
-  createJevCommentAnalysisProvider,
+  createDecisionsCommentAnalysisProvider,
 } from '@aituber-onair/comment-intelligence';
 
 // サーバー側の例。公開ブラウザアプリではキーをサーバーに置いてください。
 const intelligence = createCommentIntelligence({
   analysis: {
     mode: 'hybrid',
-    llmProvider: createJevCommentAnalysisProvider({
+    llmProvider: createDecisionsCommentAnalysisProvider({
       transport: 'typesafe',
       apiKey: process.env.TYPESAFE_API_KEY!,
       minConfidence: 0.7,
@@ -316,18 +344,93 @@ console.log(result.debug?.semanticAssessments);
 プロバイダーを設定していても通信しません。アプリ側でコメントをまとめて
 `analyze()` に渡してください。このパッケージは収集タイマーを持ちません。
 
+### 接続先ごとの設定
+
+- **Microsoft Foundry:** `endpoint` と `model`（作成済みのデプロイ名）が必須です。
+  `endpoint` はHTTPSのリソースURLを指定し、URL内の認証情報・クエリ・フラグメントは
+  含めません。末尾の `/` を取り除き、`/providers/microsoft/v1/systemone` を追加します。
+  空でない `apiKey` または `bearerToken`（Microsoft Entra IDトークンなど）の片方だけを
+  指定してください。アダプターはトークンの取得・更新を行いません。
+- **Liquid AI:** `apiKey` が必須です。既定モデルは `d1.1` に固定しています。
+  ブラウザの選択肢には `d1`、`d1-ultra`、`d1:latest`、`d1-ultra:latest` もあります。
+  ライブラリは空でないモデル文字列を受け付けますが、サービスで利用可能かどうかは別です。
+- **Google・OpenAI:** `apiKey` が必須です。Googleは `x-goog-api-key`、OpenAIは
+  Bearer認証を使います。共通の状態データをJSON文字列にして `input` に送り、Googleでは
+  Noulの条件名を `true_description` / `false_description` に変換します。OpenAIでは
+  質問を名前付きの配列に、Noulを `predicate` に変換し、応答を共通形式に戻します。
+  接続先はDecisions APIで、Chat Completionsではありません。
+- **Cloudflare REST:** `apiKey`（Cloudflare APIトークン）と `accountId` を指定します。
+  アカウントIDは英数字・`_`・`-` のみ使用できます。応答が `result` で包まれていれば
+  その中身を使い、`success: false` はエラーとして扱います。
+- **Cloudflare Workers AI binding:** `apiKey`・`accountId` の代わりに `binding` を
+  指定します。必要なのは `run(model, input): Promise<unknown>` メソッドだけで、
+  このパッケージがCloudflare SDKを追加することはありません。bindingでは `fetch` を
+  使いません。タイムアウト・キャンセルは応答待ちを終えますが、開始済みの処理は止められません。
+
+Cloudflareの両方式で使えるモデルは `clef`、`clef-flash`、`clef-omni` の3つです。
+`@cf/cloudflare/` はアダプターが付けるため、短い名前で指定してください。
+[`clef-flash` のコンテキスト長は24,576トークン](https://developers.cloudflare.com/workers-ai/models/clef-flash/)です。
+[`clef-omni`](https://developers.cloudflare.com/workers-ai/models/clef-omni/)も同じ仕組みで
+呼び出します。このコメント用アダプターはテキストを送り、メディアは送りません。
+質問数上限以内でも、モデルのトークン上限に収まるとは限りません。
+
+利用するWorkerに `AI` という名前のWorkers AI bindingを設定してください。
+以下は固定のサンプルコメントを分析する例です。`responsePlan` を有効にしたCloudflareの
+既定値である9件上限を使います。実際の入力処理や認証は利用アプリで用意してください。
+
+```ts
+import {
+  createCommentIntelligence,
+  createDecisionsCommentAnalysisProvider,
+  type CloudflareDecisionsBinding,
+} from '@aituber-onair/comment-intelligence';
+
+type Env = { AI: CloudflareDecisionsBinding };
+
+export default {
+  async fetch(_request: Request, env: Env): Promise<Response> {
+    const intelligence = createCommentIntelligence({
+      analysis: {
+        mode: 'llm-assisted',
+        llmProvider: createDecisionsCommentAnalysisProvider({
+          transport: 'cloudflare',
+          binding: env.AI,
+          model: 'clef',
+          responsePlan: true,
+        }),
+      },
+    });
+    const result = await intelligence.analyze({
+      comments: [
+        {
+          id: 'comment-1',
+          text: 'Can this voice run on my computer?',
+          timestamp: Date.now(),
+          author: { id: 'viewer-1', name: 'Viewer' },
+        },
+      ],
+      streamState: { topic: 'speech synthesis' },
+    });
+    return Response.json({
+      selectedComments: result.selectedComments,
+      responsePlans: result.responsePlans,
+    });
+  },
+};
+```
+
 ### オプションと結果
 
 | オプション | 初期値・意味 |
 | --- | --- |
-| `transport` | 必須。`typesafe` または `openrouter` |
-| `apiKey` | 必須。選んだ接続先のAPIキー |
-| `model` | 上表の接続先別の既定値。各サービスのJevモデルIDも指定可能 |
+| `transport` | 必須。上表の7種類から選択 |
+| `apiKey` | MicrosoftのBearerトークン方式とCloudflare binding方式以外で必須 |
+| `model` | 上表の接続先別の既定値。Microsoftのみデプロイ名を必ず指定 |
 | `minConfidence` | `0.7`。0〜1。検証済みの最適値ではなく、調整の開始値 |
-| `maxComments` | `20`。1〜50。対象コメントを入力順に最大何件評価するか |
-| `timeoutMs` | `2500`。HTTPリクエストを中断するまでの時間 |
+| `maxComments` | `min(20, 上限)`。接続先・モードの上限以下の正の整数。入力順に対象を選ぶ |
+| `timeoutMs` | `2500`。HTTP通信を中断、またはbindingの応答待ちを終了するまでの時間 |
 | `responsePlan` | `false`。`true` または `{ moderatorThreshold, signalThreshold }` で返し方・要注意・誤りの指摘・管理者通知も判定する（後述） |
-| `fetch` | 実行環境の `fetch`。テストなどで差し替え可能 |
+| `fetch` | 実行環境の `fetch`。HTTPのテストやproxy用に差し替え可能。bindingでは不使用 |
 
 話題・質問の判定は、確信度が閾値以上なら肯定・否定の両方を反映します。
 曖昧な回答、低確信、確信度が欠けた回答では、その項目のルール判定を残します。
@@ -348,7 +451,7 @@ console.log(result.debug?.semanticAssessments);
 ### 入力範囲と失敗時の扱い
 
 - `createCommentIntelligence()` 経由では、既存ルールが除外したコメントや
-  `answeredMemory.mode: 'exclude'` の対象をAPIに送りません。Jevで除外を解除しません。
+  `answeredMemory.mode: 'exclude'` の対象をAPIに送りません。Decisionsの判定で除外を解除しません。
 - プロバイダーを直接呼ぶ場合は、呼び出し側が事前の除外を担当します。
 - コメントは1,000文字を超えると評価対象から外し、ルールの順位を維持します。
   対象の先頭 `maxComments` 件だけを1回で評価し、自動で追加バッチを送りません。
@@ -356,26 +459,43 @@ console.log(result.debug?.semanticAssessments);
 - 話題は先頭500文字、履歴は最後のユーザー・assistant発言6件の各先頭1,000文字を
   送ります。`system` メッセージ、著者情報、任意のmetadataは送信しません。
   古い履歴や省略された部分を踏まえた評価はできません。
-- APIキー・コメント・結果をプロバイダー自身が保存することはありません。
-  送信対象の本文・会話履歴は、TypeSafe AIへ直接、またはOpenRouterとその推論先へ渡ります。
+- プロバイダー自身はAPIキー・コメント・結果を永続化しません。
+  認証情報はインスタンスのメモリ内に保持します。送信対象の本文・会話履歴は、
+  選択したサービス（OpenRouterの場合はOpenRouterとその推論先）へ渡ります。
 - 通信失敗、不正な応答、タイムアウトでは、初期設定でルール分析へ戻ります。
   このとき `debug.usedLLM` は `false` です。正常な分析経路では `true` ですが、
   全件が低確信だった場合も含むため、評価が反映された証拠にはなりません。
 - `llmPolicy.timeoutMs` が先に切れた場合もHTTP通信を中断します。
+  Workers AI bindingでは応答待ちだけを終了します。
   `fallbackToRules: false` ならエラーを呼び出し側へ返します。
   レート制限や混雑時も自動再試行せず、別サービスへ自動で切り替えることもありません。
 
-Jevの判定でコメントを除外・BANしたり、関係値を更新したり、返答を生成したりは
+Decisionsの判定でコメントを除外・BANしたり、関係値を更新したり、返答を生成したりは
 しません。管理者通知の判定（後述）も提案を返すだけで、通知の送信はアプリ側で行います。
 視聴者の発言は評価対象のデータとして渡し、その内容を指示として扱わないよう
 質問を固定しています。それでも誘導的な入力や文脈の読み違いは起こり得るため、
 既存の除外条件を維持します。
 
+### 拒否応答と確率の省略
+
+`{ type: 'refusal' }` は、その質問だけを判定対象から外します。該当項目を `decisions` に
+含めず、意味の補正や対応方針の判定に使いません。同じバッチのほかの回答は反映します。
+別途 `refused` フィールドを追加することはありません。拒否された方針のフラグは
+`false` のままで、返答の深さは省略します。ほかの有効な判定から `reasoningEffort` が
+付く場合はあります。全質問が拒否でも、正常に完了した通信として扱います。
+回答自体の欠落や、拒否以外の不正な回答形式はエラーです。
+
+Choice・Scoreの `probabilities` がある場合、省略された既知のキーは `0` にします。
+未知のキー、非有限数、0〜1の範囲外の値、合計と1との差が0.01を超える分布は拒否します。
+Choiceでは、選択された項目の確率が最大である必要があります（同率は許容）。
+一部のキーを省略しても、この検証は行います。確率マップ全体の省略は引き続き可能です。
+
 ### 返し方と管理者通知（responsePlan）
 
 `responsePlan: true` を指定すると、同じ1回の通信に質問を追加し、評価した
-コメントごとの対応方針を `result.responsePlans` に返します。初期値は `false` で、
-指定しなければ送る質問も結果も従来と同じです。順位と選択結果は変わりません。
+コメントごとの対応方針を `result.responsePlans` に返します。初期値の `false` では、
+追加の質問と対応方針を省略します。方針の判定結果はランキング点数や除外条件に反映しません。
+ただし、有効にすると質問数上限によって評価するコメント数が減る場合があります。
 
 | 質問 | 形式 | 結果への反映 |
 | --- | --- | --- |
@@ -406,7 +526,7 @@ Jevの判定でコメントを除外・BANしたり、関係値を更新した�
 const intelligence = createCommentIntelligence({
   analysis: {
     mode: 'llm-assisted',
-    llmProvider: createJevCommentAnalysisProvider({
+    llmProvider: createDecisionsCommentAnalysisProvider({
       transport: 'typesafe',
       apiKey: process.env.TYPESAFE_API_KEY!,
       responsePlan: { moderatorThreshold: 0.8, signalThreshold: 0.5 },
@@ -441,48 +561,58 @@ errorReports.push(...(decision.errorReportCommentIds ?? []));
   以上のとき、`needsAttention` と `pointsOutError` はそれぞれの確率が
   `signalThreshold`（初期値 `0.5`）以上のとき `true` です。どちらの値も
   検証済みの最適値ではありません。
-- 既存ルールが除外したコメントはJevに送らないため、方針も付きません。露骨な
-  暴言はルールで除外され、Jevが判定するのはルールで除外されなかったコメントです。
+- 既存ルールが除外したコメントはDecisionsに送らないため、方針も付きません。
+  ルールで除外されなかったコメントだけを評価します。
 - 炎上の検知のように複数コメントを集計する判断は、アプリ側で行ってください。
   Jevは個数を数える処理が苦手とされているため、Jevには1件ずつの判定だけを任せ、
   件数はコードで数えます。
-- 質問が1件あたり4問増えるため、`maxComments` が大きいと処理時間が延びる
-  可能性があります。実際の処理時間を確認し、必要なら `timeoutMs` を調整してください。
+- 質問が1件あたり4問増えます。質問数に上限のある接続先では、上表のとおり
+  コメント数上限も下がります。大きなバッチでは処理時間が延びる可能性があります。
+  実際の処理時間を確認し、必要なら `timeoutMs` を調整してください。
 
 ### 比較サンプルと検証
 
-ブラウザで試す場合は、[Live Comment Filterサンプル](./examples/live-comment-filter-sample/README.ja.md)
-を起動し、解析エンジンに「Jev」を選びます。接続先をTypeSafe AIまたはOpenRouterに
-切り替えて、そのサービスのAPIキーを入力してください。
-「文脈と回答済みの質問」パターンで、話題・コメント・直近の回答をまとめて
-設定できます。「ルールのみ」に切り替えて再実行すると、選択結果を比較できます。
+[Live Comment Filterサンプル](./examples/live-comment-filter-sample/README.ja.md)を
+起動し、解析エンジンに「Decisions / Jev」を選びます。TypeSafe AI、OpenRouter、
+Liquid AI、Google Gemini、OpenAI Decisions、Cloudflare Workers AIを選択できます。
+キーは接続先ごとにメモリ内だけで保持し、localStorage・sessionStorageには保存しません。
+Liquid・Cloudflareはモデルを選択し、OpenRouterはモデルIDを入力できます
+（既定値は `~typesafe/jev-latest`）。CloudflareにはアカウントIDとAPIトークンも必要です。
+Workers AI bindingはサーバー専用のため、ブラウザの選択肢にはありません。
 
-通信モックによるテストはJevの精度や速度を示すものではありません。実際の会話で、
-ルール版・既存LLM版・Jev版が選ぶコメントを比較してください。話題に合う未回答の
-質問を拾えた割合、回答済み質問の再選択、処理時間と費用を確認します。
-プロンプトや閾値の調整用とは別の会話データでも確認してください。
+利用者ごとに異なるエンドポイントは、この静的サンプルではproxyできません。
+そのためMicrosoft Foundryは利用不可として表示します。選択すると、エンドポイント・
+デプロイ名・キーの入力欄と実行ボタンが無効になり、理由が表示されます。
+Microsoftへの接続は、ご自身のサーバーからライブラリを使って行ってください。
 
-両接続先ともBearer認証で `state`・`questions`・`model` を送り、Choice形式の
-判断結果を受け取ります。`responsePlan` を有効にした場合は、Score形式とNoul形式の
-質問も同じ通信で送ります。通常のChat Completions APIは使いません。
-TypeSafe公式APIは2026-09-20に[クイックスタート](https://docs.typesafe.ai/introduction/quickstart)、
-[APIリファレンス](https://docs.typesafe.ai/api)、[モデル一覧](https://docs.typesafe.ai/models)
-で仕様を確認しています。OpenRouter側はalpha Decisions APIを使い、
-[公式OpenAPI](https://openrouter.ai/openapi.json)で仕様を確認しています。
+新しいAPIへのブラウザ直接接続のCORSは未検証です。ローカルのVite開発サーバーでは、
+TypeSafe AI・OpenAI・Google・Liquid・Cloudflareを固定ホスト・限定パスのproxy経由で
+呼び出し、`Origin` ヘッダーを除去します。Cloudflareのパスはアカウント識別子と
+許可された3種類のモデルだけを受け付けます。利用者が指定した任意のURLを転送する
+proxyではありません。OpenRouterは従来どおり直接接続します。
+ライブラリ自身はproxyを起動しません。
 
-2026-09-20時点の確認では、localhostからTypeSafe AIの公式APIへ直接接続するためのCORS事前リクエストに、`400 Disallowed CORS origin` が返りました。そのため、ブラウザサンプルではローカル開発サーバー（Vite）を経由してAPIを呼び出しています。これは確認時点での挙動であり、今後のAPI側の対応によって変わる可能性があります。
+開発用proxyは静的ビルドには含まれません。公開アプリでは認証付きのバックエンドを
+用意し、アプリ所有のキーをそこで管理してください。2026-09-20に行ったTypeSafeの
+localhost向けCORS事前確認では `400 Disallowed CORS origin` が返りました。
+これは当時の観測であり、ほかのサービスの現在のCORS対応を示すものではありません。
 
-TypeSafe AIへの接続はサーバー側で実行してください。サンプルの転送処理は
-静的ビルドには含まれません。公開アプリでは独自のバックエンドを用意し、
-アプリ所有のキーをサーバー側で管理してください。ライブラリ自身はプロキシを起動しません。
+「文脈と回答済みの質問」パターンで、話題・コメント・直近の回答をまとめて設定できます。
+「ルールのみ」に切り替えて同じ入力で再実行すると、選択結果を比較できます。
+通信モックは送信形式や失敗時の処理を確認するもので、モデルの精度や速度を示しません。
+新しい接続先では認証付き実推論や日本語精度の測定を行っていません。話題に合う未回答の
+質問を拾えた割合、回答済み質問の再選択、処理時間と費用を比較し、調整に使っていない
+会話データでも確認してください。
 
-両接続先の送信・応答検証・フォールバック・中断は通信モックでテストしています。
-今回、認証付きTypeSafe実推論や日本語精度の測定は行っていません。
-最新エイリアスはモデル更新で挙動が変わり得ます。
-[TypeSafeのChoice仕様](https://docs.typesafe.ai/primitives/choice)、
-[Score仕様](https://docs.typesafe.ai/primitives/score)、
-[Noul仕様](https://docs.typesafe.ai/primitives/noul)と
-[既知の制約](https://docs.typesafe.ai/model-jaggedness/jev-1.13)も参照してください。
+TypeSafe AI・OpenRouterにはBearer認証で `state`・名前付きの `questions`・`model` を
+送ります。Choiceを使い、`responsePlan` 有効時はScoreとNoulも追加します。
+[TypeSafeのAPI仕様](https://docs.typesafe.ai/api)、
+[Choice](https://docs.typesafe.ai/primitives/choice)、
+[Score](https://docs.typesafe.ai/primitives/score)、
+[Noul](https://docs.typesafe.ai/primitives/noul)、
+[既知の制約](https://docs.typesafe.ai/model-jaggedness)も参照してください。
+最新エイリアスはモデル更新で挙動が変わり得ます。固定したい場合は、接続先に合った
+バージョン付きIDを指定してください。
 
 ## Normalizer
 
@@ -535,10 +665,16 @@ console.log(debugDecision.rankedComments);
 
 ## API
 
-関数・定数: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `createJevCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`。
+関数・定数: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `createDecisionsCommentAnalysisProvider`, `createJevCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`。
 
 `createCommentIntelligence()` が返す object には、`analyze()`,
 `markAnswered()`, `getAnsweredState()`, `listAnsweredStates()`,
 `clearAnswered()`, `getViewerSafetyState()`, `resetViewerSafetyState()` があります。
 
 主な型: `LiveComment`, `CommentAuthor`, `ViewerProfile`, `ViewerSafetyState`, `AnsweredState`, `StreamState`, `RankedComment`, `SafetyReport`, `IgnoredCommentsSummary`, `CommentIntelligenceResult`, `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, `AgentCommentDecision`, `AgentSelectedComment`, `AgentSafetySummary`, `AgentToolDefinition`, LLM provider/result types。
+
+Decisions用の型: `DecisionsTransport`、`DecisionsCommentAnalysisOptions`、
+`DecisionsCommentAnalysisProvider`、`DecisionsCommentAnalysisResult`、
+`DecisionsResponsePlanOptions`、`DecisionsCommentDecision`、`CloudflareDecisionsBinding`。
+既存の `Jev*` エクスポートも残ります。`JevCommentAnalysisOptions` は従来の
+TypeSafe/OpenRouter用の型です。ほかの接続先には `DecisionsCommentAnalysisOptions` を使ってください。

@@ -75,7 +75,9 @@ if (selected) {
 This package includes a small browser example for trying rules-based live
 comment filtering. It shows which comment is picked, which unsafe comments are
 blocked, and what context is summarized. It does not connect to
-`@aituber-onair/core` or call an LLM.
+`@aituber-onair/core`. Rules mode makes no API calls; selecting OpenAI LLM assist
+or Decisions / Jev enables external analysis when you supply credentials and run
+the filter. See [browser connections and verification](#comparison-sample-and-verification).
 
 ```sh
 npm -w @aituber-onair/comment-intelligence run example:live-comment-filter-sample
@@ -248,15 +250,21 @@ const intelligence = createCommentIntelligence({
 });
 ```
 
-The analysis configuration does not read API keys from the environment or persist them. The optional Jev adapter accepts a key explicitly. If the provider fails and `fallbackToRules` is not `false`, rules mode results are returned.
+The analysis configuration does not read API keys from the environment or persist them. The optional Decisions adapter accepts explicit credentials or a Workers AI binding. If the provider fails and `fallbackToRules` is not `false`, rules mode results are returned.
 
-## Using Jev
+## Using Decisions APIs (including Jev)
 
-`createJevCommentAnalysisProvider()` optionally uses Jev to assess the meaning of
-comments before deterministic ranking. Rules remain the default and make no API
-calls. Choose `transport: 'typesafe'` or `transport: 'openrouter'` and provide
-that service's API key. Both connections use the same assessments and ranking
-behavior. The adapter does not depend on the chat package or a provider SDK.
+`createDecisionsCommentAnalysisProvider()` is the generic entry point for typed
+Decisions APIs. It assesses comment meaning before deterministic ranking.
+`createJevCommentAnalysisProvider` remains a compatible alias to the same function;
+existing TypeSafe AI and OpenRouter configurations keep working. Rules remain
+the default and make no API calls. The adapter requires no chat package or
+provider SDK.
+
+New transports are **docs-verified, not live-verified**: `microsoft`, `liquid`,
+`google`, `openai`, and `cloudflare`. Their request/response mapping, validation,
+fallback and cancellation paths have mocked tests. This does not establish
+live availability, browser CORS, latency, or judgment quality.
 
 ### Why use it?
 
@@ -265,7 +273,7 @@ punctuation. With the topic "speech synthesis", a comment such as "Can that voic
 run on my own computer?" may be relevant without repeating the topic's words.
 "I would like the setup steps" requests an answer without a question mark.
 
-Jev asks three focused questions per comment, where context is available:
+The adapter asks up to three focused questions per comment, where context is available:
 
 | Assessment | Effect |
 | --- | --- |
@@ -278,7 +286,7 @@ same topic, and instructs the model to allow clarification, repetition requests,
 and new details. Supply recent conversation to use it. It does not replace
 `markAnswered()` or maintain a semantic memory across calls.
 
-The existing ChatService analysis provider also supports semantic analysis. Jev
+The existing ChatService analysis provider also supports semantic analysis. This adapter
 uses bounded choices and confidence through a dedicated Decisions API, evaluating
 a batch in one request without generating free-form JSON text. Compare quality,
 latency and cost on your own comments before choosing between them. This adapter
@@ -286,25 +294,48 @@ does not guarantee better Japanese understanding or faster spoken responses.
 
 ### Choose a connection
 
-| Transport | API key | Default model | Endpoint |
-| --- | --- | --- | --- |
-| `typesafe` | TypeSafe AI | `jev-latest` | `https://api.typesafe.ai/v1/systemone` |
-| `openrouter` | OpenRouter | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` |
+| Transport | Authentication header | Default model | Endpoint | Question cap | Comment cap (normal / responsePlan) | Availability |
+| --- | --- | --- | --- | --- | --- | --- |
+| [`typesafe`](https://docs.typesafe.ai/models) | `Authorization: Bearer <apiKey>` | `jev-latest` | `https://api.typesafe.ai/v1/systemone` | Not set | 50 / 50 | Stable model; GA/Beta label not stated |
+| [`openrouter`](https://openrouter.ai/docs/guides/features/decisions) | `Authorization: Bearer <apiKey>` | `~typesafe/jev-latest` | `https://openrouter.ai/api/alpha/decisions` | Not set | 50 / 50 | alpha |
+| [`microsoft`](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/how-to/use-foundry-models-microsoft-decision) | `api-key: <apiKey>` or `Authorization: Bearer <bearerToken>` | Required deployment name; no default | `<endpoint>/providers/microsoft/v1/systemone` | Not set | 50 / 50 | GA (Microsoft-Decision-1.1) |
+| [`liquid`](https://docs.liquid.ai/api/reference/decision-models/make-decisions) | `Authorization: Bearer <apiKey>` | `d1.1` | `https://api.liquid.ai/decisions/v1/systemone` | 128 | 42 / 18 | Published API; GA/Beta label not stated |
+| [`google`](https://aistudio.google.com/api-reference/decisions/create-decision.md) | `x-goog-api-key: <apiKey>` | `gemini-decision-1` | `https://generativelanguage.googleapis.com/v1beta/decisions` | 1,000 | 333 / 142 | Beta |
+| [`openai`](https://developers.openai.com/api/docs/guides/decisions) | `Authorization: Bearer <apiKey>` | `gpt-6-luna` | `https://api.openai.com/v1/decisions` | 400 | 133 / 57 | GA |
+| [`cloudflare`](https://developers.cloudflare.com/workers-ai/models/clef/) | REST: `Authorization: Bearer <apiKey>`; binding: none | `clef` | REST: `https://api.cloudflare.com/client/v4/accounts/<accountId>/ai/run/@cf/cloudflare/<model>`; binding: `run('@cf/cloudflare/<model>', body)` | 64 | 21 / 9 | Listed models; GA/Beta label not stated |
 
-Existing OpenRouter configurations continue to work. Model IDs are specific to
-each service; leave `model` unset to use the correct default for the connection.
+Availability labels describe the upstream API/model, not this integration's
+verification level. The linked official references were checked on 2026-11-19;
+where they do not explicitly label GA/Beta, the table leaves that distinction
+unspecified. A question cap of "Not set" means this adapter enforces only its existing
+50-comment cap; it does not mean the service has unlimited input capacity.
+
+For APIs with a question cap, the adapter reserves **3 questions per comment**, or
+**7 with `responsePlan` enabled**, even when some context-dependent questions will
+be omitted. The ceiling is `floor(questionCap / questionsPerComment)`.
+Microsoft, TypeSafe AI and OpenRouter retain a 50-comment ceiling in both modes.
+`maxComments` defaults to `min(20, ceiling)`: 20 normally, 18 for Liquid with
+`responsePlan`, and 9 for Cloudflare with `responsePlan`. An explicit value above
+the ceiling, below 1, or not an integer throws when the provider is created; it is
+not silently clamped. See [the implemented bounds](./src/jev/questionLimits.ts).
+
+Model IDs belong to the selected service. Microsoft requires a deployment name;
+other transports use the table's default when `model` is omitted. As of the check
+above, TypeSafe's `jev-latest` points to `jev-1.14.0`. Jev 1.14 adds the Box primitive;
+this adapter uses Choice, Score and Noul, not Box or image input.
+[TypeSafe model versions and aliases](https://docs.typesafe.ai/models).
 
 ```ts
 import {
   createCommentIntelligence,
-  createJevCommentAnalysisProvider,
+  createDecisionsCommentAnalysisProvider,
 } from '@aituber-onair/comment-intelligence';
 
 // Server-side example. Keep application-owned keys on the server in public apps.
 const intelligence = createCommentIntelligence({
   analysis: {
     mode: 'hybrid',
-    llmProvider: createJevCommentAnalysisProvider({
+    llmProvider: createDecisionsCommentAnalysisProvider({
       transport: 'typesafe',
       apiKey: process.env.TYPESAFE_API_KEY!,
       minConfidence: 0.7,
@@ -333,18 +364,95 @@ Use `llm-assisted` to analyze smaller batches. `rules` never invokes the provide
 even when one is configured. The host collects comments into batches; this package
 does not schedule collection windows.
 
+### Connection-specific options
+
+- **Microsoft Foundry:** `endpoint` and `model` (your deployment name) are required.
+  Use an HTTPS resource endpoint without URL credentials, query or fragment; trailing
+  slashes are removed before appending `/providers/microsoft/v1/systemone`. Supply
+  exactly one non-empty `apiKey` or `bearerToken` (for example, a Microsoft Entra ID
+  token). The adapter does not obtain or refresh tokens.
+- **Liquid AI:** `apiKey` is required. The pinned default is `d1.1`; the browser
+  selector also offers `d1`, `d1-ultra`, `d1:latest`, and `d1-ultra:latest`.
+  The library accepts a non-empty model override; an accepted string is not a
+  guarantee that the service supports it.
+- **Google and OpenAI:** `apiKey` is required. Google uses `x-goog-api-key` and OpenAI
+  uses Bearer authentication. Both map shared state to a JSON string in `input`.
+  Google renames Noul criteria to `true_description` / `false_description`. OpenAI
+  maps questions to a named array and Noul to `predicate`, then normalizes answers
+  back to the shared parser. This is the Decisions API, not Chat Completions.
+- **Cloudflare REST:** supply `apiKey` (a Cloudflare API token) and `accountId`.
+  Account IDs must contain only letters, digits, `_`, or `-`. Responses with a
+  `result` envelope are unwrapped; `success: false` is an error.
+- **Cloudflare Workers AI binding:** supply `binding` instead of both `apiKey` and
+  `accountId`. Its `run(model, input): Promise<unknown>` method is all the adapter
+  needs; no Cloudflare SDK is installed by this package. Binding mode does not use
+  `fetch`. Timeout or cancellation ends the adapter's wait, but cannot stop an
+  already-running binding operation.
+
+Both Cloudflare modes accept only the short model selectors `clef`, `clef-flash`,
+and `clef-omni`; the adapter builds the `@cf/cloudflare/` prefix. The
+[`clef-flash` context window is 24,576 tokens](https://developers.cloudflare.com/workers-ai/models/clef-flash/).
+[`clef-omni`](https://developers.cloudflare.com/workers-ai/models/clef-omni/) uses the
+same integration; this comment adapter sends text, not media. Question-count
+bounds do not guarantee that an input fits a model's token window.
+
+Configure a Workers AI binding named `AI` in the consuming Worker. This example
+uses a fixed sample comment and the default 9-comment cap for Cloudflare with
+`responsePlan`; adapt input handling and authentication in your application.
+
+```ts
+import {
+  createCommentIntelligence,
+  createDecisionsCommentAnalysisProvider,
+  type CloudflareDecisionsBinding,
+} from '@aituber-onair/comment-intelligence';
+
+type Env = { AI: CloudflareDecisionsBinding };
+
+export default {
+  async fetch(_request: Request, env: Env): Promise<Response> {
+    const intelligence = createCommentIntelligence({
+      analysis: {
+        mode: 'llm-assisted',
+        llmProvider: createDecisionsCommentAnalysisProvider({
+          transport: 'cloudflare',
+          binding: env.AI,
+          model: 'clef',
+          responsePlan: true,
+        }),
+      },
+    });
+    const result = await intelligence.analyze({
+      comments: [
+        {
+          id: 'comment-1',
+          text: 'Can this voice run on my computer?',
+          timestamp: Date.now(),
+          author: { id: 'viewer-1', name: 'Viewer' },
+        },
+      ],
+      streamState: { topic: 'speech synthesis' },
+    });
+    return Response.json({
+      selectedComments: result.selectedComments,
+      responsePlans: result.responsePlans,
+    });
+  },
+};
+```
+
 ### Options and ranking
 
 | Option | Default / meaning |
 | --- | --- |
-| `transport` | Required: `typesafe` or `openrouter` |
-| `apiKey` | Required key for the selected service |
-| `model` | Connection-specific default above; accepts a Jev ID from that service |
+| `transport` | Required; one of the seven values above |
+| `apiKey` | Required except Microsoft Bearer-token mode or Cloudflare binding mode |
+| `model` | Connection-specific default above; required deployment name for Microsoft |
 | `minConfidence` | `0.7`, range 0–1; a starting threshold, not an empirically calibrated optimum |
-| `maxComments` | `20`, integer 1–50; first N eligible comments in caller order |
-| `timeoutMs` | `2500`; aborts the HTTP request |
+| `maxComments` | `min(20, ceiling)`; positive integer up to the transport/mode ceiling; first N eligible comments in caller order |
+| `timeoutMs` | `2500`; aborts HTTP or ends the wait for a binding call |
 | `responsePlan` | `false`; `true` or `{ moderatorThreshold, signalThreshold }` also suggests a reply style and flags rude comments, error reports, and safety risks (see below) |
-| `fetch` | Runtime fetch; can be injected for testing |
+| `fetch` | Runtime fetch; can be injected for HTTP testing/proxy routing; unused in binding mode |
 
 Confident yes and no answers can replace topic/question rule signals. Uncertain,
 low-confidence, or missing-confidence answers leave that signal unchanged.
@@ -367,7 +475,7 @@ results retain their existing path.
 ### Input bounds and failure behavior
 
 - Through `createCommentIntelligence()`, comments excluded by existing safety
-  rules or `answeredMemory.mode: 'exclude'` are not sent. Jev cannot clear exclusions.
+  rules or `answeredMemory.mode: 'exclude'` are not sent. Decisions cannot clear exclusions.
   When calling the provider directly, the caller performs eligibility filtering.
 - Comments longer than 1,000 characters are skipped, keeping rule scores. Only
   the first `maxComments` remaining comments are evaluated in one request; no
@@ -375,27 +483,44 @@ results retain their existing path.
 - The request includes up to 500 topic characters and the last six user/assistant
   messages, up to 1,000 characters each. System messages, author metadata and
   arbitrary comment metadata are omitted. Older/truncated context cannot be evaluated.
-- The provider stores no API keys, comments or results. Selected input text and
-  conversation history are sent to the selected service: TypeSafe AI directly, or
-  OpenRouter and its inference provider.
+- The provider does not persist API keys, comments or results. Selected input text and
+  conversation history are sent to the selected service (or OpenRouter and its
+  inference provider). Credentials remain in the provider instance in memory.
 - HTTP errors (including rate limits/overload), invalid responses and timeouts fall back to rules by default, with
   `debug.usedLLM: false`. A completed provider path sets it to true even when every
   answer abstained; inspect `semanticAssessments` to see which signals were used.
 - The outer `llmPolicy.timeoutMs` also cancels the HTTP request when it expires
-  first. Set `fallbackToRules: false` to propagate failures instead. No automatic
+  first; with a Workers AI binding it only ends the wait. Set `fallbackToRules: false` to propagate failures instead. No automatic
   retries or switching to another service are performed.
 
-Jev does not exclude or ban comments, update relationships, or generate replies.
+The Decisions provider does not exclude or ban comments, update relationships, or generate replies.
 Moderator alerts (below) are suggestions only; your app sends any notification.
 Fixed questions treat comment text as untrusted data. Adversarial content and
 context mistakes can still influence answers, so existing exclusions remain enforced.
+
+### Refusals and sparse probabilities
+
+A `{ type: 'refusal' }` answer skips only that question. Its dimension is omitted
+from `decisions`, so it contributes no semantic correction or plan signal; other
+answers in the batch still apply. There is no separate `refused` field. A refused
+plan flag remains `false`, and a refused depth is omitted (other valid signals can
+still set `reasoningEffort`). An all-refusal response is a completed provider call,
+not an HTTP failure. A missing answer or a malformed non-refusal answer is still
+an error.
+
+When Choice or Score includes a `probabilities` map, omitted allowed keys count
+as `0`. Unknown keys, non-finite values, values outside 0–1, or a sum more than
+0.01 away from 1 are rejected. A Choice answer must select an option with maximal
+probability (ties are allowed). Sparse maps do not weaken these checks; an
+entirely omitted probability map remains optional.
 
 ### Reply style and moderator alerts (`responsePlan`)
 
 With `responsePlan: true`, the same single request carries extra questions, and
 `result.responsePlans` returns a handling suggestion for every assessed comment.
-The default is `false`, which leaves the request and the result unchanged.
-Ranking and selection never change.
+The default is `false`, which omits these extra questions and response plans.
+Plan signals do not change ranking scores or exclusion rules. Enabling the option
+can lower the analyzed batch size because of the question budgets described above.
 
 | Question | Type | Result field |
 | --- | --- | --- |
@@ -425,7 +550,7 @@ Rude comments and comments that need a moderator right away are kept apart:
 const intelligence = createCommentIntelligence({
   analysis: {
     mode: 'llm-assisted',
-    llmProvider: createJevCommentAnalysisProvider({
+    llmProvider: createDecisionsCommentAnalysisProvider({
       transport: 'typesafe',
       apiKey: process.env.TYPESAFE_API_KEY!,
       responsePlan: { moderatorThreshold: 0.8, signalThreshold: 0.5 },
@@ -460,51 +585,58 @@ errorReports.push(...(decision.errorReportCommentIds ?? []));
   `moderatorThreshold` (default `0.8`); `needsAttention` and `pointsOutError`
   when their probability reaches `signalThreshold` (default `0.5`). Both are
   uncalibrated starting points.
-- Comments excluded by existing rules are never sent to Jev, so they get no plan.
-  Rules exclude blatant abuse; Jev assesses only the comments the rules kept.
+- Comments excluded by existing rules are never sent to the Decisions provider,
+  so they get no plan. It assesses only the comments the rules kept.
 - Aggregate judgments such as detecting a flare-up belong in your app. TypeSafe
   lists counting as a known Jev weakness, so ask Jev per comment and count in code.
-- Each comment adds four questions, so a large `maxComments` may take longer.
+- Each comment adds four questions. Enabling this option also lowers the comment
+  ceiling for question-limited transports (see the table above). A large batch may take longer.
   Measure real latency and adjust `timeoutMs` if needed.
 
 ### Comparison sample and verification
 
-To try Jev in the browser, start the [Live Comment Filter sample](./examples/live-comment-filter-sample/README.md),
-choose **Jev**, select **TypeSafe AI** or **OpenRouter**, and enter that service’s API key. The **Meaning and prior answers**
-pattern fills a topic, comments, and a recent reply. Switch to **Rules only** and
-run again to compare the selection on the same input.
+Start the [Live Comment Filter sample](./examples/live-comment-filter-sample/README.md)
+and choose **Decisions / Jev**. Select TypeSafe AI, OpenRouter, Liquid AI, Google
+Gemini, OpenAI Decisions, or Cloudflare Workers AI. Keys are kept separately for
+each connection in memory, with no localStorage or sessionStorage persistence.
+Liquid and Cloudflare have model selectors; OpenRouter has an editable model ID
+(default `~typesafe/jev-latest`). Cloudflare also needs an account ID and API token.
+Workers AI binding mode is server-only and is not offered in this UI.
 
-Mocked tests are not evidence of Jev quality or latency. Compare rules, an existing
-LLM, and Jev on the same comments: measure selection of relevant unanswered
-questions, repeated answered questions, latency, and cost. Evaluate separately on
-held-out conversations after tuning the questions or confidence threshold.
+Per-user endpoints cannot be proxied by this static sample. Microsoft Foundry is
+therefore marked unavailable: selecting it shows disabled endpoint, deployment
+and key fields, an explanation, and disabled Run buttons. Use the library from
+your own server for this connection.
 
-Both transports send `state`, `questions`, and `model` with Bearer authentication.
-They use typed Choice answers, not Chat Completions; `responsePlan` adds Score
-and Noul questions to the same request. The TypeSafe API contract
-was checked on 2026-09-20 against its [quick start](https://docs.typesafe.ai/introduction/quickstart),
-[API reference](https://docs.typesafe.ai/api), and [model list](https://docs.typesafe.ai/models).
-OpenRouter uses its **alpha** Decisions API, checked against its
-[OpenAPI](https://openrouter.ai/openapi.json). See also the TypeSafe
-[Score](https://docs.typesafe.ai/primitives/score) and
-[Noul](https://docs.typesafe.ai/primitives/noul) primitives.
+Direct browser CORS for the new APIs has **not been verified**. During local
+Vite development, TypeSafe AI, OpenAI, Google, Liquid and Cloudflare use proxy
+routes with fixed upstream hosts and restricted paths; the proxy strips `Origin`.
+Cloudflare's route permits only an account identifier and the three allowed model
+selectors. There is no generic proxy for user-supplied URLs. OpenRouter continues
+to use its direct route. The library itself does not install a proxy.
 
-As of 2026-09-20, a CORS preflight for a direct request from localhost to the
-TypeSafe AI official API returned `400 Disallowed CORS origin`. The browser
-sample therefore calls the API through its local development server (Vite).
-This reflects the behavior observed on that date and may change as the API's
-CORS support evolves.
+The development proxy is not included in the static build. Public applications
+must supply their own authenticated backend routes and keep application-owned
+keys there. The earlier TypeSafe preflight check on 2026-09-20 returned
+`400 Disallowed CORS origin` for localhost; that dated observation does not
+establish current CORS support for any other service.
 
-Use a server runtime for TypeSafe AI requests. The sample's forwarding route
-is not included in a static build. Public apps need their own backend and
-should keep application-owned keys there. The library does not install a proxy
-or override the endpoint.
+The **Meaning and prior answers** pattern fills a topic, comments and a recent
+reply. Switch to **Rules only** and run again on the same input to compare.
+Mocked tests establish request mapping and failure handling, not model quality
+or latency. No authenticated inference or Japanese quality benchmark was run for
+the new transports. Compare relevant unanswered-question selection, repeated
+answered questions, latency and cost on held-out conversations after tuning.
 
-Both transports have mocked request, validation, fallback, and cancellation tests.
-No authenticated TypeSafe inference or Japanese quality benchmark was run as part
-of this change. Latest aliases can change model behavior.
-See also [TypeSafe Choice](https://docs.typesafe.ai/primitives/choice) and
-[known limitations](https://docs.typesafe.ai/model-jaggedness/jev-1.13).
+For TypeSafe AI and OpenRouter, the adapter sends `state`, keyed `questions`, and
+`model` with Bearer authentication. Choice is always used; `responsePlan` adds
+Score and Noul. See [TypeSafe's API](https://docs.typesafe.ai/api),
+[Choice](https://docs.typesafe.ai/primitives/choice),
+[Score](https://docs.typesafe.ai/primitives/score),
+[Noul](https://docs.typesafe.ai/primitives/noul), and
+[known limitations](https://docs.typesafe.ai/model-jaggedness).
+Latest aliases can change model behavior; use a service-specific version ID when
+you need to pin it.
 
 ## Normalizers
 
@@ -574,7 +706,7 @@ your stream.
 
 ## API
 
-Functions and constants: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `createJevCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`.
+Functions and constants: `createCommentIntelligence`, `analyzeComments`, `normalizeYouTubeComment`, `normalizeTwitchComment`, `normalizeWebComment`, `formatCommentIntelligencePrompt`, `toAgentCommentDecision`, `createChatServiceCommentAnalysisProvider`, `createDecisionsCommentAnalysisProvider`, `createJevCommentAnalysisProvider`, `DEFAULT_COMMENT_INTELLIGENCE_CONFIG`, `ANALYZE_LIVE_COMMENTS_TOOL`, `COMMENT_INTELLIGENCE_AGENT_TOOLS`.
 
 The object returned by `createCommentIntelligence()` exposes `analyze()`,
 `markAnswered()`, `getAnsweredState()`, `listAnsweredStates()`,
@@ -586,3 +718,10 @@ Types include `LiveComment`, `CommentAuthor`, `ViewerProfile`,
 `CommentIntelligenceConfig`, `AnalyzeCommentsInput`, `AgentCommentDecision`,
 `AgentSelectedComment`, `AgentSafetySummary`, `AgentToolDefinition`, and
 optional LLM provider/result types.
+
+Decisions types: `DecisionsTransport`, `DecisionsCommentAnalysisOptions`,
+`DecisionsCommentAnalysisProvider`, `DecisionsCommentAnalysisResult`,
+`DecisionsResponsePlanOptions`, `DecisionsCommentDecision`, and
+`CloudflareDecisionsBinding`. Existing `Jev*` exports remain available.
+`JevCommentAnalysisOptions` retains its legacy TypeSafe/OpenRouter shape; use
+`DecisionsCommentAnalysisOptions` for the other transports.
