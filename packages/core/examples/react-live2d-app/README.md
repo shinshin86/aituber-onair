@@ -243,6 +243,10 @@ the extracted `live2dcubismcore.min.js` at the path above.
 
 This example targets Cubism 4 models, so `live2d.min.js` is not required.
 
+Models with many clipping masks, including models distributed for VTube Studio,
+are supported by automatically allocating extra mask buffers when the model
+has more than 36 masks. Models with 36 or fewer masks keep the default buffer.
+
 The example expects the whole model folder, including the `.model3.json` file
 and every referenced asset beneath it.
 

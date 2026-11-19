@@ -33,6 +33,14 @@ export interface Live2DModelInstance extends PIXI.Container {
     width?: number;
     height?: number;
     coreModel?: Live2DCoreModelLike;
+    renderer?: {
+      _clippingManager?: {
+        getClippingMaskCount(): number;
+        release(): void;
+      };
+      getRenderTextureCount(): number;
+      initialize(model: Live2DCoreModelLike, maskBufferCount: number): void;
+    };
     lipSync?: boolean;
     motionManager?: Live2DMotionManagerLike;
     eyeTracking?: {
