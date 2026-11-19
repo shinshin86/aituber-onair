@@ -1,5 +1,28 @@
 # @aituber-onair/comment-intelligence
 
+## 0.0.9
+
+### Patch Changes
+
+- Adds `createDecisionsCommentAnalysisProvider()` as the generic Decisions API
+  entry point. `createJevCommentAnalysisProvider` remains a compatible alias;
+  existing TypeSafe AI and OpenRouter settings and `Jev*` exports remain available.
+- Adds Microsoft Foundry, Liquid AI, Google Gemini Decisions, OpenAI Decisions,
+  and Cloudflare Workers AI transports without provider SDK dependencies.
+  Cloudflare supports REST and a supplied Workers AI binding. These transports
+  are docs-verified and tested with mocks, not live-verified.
+- Skips refusal answers per question and treats omitted allowed probability keys
+  as zero, while retaining validation of ranges, keys and probability totals.
+- Applies per-transport question budgets to `maxComments`, reserving 3 questions
+  per comment or 7 with `responsePlan`. Oversized explicit values throw at provider
+  creation; defaults use the smaller of 20 and the transport/mode ceiling.
+- Extends the browser sample with connection-specific in-memory credentials,
+  model choices and Cloudflare account IDs. Adds restricted fixed-host Vite dev
+  proxies for OpenAI, Google, Liquid and Cloudflare; Microsoft Foundry is marked
+  unavailable in this static sample. Direct CORS for the new APIs is unverified.
+- Documents transport authentication, limits, availability and verification
+  status, Workers AI binding usage, and Jev 1.14 aliases in English and Japanese.
+
 ## 0.0.8
 
 ### Patch Changes

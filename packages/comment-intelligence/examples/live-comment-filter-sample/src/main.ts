@@ -1,6 +1,6 @@
 import {
   createCommentIntelligence,
-  createJevCommentAnalysisProvider,
+  createDecisionsCommentAnalysisProvider,
   formatCommentIntelligencePrompt,
   type CommentAnalysisLLMProvider,
   type CommentIntelligenceConfig,
@@ -9,6 +9,7 @@ import {
   type LLMCommentAnalysisResult,
   type LiveComment,
   type JevCommentDecision,
+  type DecisionsTransport,
   type RankingStrategy,
 } from '../../../src/index';
 import { parseComments } from './parseComments';
@@ -19,7 +20,20 @@ type Intelligence = ReturnType<typeof createCommentIntelligence>;
 type UiLanguage = 'en' | 'ja';
 type PresetKey = 'live' | 'blockedViewer' | 'noisy' | 'jev' | 'responsePlan';
 type AnalysisEngine = 'rules' | 'openai' | 'jev';
-type JevTransport = 'openrouter' | 'typesafe';
+type JevTransport = DecisionsTransport;
+const DECISION_PROVIDERS: Record<JevTransport, string> = {
+  typesafe: 'TypeSafe AI',
+  openrouter: 'OpenRouter',
+  liquid: 'Liquid AI',
+  google: 'Google Gemini',
+  openai: 'OpenAI Decisions',
+  cloudflare: 'Cloudflare Workers AI',
+  microsoft: 'Microsoft Foundry',
+};
+const DECISION_MODEL_CHOICES = {
+  liquid: ['d1.1', 'd1', 'd1-ultra', 'd1:latest', 'd1-ultra:latest'],
+  cloudflare: ['clef', 'clef-flash', 'clef-omni'],
+};
 type OpenAIModel = 'gpt-5.4-nano' | 'gpt-5.4-mini' | 'gpt-5.4' | 'gpt-5.5';
 
 const OPENAI_MODELS: Array<{
@@ -228,21 +242,33 @@ const COPY = {
     engine: 'Analysis engine',
     rulesEngine: 'Rules only',
     openaiEngine: 'OpenAI LLM assist',
-    jevEngine: 'Jev',
+    jevEngine: 'Decisions / Jev',
     jevHint:
-      'Jev assesses topic relevance, requests for answers, and previously answered questions, and can also suggest a reply style. Choose OpenRouter or TypeSafe AI.',
-    jevTransport: 'Jev connection',
+      'Decisions APIs assess topic relevance, requests for answers, and previously answered questions, and can also suggest a reply style. Choose a Decisions API provider below.',
+    jevTransport: 'Decisions / Jev connection',
     jevKey: (provider: string) => `${provider} API key`,
     typesafeKeyHint:
       'Sent through the local development server to TypeSafe AI. Not saved to browser storage. Use a temporary key; keep application keys on a server in production.',
     jevKeyHint:
       'Sent directly to OpenRouter for this local demo; not saved to browser storage. Use a temporary key. Keep application keys on a server in production.',
-    recentReply: 'Recent AI reply (optional, Jev)',
+    decisionModel: 'Decision model',
+    decisionAccount: 'Cloudflare account ID',
+    decisionToken: 'Cloudflare API token',
+    decisionEndpoint: 'Microsoft Foundry endpoint',
+    decisionDeployment: 'Deployment name',
+    decisionUnavailable: 'Unavailable in this browser sample',
+    microsoftUnavailable:
+      'Per-user endpoints cannot be proxied by this static sample. Microsoft Foundry is therefore unavailable here; use the library from your own server.',
+    decisionProxyHint:
+      'Sent through the local development server to the selected provider. Direct browser CORS has not been verified. Keys stay in memory only; use a temporary key and keep production keys on your server.',
+    decisionFieldsRequired:
+      'Enter a model and a valid Cloudflare account ID when required before running.',
+    recentReply: 'Recent AI reply (optional, Decisions)',
     recentReplyHint:
       'Paste an actual recent reply to check whether a comment has already been answered. Leave blank to skip this assessment.',
     responsePlanToggle: 'Also suggest reply style and moderator alerts',
     responsePlanHint:
-      'Adds questions to the same Jev request: how deeply to reply, the suggested reasoning effort for your reply model, whether the comment is rude, whether it points out a mistake by the stream, and whether it carries a safety risk. Ranking is unchanged. This sample does not generate replies or send notifications.',
+      'Adds questions to the same Decisions request: how deeply to reply, the suggested reasoning effort for your reply model, whether the comment is rude, whether it points out a mistake by the stream, and whether it carries a safety risk. Ranking is unchanged. This sample does not generate replies or send notifications.',
     planTopic: 'choosing streaming software',
     planReply:
       'This streaming software is free, and you can use it commercially too.',
@@ -274,7 +300,7 @@ const COPY = {
       'Jev requests time out after 2.5 seconds. Network or API errors also fall back to rules.',
 
     engineHint:
-      'Choose rules, OpenAI, or Jev to compare comment selection. External analysis runs only when you click the filter button.',
+      'Choose rules, OpenAI, or Decisions / Jev to compare comment selection. External analysis runs only when you click the filter button.',
     openaiModel: 'OpenAI model',
     openaiModelHint:
       'Default uses the cost-efficient nano model. Choose a larger model when you want higher analysis quality.',
@@ -464,21 +490,33 @@ const COPY = {
     engine: '解析エンジン',
     rulesEngine: 'ルールのみ',
     openaiEngine: 'OpenAI LLMアシスト',
-    jevEngine: 'Jev',
+    jevEngine: 'Decisions / Jev',
     jevHint:
-      '話題との関連、回答を求めるコメント、回答済みの質問を評価し、返し方の判定もできます。OpenRouterまたはTypeSafe AIを選べます。',
-    jevTransport: 'Jevの接続先',
+      '話題との関連、回答を求めるコメント、回答済みの質問を評価し、返し方の判定もできます。Decisions APIの接続先を選べます。',
+    jevTransport: 'Decisions / Jevの接続先',
     jevKey: (provider: string) => `${provider} APIキー`,
     typesafeKeyHint:
       'キーはローカル開発サーバー経由でTypeSafe AIへ送信し、ブラウザストレージには保存しません。検証用の一時キーを使い、公開アプリのキーはサーバー側で管理してください。',
     jevKeyHint:
       'ローカル検証用の一時キーを使用してください。キーはOpenRouterへ直接送信し、ブラウザには保存しません。公開アプリではサーバー側で管理してください。',
-    recentReply: '直近のAIの回答（任意・Jev用）',
+    decisionModel: '判定モデル',
+    decisionAccount: 'CloudflareアカウントID',
+    decisionToken: 'Cloudflare APIトークン',
+    decisionEndpoint: 'Microsoft Foundryエンドポイント',
+    decisionDeployment: 'デプロイ名',
+    decisionUnavailable: 'このブラウザサンプルでは利用不可',
+    microsoftUnavailable:
+      '利用者ごとに異なるエンドポイントは、この静的サンプルではproxyできません。そのためMicrosoft Foundryはここでは利用できません。ご自身のサーバーからライブラリを使ってください。',
+    decisionProxyHint:
+      'ローカル開発サーバー経由で選択した接続先へ送信します。ブラウザからの直接接続のCORSは未検証です。キーはメモリ内だけに保持します。一時キーで検証し、本番のキーはサーバーで管理してください。',
+    decisionFieldsRequired:
+      'モデルと、必要な場合は有効なCloudflareアカウントIDを入力してください。',
+    recentReply: '直近のAIの回答（任意・Decisions用）',
     recentReplyHint:
       '実際に返した回答を入力すると、回答済みかどうかを評価できます。空欄ならこの評価は行いません。',
     responsePlanToggle: '返し方と管理者通知も判定する',
     responsePlanHint:
-      '同じJevの通信に質問を追加し、返答の深さ、返答LLMへの推奨reasoningEffort、失礼なコメントか、配信側の誤りを指摘しているか、安全上のリスクがあるかを判定します。順位は変わりません。このサンプルは返信の生成も通知の送信も行いません。',
+      '同じDecisions APIへの通信に質問を追加し、返答の深さ、返答LLMへの推奨reasoningEffort、失礼なコメントか、配信側の誤りを指摘しているか、安全上のリスクがあるかを判定します。順位は変わりません。このサンプルは返信の生成も通知の送信も行いません。',
     planTopic: '配信ソフトの選び方',
     planReply: 'この配信ソフトは無料で、商用利用もできますよ。',
     suggestedEffort: (effort: string) =>
@@ -666,7 +704,22 @@ let jevTransport: JevTransport = 'typesafe';
 const jevApiKeys: Record<JevTransport, string> = {
   openrouter: '',
   typesafe: '',
+  liquid: '',
+  google: '',
+  openai: '',
+  cloudflare: '',
+  microsoft: '',
 };
+const decisionModels: Record<JevTransport, string> = {
+  typesafe: 'jev-latest',
+  openrouter: '~typesafe/jev-latest',
+  liquid: 'd1.1',
+  google: 'gemini-decision-1',
+  openai: 'gpt-6-luna',
+  cloudflare: 'clef',
+  microsoft: '',
+};
+let cloudflareAccountId = '';
 let jevApiKeyRevision = 0;
 let jevResponsePlan = false;
 let recentReply = '';
@@ -764,12 +817,17 @@ function renderApp() {
             <p class="hint">${copy.jevHint}</p>
             <label for="jev-transport">${copy.jevTransport}</label>
             <select id="jev-transport"${jevControlsDisabled}>
-              <option value="typesafe"${jevTransport === 'typesafe' ? ' selected' : ''}>TypeSafe AI</option>
-              <option value="openrouter"${jevTransport === 'openrouter' ? ' selected' : ''}>OpenRouter</option>
+              ${Object.entries(DECISION_PROVIDERS)
+                .map(
+                  ([transport, label]) =>
+                    `<option value="${transport}"${jevTransport === transport ? ' selected' : ''}>${label}${transport === 'microsoft' ? ` (${copy.decisionUnavailable})` : ''}</option>`
+                )
+                .join('')}
             </select>
-            <label for="jev-api-key">${copy.jevKey(jevProviderLabel())}</label>
+            <div id="decision-fields" class="provider-settings">${renderDecisionFields()}</div>
+            <label for="jev-api-key">${decisionKeyLabel()}</label>
             <input id="jev-api-key" type="password" autocomplete="off" value="${escapeHtml(jevApiKeys[jevTransport])}"${jevControlsDisabled} />
-            <p class="hint" id="jev-key-hint">${jevTransport === 'typesafe' ? copy.typesafeKeyHint : copy.jevKeyHint}</p>
+            <p class="hint" id="jev-key-hint">${decisionKeyHint()}</p>
             <label for="recent-reply">${copy.recentReply}</label>
             <textarea id="recent-reply" rows="3"${jevControlsDisabled}>${escapeHtml(recentReply)}</textarea>
             <p class="hint">${copy.recentReplyHint}</p>
@@ -944,6 +1002,7 @@ function renderApp() {
   `;
 
   bindEvents();
+  updateEngineControls();
   applyPresetContext();
   resetIntelligence();
   renderPendingResult();
@@ -1040,16 +1099,27 @@ function bindEvents() {
       getElement<HTMLInputElement>('jev-api-key').value =
         jevApiKeys[jevTransport];
       const label = document.querySelector('label[for="jev-api-key"]');
-      if (label)
-        label.textContent = COPY[uiLanguage].jevKey(jevProviderLabel());
-      getElement<HTMLParagraphElement>('jev-key-hint').textContent =
-        jevTransport === 'typesafe'
-          ? COPY[uiLanguage].typesafeKeyHint
-          : COPY[uiLanguage].jevKeyHint;
+      if (label) label.textContent = decisionKeyLabel();
+      getElement('decision-fields').innerHTML = renderDecisionFields();
+      getElement('jev-key-hint').textContent = decisionKeyHint();
+      updateEngineControls();
       resetIntelligence();
       renderPendingResult();
     }
   );
+
+  for (const event of ['input', 'change']) {
+    getElement('decision-fields').addEventListener(event, (event) => {
+      const target = event.target as HTMLInputElement;
+      if (target.id === 'decision-model')
+        decisionModels[jevTransport] = target.value;
+      else if (target.id === 'decision-account')
+        cloudflareAccountId = target.value;
+      else return;
+      resetIntelligence();
+      renderPendingResult();
+    });
+  }
 
   getElement<HTMLInputElement>('jev-api-key').addEventListener(
     'input',
@@ -1131,7 +1201,11 @@ function updateEngineControls() {
     for (const control of settings.querySelectorAll<
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >('input, select, textarea')) {
-      control.disabled = settings.hidden;
+      control.disabled =
+        settings.hidden ||
+        (engine === 'jev' &&
+          jevTransport === 'microsoft' &&
+          control.id !== 'jev-transport');
     }
   }
 }
@@ -1181,7 +1255,10 @@ function buildConfig(): CommentIntelligenceConfig {
             language,
             selectedOpenAIModel
           )
-        : analysisEngine === 'jev' && jevApiKeys[jevTransport].trim()
+        : analysisEngine === 'jev' &&
+            jevTransport !== 'microsoft' &&
+            decisionFieldsValid() &&
+            jevApiKeys[jevTransport].trim()
           ? createBrowserJevProvider(jevApiKeys[jevTransport].trim())
           : undefined,
       llmPolicy: {
@@ -1233,26 +1310,86 @@ function buildConfigSignature(): string {
     openaiApiKeyRevision,
     jevTransport,
     jevApiKeyRevision,
+    decisionModel: decisionModels[jevTransport],
+    cloudflareAccountId,
     jevResponsePlan,
   });
 }
 
+function decisionName(): string {
+  return jevTransport === 'typesafe' || jevTransport === 'openrouter'
+    ? 'Jev'
+    : 'Decisions';
+}
+
+function decisionKeyLabel(): string {
+  return jevTransport === 'cloudflare'
+    ? COPY[uiLanguage].decisionToken
+    : COPY[uiLanguage].jevKey(jevProviderLabel());
+}
+
+function decisionKeyHint(): string {
+  const copy = COPY[uiLanguage];
+  if (jevTransport === 'microsoft') return copy.microsoftUnavailable;
+  if (jevTransport === 'typesafe') return copy.typesafeKeyHint;
+  return jevTransport === 'openrouter'
+    ? copy.jevKeyHint
+    : copy.decisionProxyHint;
+}
+
+function decisionFieldsValid(): boolean {
+  return (
+    decisionModels[jevTransport].trim().length > 0 &&
+    (jevTransport !== 'cloudflare' ||
+      /^[A-Za-z0-9_-]+$/.test(cloudflareAccountId.trim()))
+  );
+}
+
+function renderDecisionFields(): string {
+  const copy = COPY[uiLanguage];
+  const model = decisionModels[jevTransport];
+  const choices =
+    jevTransport === 'liquid' || jevTransport === 'cloudflare'
+      ? DECISION_MODEL_CHOICES[jevTransport]
+      : undefined;
+  const disabled =
+    analysisEngine !== 'jev' || jevTransport === 'microsoft' ? ' disabled' : '';
+  return `
+    ${jevTransport === 'microsoft' ? `<label for="decision-endpoint">${copy.decisionEndpoint}</label><input id="decision-endpoint" type="url" disabled />` : ''}
+    ${jevTransport === 'cloudflare' ? `<label for="decision-account">${copy.decisionAccount}</label><input id="decision-account" type="text" autocomplete="off" value="${escapeHtml(cloudflareAccountId)}"${disabled} />` : ''}
+    <label for="decision-model">${jevTransport === 'microsoft' ? copy.decisionDeployment : copy.decisionModel}</label>
+    ${choices ? `<select id="decision-model"${disabled}>${choices.map((value) => `<option value="${value}"${value === model ? ' selected' : ''}>${value}</option>`).join('')}</select>` : `<input id="decision-model" type="text" value="${escapeHtml(model)}"${disabled}${jevTransport === 'openrouter' || jevTransport === 'microsoft' ? '' : ' readonly'} />`}
+  `;
+}
+
 function jevProviderLabel(): string {
-  return jevTransport === 'typesafe' ? 'TypeSafe AI' : 'OpenRouter';
+  return DECISION_PROVIDERS[jevTransport];
 }
 
 function createBrowserJevProvider(apiKey: string): CommentAnalysisLLMProvider {
   const transport = jevTransport;
-  const provider = createJevCommentAnalysisProvider({
-    transport,
-    apiKey,
+  if (transport === 'microsoft')
+    throw new Error('Microsoft is unavailable in this sample');
+  const model = decisionModels[transport].trim();
+  const accountId = cloudflareAccountId.trim();
+  const paths: Partial<Record<JevTransport, string>> = {
+    typesafe: '/api/typesafe/systemone',
+    liquid: '/api/liquid/systemone',
+    google: '/api/google/decisions',
+    openai: '/api/openai/decisions',
+    cloudflare: `/api/cloudflare/${accountId}/${model}`,
+  };
+  const path = paths[transport];
+  const connection =
+    transport === 'cloudflare'
+      ? { transport, apiKey, accountId }
+      : { transport, apiKey };
+  const provider = createDecisionsCommentAnalysisProvider({
+    ...connection,
+    model,
     responsePlan: jevResponsePlan,
-    // TypeSafe does not allow arbitrary browser origins; the local Vite server
-    // forwards this fixed endpoint. Production apps need their own backend.
-    fetch:
-      transport === 'typesafe'
-        ? (_url, init) => fetch('/api/typesafe/systemone', init)
-        : undefined,
+    // These local routes have fixed hosts and restricted paths in Vite.
+    fetch: path ? (_url, init) => fetch(path, init) : undefined,
   });
   return {
     inputScope: provider.inputScope,
@@ -1267,7 +1404,7 @@ function createBrowserJevProvider(apiKey: string): CommentAnalysisLLMProvider {
         return result;
       } catch (error) {
         lastLLMError =
-          error instanceof Error ? error.message : 'Jev analysis failed';
+          error instanceof Error ? error.message : 'Decisions analysis failed';
         throw error;
       }
     },
@@ -1530,7 +1667,7 @@ function setAnalysisStatus(
 
 function engineLabel(): string {
   return analysisEngine === 'jev'
-    ? `Jev (${jevProviderLabel()})`
+    ? `${decisionName()} (${jevProviderLabel()})`
     : analysisEngine === 'openai'
       ? `OpenAI / ${selectedOpenAIModel}`
       : COPY[uiLanguage].rulesEngine;
@@ -1545,7 +1682,8 @@ function setAnalysisBusy(busy: boolean) {
   for (const button of document.querySelectorAll<HTMLButtonElement>(
     '#controls button.primary'
   )) {
-    button.disabled = busy;
+    button.disabled =
+      busy || (analysisEngine === 'jev' && jevTransport === 'microsoft');
     button.classList.toggle('is-loading', busy);
     button.textContent = busy
       ? COPY[uiLanguage].running
@@ -1556,6 +1694,19 @@ function setAnalysisBusy(busy: boolean) {
 
 async function analyze(options: { focusResults?: boolean } = {}) {
   if (isAnalyzing) return;
+  if (
+    analysisEngine === 'jev' &&
+    (jevTransport === 'microsoft' || !decisionFieldsValid())
+  ) {
+    const error = getElement<HTMLParagraphElement>('analysis-error');
+    error.textContent =
+      jevTransport === 'microsoft'
+        ? COPY[uiLanguage].microsoftUnavailable
+        : COPY[uiLanguage].decisionFieldsRequired;
+    error.hidden = false;
+    setAnalysisStatus('error', error.textContent);
+    return;
+  }
   if (
     (analysisEngine === 'jev' && !jevApiKeys[jevTransport].trim()) ||
     (analysisEngine === 'openai' && !openaiApiKey.trim())
@@ -1628,8 +1779,8 @@ async function analyze(options: { focusResults?: boolean } = {}) {
           ).length ?? 0;
         message =
           jevDecisionCount === 0
-            ? copy.skippedJev
-            : `${message} · ${copy.jevApplied(applied)}`;
+            ? copy.skippedJev.replace(/Jev/g, decisionName())
+            : `${message} · ${copy.jevApplied(applied).replace(/Jev/g, decisionName())}`;
       }
       setAnalysisStatus(
         fallback ? 'warning' : 'success',
@@ -1739,10 +1890,9 @@ function buildFlowItems(
         : analysisEngine === 'jev'
           ? {
               state: jevDecisionCount ? 'done' : 'skipped',
-              detail: copy.flowJev(
-                jevDecisionCount,
-                Boolean(result.responsePlans)
-              ),
+              detail: copy
+                .flowJev(jevDecisionCount, Boolean(result.responsePlans))
+                .replace(/Jev/g, decisionName()),
             }
           : { state: 'done', detail: copy.flowOpenAI };
   const selected = result.selectedComments.length;
@@ -1853,7 +2003,7 @@ function renderResult(
         copy.llmFallbackNotice,
         lastLLMError ? copy.llmFailureReason(lastLLMError) : undefined,
         analysisEngine === 'jev'
-          ? copy.jevTimingHint
+          ? copy.jevTimingHint.replace(/Jev/g, decisionName())
           : lastLLMError
             ? undefined
             : copy.llmFallbackTimingHint,
