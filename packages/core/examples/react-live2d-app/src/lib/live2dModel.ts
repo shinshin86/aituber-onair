@@ -25,6 +25,35 @@ let cubism4ModulePromise: Promise<{ Live2DModel: Live2DModelCtor }> | null =
 let cubismCoreLoadingPromise: Promise<void> | null = null;
 let blobUrlFixInstalled = false;
 
+export function getLive2DMaskBufferCount(maskCount: number): number {
+  // Cubism packs up to 36 masks into one buffer, or 32 per buffer with multiple.
+  return maskCount <= 36 ? 1 : Math.ceil(maskCount / 32);
+}
+
+/** Configure a newly loaded Cubism 4 model before its first render. */
+export function configureLive2DMaskBuffers(
+  model: Pick<Live2DModelInstance, 'internalModel'>,
+): void {
+  const coreModel = model.internalModel?.coreModel;
+  const renderer = model.internalModel?.renderer;
+  const clippingManager = renderer?._clippingManager;
+  if (!coreModel || !renderer || !clippingManager) return;
+
+  // Count shared clipping contexts once, including masks used by later motions.
+  const bufferCount = getLive2DMaskBufferCount(
+    clippingManager.getClippingMaskCount(),
+  );
+  if (bufferCount === 1 || renderer.getRenderTextureCount() >= bufferCount) {
+    return;
+  }
+
+  // initialize() replaces the manager without releasing it. Keep the renderer
+  // itself alive: renderer.release() also destroys its texture/buffer storage.
+  clippingManager.release();
+  renderer.initialize(coreModel, bufferCount);
+  // Pixi attaches the WebGL context and model textures on the first render.
+}
+
 export type Live2DModelJson = {
   FileReferences?: {
     Moc?: string;

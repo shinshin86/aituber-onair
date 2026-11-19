@@ -28,6 +28,7 @@ import {
   type EmotionEffectGeometry,
 } from './EmotionEffectOverlay';
 import {
+  configureLive2DMaskBuffers,
   ensureCubismCoreLoaded,
   createLive2DPlaybackModelJsonUrl,
   destroyLive2DModel,
@@ -359,6 +360,7 @@ export function Live2DStage({
           return;
         }
 
+        configureLive2DMaskBuffers(model);
         clearCurrentModel();
         disableAutoFocus(model);
         model.interactive = true;
