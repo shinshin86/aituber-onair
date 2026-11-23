@@ -770,8 +770,15 @@ export function EngineSelector({
             <option value="elevenlabs/eleven-v4-turbo">
               ElevenLabs v4 Turbo
             </option>
+            <option value="qwen/qwen3-tts-1.7b">Qwen3 TTS 1.7B</option>
           </select>
-          {openRouterModel.startsWith('elevenlabs/') ? (
+          {openRouterModel === 'qwen/qwen3-tts-1.7b' ? (
+            <p className="helper-text">
+              One-shot MP3 speech using preset voices, including ono_anna for
+              Japanese. Speed, instructions, and reference audio are not
+              exposed.
+            </p>
+          ) : openRouterModel.startsWith('elevenlabs/') ? (
             <p className="helper-text">
               One-shot MP3 speech using this model's catalog voices. Speed,
               style, emotion, and voice cloning controls are not exposed.

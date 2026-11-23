@@ -107,6 +107,33 @@ describe('OpenRouter model-scoped voice list', () => {
     },
   );
 
+  it('uses all nine published Qwen presets from the exact model catalog', async () => {
+    const model = 'qwen/qwen3-tts-1.7b';
+    const presets = [
+      'vivian',
+      'serena',
+      'uncle_fu',
+      'dylan',
+      'eric',
+      'ryan',
+      'aiden',
+      'ono_anna',
+      'sohee',
+    ];
+    mockModels({
+      data: [
+        { id: 'elevenlabs/eleven-v4', supported_voices: ['george'] },
+        {
+          id: model,
+          supported_voices: [...presets, 'ono_anna', 'george', fullVoice, null],
+        },
+      ],
+    });
+    expect(
+      await getVoiceEngineVoiceList('openRouter', { openRouterModel: model }),
+    ).toEqual(presets.map((id) => ({ id, label: id, metadata: { model } })));
+  });
+
   it('supports the public unauthenticated catalog and separate custom models URL', async () => {
     const fetchMock = mockModels({
       data: [{ id: full, supported_voices: [] }],

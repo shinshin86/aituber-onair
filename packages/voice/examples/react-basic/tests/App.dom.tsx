@@ -283,6 +283,50 @@ describe('Provider maintenance flows with offline fixtures', () => {
   );
 });
 
+describe('Qwen3 preset selection with offline audio', () => {
+  it('requires explicit model and voice selection and reaches the MP3 player', async () => {
+    const model = 'qwen/qwen3-tts-1.7b';
+    await change('engine', 'openRouter');
+    await change('apiKey', 'fake-key');
+    await change('openRouterModel', model);
+    expect(field('speaker').value).toBe('');
+    expect(button(speakButton).disabled).toBe(true);
+    expect(container.textContent).toContain('ono_anna for Japanese');
+    expect(container.textContent).not.toContain(
+      'not recommended for production',
+    );
+    routes.set(modelsRoute, () =>
+      jsonResponse({
+        data: [
+          { id: model, supported_voices: ['ono_anna', 'vivian', 'george'] },
+        ],
+      }),
+    );
+    await click(openRouterListButton);
+    expect(
+      Array.from((field('speaker') as HTMLSelectElement).options).map(
+        (option) => option.value,
+      ),
+    ).toEqual(['', 'ono_anna', 'vivian']);
+    await change('speaker', 'ono_anna');
+    await change('text', 'こんにちは');
+    routes.set('POST https://openrouter.ai/api/v1/audio/speech', (init) => {
+      expect(JSON.parse(init.body as string)).toEqual({
+        model,
+        voice: 'ono_anna',
+        input: 'こんにちは',
+        response_format: 'mp3',
+      });
+      return audioResponse();
+    });
+    await click(speakButton);
+    expect(audio.played).toHaveBeenCalledWith(mp3Bytes);
+    await change('openRouterModel', 'elevenlabs/eleven-v4');
+    expect(field('speaker').value).toBe('');
+    expect(button(speakButton).disabled).toBe(true);
+  });
+});
+
 describe('Voice sample DOM flow with fake network and audio', () => {
   it('routes Eleven v4 through HTTP and restores retained settings when switching back', async () => {
     await configureElevenLabs();
@@ -983,6 +1027,7 @@ describe('OpenRouter public-preview model flow with offline fixtures', () => {
       flashModel,
       'elevenlabs/eleven-v4',
       'elevenlabs/eleven-v4-turbo',
+      'qwen/qwen3-tts-1.7b',
     ]);
 
     await change('apiKey', 'fake-openrouter-key');
