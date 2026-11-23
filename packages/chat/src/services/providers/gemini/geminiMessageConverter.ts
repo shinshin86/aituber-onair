@@ -1,5 +1,6 @@
 import { Message, MessageWithVision } from '../../../types';
 import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+import { getNeonHistory } from '../../../utils/neonHistory';
 
 type GeminiMessage = {
   role: string | null;
@@ -13,6 +14,7 @@ export type GeminiFunctionCallContext = {
 };
 
 type ConverterOptions = {
+  neonHistory?: boolean;
   callIdMap?: Map<string, string>;
   functionCallContextMap?: Map<string, GeminiFunctionCallContext>;
 };
@@ -54,6 +56,12 @@ export function convertMessagesToGeminiFormat(
   for (const msg of messages) {
     if (msg.role === 'system') continue;
     const role = mapRoleToGemini(msg.role);
+    const neonParts = getNeonModelParts(msg, options);
+    if (neonParts) {
+      pushCurrent();
+      gemini.push({ role: 'model', parts: neonParts });
+      continue;
+    }
 
     if ((msg as any).tool_calls) {
       pushCurrent();
@@ -108,6 +116,12 @@ export async function convertVisionMessagesToGeminiFormat(
   for (const msg of messages) {
     if (msg.role === 'system') continue;
     const role = mapRoleToGemini(msg.role);
+    const neonParts = getNeonModelParts(msg, options);
+    if (neonParts) {
+      pushCurrent();
+      geminiMessages.push({ role: 'model', parts: neonParts });
+      continue;
+    }
 
     if ((msg as any).tool_calls) {
       pushCurrent();
@@ -183,6 +197,31 @@ export function extractGeminiSystemInstruction(
     );
   });
   return parts.length > 0 ? { parts } : undefined;
+}
+
+/** Only replay parts explicitly carried on a Neon assistant message. */
+function getNeonModelParts(
+  message: Message | MessageWithVision,
+  options: ConverterOptions,
+): unknown[] | undefined {
+  if (!options.neonHistory || message.role !== 'assistant') return undefined;
+  const history = getNeonHistory(message);
+  if (history?.route !== 'native') return undefined;
+
+  // Restore provider call IDs for the matching tool results in this request.
+  const calls = history.parts.flatMap((part: any) => {
+    const call = part?.functionCall ?? part?.function_call;
+    return call ? [call] : [];
+  });
+  for (const [index, call] of (message.tool_calls ?? []).entries()) {
+    const providerCall = calls[index];
+    if (providerCall?.name !== call.function.name) continue;
+    options.functionCallContextMap?.set(call.id, {
+      name: providerCall.name,
+      providerCallId: providerCall.id,
+    });
+  }
+  return history.parts;
 }
 
 function createFunctionCallPart(call: any, options: ConverterOptions) {

@@ -1,5 +1,16 @@
 # @aituber-onair/chat
 
+## Unreleased
+
+### Added
+
+- Add Gemini 4 Neon as an opt-in native Gemini and OpenRouter Chat model with
+  image input, streaming, tools, explicit low thinking by default, and Neon-only
+  xhigh controls. Existing provider and model defaults remain unchanged.
+- Preserve Neon model-part history and signatures through assistant_message;
+  hide thought text from visible replies. Add mocked transport and React tests.
+  No Core propagation, package version change, or live inference validation.
+
 ## 0.72.0
 
 ### Minor Changes

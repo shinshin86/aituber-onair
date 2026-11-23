@@ -425,6 +425,7 @@ describe('ChatServiceFactory', () => {
         'low',
         'medium',
         'high',
+        'xhigh',
       ]);
       expect(
         ChatServiceFactory.getProviderCapabilities(

@@ -42,7 +42,7 @@ const JSON_MODE_SUPPORTED_PROVIDERS = new Set<string>([
 const REASONING_EFFORT_BY_PROVIDER: Record<string, string[]> = {
   openai: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
   claude: ['low', 'medium', 'high', 'xhigh', 'max'],
-  gemini: ['minimal', 'low', 'medium', 'high'],
+  gemini: ['minimal', 'low', 'medium', 'high', 'xhigh'],
   openrouter: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'],
   kimi: ['low', 'high', 'max'],
   mistral: ['low', 'medium', 'high'],

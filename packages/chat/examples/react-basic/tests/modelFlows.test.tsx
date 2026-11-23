@@ -174,6 +174,12 @@ const modelCases = [
       'minimal',
     ],
     ['Nex N2.6 (OpenRouter)', 'nex-agi/nex-n2.6', ['high', 'medium'], 'medium'],
+    [
+      'Gemini 4 Neon (OpenRouter)',
+      'google/gemini-4-neon',
+      ['xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
   ].map(([label, model, efforts, initialEffort]) => ({
     provider: 'OpenRouter',
     label: label as string,
@@ -440,6 +446,16 @@ describe('React sample model-to-transport flows (mock network only)', () => {
     async (model) => {
       await selectModel(model);
       const effort = element<HTMLSelectElement>(model.control);
+      if (model.model === 'google/gemini-4-neon') {
+        const reasoning = element<HTMLInputElement>(
+          '#openrouter-include-reasoning',
+        );
+        expect(reasoning.disabled).toBe(true);
+        expect(reasoning.checked).toBe(true);
+        expect(container.textContent).toContain(
+          'Neon reasoning history is used for continuity on this route',
+        );
+      }
       expect([...effort.options].map((option) => option.value)).toEqual(
         model.efforts,
       );

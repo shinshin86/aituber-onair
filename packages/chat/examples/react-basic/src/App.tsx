@@ -84,6 +84,7 @@ interface ChatMessage extends Omit<Message, 'timestamp' | 'content'> {
   content: Message['content'] | MessageWithVision['content'];
   isStreaming?: boolean;
   assistantMessage?: ChatCompletionAssistantMessage;
+  assistantRoute?: string;
 }
 
 type ReasoningEffortLevel =
@@ -220,7 +221,8 @@ function App() {
     reasoning_effort === 'minimal' ||
     reasoning_effort === 'low' ||
     reasoning_effort === 'medium' ||
-    reasoning_effort === 'high'
+    reasoning_effort === 'high' ||
+    reasoning_effort === 'xhigh'
       ? reasoning_effort
       : undefined;
   const geminiReasoningEffort = normalizeGeminiReasoningEffort(
@@ -578,7 +580,9 @@ function App() {
             (m) => m.role !== 'assistant' || m.content || m.assistantMessage,
           )
           .map((message) =>
-            message.assistantMessage
+            message.assistantMessage &&
+            (!message.assistantRoute ||
+              message.assistantRoute === `${provider}/${selectedModel}`)
               ? message.assistantMessage
               : { role: message.role, content: message.content },
           );
@@ -610,6 +614,11 @@ function App() {
                       content: complete,
                       isStreaming: false,
                       assistantMessage: completion?.assistant_message,
+                      assistantRoute:
+                        selectedModel === 'gemini-4-neon' ||
+                        selectedModel === 'google/gemini-4-neon'
+                          ? `${provider}/${selectedModel}`
+                          : undefined,
                     }
                   : msg,
               ),
@@ -741,7 +750,8 @@ function App() {
                   reasoning_effort === 'minimal' ||
                   reasoning_effort === 'low' ||
                   reasoning_effort === 'medium' ||
-                  reasoning_effort === 'high'
+                  reasoning_effort === 'high' ||
+                  reasoning_effort === 'xhigh'
                     ? reasoning_effort
                     : undefined;
                 setReasoningEffort(

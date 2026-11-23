@@ -710,6 +710,7 @@ it.each([
   ['Gemini 4 Argon', 'gemini-4-argon'],
   ['Gemini 4 Carbon', 'gemini-4-carbon'],
   ['Gemini 4 Hydrogen', 'gemini-4-hydrogen'],
+  ['Gemini 4 Neon', 'gemini-4-neon'],
 ])(
   'configures direct %s with low thinking and sends a streamed request',
   async (label, modelId) => {
@@ -732,6 +733,7 @@ it.each([
       'low',
       'medium',
       'high',
+      ...(modelId === 'gemini-4-neon' ? ['xhigh'] : []),
     ]);
     expect(effort.value).toBe('low');
     expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
@@ -740,7 +742,7 @@ it.each([
       `/v1beta/models/${modelId}:streamGenerateContent?alt=sse&`,
     );
     expect(requestBody().generationConfig).toEqual({
-      maxOutputTokens: 32768,
+      maxOutputTokens: modelId === 'gemini-4-neon' ? 65536 : 32768,
       thinkingConfig: { includeThoughts: false, thinkingLevel: 'LOW' },
     });
   },
@@ -852,4 +854,53 @@ it('labels Mistral DeepSeek as preview without inheriting GLM reasoning controls
   await sendMessage();
   expect(requestBody()).not.toHaveProperty('reasoning_effort');
   expect(requestBody()).not.toHaveProperty('thinking');
+});
+
+it('preserves native Neon signed history only on its route and sends xhigh', async () => {
+  fetchMock.mockClear();
+  fetchMock.mockResolvedValue({
+    ...createSseResponse([
+      'data: {"candidates":[{"content":{"parts":[{"text":"Hello from the provider","thoughtSignature":"mock-neon-signature"}]}}]}\n\n',
+    ]),
+    ok: true,
+    status: 200,
+  });
+  await renderApp();
+  await click(button('Gemini', 'provider'));
+  await click(button('Gemini 4 Neon', 'model'));
+  await changeInput('#api-key', 'test-ui-key');
+  await changeSelect('#gemini-reasoning-effort', 'xhigh');
+  await sendMessage();
+  expect(requestBody().generationConfig.thinkingConfig.thinkingLevel).toBe(
+    'XHIGH',
+  );
+  fetchMock.mockClear();
+  fetchMock.mockResolvedValue({
+    ...createSseResponse([
+      'data: {"candidates":[{"content":{"parts":[{"text":"Hello from the provider"}]}}]}\n\n',
+    ]),
+    ok: true,
+    status: 200,
+  });
+  await sendMessage();
+  expect(requestBody().contents[1].parts).toEqual([
+    {
+      text: 'Hello from the provider',
+      thoughtSignature: 'mock-neon-signature',
+    },
+  ]);
+  await click(button('Gemini 4 Hydrogen', 'model'));
+  fetchMock.mockClear();
+  fetchMock.mockResolvedValue({
+    ...createSseResponse([
+      'data: {"candidates":[{"content":{"parts":[{"text":"Hello from the provider"}]}}]}\n\n',
+    ]),
+    ok: true,
+    status: 200,
+  });
+  await sendMessage();
+  expect(JSON.stringify(requestBody())).not.toContain('mock-neon-signature');
+  expect(requestBody().generationConfig.thinkingConfig.thinkingLevel).toBe(
+    'LOW',
+  );
 });

@@ -1,4 +1,5 @@
 import { ChatService } from '../../ChatService';
+import { NEON_HISTORY } from '../../../utils/neonHistory';
 import {
   Message,
   MessageWithVision,
@@ -13,6 +14,7 @@ import {
   MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_4_CARBON,
   MODEL_GEMINI_4_HYDROGEN,
+  MODEL_GEMINI_4_NEON,
   GEMINI_VISION_SUPPORTED_MODELS,
   normalizeGeminiReasoningEffort,
   type GeminiReasoningEffort,
@@ -67,14 +69,15 @@ export class GeminiChatService implements ChatService {
     return (
       model === MODEL_GEMINI_4_ARGON ||
       model === MODEL_GEMINI_4_CARBON ||
-      model === MODEL_GEMINI_4_HYDROGEN
+      model === MODEL_GEMINI_4_HYDROGEN ||
+      model === MODEL_GEMINI_4_NEON
     );
   }
 
   private resolveThinkingConfig(model: string):
     | {
         includeThoughts: false;
-        thinkingLevel: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
+        thinkingLevel: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH' | 'XHIGH';
       }
     | undefined {
     const effort = normalizeGeminiReasoningEffort(model, this.reasoningEffort);
@@ -85,7 +88,8 @@ export class GeminiChatService implements ChatService {
           | 'MINIMAL'
           | 'LOW'
           | 'MEDIUM'
-          | 'HIGH',
+          | 'HIGH'
+          | 'XHIGH',
       };
     }
 
@@ -102,10 +106,12 @@ export class GeminiChatService implements ChatService {
   private shouldExposeTextPart(part: any, model: string): boolean {
     if (!part.text) return false;
 
-    // Gemma 4 can emit thought parts as regular text blocks.
-    // Hide those blocks from user-visible output while leaving other Gemini
-    // model families unchanged for now.
-    if (this.isGemma4Model(model) && part.thought === true) {
+    // A thought summary is history metadata, not visible answer text.
+    // Apply this only to Gemma 4 and Neon to preserve existing behavior.
+    if (
+      (this.isGemma4Model(model) || model === MODEL_GEMINI_4_NEON) &&
+      part.thought === true
+    ) {
       return false;
     }
 
@@ -271,19 +277,24 @@ export class GeminiChatService implements ChatService {
   async processChat(
     messages: Message[],
     onPartialResponse: (text: string) => void,
-    onCompleteResponse: (text: string) => Promise<void>,
+    onCompleteResponse: (
+      text: string,
+      completion?: ToolChatCompletion,
+    ) => Promise<void>,
   ): Promise<void> {
     try {
       await processChatWithOptionalTools({
         hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
         runWithoutTools: async () => {
           const res = await this.callGemini(messages, this.model, true);
-          const { blocks } = await this.parseStream(
+          const completion = await this.parseStream(
             res,
             onPartialResponse,
             this.model,
           );
-          return StreamTextAccumulator.getFullText(blocks);
+          return this.model === MODEL_GEMINI_4_NEON
+            ? completion
+            : StreamTextAccumulator.getFullText(completion.blocks);
         },
         runWithTools: () => this.chatOnce(messages, true, onPartialResponse),
         onCompleteResponse,
@@ -291,7 +302,8 @@ export class GeminiChatService implements ChatService {
           'Received functionCall. Use chatOnce() loop when tools are enabled.',
       });
     } catch (err) {
-      console.error('Error in processChat:', err);
+      if (this.model !== MODEL_GEMINI_4_NEON)
+        console.error('Error in processChat:', err);
       throw err;
     }
   }
@@ -299,19 +311,24 @@ export class GeminiChatService implements ChatService {
   async processVisionChat(
     messages: MessageWithVision[],
     onPartialResponse: (text: string) => void,
-    onCompleteResponse: (text: string) => Promise<void>,
+    onCompleteResponse: (
+      text: string,
+      completion?: ToolChatCompletion,
+    ) => Promise<void>,
   ): Promise<void> {
     try {
       await processChatWithOptionalTools({
         hasTools: this.tools.length > 0 || this.mcpServers.length > 0,
         runWithoutTools: async () => {
           const res = await this.callGemini(messages, this.visionModel, true);
-          const { blocks } = await this.parseStream(
+          const completion = await this.parseStream(
             res,
             onPartialResponse,
             this.visionModel,
           );
-          return StreamTextAccumulator.getFullText(blocks);
+          return this.visionModel === MODEL_GEMINI_4_NEON
+            ? completion
+            : StreamTextAccumulator.getFullText(completion.blocks);
         },
         runWithTools: () => this.visionChatOnce(messages),
         onToolBlocks: (blocks) => {
@@ -326,7 +343,8 @@ export class GeminiChatService implements ChatService {
           'Received functionCall. Use visionChatOnce() loop when tools are enabled.',
       });
     } catch (err) {
-      console.error('Error in processVisionChat:', err);
+      if (this.visionModel !== MODEL_GEMINI_4_NEON)
+        console.error('Error in processVisionChat:', err);
       throw err;
     }
   }
@@ -347,29 +365,41 @@ export class GeminiChatService implements ChatService {
           (b: any) => b?.type === 'image_url' || b?.inlineData,
         ),
     );
-    const contents = hasVision
-      ? await convertVisionMessagesToGeminiFormat(
-          messages as MessageWithVision[],
-          {
-            callIdMap: this.callIdMap,
-            functionCallContextMap: this.functionCallContextMap,
-          },
-        )
-      : convertMessagesToGeminiFormat(messages as Message[], {
+    const isNeon = model === MODEL_GEMINI_4_NEON;
+    // Neon history is explicit and request-scoped, not keyed by answer text.
+    const converterOptions = isNeon
+      ? {
+          neonHistory: true,
+          functionCallContextMap: new Map<string, GeminiFunctionCallContext>(),
+        }
+      : {
           callIdMap: this.callIdMap,
           functionCallContextMap: this.functionCallContextMap,
-        });
+        };
+    const contents =
+      hasVision ||
+      (isNeon && messages.some((message) => Array.isArray(message.content)))
+        ? await convertVisionMessagesToGeminiFormat(
+            messages as MessageWithVision[],
+            converterOptions,
+          )
+        : convertMessagesToGeminiFormat(
+            messages as Message[],
+            converterOptions,
+          );
 
-    // Gemini 4 models include thinking in their output budget. Follow Google's
-    // 32K recommendation for implicit caps; preserve lower explicit caller
-    // limits.
+    // Gemini 4 models include thinking in their output budget. Neon uses its
+    // documented 64K synchronous limit; preserve other models and lower
+    // explicit caller limits.
     const implicitMaxTokens = getMaxTokensForResponseLength(
       this.responseLength,
     );
     const maxOutputTokens = this.isGemini4Model(model)
       ? Math.min(
-          maxTokens ?? Math.max(32_768, implicitMaxTokens),
-          stream || model === MODEL_GEMINI_4_HYDROGEN ? 65_536 : 32_768,
+          maxTokens ?? (isNeon ? 65_536 : Math.max(32_768, implicitMaxTokens)),
+          stream || isNeon || model === MODEL_GEMINI_4_HYDROGEN
+            ? 65_536
+            : 32_768,
         )
       : (maxTokens ?? implicitMaxTokens);
     const body: any = {
@@ -424,7 +454,9 @@ export class GeminiChatService implements ChatService {
 
     const tryApi = async (): Promise<Response> => {
       try {
-        const payload = firstVer === 'v1' ? body : this.adaptKeysForApi(body); // snake_case conversion
+        // REST accepts camelCase; avoid recursively rewriting opaque history or tool arguments.
+        const payload =
+          firstVer === 'v1' || isNeon ? body : this.adaptKeysForApi(body);
         return await fetchOnce(firstVer, payload);
       } catch (e: any) {
         // Retry with v1beta when a v1 request looks unsupported for this model.
@@ -450,7 +482,7 @@ export class GeminiChatService implements ChatService {
       return res;
     } catch (error: any) {
       // Enhanced error logging for debugging
-      if (error.body) {
+      if (error.body && !isNeon) {
         console.error('Gemini API Error Details:', error.body);
         console.error('Request Body:', JSON.stringify(body, null, 2));
       }
@@ -458,17 +490,22 @@ export class GeminiChatService implements ChatService {
     }
   }
 
-  private createFunctionCallBlock(part: any): ToolChatBlock | undefined {
+  private createFunctionCallBlock(
+    part: any,
+    model: string,
+  ): ToolChatBlock | undefined {
     const functionCall = part.functionCall ?? part.function_call;
     if (!functionCall) return undefined;
 
     const toolUseId = functionCall.id ?? this.genUUID();
-    this.callIdMap.set(toolUseId, functionCall.name);
-    this.functionCallContextMap.set(toolUseId, {
-      name: functionCall.name,
-      providerCallId: functionCall.id,
-      thoughtSignature: part.thoughtSignature ?? part.thought_signature,
-    });
+    if (model !== MODEL_GEMINI_4_NEON) {
+      this.callIdMap.set(toolUseId, functionCall.name);
+      this.functionCallContextMap.set(toolUseId, {
+        name: functionCall.name,
+        providerCallId: functionCall.id,
+        thoughtSignature: part.thoughtSignature ?? part.thought_signature,
+      });
+    }
 
     return {
       type: 'tool_use',
@@ -502,6 +539,7 @@ export class GeminiChatService implements ChatService {
 
     const textBlocks: ToolChatBlock[] = [];
     const toolBlocks: ToolChatBlock[] = [];
+    const modelParts: unknown[] = [];
     let buf = '';
 
     const flush = (payload: string) => {
@@ -515,11 +553,12 @@ export class GeminiChatService implements ChatService {
 
       for (const cand of obj.candidates ?? []) {
         for (const part of cand.content?.parts ?? []) {
+          if (model === MODEL_GEMINI_4_NEON) modelParts.push(part);
           if (this.shouldExposeTextPart(part, model)) {
             onPartial(part.text);
             StreamTextAccumulator.addTextBlock(textBlocks, part.text);
           }
-          const functionCallBlock = this.createFunctionCallBlock(part);
+          const functionCallBlock = this.createFunctionCallBlock(part, model);
           if (functionCallBlock) toolBlocks.push(functionCallBlock);
           const functionResponseBlock = this.createFunctionResponseBlock(part);
           if (functionResponseBlock) toolBlocks.push(functionResponseBlock);
@@ -551,13 +590,7 @@ export class GeminiChatService implements ChatService {
     }
     if (buf) flush(buf);
 
-    const blocks = [...textBlocks, ...toolBlocks];
-    return {
-      blocks,
-      stop_reason: toolBlocks.some((b) => b.type === 'tool_use')
-        ? 'tool_use'
-        : 'end',
-    };
+    return this.createCompletion(textBlocks, toolBlocks, modelParts, model);
   }
 
   /* ────────────────────────────────────────────────────────── */
@@ -566,25 +599,55 @@ export class GeminiChatService implements ChatService {
   private parseOneShot(data: any, model: string): ToolChatCompletion {
     const textBlocks: ToolChatBlock[] = [];
     const toolBlocks: ToolChatBlock[] = [];
+    const modelParts: unknown[] = [];
 
     for (const cand of data.candidates ?? []) {
       for (const part of cand.content?.parts ?? []) {
+        if (model === MODEL_GEMINI_4_NEON) modelParts.push(part);
         if (this.shouldExposeTextPart(part, model)) {
           textBlocks.push({ type: 'text', text: part.text });
         }
-        const functionCallBlock = this.createFunctionCallBlock(part);
+        const functionCallBlock = this.createFunctionCallBlock(part, model);
         if (functionCallBlock) toolBlocks.push(functionCallBlock);
         const functionResponseBlock = this.createFunctionResponseBlock(part);
         if (functionResponseBlock) toolBlocks.push(functionResponseBlock);
       }
     }
 
-    const blocks = [...textBlocks, ...toolBlocks];
+    return this.createCompletion(textBlocks, toolBlocks, modelParts, model);
+  }
+
+  private createCompletion(
+    textBlocks: ToolChatBlock[],
+    toolBlocks: ToolChatBlock[],
+    modelParts: unknown[],
+    model: string,
+  ): ToolChatCompletion {
+    const calls = toolBlocks.filter((block) => block.type === 'tool_use');
     return {
-      blocks,
-      stop_reason: toolBlocks.some((b) => b.type === 'tool_use')
-        ? 'tool_use'
-        : 'end',
+      blocks: [...textBlocks, ...toolBlocks],
+      stop_reason: calls.length ? 'tool_use' : 'end',
+      ...(model === MODEL_GEMINI_4_NEON && modelParts.length
+        ? {
+            assistant_message: {
+              role: 'assistant',
+              content: StreamTextAccumulator.getFullText(textBlocks),
+              [NEON_HISTORY]: { route: 'native' as const, parts: modelParts },
+              ...(calls.length
+                ? {
+                    tool_calls: calls.map((call) => ({
+                      id: call.id,
+                      type: 'function' as const,
+                      function: {
+                        name: call.name,
+                        arguments: JSON.stringify(call.input),
+                      },
+                    })),
+                  }
+                : {}),
+            },
+          }
+        : {}),
     };
   }
 
