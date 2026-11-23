@@ -375,6 +375,11 @@ describe('ProviderSelector rendered configuration for recent models', () => {
               'Ling 3.0 Flash VL',
               'Nex N2.5 Pro',
               'GPT-6.1 Terra (OpenRouter)',
+              'Hy4 Flash',
+              'Qwen4 Max',
+              'GPT-6.2 Sol (OpenRouter)',
+              'GPT-6.2 Astra (OpenRouter)',
+              'Inkling 2 Mini (OpenRouter)',
             ].includes(label ?? ''),
         )
         .slice(-2),

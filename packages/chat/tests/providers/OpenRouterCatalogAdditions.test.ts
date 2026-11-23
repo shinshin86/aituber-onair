@@ -7,6 +7,8 @@ import {
   getDefaultOpenRouterReasoningEffort,
   isOpenRouterFreeModel,
   type MessageWithVision,
+  OPENROUTER_VISION_SUPPORTED_MODELS,
+  normalizeOpenRouterReasoningEffort,
 } from '../../src';
 import { openRouterCatalogAdditions } from '../fixtures/openrouterCatalogAdditions';
 import { ChatServiceHttpClient } from '../../src/utils/chatServiceHttpClient';
@@ -63,6 +65,7 @@ describe.each(openRouterCatalogAdditions)(
       expect(caps.models).toContain(entry.model);
       expect(caps.defaultModel).toBe(MODEL_GOOGLE_GEMMA_4_31B_IT_FREE);
       expect(caps.vision).toBe('supported');
+      expect(OPENROUTER_VISION_SUPPORTED_MODELS).toContain(entry.model);
       expect(caps.reasoningEffort).toEqual(entry.efforts);
       expect(isOpenRouterFreeModel(entry.model)).toBe(false);
       expect(getDefaultOpenRouterReasoningEffort(entry.model)).toBe(
@@ -121,17 +124,13 @@ describe.each(openRouterCatalogAdditions)(
       const post = vi
         .spyOn(ChatServiceHttpClient, 'post')
         .mockImplementation(async () => reply(false));
-      for (const effort of entry.efforts.length ? entry.efforts : ['high']) {
+      for (const effort of entry.efforts.length
+        ? entry.efforts
+        : (['high'] as const)) {
         const chat = ChatServiceFactory.createChatService('openrouter', {
           apiKey: 'test-key',
           model: entry.model,
-          reasoning_effort: effort as
-            | 'none'
-            | 'low'
-            | 'medium'
-            | 'high'
-            | 'xhigh'
-            | 'max',
+          reasoning_effort: effort,
           reasoningMaxTokens: 1024,
         });
         await chat.chatOnce!([...messages], false, () => {}, 1234);
@@ -154,4 +153,29 @@ it('keeps the pre-existing Nemotron free variant independently available', () =>
   expect(models).toContain('nvidia/nemotron-3.5-super-vl');
   expect(models).toContain('nvidia/nemotron-3.5-super-vl:free');
   expect(isOpenRouterFreeModel('nvidia/nemotron-3.5-super-vl:free')).toBe(true);
+});
+
+it('keeps exact reasoning profiles independent of similar model IDs', () => {
+  const supported = ChatServiceFactory.getSupportedModels('openrouter');
+  expect(normalizeOpenRouterReasoningEffort('tencent/hy4', 'high')).toBe(
+    'high',
+  );
+  expect(
+    normalizeOpenRouterReasoningEffort('tencent/hy4-flash', 'high'),
+  ).toBeUndefined();
+  expect(normalizeOpenRouterReasoningEffort('qwen/qwen4-max', 'medium')).toBe(
+    'none',
+  );
+  expect(
+    normalizeOpenRouterReasoningEffort(
+      'thinkingmachines/inkling-2-mini',
+      'xhigh',
+    ),
+  ).toBe('none');
+  for (const model of ['openai/gpt-6.2-sol', 'openai/gpt-6.2-astra']) {
+    expect(normalizeOpenRouterReasoningEffort(model, 'none')).toBe('low');
+    expect(supported).not.toContain(`${model}-pro`);
+    expect(supported).not.toContain(`${model}:batch`);
+  }
+  expect(supported).not.toContain('tencent/hy4-flash-unknown');
 });

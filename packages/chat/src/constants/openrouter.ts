@@ -17,6 +17,8 @@ export const MODEL_APODEX_1_1_MINI_FREE = 'apodex/apodex-1.1-mini:free';
 
 export const MODEL_OPENAI_GPT_6_1_TERRA = 'openai/gpt-6.1-terra';
 export const MODEL_OPENAI_GPT_6_1_SOL = 'openai/gpt-6.1-sol';
+export const MODEL_OPENAI_GPT_6_2_SOL = 'openai/gpt-6.2-sol';
+export const MODEL_OPENAI_GPT_6_2_ASTRA = 'openai/gpt-6.2-astra';
 export const MODEL_OPENAI_GPT_6_SOL = 'openai/gpt-6-sol';
 export const MODEL_OPENAI_GPT_6_LUNA = 'openai/gpt-6-luna';
 export const MODEL_ANTHROPIC_CLAUDE_SONNET_5_5 = 'anthropic/claude-sonnet-5.5';
@@ -40,6 +42,7 @@ export const MODEL_INCEPTION_MERCURY_2_5 = 'inception/mercury-2.5';
 export const MODEL_NEX_AGI_NEX_N2_5_MINI_FREE = 'nex-agi/nex-n2.5-mini:free';
 export const MODEL_NEX_AGI_NEX_N2_5_PRO_FREE = 'nex-agi/nex-n2.5-pro:free';
 export const MODEL_QWEN_QWEN_3_8_MAX_0902 = 'qwen/qwen3.8-max-0902';
+export const MODEL_QWEN_QWEN_4_MAX = 'qwen/qwen4-max';
 export const MODEL_META_MUSE_SPARK_1_3 = 'meta/muse-spark-1.3';
 
 export const MODEL_NVIDIA_NEMOTRON_3_5_LIGHTNING =
@@ -69,6 +72,7 @@ export const MODEL_OPENROUTER_DEEPSEEK_FLASH_LATEST =
 export const MODEL_ZAI_GLM_FLASH_LATEST = '~z-ai/glm-flash-latest';
 export const MODEL_XIAOMI_MIMO_V2_6_PRO = 'xiaomi/mimo-v2.6-pro';
 export const MODEL_TENCENT_HY4 = 'tencent/hy4';
+export const MODEL_TENCENT_HY4_FLASH = 'tencent/hy4-flash';
 export const MODEL_COHERE_COMMAND_A_PLUS = 'cohere/command-a-plus';
 export const MODEL_BYTEDANCE_SEED_2_1_TURBO = 'bytedance-seed/seed-2-1-turbo';
 export const MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL =
@@ -78,12 +82,19 @@ export const MODEL_OPENROUTER_SAKANA_NAMAZU = 'sakana/sakana-namazu';
 export const MODEL_META_MUSE_EMBER = 'meta/muse-ember';
 export const MODEL_THINKINGMACHINES_INKLING_2_SMALL =
   'thinkingmachines/inkling-2-small';
+export const MODEL_THINKINGMACHINES_INKLING_2_MINI =
+  'thinkingmachines/inkling-2-mini';
 export const MODEL_NEX_AGI_NEX_N2_6 = 'nex-agi/nex-n2.6';
 export const MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE =
   'inclusionai/ling-3.2-flash:free';
 
 // These catalog entries do not document a reasoning token-budget control.
 export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
+  MODEL_THINKINGMACHINES_INKLING_2_MINI,
+  MODEL_OPENAI_GPT_6_2_SOL,
+  MODEL_OPENAI_GPT_6_2_ASTRA,
+  MODEL_QWEN_QWEN_4_MAX,
+  MODEL_TENCENT_HY4_FLASH,
   MODEL_META_MUSE_EMBER,
   MODEL_THINKINGMACHINES_INKLING_2_SMALL,
   MODEL_NEX_AGI_NEX_N2_6,
@@ -283,6 +294,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     efforts: ['max', 'high', 'medium', 'low', 'minimal'],
     defaultEffort: 'minimal',
   },
+  [MODEL_THINKINGMACHINES_INKLING_2_MINI]: {
+    efforts: ['max', 'high', 'medium', 'low', 'minimal', 'none'],
+    defaultEffort: 'none',
+  },
   [MODEL_NEX_AGI_NEX_N2_6]: {
     efforts: ['high', 'medium'],
     defaultEffort: 'medium',
@@ -311,6 +326,10 @@ const OPENROUTER_MODEL_REASONING: Record<
   [MODEL_TENCENT_HY4]: {
     efforts: ['none', 'low', 'high'],
     defaultEffort: 'none',
+  },
+  [MODEL_TENCENT_HY4_FLASH]: {
+    efforts: [],
+    defaultEffort: undefined,
   },
   [MODEL_COHERE_COMMAND_A_PLUS]: { efforts: [], defaultEffort: undefined },
   [MODEL_BYTEDANCE_SEED_2_1_TURBO]: { efforts: [], defaultEffort: undefined },
@@ -491,6 +510,14 @@ const OPENROUTER_MODEL_REASONING: Record<
     efforts: ['low', 'medium', 'high', 'xhigh', 'max'],
     defaultEffort: 'low',
   },
+  [MODEL_OPENAI_GPT_6_2_SOL]: {
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'low',
+  },
+  [MODEL_OPENAI_GPT_6_2_ASTRA]: {
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'low',
+  },
   [MODEL_OPENAI_GPT_6_SOL]: {
     efforts: ['none', 'low', 'medium', 'high', 'xhigh', 'max'],
     defaultEffort: 'none',
@@ -567,6 +594,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     efforts: ['xhigh', 'high', 'medium', 'low', 'minimal'],
     defaultEffort: 'minimal',
   },
+  [MODEL_QWEN_QWEN_4_MAX]: {
+    efforts: ['xhigh', 'high', 'low', 'none'],
+    defaultEffort: 'none',
+  },
   [MODEL_META_MUSE_SPARK_1_3]: {
     efforts: ['max', 'xhigh', 'high', 'medium', 'low', 'minimal'],
     defaultEffort: 'minimal',
@@ -584,6 +615,7 @@ export const OPENROUTER_FREE_MODELS = [
 export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_META_MUSE_EMBER,
   MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+  MODEL_THINKINGMACHINES_INKLING_2_MINI,
   MODEL_NEX_AGI_NEX_N2_6,
   MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE,
 
@@ -593,6 +625,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_ZAI_GLM_FLASH_LATEST,
   MODEL_XIAOMI_MIMO_V2_6_PRO,
   MODEL_TENCENT_HY4,
+  MODEL_TENCENT_HY4_FLASH,
   MODEL_COHERE_COMMAND_A_PLUS,
   MODEL_BYTEDANCE_SEED_2_1_TURBO,
   MODEL_NVIDIA_NEMOTRON_3_5_SUPER_VL,
@@ -610,6 +643,8 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_QWEN_QWEN_3_8_27B,
   MODEL_QWEN_QWEN_3_8_OMNI_FLASH,
   MODEL_OPENAI_GPT_6_1_SOL,
+  MODEL_OPENAI_GPT_6_2_SOL,
+  MODEL_OPENAI_GPT_6_2_ASTRA,
   MODEL_OPENAI_GPT_6_SOL,
   MODEL_OPENAI_GPT_6_LUNA,
   MODEL_ANTHROPIC_CLAUDE_SONNET_5_5,
@@ -629,6 +664,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
   MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
+  MODEL_QWEN_QWEN_4_MAX,
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_OPENROUTER_AUTO_BETA,
   MODEL_MOONSHOTAI_KIMI_K3,
