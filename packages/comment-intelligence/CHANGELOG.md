@@ -1,5 +1,10 @@
 # @aituber-onair/comment-intelligence
 
+## Unreleased
+
+- Adds Liquid AI `d1.2` as an opt-in choice in the live comment filter browser
+  sample. The default and legacy choices are unchanged.
+
 ## 0.0.9
 
 ### Patch Changes

@@ -42,6 +42,22 @@ describe('browser Decisions connections', () => {
     document.body.innerHTML = '';
   });
 
+  it('passes the selected Liquid d1.2 model to the existing route', async () => {
+    mockDecisions();
+    change('jev-transport', 'liquid');
+    expect(field('decision-model').value).toBe('d1.1');
+    change('decision-model', 'd1.2');
+    change('jev-api-key', 'liquid-test-key', 'input');
+    run();
+    await vi.waitFor(() =>
+      expect(field('filter-from-editor').disabled).toBe(false)
+    );
+    expect(fetch).toHaveBeenCalledOnce();
+    const [url, init] = vi.mocked(fetch).mock.calls[0];
+    expect(url).toBe('/api/liquid/systemone');
+    expect(JSON.parse(init?.body as string).model).toBe('d1.2');
+  });
+
   it.each([
     ['liquid', 'd1.1', '/api/liquid/systemone', 'Authorization'],
     ['google', 'gemini-decision-1', '/api/google/decisions', 'x-goog-api-key'],

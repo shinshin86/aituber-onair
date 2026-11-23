@@ -372,7 +372,8 @@ does not schedule collection windows.
   exactly one non-empty `apiKey` or `bearerToken` (for example, a Microsoft Entra ID
   token). The adapter does not obtain or refresh tokens.
 - **Liquid AI:** `apiKey` is required. The pinned default is `d1.1`; the browser
-  selector also offers `d1`, `d1-ultra`, `d1:latest`, and `d1-ultra:latest`.
+  selector also offers `d1.2`, `d1`, `d1-ultra`, `d1:latest`, and
+  `d1-ultra:latest`. Liquid AI [recommends `d1.2` for new integrations](https://docs.liquid.ai/lfm/help/deprecations#deprecated-api-models).
   The library accepts a non-empty model override; an accepted string is not a
   guarantee that the service supports it.
 - **Google and OpenAI:** `apiKey` is required. Google uses `x-goog-api-key` and OpenAI
