@@ -1,6 +1,8 @@
 # @aituber-onair/voice
 
-## Unreleased
+## 0.31.0
+
+### Minor Changes
 
 - Add explicit OpenRouter `qwen/qwen3-tts-1.7b` support for one-shot MP3
   synthesis with its published preset voices, including `ono_anna` for

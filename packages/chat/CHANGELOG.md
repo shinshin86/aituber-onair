@@ -1,6 +1,6 @@
 # @aituber-onair/chat
 
-## Unreleased
+## 0.73.0
 
 ### Minor Changes
 
@@ -17,7 +17,6 @@
   hide thought text from visible replies. Tool calls rebuilt from blocks keep
   their native function-call signatures within the same service instance. Add
   mocked transport and React tests.
-  No Core propagation, package version change, or live inference validation.
 
 ## 0.72.0
 
