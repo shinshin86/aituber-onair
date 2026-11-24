@@ -22,6 +22,7 @@ import {
   MODEL_META_MUSE_SPARK_1_3,
   MODEL_META_MUSE_EMBER,
   MODEL_THINKINGMACHINES_INKLING_2_SMALL,
+  MODEL_THINKINGMACHINES_INKLING_2_MINI,
   MODEL_UPSTAGE_SOLAR_PRO4,
   MODEL_UPSTAGE_SOLAR_MINI4,
   MODEL_OPENAI_GPT_5_MINI,
@@ -429,6 +430,7 @@ export class OpenRouterChatService implements ChatService {
             model !== MODEL_META_MUSE_SPARK_1_3 &&
             model !== MODEL_META_MUSE_EMBER &&
             model !== MODEL_THINKINGMACHINES_INKLING_2_SMALL &&
+            model !== MODEL_THINKINGMACHINES_INKLING_2_MINI &&
             model !== MODEL_UPSTAGE_SOLAR_PRO4 &&
             model !== MODEL_UPSTAGE_SOLAR_MINI4 &&
             model !== MODEL_OPENAI_GPT_5_MINI &&

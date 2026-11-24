@@ -71,4 +71,40 @@ export const openRouterCatalogAdditions = [
     defaultEffort: 'none',
     withoutBudget: true,
   },
+  // Official OpenRouter Chat Completions catalog checked on 2026-11-23.
+  {
+    model: 'tencent/hy4-flash',
+    label: 'Hy4 Flash',
+    efforts: [],
+    defaultEffort: undefined,
+    withoutBudget: true,
+  },
+  {
+    model: 'qwen/qwen4-max',
+    label: 'Qwen4 Max',
+    efforts: ['xhigh', 'high', 'low', 'none'],
+    defaultEffort: 'none',
+    withoutBudget: true,
+  },
+  {
+    model: 'openai/gpt-6.2-sol',
+    label: 'GPT-6.2 Sol (OpenRouter)',
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'low',
+    withoutBudget: true,
+  },
+  {
+    model: 'openai/gpt-6.2-astra',
+    label: 'GPT-6.2 Astra (OpenRouter)',
+    efforts: ['max', 'xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'low',
+    withoutBudget: true,
+  },
+  {
+    model: 'thinkingmachines/inkling-2-mini',
+    label: 'Inkling 2 Mini (OpenRouter)',
+    efforts: ['max', 'high', 'medium', 'low', 'minimal', 'none'],
+    defaultEffort: 'none',
+    withoutBudget: true,
+  },
 ] as const;

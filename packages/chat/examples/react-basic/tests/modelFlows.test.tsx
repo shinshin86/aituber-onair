@@ -1,5 +1,8 @@
 import { remainingOpenRouterReasoningProfiles } from '../../../tests/fixtures/openrouterReasoningDefaults';
-import { allModels } from '../src/components/ProviderSelector';
+import {
+  allModels,
+  getVisionSupportLevel,
+} from '../src/components/ProviderSelector';
 import { catalogFixture } from './catalogFixture';
 // @vitest-environment jsdom
 import { act } from 'react';
@@ -174,6 +177,26 @@ const modelCases = [
       'minimal',
     ],
     ['Nex N2.6 (OpenRouter)', 'nex-agi/nex-n2.6', ['high', 'medium'], 'medium'],
+
+    ['Qwen4 Max', 'qwen/qwen4-max', ['xhigh', 'high', 'low', 'none'], 'none'],
+    [
+      'GPT-6.2 Sol (OpenRouter)',
+      'openai/gpt-6.2-sol',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'GPT-6.2 Astra (OpenRouter)',
+      'openai/gpt-6.2-astra',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'Inkling 2 Mini (OpenRouter)',
+      'thinkingmachines/inkling-2-mini',
+      ['max', 'high', 'medium', 'low', 'minimal', 'none'],
+      'none',
+    ],
   ].map(([label, model, efforts, initialEffort]) => ({
     provider: 'OpenRouter',
     label: label as string,
@@ -573,6 +596,33 @@ describe('React sample model-to-transport flows (mock network only)', () => {
       ]);
     },
   );
+
+  it('uses Hy4 Flash without borrowing the base Hy4 effort or image metadata for near matches', async () => {
+    await chooseButton('.provider-item', 'OpenRouter');
+    await chooseButton('.model-item', 'Hy4');
+    await change('#api-key', FAKE_KEY);
+    await change('#openrouter-reasoning-effort', 'high');
+    await chooseButton('.model-item', 'Hy4 Flash');
+    expect(container.querySelector('#openrouter-reasoning-effort')).toBeNull();
+    expect(
+      container.querySelector('#openrouter-reasoning-max-tokens'),
+    ).toBeNull();
+    expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
+    expect(
+      getVisionSupportLevel('openrouter', 'tencent/hy4-flash-unknown'),
+    ).toBe('unsupported');
+    expect(getVisionSupportLevel('openrouter', 'openai/gpt-6.2-sol-pro')).toBe(
+      'unsupported',
+    );
+    await completeReply(OPENROUTER);
+    expect(requests[0].body).toMatchObject({
+      model: 'tencent/hy4-flash',
+      stream: true,
+      reasoning: { exclude: true },
+    });
+    expect(requests[0].body.reasoning).not.toHaveProperty('effort');
+    expect(requests[0].body.reasoning).not.toHaveProperty('max_tokens');
+  });
 
   it('Ling 3.1 Flash streams repeated replies and recovers from HTTP errors without unsupported settings', async () => {
     await chooseButton('.provider-item', 'OpenRouter');
