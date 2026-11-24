@@ -230,10 +230,25 @@ streaming. The default stays Gemma 4 31B IT (Free).
 | `~z-ai/glm-flash-latest` | low, high, max (low) |
 | `xiaomi/mimo-v2.6-pro` | Visibility only; no effort or token budget |
 | `tencent/hy4` | none, low, high (none) |
+| `tencent/hy4-flash` | Visibility only; no effort or token-budget control |
+| `qwen/qwen4-max` | xhigh, high, low, none (none) |
+| `openai/gpt-6.2-sol` | max, xhigh, high, medium, low (low) |
+| `openai/gpt-6.2-astra` | max, xhigh, high, medium, low (low) |
+| `thinkingmachines/inkling-2-mini` | max, high, medium, low, minimal, none (none) |
 | `cohere/command-a-plus` | Visibility only; no effort or token budget |
 | `bytedance-seed/seed-2-1-turbo` | Visibility only; no effort or token budget |
 | `nvidia/nemotron-3.5-super-vl` | Visibility only; no effort or token budget |
 | `sakana/sakana-namazu` | none, high (none) |
+
+This group uses the existing OpenRouter API key and Chat Completions endpoint.
+GPT-6.2 Sol and Astra require reasoning; the package starts at `low` instead
+of the catalog's `medium` default. Qwen4 Max and Inkling 2 Mini start at
+`none` instead of the catalog's `high` default to favor responsive chat.
+Hy4 Flash follows the provider's reasoning default because its exact catalog
+entry does not publish effort levels. For these five routes, undocumented
+reasoning-token budgets are omitted. Choose an explicit effort to trade
+latency for deeper reasoning where supported. Additional vendor input types
+such as video and files are not exposed.
 
 Latest-family aliases can change their upstream target. Use the Luna/Terra
 aliases instead of removed `~openai/gpt-latest`. GLM Flash thinking cannot be

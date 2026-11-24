@@ -198,6 +198,13 @@ Supported explicit models include `elevenlabs/eleven-v4` and
 with binary `audio/mpeg` returned unchanged to the audio player. Direct
 ElevenLabs engine model restrictions are separate.
 
+[Qwen3 TTS 1.7B](https://openrouter.ai/qwen/qwen3-tts-1.7b/)
+(`qwen/qwen3-tts-1.7b`, served by Together) is an explicit option on the same
+endpoint. Select a published [preset voice](https://openrouter.ai/api/v1/audio/speech/models/qwen/qwen3-tts-1.7b),
+such as `ono_anna` for Japanese, as `speaker`. The integration returns
+one-shot MP3 as `audio/mpeg`; reference audio, speed, instructions, and
+streaming are not exposed.
+
 Preview models are explicit compatibility options. This dedicated
 engine supports `microsoft/mai-voice-2.1` and
 `microsoft/mai-voice-2.1-flash` through OpenRouter's
@@ -264,7 +271,7 @@ When changing models at runtime, choose a voice from the new model's list and
 update `openRouterModel` and `speaker` together. Updating only the model clears
 the prior speaker. MAI full IDs end with `:MAI-Voice-2.1` or
 `:MAI-Voice-2.1-Flash`; a stale suffix is rejected, never rewritten automatically.
-ElevenLabs uses catalog voice slugs without a MAI suffix.
+ElevenLabs and Qwen3 TTS use catalog voice slugs without a MAI suffix.
 The React example starts with no model or voice selected and provides
 model-scoped voice selection, API key and separate endpoint controls.
 

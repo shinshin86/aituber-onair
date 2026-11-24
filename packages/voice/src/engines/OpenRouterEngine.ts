@@ -18,7 +18,7 @@ import { VoiceEngineError } from './VoiceEngineError';
 
 export type { OpenRouterTtsModel } from './internal/openRouter';
 
-/** One-shot speech with explicit model selection: MAI PCM as WAV, ElevenLabs MP3. */
+/** One-shot speech with explicit model selection: MAI PCM as WAV, or MP3. */
 export class OpenRouterEngine implements VoiceEngine {
   private apiEndpoint = OPENROUTER_TTS_API_URL;
   private model?: OpenRouterTtsModel;

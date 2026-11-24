@@ -10,7 +10,20 @@ export const OPENROUTER_AUDIO_FORMATS = {
   'microsoft/mai-voice-2.1-flash': 'pcm',
   'elevenlabs/eleven-v4': 'mp3',
   'elevenlabs/eleven-v4-turbo': 'mp3',
+  'qwen/qwen3-tts-1.7b': 'mp3',
 } as const;
+
+const QWEN3_TTS_PRESET_VOICES = new Set([
+  'vivian',
+  'serena',
+  'uncle_fu',
+  'dylan',
+  'eric',
+  'ryan',
+  'aiden',
+  'ono_anna',
+  'sohee',
+]);
 
 export type OpenRouterTtsModel = keyof typeof OPENROUTER_AUDIO_FORMATS;
 
@@ -32,6 +45,9 @@ export function isOpenRouterVoice(
   model: OpenRouterTtsModel,
 ): voice is string {
   if (typeof voice !== 'string') return false;
+  if (model === 'qwen/qwen3-tts-1.7b') {
+    return QWEN3_TTS_PRESET_VOICES.has(voice);
+  }
   if (
     model === 'elevenlabs/eleven-v4' ||
     model === 'elevenlabs/eleven-v4-turbo'

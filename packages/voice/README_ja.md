@@ -195,6 +195,13 @@ const voiceService = new VoiceService({
 に従い、`audio/mpeg` のバイナリーをそのまま再生に渡します。
 直接接続する ElevenLabs エンジンの対応モデルとは区別してください。
 
+[Qwen3 TTS 1.7B](https://openrouter.ai/qwen/qwen3-tts-1.7b/)
+（`qwen/qwen3-tts-1.7b`、Together 経由）も同じエンドポイントで明示的に選べます。
+日本語向けの `ono_anna` など、公開されている
+[プリセット音声](https://openrouter.ai/api/v1/audio/speech/models/qwen/qwen3-tts-1.7b)
+の ID を `speaker` に指定します。単発合成の MP3（`audio/mpeg`）に対応し、
+参照音声・速度・指示文・ストリーミングは提供しません。
+
 互換性のために残しているプレビューモデルも明示選択が必要です。この専用
 エンジンは `microsoft/mai-voice-2.1` と
 `microsoft/mai-voice-2.1-flash` を OpenRouter の
