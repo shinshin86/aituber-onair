@@ -423,9 +423,25 @@ npm run test
 npm run build
 ```
 
-### Chat 0.72.0
+### Chat 0.73.0 and Voice 0.31.0
 
-Core 0.26.31 uses published Chat 0.72.0 and Voice 0.30.0.
+Core 0.26.32 uses published Chat 0.73.0 and Voice 0.31.0.
+Gemini 4 Neon is an explicit, paid, image-capable option with streaming and
+tools on two routes. Native Gemini (`gemini-4-neon`, `MODEL_GEMINI_4_NEON`)
+exposes `low` (package default), `medium`, and `high`; OpenRouter
+(`google/gemini-4-neon`, `MODEL_GOOGLE_GEMINI_4_NEON`) also exposes `xhigh`.
+Native Gemini 4 routes omit `xhigh` when its REST enum is undocumented:
+currently Hydrogen and Neon. Neon returns signed model
+history. Core forwards it unchanged within one tool-call loop, but its chat log
+keeps only the visible reply text, so later turns and saved logs carry no
+signatures. To keep signed history across turns, call Chat directly and append
+the returned `assistant_message`.
+OpenRouter also adds five explicit image-capable routes with tools and
+streaming: `tencent/hy4-flash` (no reasoning control), `qwen/qwen4-max`
+(default `none`), `openai/gpt-6.2-sol` and `openai/gpt-6.2-astra` (default
+`low`), and `thinkingmachines/inkling-2-mini` (default `none`). Provider
+default models are unchanged.
+
 Native OpenAI GPT-6.2 Sol (`gpt-6.2-sol`) and GPT-6.2 Astra (`gpt-6.2-astra`)
 are explicit image-capable options. Reasoning starts at `low`; only `low` and
 `medium` are exposed, and other saved levels are normalized to that range.
@@ -436,7 +452,7 @@ is an explicit public-preview option with image input, streaming, and tools;
 no reasoning control is sent because none is documented. Mistral tool calls
 now continue correctly in follow-up requests. Provider defaults are unchanged.
 
-Gemini 4 models (currently Argon, Carbon, and Hydrogen) are explicit,
+Gemini 4 models (currently Argon, Carbon, Hydrogen, and Neon) are explicit,
 image-capable choices with mandatory thinking. Select `low` (package default),
 `medium`, or `high`; provider default models are unchanged.
 Hydrogen (`gemini-4-hydrogen`, OpenRouter `google/gemini-4-hydrogen`) is
@@ -449,7 +465,7 @@ Carbon uses more thinking tokens than Argon, with higher latency and token use.
 Thinking counts toward output limits. All Gemini 4 models keep an implicit
 32,768-token floor, including on OpenRouter. For direct Gemini calls, explicit
 limits are capped per model: Argon/Carbon at 32,768 non-streaming / 65,536
-streaming; Hydrogen at 65,536 in both modes. Smaller explicit limits are
+streaming; Hydrogen and Neon at 65,536 in both modes. Smaller explicit limits are
 preserved. Request short replies in the prompt. Long decode and automatic
 continuation are not implemented.
 

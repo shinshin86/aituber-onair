@@ -78,6 +78,24 @@ describe('released model settings', () => {
     ],
     ['nex-agi/nex-n2.6', ['high', 'medium'], 'medium'],
     ['inclusionai/ling-3.2-flash:free', [], undefined],
+    ['google/gemini-4-neon', ['xhigh', 'high', 'medium', 'low'], 'low'],
+    ['tencent/hy4-flash', [], undefined],
+    ['qwen/qwen4-max', ['xhigh', 'high', 'low', 'none'], 'none'],
+    [
+      'openai/gpt-6.2-sol',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'openai/gpt-6.2-astra',
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      'thinkingmachines/inkling-2-mini',
+      ['max', 'high', 'medium', 'low', 'minimal', 'none'],
+      'none',
+    ],
   ] as const)(
     'propagates %s and only its supported reasoning controls',
     async (model, efforts, defaultEffort) => {
@@ -166,12 +184,14 @@ describe('released model settings', () => {
     expect(options()).toContain('gemini-4-argon');
     expect(options()).toContain('gemini-4-carbon');
     expect(options()).toContain('gemini-4-hydrogen');
+    expect(options()).toContain('gemini-4-neon');
     expect(options()).not.toContain('gemini-2.5-pro');
     expect(options()).not.toContain('gemini-2.5-flash');
     for (const model of [
       'gemini-4-argon',
       'gemini-4-carbon',
       'gemini-4-hydrogen',
+      'gemini-4-neon',
     ]) {
       await choose('model', model);
       const effort = container.querySelector<HTMLSelectElement>(
@@ -336,6 +356,16 @@ describe('released model settings', () => {
     expect(container.textContent).toContain(
       '音声は選択したモデルのカタログから選んでください。',
     );
+    expect(container.textContent).toContain(
+      'Qwen3 TTS 1.7BもMP3形式で、プリセット音声のみ使えます。',
+    );
+    expect(
+      [
+        ...container.querySelectorAll<HTMLOptionElement>(
+          '#openRouterTtsModel option',
+        ),
+      ].map((option) => option.value),
+    ).toContain('qwen/qwen3-tts-1.7b');
     await choose('voiceEngine', 'openai');
     expect(container.textContent).toContain(
       'OpenAI Speech APIのモデルは2027-01-06に提供終了予定です。',

@@ -191,9 +191,21 @@ npm run lint
 MP4生成テストのスキップ条件はffmpegがない場合だけです。
 ライブ配信用のReactサンプルとは独立しています。
 
-### Chat 0.72.0
+### Chat 0.73.0・Voice 0.31.0
 
-Core 0.26.31は公開済みのChat 0.72.0とVoice 0.30.0を利用します。
+Core 0.26.32は公開済みのChat 0.73.0とVoice 0.31.0を利用します。
+Gemini 4 Neonは画像入力・ストリーミング・ツールに対応する有料の明示選択肢で、2つの経路で使えます。
+Gemini公式（`gemini-4-neon`、`MODEL_GEMINI_4_NEON`）は`low`（パッケージの初期値）・`medium`・`high`、
+OpenRouter（`google/gemini-4-neon`、`MODEL_GOOGLE_GEMINI_4_NEON`）はこれに加えて`xhigh`を選べます。
+Gemini 4の公式経路では、GenerateContent RESTでの`xhigh`の列挙値が公開されていないモデルは`xhigh`を出しません。現在はHydrogenとNeonが該当します。
+Neonは署名付きのモデル履歴を返します。Coreは1回のツール呼び出しループの中ではこれをそのまま送り返しますが、
+チャットログには表示テキストだけを残すため、次のターン以降や保存したログには署名が含まれません。
+ターンをまたいで署名付き履歴を保つには、Chatを直接呼び出し、返された`assistant_message`を履歴に追加してください。
+OpenRouterには、画像入力・ツール・ストリーミングに対応する5つの明示選択肢も追加しました。
+`tencent/hy4-flash`（推論の制御なし）、`qwen/qwen4-max`（初期値`none`）、
+`openai/gpt-6.2-sol`と`openai/gpt-6.2-astra`（初期値`low`）、`thinkingmachines/inkling-2-mini`（初期値`none`）です。
+プロバイダーの初期モデルは変わりません。
+
 OpenAI公式のGPT-6.2 Sol（`gpt-6.2-sol`）とGPT-6.2 Astra（`gpt-6.2-astra`）は画像入力に対応する明示選択肢です。
 推論は`low`から始まり、選べるのは`low`と`medium`のみです。保存済みのそれ以外のレベルはこの範囲に丸めます。
 Responses APIが既定で、ツールとMCPを使う場合は必須です。ツールなしならChat Completionsも使えますが、
@@ -202,7 +214,7 @@ Mistral経由のDeepSeek V4.1 Flash 1017（`deepseek-v4-1-flash-1017`）は、�
 推論の制御は公開ドキュメントがないため送信しません。Mistralのツール呼び出しは後続リクエストでも継続できるよう修正しました。
 プロバイダーの初期モデルは変わりません。
 
-Gemini 4モデル（現在はArgon・Carbon・Hydrogen）は画像入力に対応する明示選択肢で、思考は必須です。
+Gemini 4モデル（現在はArgon・Carbon・Hydrogen・Neon）は画像入力に対応する明示選択肢で、思考は必須です。
 `low`（パッケージの初期値）・`medium`・`high`を選べます。プロバイダーの初期モデルは変わりません。
 Hydrogen（`gemini-4-hydrogen`、OpenRouterでは`google/gemini-4-hydrogen`）は、
 直接Gemini APIのレート制限付き無料枠で利用できます。OpenRouter版は有料です。
@@ -212,7 +224,7 @@ CarbonはArgonより思考トークンを多く使い、応答時間とトーク
 
 思考も出力上限に含まれます。Gemini 4の暗黙の上限はOpenRouter版も含め最低32,768トークンです。
 直接Gemini APIで明示した上限はモデル別に制限されます。
-Argon・Carbonは非ストリーミング32,768／ストリーミング65,536、Hydrogenは両方式とも65,536です。
+Argon・Carbonは非ストリーミング32,768／ストリーミング65,536、HydrogenとNeonは両方式とも65,536です。
 それより小さな明示上限は保持します。短い返答はプロンプトでも指定してください。
 long decodeと自動継続生成は実装していません。
 

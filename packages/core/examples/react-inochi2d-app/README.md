@@ -1,8 +1,29 @@
 # Inochi2D Chat
 
-### Chat 0.72.0
+### Chat 0.73.0 and Voice 0.31.0
 
-Core 0.26.31 uses published Chat 0.72.0 and Voice 0.30.0.
+Core 0.26.32 uses published Chat 0.73.0 and Voice 0.31.0.
+Gemini 4 Neon is an explicit, paid, image-capable option with streaming and
+tools on two routes. Native Gemini (`gemini-4-neon`, `MODEL_GEMINI_4_NEON`)
+exposes `low` (package default), `medium`, and `high`; OpenRouter
+(`google/gemini-4-neon`, `MODEL_GOOGLE_GEMINI_4_NEON`) also exposes `xhigh`.
+Native Gemini 4 routes omit `xhigh` when its REST enum is undocumented:
+currently Hydrogen and Neon. Neon returns signed model
+history. Core forwards it unchanged within one tool-call loop, but its chat log
+keeps only the visible reply text, so later turns and saved logs carry no
+signatures. To keep signed history across turns, call Chat directly and append
+the returned `assistant_message`.
+OpenRouter also adds five explicit image-capable routes with tools and
+streaming: `tencent/hy4-flash` (no reasoning control), `qwen/qwen4-max`
+(default `none`), `openai/gpt-6.2-sol` and `openai/gpt-6.2-astra` (default
+`low`), and `thinkingmachines/inkling-2-mini` (default `none`). Provider
+default models are unchanged.
+OpenRouter TTS adds Qwen3 TTS 1.7B (`qwen/qwen3-tts-1.7b`) as an explicit
+model: one-shot MP3 with its published preset voices only, such as `ono_anna`
+for Japanese. Speed, instructions, and reference audio are not exposed. It is
+listed in the OpenRouter TTS model selector; when no saved voice is in the
+loaded list, `ono_anna` is preselected.
+
 Native OpenAI GPT-6.2 Sol (`gpt-6.2-sol`) and GPT-6.2 Astra (`gpt-6.2-astra`)
 are explicit image-capable options. Reasoning starts at `low`; only `low` and
 `medium` are exposed, and other saved levels are normalized to that range.
@@ -13,7 +34,7 @@ is an explicit public-preview option with image input, streaming, and tools;
 no reasoning control is sent because none is documented. Mistral tool calls
 now continue correctly in follow-up requests. Provider defaults are unchanged.
 
-Gemini 4 models (currently Argon, Carbon, and Hydrogen) are explicit,
+Gemini 4 models (currently Argon, Carbon, Hydrogen, and Neon) are explicit,
 image-capable choices with mandatory thinking. Select `low` (package default),
 `medium`, or `high`; provider default models are unchanged.
 Hydrogen (`gemini-4-hydrogen`, OpenRouter `google/gemini-4-hydrogen`) is
@@ -26,7 +47,7 @@ Carbon uses more thinking tokens than Argon, with higher latency and token use.
 Thinking counts toward output limits. All Gemini 4 models keep an implicit
 32,768-token floor, including on OpenRouter. For direct Gemini calls, explicit
 limits are capped per model: Argon/Carbon at 32,768 non-streaming / 65,536
-streaming; Hydrogen at 65,536 in both modes. Smaller explicit limits are
+streaming; Hydrogen and Neon at 65,536 in both modes. Smaller explicit limits are
 preserved. Request short replies in the prompt. Long decode and automatic
 continuation are not implemented.
 
@@ -74,7 +95,7 @@ Providers whose APIs must not be called directly from this browser example are
 shown disabled: currently Sakana AI and Sarashina. Sarashina API keys must stay
 on a protected backend; use a Node/backend integration.
 
-Core 0.26.31 uses published Chat 0.72.0 and Voice 0.30.0. Select
+Core 0.26.32 uses published Chat 0.73.0 and Voice 0.31.0. Select
 `deepseek-flash` for DeepSeek-V4.1-Flash-1017; this rolling API ID follows
 provider updates. Fish Audio's Model selector includes `drama-3` and
 `drama-3-preview` for one-shot, single-speaker speech. The preview may change;
@@ -437,7 +458,7 @@ Deepgram offers Haley (English) and Ayumi, Hayato, Nozomi, and Sayaka (Japanese)
 
 ### Sarashina and reasoning defaults
 
-This example uses Core 0.26.31 with Chat 0.72.0 and Voice 0.30.0. Sarashina is
+This example uses Core 0.26.32 with Chat 0.73.0 and Voice 0.31.0. Sarashina is
 shown but disabled for new browser selections, like Sakana AI. Saved provider,
 model and key values remain intact. The backend provider offers text-only
 `sarashina3-nano` (default), `sarashina3-mini`, and `sarashina3.2-mini-thinking`;

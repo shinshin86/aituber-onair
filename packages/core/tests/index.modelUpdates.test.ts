@@ -27,6 +27,13 @@ describe('Released Chat and Voice model exports', () => {
     'MODEL_GOOGLE_GEMINI_4_ARGON',
     'MODEL_GOOGLE_GEMINI_4_CARBON',
     'MODEL_GOOGLE_GEMINI_4_HYDROGEN',
+    'MODEL_GEMINI_4_NEON',
+    'MODEL_GOOGLE_GEMINI_4_NEON',
+    'MODEL_TENCENT_HY4_FLASH',
+    'MODEL_QWEN_QWEN_4_MAX',
+    'MODEL_OPENAI_GPT_6_2_SOL',
+    'MODEL_OPENAI_GPT_6_2_ASTRA',
+    'MODEL_THINKINGMACHINES_INKLING_2_MINI',
     'MODEL_META_MUSE_EMBER',
     'MODEL_THINKINGMACHINES_INKLING_2_SMALL',
     'MODEL_NEX_AGI_NEX_N2_6',
@@ -143,6 +150,19 @@ describe('Released Chat and Voice model exports', () => {
       openRouterModel: model,
     };
     expect(options.openRouterModel).toBe(model);
+  });
+
+  it('accepts OpenRouter Qwen3 TTS 1.7B with a preset voice through Core options', () => {
+    const model: OpenRouterTtsModel = 'qwen/qwen3-tts-1.7b';
+    const options: VoiceServiceOptions = {
+      engineType: 'openRouter',
+      openRouterModel: model,
+      speaker: 'ono_anna',
+    };
+    expect(options).toMatchObject({
+      openRouterModel: model,
+      speaker: 'ono_anna',
+    });
   });
 });
 
@@ -283,5 +303,165 @@ describe('Published Chat 0.72 transport through Core', () => {
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body.model).toBe('deepseek-v4-1-flash-1017');
     expect(body).not.toHaveProperty('reasoning_effort');
+  });
+});
+
+describe('Published Chat 0.73 Gemini 4 Neon through Core', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const geminiReply = (parts: unknown[], stream: boolean) => {
+    const payload = { candidates: [{ content: { role: 'model', parts } }] };
+    return new Response(
+      stream ? `data: ${JSON.stringify(payload)}\n\n` : JSON.stringify(payload),
+    );
+  };
+
+  it('sends explicit LOW thinking for native Neon by default', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(geminiReply([{ text: 'Hello' }], false));
+    vi.stubGlobal('fetch', fetchMock);
+    const service = core.ChatServiceFactory.createChatService('gemini', {
+      apiKey: 'mock-key',
+      model: core.MODEL_GEMINI_4_NEON,
+    });
+    await service.chatOnce!([{ role: 'user', content: 'Hello' }], false);
+    const [url, request] = fetchMock.mock.calls[0];
+    expect(url).toContain('/v1beta/models/gemini-4-neon:generateContent');
+    expect(JSON.parse(request.body).generationConfig).toEqual({
+      maxOutputTokens: 65_536,
+      thinkingConfig: { includeThoughts: false, thinkingLevel: 'LOW' },
+    });
+  });
+
+  it('replays signed Neon parts within one Core tool loop but stores plain text history', async () => {
+    const call = {
+      functionCall: { id: 'call-1', name: 'lookup', args: { city: 'Osaka' } },
+      thoughtSignature: 'mock-tool-signature',
+    };
+    const answer = { text: 'Sunny', thoughtSignature: 'mock-text-signature' };
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(geminiReply([call], true))
+      .mockResolvedValueOnce(geminiReply([answer], false))
+      .mockResolvedValueOnce(geminiReply([{ text: 'Again' }], true));
+    vi.stubGlobal('fetch', fetchMock);
+    const service = core.ChatServiceFactory.createChatService('gemini', {
+      apiKey: 'mock-key',
+      model: core.MODEL_GEMINI_4_NEON,
+      tools: [{ name: 'lookup', parameters: { type: 'object' } }],
+    });
+    const toolCallback = vi.fn(async (blocks: core.ToolUseBlock[]) =>
+      blocks.map((block) => ({
+        type: 'tool_result' as const,
+        tool_use_id: block.id,
+        content: 'sunny',
+      })),
+    );
+    const processor = new core.ChatProcessor(
+      service,
+      { systemPrompt: '', useMemory: false },
+      undefined,
+      toolCallback,
+    );
+    const contents = (index: number) =>
+      JSON.parse(fetchMock.mock.calls[index][1].body).contents;
+
+    await processor.processTextChat('Weather?');
+    expect(toolCallback).toHaveBeenCalledOnce();
+    // The tool continuation forwards the signed functionCall part unchanged.
+    expect(contents(1)[1]).toEqual({ role: 'model', parts: [call] });
+
+    // Core keeps only visible text in its chat log, so the next turn sends
+    // the final reply without its text signature.
+    expect(processor.getChatLog().at(-1)).toMatchObject({
+      role: 'assistant',
+      content: 'Sunny',
+    });
+    await processor.processTextChat('And tomorrow?');
+    expect(contents(2)).toContainEqual({
+      role: 'model',
+      parts: [{ text: 'Sunny' }],
+    });
+    expect(JSON.stringify(contents(2))).not.toContain('mock-text-signature');
+  });
+
+  it('restores OpenRouter Neon reasoning details only inside the Core tool loop', async () => {
+    const details = [
+      {
+        type: 'reasoning.encrypted',
+        index: 0,
+        format: 'google-gemini-v1',
+        data: 'mock-encrypted-detail',
+      },
+    ];
+    const sse = (...deltas: Record<string, unknown>[]) =>
+      new Response(
+        deltas
+          .map(
+            (delta) => `data: ${JSON.stringify({ choices: [{ delta }] })}\n\n`,
+          )
+          .join('') + 'data: [DONE]\n\n',
+      );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        sse({
+          reasoning_details: details,
+          tool_calls: [
+            {
+              index: 0,
+              id: 'call-1',
+              type: 'function',
+              function: { name: 'lookup', arguments: '{}' },
+            },
+          ],
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            choices: [
+              {
+                message: {
+                  role: 'assistant',
+                  content: 'Sunny',
+                  reasoning_details: details,
+                },
+              },
+            ],
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(sse({ content: 'Again' }));
+    vi.stubGlobal('fetch', fetchMock);
+    const service = core.ChatServiceFactory.createChatService('openrouter', {
+      apiKey: 'mock-key',
+      model: core.MODEL_GOOGLE_GEMINI_4_NEON,
+      tools: [{ name: 'lookup', parameters: { type: 'object' } }],
+    });
+    const processor = new core.ChatProcessor(
+      service,
+      { systemPrompt: '', useMemory: false },
+      undefined,
+      async (blocks) =>
+        blocks.map((block) => ({
+          type: 'tool_result' as const,
+          tool_use_id: block.id,
+          content: 'sunny',
+        })),
+    );
+    const messages = (index: number) =>
+      JSON.parse(fetchMock.mock.calls[index][1].body).messages;
+
+    await processor.processTextChat('Weather?');
+    expect(messages(1)).toContainEqual(
+      expect.objectContaining({
+        role: 'assistant',
+        reasoning_details: details,
+      }),
+    );
+    await processor.processTextChat('And tomorrow?');
+    expect(JSON.stringify(messages(2))).not.toContain('reasoning_details');
   });
 });

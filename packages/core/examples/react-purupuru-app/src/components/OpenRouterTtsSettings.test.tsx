@@ -167,6 +167,31 @@ describe('OpenRouter TTS settings', () => {
     expect(saved().openRouterModel).toBe('elevenlabs/eleven-v4');
     expect(saved().speaker).toBe('new-provider-voice');
   });
+  it('lists Qwen3 TTS presets and preselects ono_anna for Japanese', async () => {
+    const qwen = 'qwen/qwen3-tts-1.7b';
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [{ id: qwen, supported_voices: ['vivian', 'ono_anna'] }],
+      }),
+    });
+    await act(async () => root.render(<Harness />));
+    expect(optionValues('tts-openrouter-model')).toContain(qwen);
+    await choose('tts-openrouter-model', qwen);
+    expect(optionValues('tts-openrouter-speaker')).toEqual([
+      '',
+      'vivian',
+      'ono_anna',
+    ]);
+    expect(select('tts-openrouter-speaker').value).toBe('ono_anna');
+    expect(saved()).toMatchObject({
+      openRouterModel: qwen,
+      speaker: 'ono_anna',
+    });
+    expect(container.textContent).toContain(
+      'Qwen3 TTS 1.7BもMP3形式で、プリセット音声のみ使えます。',
+    );
+  });
 
   beforeEach(() => {
     (

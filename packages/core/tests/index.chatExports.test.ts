@@ -6,6 +6,13 @@ import {
   MODEL_GEMINI_4_HYDROGEN,
   MODEL_GOOGLE_GEMINI_4_CARBON,
   MODEL_GOOGLE_GEMINI_4_HYDROGEN,
+  MODEL_GEMINI_4_NEON,
+  MODEL_GOOGLE_GEMINI_4_NEON,
+  MODEL_TENCENT_HY4_FLASH,
+  MODEL_QWEN_QWEN_4_MAX,
+  MODEL_OPENAI_GPT_6_2_SOL,
+  MODEL_OPENAI_GPT_6_2_ASTRA,
+  MODEL_THINKINGMACHINES_INKLING_2_MINI,
   MODEL_META_MUSE_EMBER,
   OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET,
   MODEL_THINKINGMACHINES_INKLING_2_SMALL,
@@ -207,6 +214,7 @@ describe('Core index chat re-exports', () => {
   it.each([
     ['gemini', MODEL_GEMINI_4_CARBON],
     ['gemini', MODEL_GEMINI_4_HYDROGEN],
+    ['gemini', MODEL_GEMINI_4_NEON],
     ['openrouter', MODEL_GOOGLE_GEMINI_4_CARBON],
     ['openrouter', MODEL_GOOGLE_GEMINI_4_HYDROGEN],
   ] as const)(
@@ -242,6 +250,24 @@ describe('Core index chat re-exports', () => {
     ],
     [MODEL_NEX_AGI_NEX_N2_6, ['high', 'medium'], 'medium'],
     [MODEL_INCLUSIONAI_LING_3_2_FLASH_FREE, [], undefined],
+    [MODEL_GOOGLE_GEMINI_4_NEON, ['xhigh', 'high', 'medium', 'low'], 'low'],
+    [MODEL_TENCENT_HY4_FLASH, [], undefined],
+    [MODEL_QWEN_QWEN_4_MAX, ['xhigh', 'high', 'low', 'none'], 'none'],
+    [
+      MODEL_OPENAI_GPT_6_2_SOL,
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      MODEL_OPENAI_GPT_6_2_ASTRA,
+      ['max', 'xhigh', 'high', 'medium', 'low'],
+      'low',
+    ],
+    [
+      MODEL_THINKINGMACHINES_INKLING_2_MINI,
+      ['max', 'high', 'medium', 'low', 'minimal', 'none'],
+      'none',
+    ],
   ] as const)(
     'exposes %s image and reasoning capabilities through Core',
     (model, efforts, defaultEffort) => {

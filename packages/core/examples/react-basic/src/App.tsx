@@ -1469,8 +1469,9 @@ const App: React.FC = () => {
   ]);
 
   // OpenRouter voices are scoped to the explicitly selected preview model.
-  // A chosen voice is kept while listed; otherwise an English voice (or the
-  // first one) is selected so speech never runs without a valid voice ID.
+  // A chosen voice is kept while listed; otherwise the Japanese preset
+  // (ono_anna, offered by Qwen3 TTS), an English voice, or the first one is
+  // selected so speech never runs without a valid voice ID.
   useEffect(() => {
     if (selectedVoiceEngine !== 'openRouter') return;
     const apiKey = openRouterTtsApiKey.trim();
@@ -1496,7 +1497,9 @@ const App: React.FC = () => {
         setSelectedSpeakers((prev) => {
           if (voices.some((voice) => voice.id === prev.openRouter)) return prev;
           const preferred =
-            voices.find((voice) => voice.id.startsWith('en-US-')) ?? voices[0];
+            voices.find((voice) => voice.id === 'ono_anna') ??
+            voices.find((voice) => voice.id.startsWith('en-US-')) ??
+            voices[0];
           return { ...prev, openRouter: preferred?.id ?? '' };
         });
       } catch (error) {
@@ -5457,6 +5460,9 @@ const App: React.FC = () => {
                         <option value="elevenlabs/eleven-v4-turbo">
                           ElevenLabs v4 Turbo
                         </option>
+                        <option value="qwen/qwen3-tts-1.7b">
+                          Qwen3 TTS 1.7B
+                        </option>
                       </select>
                       <div
                         style={{
@@ -5468,6 +5474,8 @@ const App: React.FC = () => {
                         MAIモデルは公開プレビュー版で、SLAはなく本番利用は推奨されていません。
                         現時点では日本語の音声がありません。PCM音声をWAV形式で返します。
                         ElevenLabsモデルはMP3形式で返します。
+                        Qwen3 TTS 1.7BもMP3形式で、プリセット音声のみ使えます。
+                        日本語にはono_annaを選んでください。速度・指示文・参照音声は設定できません。
                         音声は選択したモデルのカタログから選んでください。
                       </div>
                       <label htmlFor="openRouterSpeaker">Voice:</label>
