@@ -77,7 +77,7 @@ export class GeminiChatService implements ChatService {
   private resolveThinkingConfig(model: string):
     | {
         includeThoughts: false;
-        thinkingLevel: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH' | 'XHIGH';
+        thinkingLevel: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
       }
     | undefined {
     const effort = normalizeGeminiReasoningEffort(model, this.reasoningEffort);
@@ -88,8 +88,7 @@ export class GeminiChatService implements ChatService {
           | 'MINIMAL'
           | 'LOW'
           | 'MEDIUM'
-          | 'HIGH'
-          | 'XHIGH',
+          | 'HIGH',
       };
     }
 
@@ -367,10 +366,15 @@ export class GeminiChatService implements ChatService {
     );
     const isNeon = model === MODEL_GEMINI_4_NEON;
     // Neon history is explicit and request-scoped, not keyed by answer text.
+    // Copies of the call maps keep signatures for tool calls that callers
+    // rebuild from blocks without the in-memory assistant_message.
     const converterOptions = isNeon
       ? {
           neonHistory: true,
-          functionCallContextMap: new Map<string, GeminiFunctionCallContext>(),
+          callIdMap: new Map(this.callIdMap),
+          functionCallContextMap: new Map<string, GeminiFunctionCallContext>(
+            this.functionCallContextMap,
+          ),
         }
       : {
           callIdMap: this.callIdMap,
@@ -490,22 +494,17 @@ export class GeminiChatService implements ChatService {
     }
   }
 
-  private createFunctionCallBlock(
-    part: any,
-    model: string,
-  ): ToolChatBlock | undefined {
+  private createFunctionCallBlock(part: any): ToolChatBlock | undefined {
     const functionCall = part.functionCall ?? part.function_call;
     if (!functionCall) return undefined;
 
     const toolUseId = functionCall.id ?? this.genUUID();
-    if (model !== MODEL_GEMINI_4_NEON) {
-      this.callIdMap.set(toolUseId, functionCall.name);
-      this.functionCallContextMap.set(toolUseId, {
-        name: functionCall.name,
-        providerCallId: functionCall.id,
-        thoughtSignature: part.thoughtSignature ?? part.thought_signature,
-      });
-    }
+    this.callIdMap.set(toolUseId, functionCall.name);
+    this.functionCallContextMap.set(toolUseId, {
+      name: functionCall.name,
+      providerCallId: functionCall.id,
+      thoughtSignature: part.thoughtSignature ?? part.thought_signature,
+    });
 
     return {
       type: 'tool_use',
@@ -558,7 +557,7 @@ export class GeminiChatService implements ChatService {
             onPartial(part.text);
             StreamTextAccumulator.addTextBlock(textBlocks, part.text);
           }
-          const functionCallBlock = this.createFunctionCallBlock(part, model);
+          const functionCallBlock = this.createFunctionCallBlock(part);
           if (functionCallBlock) toolBlocks.push(functionCallBlock);
           const functionResponseBlock = this.createFunctionResponseBlock(part);
           if (functionResponseBlock) toolBlocks.push(functionResponseBlock);
@@ -607,7 +606,7 @@ export class GeminiChatService implements ChatService {
         if (this.shouldExposeTextPart(part, model)) {
           textBlocks.push({ type: 'text', text: part.text });
         }
-        const functionCallBlock = this.createFunctionCallBlock(part, model);
+        const functionCallBlock = this.createFunctionCallBlock(part);
         if (functionCallBlock) toolBlocks.push(functionCallBlock);
         const functionResponseBlock = this.createFunctionResponseBlock(part);
         if (functionResponseBlock) toolBlocks.push(functionResponseBlock);

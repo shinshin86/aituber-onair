@@ -110,7 +110,7 @@ describe('Gemini 4 Neon native history', () => {
         [{ name: 'lookup', parameters: { type: 'object' } }],
         [],
         undefined,
-        'xhigh',
+        'high',
       );
       const first = await service.chatOnce([user], stream);
       expect(first.blocks.map((block) => block.type)).toEqual([
@@ -120,7 +120,7 @@ describe('Gemini 4 Neon native history', () => {
       expect(first.stop_reason).toBe('tool_use');
       expect(
         post.mock.calls[0][1].generationConfig.thinkingConfig.thinkingLevel,
-      ).toBe('XHIGH');
+      ).toBe('HIGH');
 
       const second = await service.visionChatOnce(
         [
@@ -160,4 +160,48 @@ describe('Gemini 4 Neon native history', () => {
       ]);
     },
   );
+
+  it('keeps the tool signature when callers rebuild the tool turn from blocks', async () => {
+    const call = {
+      functionCall: { id: 'first', name: 'lookup', args: { city: 'Osaka' } },
+      thoughtSignature: 'mock-tool-signature',
+    };
+    const post = vi
+      .spyOn(ChatServiceHttpClient, 'post')
+      .mockResolvedValueOnce(oneShot([call]))
+      .mockResolvedValueOnce(oneShot([{ text: 'Done' }]));
+    const service = new GeminiChatService(
+      'test-key',
+      MODEL_GEMINI_4_NEON,
+      MODEL_GEMINI_4_NEON,
+      [{ name: 'lookup', parameters: { type: 'object' } }],
+    );
+    const first = await service.chatOnce([user], false);
+    const toolUse = first.blocks.find((block) => block.type === 'tool_use');
+    expect(toolUse).toMatchObject({ id: 'first', name: 'lookup' });
+
+    // Rebuilt history without the symbol-keyed assistant_message metadata.
+    await service.chatOnce(
+      [
+        user,
+        {
+          role: 'assistant',
+          content: '',
+          tool_calls: [
+            {
+              id: 'first',
+              type: 'function',
+              function: { name: 'lookup', arguments: '{"city":"Osaka"}' },
+            },
+          ],
+        } as Message,
+        { role: 'tool', content: '1', tool_call_id: 'first' } as Message,
+      ],
+      false,
+    );
+    expect(post.mock.calls[1][1].contents[1]).toEqual({
+      role: 'model',
+      parts: [call],
+    });
+  });
 });

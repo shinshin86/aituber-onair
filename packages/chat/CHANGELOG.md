@@ -5,10 +5,13 @@
 ### Added
 
 - Add Gemini 4 Neon as an opt-in native Gemini and OpenRouter Chat model with
-  image input, streaming, tools, explicit low thinking by default, and Neon-only
-  xhigh controls. Existing provider and model defaults remain unchanged.
+  image input, streaming, tools, and explicit low thinking by default. The
+  OpenRouter route also exposes its catalog-documented `xhigh` level; the native
+  route does not because its REST enum spelling is undocumented. Existing
+  provider and model defaults remain unchanged.
 - Preserve Neon model-part history and signatures through assistant_message;
-  hide thought text from visible replies. Add mocked transport and React tests.
+  hide thought text from visible replies. Tool calls rebuilt from blocks keep
+  their native function-call signatures within the same service instance. Add mocked transport and React tests.
   No Core propagation, package version change, or live inference validation.
 
 ## 0.72.0

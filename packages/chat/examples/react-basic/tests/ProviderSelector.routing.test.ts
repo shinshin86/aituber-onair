@@ -733,7 +733,6 @@ it.each([
       'low',
       'medium',
       'high',
-      ...(modelId === 'gemini-4-neon' ? ['xhigh'] : []),
     ]);
     expect(effort.value).toBe('low');
     expect(element<HTMLInputElement>('#image-upload').disabled).toBe(false);
@@ -856,7 +855,7 @@ it('labels Mistral DeepSeek as preview without inheriting GLM reasoning controls
   expect(requestBody()).not.toHaveProperty('thinking');
 });
 
-it('preserves native Neon signed history only on its route and sends xhigh', async () => {
+it('preserves native Neon signed history only on its route and sends high', async () => {
   fetchMock.mockClear();
   fetchMock.mockResolvedValue({
     ...createSseResponse([
@@ -869,10 +868,16 @@ it('preserves native Neon signed history only on its route and sends xhigh', asy
   await click(button('Gemini', 'provider'));
   await click(button('Gemini 4 Neon', 'model'));
   await changeInput('#api-key', 'test-ui-key');
-  await changeSelect('#gemini-reasoning-effort', 'xhigh');
+  expect(
+    Array.from(
+      element<HTMLSelectElement>('#gemini-reasoning-effort').options,
+      (option) => option.value,
+    ),
+  ).not.toContain('xhigh');
+  await changeSelect('#gemini-reasoning-effort', 'high');
   await sendMessage();
   expect(requestBody().generationConfig.thinkingConfig.thinkingLevel).toBe(
-    'XHIGH',
+    'HIGH',
   );
   fetchMock.mockClear();
   fetchMock.mockResolvedValue({
@@ -901,6 +906,6 @@ it('preserves native Neon signed history only on its route and sends xhigh', asy
   await sendMessage();
   expect(JSON.stringify(requestBody())).not.toContain('mock-neon-signature');
   expect(requestBody().generationConfig.thinkingConfig.thinkingLevel).toBe(
-    'LOW',
+    'HIGH',
   );
 });

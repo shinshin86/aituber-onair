@@ -787,10 +787,12 @@ Gemini 4のモデル（現在はArgon・Carbon・Hydrogen・Neon）は、`v1beta
   （`gemini-4-carbon`、`MODEL_GEMINI_4_CARBON`）は有料枠が必要です。
   Google側の初期値は`medium`です。CarbonはArgonより思考トークンが多く、応答時間と消費量が増えます。
 - Gemini 4 Neon（`gemini-4-neon`、`MODEL_GEMINI_4_NEON`）は有料枠の明示選択肢です。
-  思考は`low`（パッケージ初期値）・`medium`・`high`・`xhigh`に対応し、Google側の既定`high`に対して`LOW`を明示送信します。
+  思考は`low`（パッケージ初期値）・`medium`・`high`に対応し、Google側の既定`high`に対して`LOW`を明示送信します。
+  GenerateContent RESTで`xhigh`の列挙値の表記が公開されていないGemini 4モデルと同様に、このネイティブ経路では`xhigh`を選択肢に含めていません。
   思考を含む暗黙の出力予算と1回の上限は、両モードとも65,536です。
   `chatOnce`・`visionChatOnce`の次の履歴には、返された`assistant_message`を変更せず追加してください。
   非表示の思考とテキストの署名を含む元のmodel partsを保持します。テキストだけからの再構築では保持できません。
+  `blocks`から再構築したツール呼び出しは、同じサービスインスタンス内であれば関数呼び出しの署名を保持します。
   対象はChatとReactサンプルであり、Coreへの反映は含みません。
   署名を含むメタデータは同じプロバイダー・モデル内だけで使用してください。SDKで経路を切り替える際は、
   表示テキストだけから履歴を再構築してください。Neonのメタデータはsymbolキーで保持し、対応するNeon経路だけが送信します。

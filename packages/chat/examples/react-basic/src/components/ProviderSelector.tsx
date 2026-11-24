@@ -1721,8 +1721,7 @@ export default function ProviderSelector({
     reasoning_effort === 'minimal' ||
     reasoning_effort === 'low' ||
     reasoning_effort === 'medium' ||
-    reasoning_effort === 'high' ||
-    reasoning_effort === 'xhigh'
+    reasoning_effort === 'high'
       ? reasoning_effort
       : undefined;
   const geminiReasoningEffort = normalizeGeminiReasoningEffort(

@@ -808,13 +808,17 @@ remains `gemini-3.1-flash-lite`.
   Google defaults to `medium`. Carbon uses more thinking tokens than Argon;
   expect higher latency and token usage.
 - Gemini 4 Neon (`gemini-4-neon`, `MODEL_GEMINI_4_NEON`) is an explicit paid
-  option with `low` (package default), `medium`, `high`, and `xhigh` thinking.
+  option with `low` (package default), `medium`, and `high` thinking. As with
+  other Gemini 4 models whose GenerateContent REST enum for `xhigh` is not
+  documented, `xhigh` is not exposed on this native route.
   Google defaults to `high`; the package sends `LOW` explicitly. Its implicit
   output budget and per-request cap are 65,536 in both modes, including thinking.
   Append the returned `assistant_message` unchanged to subsequent `chatOnce` /
   `visionChatOnce` history to preserve all original model parts and signatures,
   including hidden thoughts and text signatures. Reconstructing plain assistant
-  text loses that metadata. This applies to Chat and the React example, not Core.
+  text loses that metadata. Tool calls rebuilt from `blocks` keep their
+  function-call signatures within the same service instance. This applies to
+  Chat and the React example, not Core.
   Keep this metadata only within the same provider and model. SDK callers must
   rebuild visible-text-only history when switching routes. Neon metadata is
   stored under a symbol and only the matching Neon route puts it on the wire;

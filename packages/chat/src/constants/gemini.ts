@@ -65,12 +65,7 @@ export const GEMINI_VISION_SUPPORTED_MODELS = [
   ...GEMINI_DEPRECATED_MODELS,
 ];
 
-export type GeminiReasoningEffort =
-  | 'minimal'
-  | 'low'
-  | 'medium'
-  | 'high'
-  | 'xhigh';
+export type GeminiReasoningEffort = 'minimal' | 'low' | 'medium' | 'high';
 
 const GEMINI_FLASH_REASONING_EFFORTS: readonly GeminiReasoningEffort[] = [
   'minimal',
@@ -112,7 +107,7 @@ export function getGeminiSupportedReasoningEfforts(
   model: string,
 ): readonly GeminiReasoningEffort[] {
   if (model === MODEL_GEMINI_4_NEON) {
-    return ['low', 'medium', 'high', 'xhigh'];
+    return ['low', 'medium', 'high'];
   }
 
   if (GEMINI_FLASH_REASONING_EFFORT_MODELS.includes(model)) {
