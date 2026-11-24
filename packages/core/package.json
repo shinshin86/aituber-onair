@@ -35,8 +35,8 @@
     "directory": "packages/core"
   },
   "dependencies": {
-    "@aituber-onair/chat": "^0.72.0",
-    "@aituber-onair/voice": "^0.30.0"
+    "@aituber-onair/chat": "^0.73.0",
+    "@aituber-onair/voice": "^0.31.0"
   },
   "peerDependencies": {
     "@pixiv/three-vrm": "^1.0.9"
