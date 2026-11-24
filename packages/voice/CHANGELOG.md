@@ -1,5 +1,12 @@
 # @aituber-onair/voice
 
+## Unreleased
+
+- Add explicit OpenRouter `qwen/qwen3-tts-1.7b` support for one-shot MP3
+  synthesis with its published preset voices, including `ono_anna` for
+  Japanese. The React example uses model-scoped voice selection and
+  does not expose reference audio, instructions, or speed controls.
+
 ## 0.30.0
 
 ### Minor Changes

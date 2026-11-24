@@ -54,7 +54,7 @@ The app will open at `http://localhost:3000` with hot reload enabled.
 ### Supported Voice Engines
 
 - **OpenAI TTS** - High-quality voices with API key
-- **OpenRouter MAI Voice** - Explicit opt-in MAI-Voice-2.1 and MAI-Voice-2.1-Flash public-preview models with model-scoped voice lists; no preview model is selected by default
+- **OpenRouter TTS** - Explicit opt-in models from Microsoft, ElevenLabs, and Qwen, with model-scoped voice lists; no model is selected by default
 - **OpenAI-Compatible TTS** - Self-hosted OpenAI-style endpoints such as Kokoro FastAPI
 - **Inworld TTS** - Non-streaming Inworld REST API with Basic authentication
 - **Gradium TTS** - One-shot Gradium REST API with flagship voice presets
@@ -213,6 +213,10 @@ All models and voices require explicit selection. `elevenlabs/eleven-v4` and
 `george`. The player receives the binary MP3 without a WAV header. The model
 selector filters catalog voices and clears the prior voice when switching.
 Speed, style, and cloning controls are not exposed.
+
+Select `qwen/qwen3-tts-1.7b` and fetch its voices to use Qwen3 TTS 1.7B.
+Choose `ono_anna` for Japanese speech. It uses one-shot MP3 playback with
+preset voices only; there are no speed, instruction, or reference audio controls.
 
 Preview models require an explicit choice and are unsuitable as production
 defaults. This example offers `microsoft/mai-voice-2.1` and

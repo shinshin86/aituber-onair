@@ -116,6 +116,49 @@ describe('OpenRouterEngine', () => {
     },
   );
 
+  it('sends only the documented Qwen3 text and preset voice fields and returns MP3 bytes', async () => {
+    const mp3 = Uint8Array.of(73, 68, 51, 1, 2).buffer;
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers({ 'content-type': 'audio/mpeg' }),
+      arrayBuffer: async () => mp3,
+    } as Response);
+    const model = 'qwen/qwen3-tts-1.7b';
+    const audio = await createEngine(model).fetchAudio(
+      { message: ' こんにちは ', style: 'happy' },
+      'ono_anna',
+      'key',
+    );
+    expect(audio).toBe(mp3);
+    expect(fetchMock.mock.calls[0][0]).toBe(OPENROUTER_TTS_API_URL);
+    expect(JSON.parse(fetchMock.mock.calls[0][1]?.body as string)).toEqual({
+      model,
+      input: 'こんにちは',
+      voice: 'ono_anna',
+      response_format: 'mp3',
+    });
+  });
+
+  it('rejects non-Qwen presets and malformed Qwen voices before synthesis', async () => {
+    const { fetchMock } = mockAudioResponse();
+    const engine = createEngine('qwen/qwen3-tts-1.7b');
+    for (const voice of [
+      'george',
+      'Ono Anna',
+      'ono_anna:extra',
+      '',
+      cases[0][1],
+    ]) {
+      await expect(engine.fetchAudio(talk, voice, 'key')).rejects.toMatchObject(
+        {
+          kind: 'configuration',
+        },
+      );
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it.each(['elevenlabs/eleven-v4', 'elevenlabs/eleven-v4-turbo'] as const)(
     'rejects empty or suffixed voices before sending %s',
     async (model) => {
@@ -134,7 +177,7 @@ describe('OpenRouterEngine', () => {
     ['audio/mpeg', new ArrayBuffer(0)],
     ['application/json', new ArrayBuffer(4)],
   ])(
-    'rejects unexpected or empty ElevenLabs responses (%s)',
+    'rejects unexpected or empty MP3 responses (%s)',
     async (contentType, bytes) => {
       vi.spyOn(globalThis, 'fetch').mockResolvedValue({
         ok: true,
@@ -144,6 +187,9 @@ describe('OpenRouterEngine', () => {
       } as Response);
       await expect(
         createEngine('elevenlabs/eleven-v4').fetchAudio(talk, 'george', 'key'),
+      ).rejects.toMatchObject({ kind: 'api' });
+      await expect(
+        createEngine('qwen/qwen3-tts-1.7b').fetchAudio(talk, 'ono_anna', 'key'),
       ).rejects.toMatchObject({ kind: 'api' });
     },
   );
