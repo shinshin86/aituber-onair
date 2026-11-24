@@ -31,7 +31,7 @@ const DECISION_PROVIDERS: Record<JevTransport, string> = {
   microsoft: 'Microsoft Foundry',
 };
 const DECISION_MODEL_CHOICES = {
-  liquid: ['d1.1', 'd1', 'd1-ultra', 'd1:latest', 'd1-ultra:latest'],
+  liquid: ['d1.2', 'd1.1', 'd1', 'd1-ultra', 'd1:latest', 'd1-ultra:latest'],
   cloudflare: ['clef', 'clef-flash', 'clef-omni'],
 };
 type OpenAIModel = 'gpt-5.4-nano' | 'gpt-5.4-mini' | 'gpt-5.4' | 'gpt-5.5';

@@ -352,7 +352,8 @@ console.log(result.debug?.semanticAssessments);
   空でない `apiKey` または `bearerToken`（Microsoft Entra IDトークンなど）の片方だけを
   指定してください。アダプターはトークンの取得・更新を行いません。
 - **Liquid AI:** `apiKey` が必須です。既定モデルは `d1.1` に固定しています。
-  ブラウザの選択肢には `d1`、`d1-ultra`、`d1:latest`、`d1-ultra:latest` もあります。
+  ブラウザの選択肢には `d1.2`、`d1`、`d1-ultra`、`d1:latest`、`d1-ultra:latest` もあります。
+  Liquid AIは新規連携に [`d1.2` を推奨](https://docs.liquid.ai/lfm/help/deprecations#deprecated-api-models)しています。
   ライブラリは空でないモデル文字列を受け付けますが、サービスで利用可能かどうかは別です。
 - **Google・OpenAI:** `apiKey` が必須です。Googleは `x-goog-api-key`、OpenAIは
   Bearer認証を使います。共通の状態データをJSON文字列にして `input` に送り、Googleでは
