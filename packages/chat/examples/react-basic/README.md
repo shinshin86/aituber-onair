@@ -168,13 +168,32 @@ built-in model status is `available`.
 
 **Gemini**
 
-- Gemini 4 models (currently Argon, Carbon, and Hydrogen) are explicit image-capable options.
+- Gemini 4 models (currently Argon, Carbon, Hydrogen, and Neon) are explicit image-capable options.
 - Gemini 4 Argon (`gemini-4-argon`) is a paid option;
   the provider default is unchanged. Thinking cannot be disabled. Select
   `low` (package default), `medium`, or `high`; Google defaults to `medium`.
 - Gemini 4 Carbon (`gemini-4-carbon`) is an explicit paid option with the
   same thinking controls and caps as Argon. It spends more thinking tokens per
   turn, so expect slower replies than Argon.
+- Gemini 4 Neon (`gemini-4-neon`, `MODEL_GEMINI_4_NEON`) is an explicit paid
+  option with `low` (package default), `medium`, and `high` thinking. As with
+  other Gemini 4 models whose GenerateContent REST enum for `xhigh` is not
+  documented, `xhigh` is not exposed on this native route.
+  Google defaults to `high`; the package sends `LOW` explicitly. Its implicit
+  output budget and per-request cap are 65,536 in both modes, including thinking.
+  Append the returned `assistant_message` unchanged to subsequent `chatOnce` /
+  `visionChatOnce` history to preserve all original model parts and signatures,
+  including hidden thoughts and text signatures. Reconstructing plain assistant
+  text loses that metadata. Tool calls rebuilt from `blocks` keep their
+  function-call signatures within the same service instance. This applies to
+  Chat and the React example, not Core.
+  Keep this metadata only within the same provider and model. SDK callers must
+  rebuild visible-text-only history when switching routes. Neon metadata is
+  stored under a symbol and only the matching Neon route puts it on the wire;
+  JSON serialization intentionally drops it. Keep the returned messages in
+  memory: JSON persistence/reloading of signed Neon history is not supported.
+  The React example also enforces this route boundary. Do not log raw messages.
+  See the [Neon migration guide](https://aistudio.google.com/docs/whats-new-gemini-4-neon).
 - Gemini 4 Hydrogen (`gemini-4-hydrogen`) is available on the rate-limited free tier.
   Google defaults to `high`; the package exposes `low` (default), `medium`, and `high`.
   The undocumented REST enum for `xhigh` is not exposed.
@@ -189,6 +208,16 @@ built-in model status is `available`.
 - Best for: Fast responses and multimodal chat. The lowest supported thinking level keeps latency and hidden-token usage low.
 
 **OpenRouter**
+
+Gemini 4 Neon is also available through OpenRouter as `google/gemini-4-neon`
+(`MODEL_GOOGLE_GEMINI_4_NEON`). It supports image input, streaming and tools;
+reasoning is mandatory with `xhigh`/`high`/`medium`/`low` and package default `low`.
+No reasoning token budget is sent. The implicit output budget is 65,536;
+explicit lower limits remain supported. Preserve returned `assistant_message` in memory for tool continuation. Its
+symbol-keyed metadata is restored as `reasoning_details` only on this route;
+JSON serialization drops that metadata and is not supported for persistence. Existing provider/model
+and saved effort defaults are unchanged. See [OpenRouter Neon](https://openrouter.ai/google/gemini-4-neon).
+
 
 Additional curated OpenRouter choices are paid and image-capable, with tools and
 streaming. The default stays Gemma 4 31B IT (Free).

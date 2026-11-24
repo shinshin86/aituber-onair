@@ -12,6 +12,7 @@ type SseParseOptions = {
   onJsonError?: JsonParseErrorHandler;
   appendTextBlock?: (blocks: ToolChatBlock[], text: string) => void;
   preserveAssistantMessage?: boolean;
+  preserveReasoningDetails?: boolean;
   reasoningField?: 'reasoning_content' | 'reasoning';
   requireDone?: boolean;
   throwOnApiError?: boolean;
@@ -154,6 +155,9 @@ export async function parseOpenAICompatibleToolStream(
   const toolCallsMap = new Map<number, any>();
   let fullContent = '';
   let reasoningContent = '';
+  const reasoningDetails: Record<string, unknown>[] = [];
+  const reasoningDetailIndices = new Map<number, number>();
+  const reasoningDetailIds = new Map<string, number>();
   const reasoningField = options.reasoningField ?? 'reasoning_content';
   let finishReason: string | undefined;
   let usage: Record<string, any> | undefined;
@@ -189,6 +193,47 @@ export async function parseOpenAICompatibleToolStream(
       const reasoning = extractTextContent(delta?.[reasoningField]);
       if (reasoning) {
         reasoningContent += reasoning;
+      }
+
+      if (
+        options.preserveReasoningDetails &&
+        Array.isArray(delta?.reasoning_details)
+      ) {
+        for (const detail of delta.reasoning_details) {
+          if (!detail || typeof detail !== 'object' || Array.isArray(detail))
+            continue;
+          const index = Number.isInteger(detail.index)
+            ? (detail.index as number)
+            : undefined;
+          const id = typeof detail.id === 'string' ? detail.id : undefined;
+          const position =
+            (index === undefined
+              ? undefined
+              : reasoningDetailIndices.get(index)) ??
+            (id === undefined ? undefined : reasoningDetailIds.get(id)) ??
+            reasoningDetails.length;
+          if (index !== undefined) reasoningDetailIndices.set(index, position);
+          if (id !== undefined) reasoningDetailIds.set(id, position);
+          const previous = reasoningDetails[position];
+          if (!previous) {
+            reasoningDetails.push({ ...detail });
+            continue;
+          }
+
+          // Keep identifiers and signatures whole; only reasoning payloads are deltas.
+          const merged: Record<string, unknown> = { ...previous };
+          for (const [field, value] of Object.entries(detail)) {
+            if (value == null && merged[field] != null) continue;
+            const prior = merged[field];
+            merged[field] =
+              (field === 'text' || field === 'summary' || field === 'data') &&
+              typeof prior === 'string' &&
+              typeof value === 'string'
+                ? prior + value
+                : value;
+          }
+          reasoningDetails[position] = merged;
+        }
       }
 
       if (delta?.tool_calls) {
@@ -232,10 +277,14 @@ export async function parseOpenAICompatibleToolStream(
         arguments: entry.args,
       },
     }));
+  if (reasoningDetails.every((detail) => typeof detail.index === 'number')) {
+    reasoningDetails.sort((a, b) => (a.index as number) - (b.index as number));
+  }
   const assistantMessage: ChatCompletionAssistantMessage = {
     role: 'assistant',
     content: fullContent,
     ...(reasoningContent ? { [reasoningField]: reasoningContent } : {}),
+    ...(reasoningDetails.length ? { reasoning_details: reasoningDetails } : {}),
     ...(assistantToolCalls.length > 0
       ? { tool_calls: assistantToolCalls }
       : {}),

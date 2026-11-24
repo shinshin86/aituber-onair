@@ -797,7 +797,7 @@ in the supported model list; use `claude-sonnet-5-5` instead.
 
 #### Google Gemini
 
-Gemini 4 models (currently Argon, Carbon, and Hydrogen) are explicit stable
+Gemini 4 models (currently Argon, Carbon, Hydrogen, and Neon) are explicit stable
 options with text/image input, streaming, and function calling through
 `v1beta` GenerateContent REST. Thinking is mandatory; this package exposes
 `low` (default for chat latency), `medium`, and `high`. The provider default
@@ -807,6 +807,25 @@ remains `gemini-3.1-flash-lite`.
   (`gemini-4-carbon`, `MODEL_GEMINI_4_CARBON`) require the paid tier.
   Google defaults to `medium`. Carbon uses more thinking tokens than Argon;
   expect higher latency and token usage.
+- Gemini 4 Neon (`gemini-4-neon`, `MODEL_GEMINI_4_NEON`) is an explicit paid
+  option with `low` (package default), `medium`, and `high` thinking. As with
+  other Gemini 4 models whose GenerateContent REST enum for `xhigh` is not
+  documented, `xhigh` is not exposed on this native route.
+  Google defaults to `high`; the package sends `LOW` explicitly. Its implicit
+  output budget and per-request cap are 65,536 in both modes, including thinking.
+  Append the returned `assistant_message` unchanged to subsequent `chatOnce` /
+  `visionChatOnce` history to preserve all original model parts and signatures,
+  including hidden thoughts and text signatures. Reconstructing plain assistant
+  text loses that metadata. Tool calls rebuilt from `blocks` keep their
+  function-call signatures within the same service instance. This applies to
+  Chat and the React example, not Core.
+  Keep this metadata only within the same provider and model. SDK callers must
+  rebuild visible-text-only history when switching routes. Neon metadata is
+  stored under a symbol and only the matching Neon route puts it on the wire;
+  JSON serialization intentionally drops it. Keep the returned messages in
+  memory: JSON persistence/reloading of signed Neon history is not supported.
+  The React example also enforces this route boundary. Do not log raw messages.
+  See the [Neon migration guide](https://aistudio.google.com/docs/whats-new-gemini-4-neon).
 - Gemini 4 Hydrogen (`gemini-4-hydrogen`, `MODEL_GEMINI_4_HYDROGEN`) is also
   available on the rate-limited free tier. Google defaults to `high`; its
   additional `xhigh` level is not exposed because the GenerateContent REST
@@ -821,7 +840,7 @@ per-request caps below; smaller limits can exhaust the budget before an answer.
 | Direct Gemini model | Non-streaming cap | Streaming cap |
 | --- | --- | --- |
 | Argon, Carbon | 32,768 | 65,536 |
-| Hydrogen | 65,536 | 65,536 |
+| Hydrogen, Neon | 65,536 | 65,536 |
 
 Function-call thought signatures are preserved. Sampling parameters and explicit
 cache fields are omitted. Long decode and automatic continuation are not
@@ -877,6 +896,16 @@ Gemini 2.5 Pro and Flash were deprecated on 2026-11-02 and are exported in
 See [Google changelog](https://aistudio.google.com/docs/changelog).
 
 #### OpenRouter
+
+Gemini 4 Neon is also available through OpenRouter as `google/gemini-4-neon`
+(`MODEL_GOOGLE_GEMINI_4_NEON`). It supports image input, streaming and tools;
+reasoning is mandatory with `xhigh`/`high`/`medium`/`low` and package default `low`.
+No reasoning token budget is sent. The implicit output budget is 65,536;
+explicit lower limits remain supported. Preserve returned `assistant_message` in memory for tool continuation. Its
+symbol-keyed metadata is restored as `reasoning_details` only on this route;
+JSON serialization drops that metadata and is not supported for persistence. Existing provider/model
+and saved effort defaults are unchanged. See [OpenRouter Neon](https://openrouter.ai/google/gemini-4-neon).
+
 
 These additional curated options are paid, image-capable Chat Completions models
 with tools and streaming. They are explicit choices; the provider default stays
@@ -1884,9 +1913,9 @@ Currently, the following AI providers are built-in:
 
 - **OpenAI**: GPT-6.2 Sol (`gpt-6.2-sol`) and GPT-6.2 Astra (`gpt-6.2-astra`, explicit, low reasoning by default, tools via Responses), GPT-6.1 Terra (`gpt-6.1-terra`, explicit, tools via Responses), GPT-6.1 Sol (`gpt-6.1-sol`, tools via Responses), GPT-6 Astra (`gpt-6-astra`), GPT-6 Sol (`gpt-6-sol`), and GPT-6 Luna (`gpt-6-luna`, Responses API by default); Supports models like GPT-5.6 (Sol/Terra/Luna), GPT-5.5, GPT-5.4 Pro, GPT-5.4, GPT-5.4 Mini
 - **OpenAI-Compatible**: Supports arbitrary local/self-hosted model IDs via OpenAI-compatible endpoints. Vision capability is treated as `unknown` unless your app knows the endpoint-specific model catalog.
-- **Gemini**: Gemini 4 Hydrogen (`gemini-4-hydrogen`, explicit option with a rate-limited free tier), Gemini 4 Carbon (`gemini-4-carbon`) and Gemini 4 Argon (`gemini-4-argon`). Argon/Carbon require the paid tier. All three require thinking and default to `low`; Supports recommended models like Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.7 Flash, Gemini 3.5 Flash, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
+- **Gemini**: Gemini 4 Neon (`gemini-4-neon`, explicit paid option with low default), Gemini 4 Hydrogen (`gemini-4-hydrogen`, explicit option with a rate-limited free tier), Gemini 4 Carbon (`gemini-4-carbon`) and Gemini 4 Argon (`gemini-4-argon`). Argon/Carbon require the paid tier. All four require thinking and default to `low`; Supports recommended models like Gemini 3.8 Flash, Gemini 3.6 Flash, Gemini 3.5 Flash-Lite, Gemini 3.1 Flash-Lite, Gemini 3.1 Pro Preview, Gemini 3 Flash Preview, Gemini 2.5 Flash Lite, Gemma 4 31B IT, and Gemma 4 26B A4B IT. Gemini 3 models default to their lowest supported thinking level for chat-style responses. Gemini 3.8 Flash, Gemini 3.7 Flash, and Gemini 3 Pro use low because they do not support minimal; other Gemini 3 Flash models use minimal. Deprecated lifecycle models such as Gemini 3.7 Flash, Gemini 3.5 Flash, Gemini 3.1 Flash-Lite Preview, Gemini 3 Pro Preview, and Gemini 2.5 Flash Lite Preview remain exported for explicit use.
 - **Claude**: Claude Haiku 5.5 (`claude-haiku-5-5`, explicit), Claude Opus 5.5 (`claude-opus-5-5`), Claude Sonnet 5.5 (`claude-sonnet-5-5`), Claude Fable 5.1 (`claude-fable-5-1`), and Claude Fable 5.2 (`claude-fable-5-2`, explicit); Supports current Claude API model IDs including Claude Fable 5, Claude Opus 5, Claude Sonnet 5, Claude Opus 4.8, Claude Opus 4.7, Claude Opus 4.6, Claude Opus 4.5, Claude Sonnet 4.6, and Claude Haiku 4.5. Adjustable `reasoning_effort` is sent as `output_config.effort` only for models that support it; refusal metadata is preserved as a terminal completion.
-- **OpenRouter**: Gemini 4 Hydrogen (`google/gemini-4-hydrogen`), Muse Ember, Inkling 2 Small, Nex N2.6, Ling 3.2 Flash Free, Hy4 Flash, Qwen4 Max, GPT-6.2 Sol/Astra, and Inkling 2 Mini are explicit image-capable options. Additional explicit options: GPT Luna/Terra tier aliases, DeepSeek/GLM Flash aliases, MiMo V2.6 Pro, Hy4, Command A+, Seed 2.1 Turbo, Nemotron 3.5 Super VL (paid), and Sakana Namazu; Gemini 4 Carbon (`google/gemini-4-carbon`) and Gemini 4 Argon (`google/gemini-4-argon`), explicit paid options with mandatory reasoning and package default `low`, Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, explicit public preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, Solar Pro 4, MiMo V2.6 Flash, GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1/5.2, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input). The default is `google/gemma-4-31b-it:free`; `nvidia/nemotron-3.5-super-vl:free` is also listed as a free model. Additional models: `anthropic/claude-haiku-5.5`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`. `openai/gpt-6.1-terra` is also an explicit option.
+- **OpenRouter**: Gemini 4 Neon (`google/gemini-4-neon`, explicit paid option), Gemini 4 Hydrogen (`google/gemini-4-hydrogen`), Muse Ember, Inkling 2 Small, Nex N2.6, Ling 3.2 Flash Free, Hy4 Flash, Qwen4 Max, GPT-6.2 Sol/Astra, and Inkling 2 Mini are explicit image-capable options. Additional explicit options: GPT Luna/Terra tier aliases, DeepSeek/GLM Flash aliases, MiMo V2.6 Pro, Hy4, Command A+, Seed 2.1 Turbo, Nemotron 3.5 Super VL (paid), and Sakana Namazu; Gemini 4 Carbon (`google/gemini-4-carbon`) and Gemini 4 Argon (`google/gemini-4-argon`), explicit paid options with mandatory reasoning and package default `low`, Pareto 26.9 (`unbiased/pareto-26.9`), Mistral Large 4 (`mistralai/mistral-large-4-0`, explicit public preview), Ling 3.1 Flash (text-only, explicit), Solar Mini4, Solar Pro 4, MiMo V2.6 Flash, GPT-6.1 Sol, GPT-6 Sol/Luna/Astra/Pro, Claude Sonnet 5.5/Opus 5.5, Grok 4.7, Claude Fable 5.1/5.2, DeepSeek V4.1 Flash, Gemini 3.8 Flash, Qwen3.8 Max, Muse Spark 1.3; Supports a curated OpenRouter model list (OpenAI/Claude/Gemini/Z.ai/xAI/Kimi/DeepSeek/Qwen), including GLM-5.3/FlashX, Qwen3.8 Flash, DeepSeek V4 Flash Vision Exp, Claude Sonnet 5/Opus 4.8, and Kimi K2.6. See the OpenRouter section for model IDs. Explicit options also include `nvidia/nemotron-3.5-lightning` (text-only), `qwen/qwen3.8-27b`, and `qwen/qwen3.8-omni-flash` (image input). The default is `google/gemma-4-31b-it:free`; `nvidia/nemotron-3.5-super-vl:free` is also listed as a free model. Additional models: `anthropic/claude-haiku-5.5`, `deepseek/deepseek-v4.1-flash-1017`, `moonshotai/kimi-k3.1-pro`, `minimax/minimax-m3.1-flash`, `unbiased/pareto-26.10`, `inclusionai/ling-3.0-flash-vl`, `nex-agi/nex-n2.5-pro`. `openai/gpt-6.1-terra` is also an explicit option.
 - **Z.ai**: Supports GLM-5.3/GLM-5.2/GLM-5.1/GLM-5/GLM-5-Turbo and GLM-4.7/4.6 text models, plus GLM-5.3-FlashX/GLM-5.3-Flash/GLM-5V-Turbo/GLM-4.6V vision models. GLM-5.3 always thinks and defaults to `low`; GLM-5.2 defaults to `none`.
 - **xAI**: Supports Grok 4.7, Grok 4.6, Grok 4.5, Grok 4.3, and Grok 4.20 Reasoning/Non-Reasoning with vision. Grok 4.7/4.6/4.5 use package-default `reasoning_effort: 'low'`; Grok 4.3 defaults to `none`.
 - **Kimi**: Kimi K3.1 Pro (`kimi-k3.1-pro`, default) and Highspeed (`kimi-k3.1-pro-highspeed`) support image input, tools, streaming, and the same reasoning controls as K3. Also supports Kimi K3 (`kimi-k3`, `low` / `high` / `max` reasoning with `low` as the package default), all with vision support. K2 series models (`kimi-k2.6`, `kimi-k2.7-code`, `kimi-k2.7-code-highspeed`) are deprecated ahead of Kimi's December 2026 retirement

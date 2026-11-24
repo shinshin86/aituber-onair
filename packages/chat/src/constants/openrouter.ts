@@ -34,6 +34,7 @@ export const MODEL_OPENROUTER_DEEPSEEK_V4_1_FLASH =
 export const MODEL_GOOGLE_GEMINI_3_8_FLASH = 'google/gemini-3.8-flash';
 export const MODEL_GOOGLE_GEMINI_4_ARGON = 'google/gemini-4-argon';
 export const MODEL_GOOGLE_GEMINI_4_CARBON = 'google/gemini-4-carbon';
+export const MODEL_GOOGLE_GEMINI_4_NEON = 'google/gemini-4-neon';
 export const MODEL_GOOGLE_GEMINI_4_HYDROGEN = 'google/gemini-4-hydrogen';
 export const MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE =
   'inclusionai/ling-3.0-flash-vl:free';
@@ -109,6 +110,7 @@ export const OPENROUTER_MODELS_WITHOUT_REASONING_BUDGET: readonly string[] = [
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
   MODEL_GOOGLE_GEMINI_4_HYDROGEN,
+  MODEL_GOOGLE_GEMINI_4_NEON,
   MODEL_UNBIASED_PARETO_26_10,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL,
   MODEL_INCLUSIONAI_LING_3_1_FLASH,
@@ -566,6 +568,10 @@ const OPENROUTER_MODEL_REASONING: Record<
     efforts: ['high', 'medium', 'low'],
     defaultEffort: 'low',
   },
+  [MODEL_GOOGLE_GEMINI_4_NEON]: {
+    efforts: ['xhigh', 'high', 'medium', 'low'],
+    defaultEffort: 'low',
+  },
   [MODEL_GOOGLE_GEMINI_4_HYDROGEN]: {
     efforts: ['high', 'medium', 'low'],
     defaultEffort: 'low',
@@ -660,6 +666,7 @@ export const OPENROUTER_VISION_SUPPORTED_MODELS = [
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
   MODEL_GOOGLE_GEMINI_4_HYDROGEN,
+  MODEL_GOOGLE_GEMINI_4_NEON,
   MODEL_INCLUSIONAI_LING_3_0_FLASH_VL_FREE,
   MODEL_NEX_AGI_NEX_N2_5_MINI_FREE,
   MODEL_NEX_AGI_NEX_N2_5_PRO_FREE,

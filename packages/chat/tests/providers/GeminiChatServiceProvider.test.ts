@@ -10,6 +10,7 @@ import {
   MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_4_CARBON,
   MODEL_GEMINI_4_HYDROGEN,
+  MODEL_GEMINI_4_NEON,
   MODEL_GEMINI_3_7_FLASH,
   MODEL_GEMINI_3_6_FLASH,
   MODEL_GEMINI_3_5_FLASH,
@@ -47,6 +48,7 @@ describe('GeminiChatServiceProvider', () => {
     it('should return array of supported models', () => {
       const models = provider.getSupportedModels();
       expect(models).toEqual([
+        MODEL_GEMINI_4_NEON,
         MODEL_GEMINI_4_CARBON,
         MODEL_GEMINI_4_HYDROGEN,
         MODEL_GEMINI_4_ARGON,

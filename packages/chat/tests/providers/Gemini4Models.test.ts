@@ -4,9 +4,11 @@ import {
   MODEL_GEMINI_4_ARGON,
   MODEL_GEMINI_4_CARBON,
   MODEL_GEMINI_4_HYDROGEN,
+  MODEL_GEMINI_4_NEON,
   MODEL_GOOGLE_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
   MODEL_GOOGLE_GEMINI_4_HYDROGEN,
+  MODEL_GOOGLE_GEMINI_4_NEON,
   MODEL_GEMINI_3_1_FLASH_LITE,
   MODEL_GOOGLE_GEMMA_4_31B_IT_FREE,
   type ChatResponseLength,
@@ -20,18 +22,28 @@ const GEMINI_4_MODELS = [
     label: 'Argon',
     model: MODEL_GEMINI_4_ARGON,
     openRouterModel: MODEL_GOOGLE_GEMINI_4_ARGON,
+    implicitCap: 32_768,
     nonStreamingCap: 32_768,
   },
   {
     label: 'Carbon',
     model: MODEL_GEMINI_4_CARBON,
     openRouterModel: MODEL_GOOGLE_GEMINI_4_CARBON,
+    implicitCap: 32_768,
     nonStreamingCap: 32_768,
   },
   {
     label: 'Hydrogen',
     model: MODEL_GEMINI_4_HYDROGEN,
     openRouterModel: MODEL_GOOGLE_GEMINI_4_HYDROGEN,
+    implicitCap: 32_768,
+    nonStreamingCap: 65_536,
+  },
+  {
+    label: 'Neon',
+    model: MODEL_GEMINI_4_NEON,
+    openRouterModel: MODEL_GOOGLE_GEMINI_4_NEON,
+    implicitCap: 65_536,
     nonStreamingCap: 65_536,
   },
 ] as const;
@@ -63,7 +75,7 @@ afterEach(() => {
 
 describe.each(GEMINI_4_MODELS)(
   'Gemini 4 $label',
-  ({ model, openRouterModel, nonStreamingCap }) => {
+  ({ model, openRouterModel, nonStreamingCap, implicitCap }) => {
     const service = (
       responseLength?: ChatResponseLength,
       reasoning_effort?: 'minimal' | 'low' | 'medium' | 'high',
@@ -102,7 +114,7 @@ describe.each(GEMINI_4_MODELS)(
         );
         const body = post.mock.calls[0][1] as any;
         expect(body.generationConfig).toEqual({
-          maxOutputTokens: 32_768,
+          maxOutputTokens: implicitCap,
           thinkingConfig: { includeThoughts: false, thinkingLevel: 'LOW' },
         });
         expect(body.contents).toEqual([
@@ -140,8 +152,8 @@ describe.each(GEMINI_4_MODELS)(
     );
 
     it.each([
-      [false, undefined, 32_768],
-      [true, undefined, 32_768],
+      [false, undefined, implicitCap],
+      [true, undefined, implicitCap],
       [false, 100_000, nonStreamingCap],
       [false, 50_000, Math.min(50_000, nonStreamingCap)],
       [true, 100_000, 65_536],
@@ -263,7 +275,7 @@ describe.each(GEMINI_4_MODELS)(
         await chat.chatOnce!(
           [
             ...messages,
-            {
+            first.assistant_message ?? {
               role: 'assistant',
               content: '',
               tool_calls: [
@@ -289,12 +301,16 @@ describe.each(GEMINI_4_MODELS)(
               role: 'model',
               parts: [
                 {
-                  function_call: {
+                  [model === MODEL_GEMINI_4_NEON
+                    ? 'functionCall'
+                    : 'function_call']: {
                     id: 'gemini4-call',
                     name: 'weather',
                     args: { city: 'Tokyo' },
                   },
-                  thought_signature: 'opaque-signature',
+                  [model === MODEL_GEMINI_4_NEON
+                    ? 'thoughtSignature'
+                    : 'thought_signature']: 'opaque-signature',
                 },
               ],
             },
@@ -302,7 +318,9 @@ describe.each(GEMINI_4_MODELS)(
               role: 'user',
               parts: [
                 {
-                  function_response: {
+                  [model === MODEL_GEMINI_4_NEON
+                    ? 'functionResponse'
+                    : 'function_response']: {
                     id: 'gemini4-call',
                     name: 'weather',
                     response: { temperature: 25 },
@@ -319,7 +337,7 @@ describe.each(GEMINI_4_MODELS)(
 
 it.each(GEMINI_4_MODELS)(
   'keeps OpenRouter $label thinking enabled without an undocumented reasoning budget',
-  async ({ openRouterModel }) => {
+  async ({ openRouterModel, implicitCap }) => {
     const post = vi.spyOn(ChatServiceHttpClient, 'post').mockImplementation(
       async () =>
         new Response(
@@ -341,9 +359,12 @@ it.each(GEMINI_4_MODELS)(
     );
     expect(post.mock.calls[0][1]).toMatchObject({
       model: openRouterModel,
-      max_tokens: 32768,
+      max_tokens: implicitCap,
       stream: false,
-      reasoning: { effort: 'low', exclude: true },
+      reasoning:
+        openRouterModel === MODEL_GOOGLE_GEMINI_4_NEON
+          ? { effort: 'low' }
+          : { effort: 'low', exclude: true },
     });
     expect(post.mock.calls[0][1]).not.toHaveProperty('reasoning.max_tokens');
     await chat.chatOnce!(messages, false, () => {}, 1234);

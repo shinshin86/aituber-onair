@@ -77,8 +77,10 @@ import {
   MODEL_GEMINI_4_ARGON,
   MODEL_GOOGLE_GEMINI_4_CARBON,
   MODEL_GOOGLE_GEMINI_4_HYDROGEN,
+  MODEL_GOOGLE_GEMINI_4_NEON,
   MODEL_GEMINI_4_CARBON,
   MODEL_GEMINI_4_HYDROGEN,
+  MODEL_GEMINI_4_NEON,
   MODEL_QWEN_QWEN_3_8_MAX_0902,
   MODEL_QWEN_QWEN_4_MAX,
   MODEL_META_MUSE_SPARK_1_3,
@@ -408,8 +410,20 @@ export const allModels: ProviderModel[] = [
     default: false,
   },
   {
+    id: MODEL_GEMINI_4_NEON,
+    name: 'Gemini 4 Neon',
+    provider: 'gemini',
+    default: false,
+  },
+  {
     id: MODEL_GOOGLE_GEMINI_4_HYDROGEN,
     name: 'Gemini 4 Hydrogen (OpenRouter)',
+    provider: 'openrouter',
+    default: false,
+  },
+  {
+    id: MODEL_GOOGLE_GEMINI_4_NEON,
+    name: 'Gemini 4 Neon (OpenRouter)',
     provider: 'openrouter',
     default: false,
   },
@@ -2491,12 +2505,17 @@ export default function ProviderSelector({
                   <input
                     id="openrouter-include-reasoning"
                     type="checkbox"
-                    checked={openrouterIncludeReasoning || false}
+                    checked={
+                      selectedModel === MODEL_GOOGLE_GEMINI_4_NEON ||
+                      openrouterIncludeReasoning ||
+                      false
+                    }
                     onChange={(e) =>
                       onOpenrouterIncludeReasoningChange?.(e.target.checked)
                     }
                     disabled={
                       disabled ||
+                      selectedModel === MODEL_GOOGLE_GEMINI_4_NEON ||
                       !catalogSupportsReasoning(
                         selectedModel,
                         ChatServiceFactory.getSupportedModels(
@@ -2508,7 +2527,9 @@ export default function ProviderSelector({
                   Include Reasoning
                 </label>
                 <span className="helper-text">
-                  Excluding reasoning avoids empty responses
+                  {selectedModel === MODEL_GOOGLE_GEMINI_4_NEON
+                    ? 'Neon reasoning history is used for continuity on this route and is not displayed.'
+                    : 'Excluding reasoning avoids empty responses'}
                 </span>
               </div>
 
