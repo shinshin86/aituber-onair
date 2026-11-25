@@ -241,7 +241,7 @@ explicitly excluded by this admin example; see its provider exclusion reasons.
 
 ### Sarashina on the protected backend
 
-Core 0.26.32 uses published Chat 0.73.0. This sample enumerates providers on
+Core 0.26.33 uses published Chat 0.73.0. This sample enumerates providers on
 its protected server, so Sarashina is usable in the admin provider list like
 Sakana AI; the browser sends requests only to the sample server. Direct-browser
 examples disable those providers. Choose Sarashina3 Nano for the lightweight
@@ -252,7 +252,7 @@ be used for training. No live Sarashina account or inference call was tested.
 
 ### Chat 0.73.0 and Voice 0.31.0
 
-Core 0.26.32 uses published Chat 0.73.0 and Voice 0.31.0.
+Core 0.26.33 uses published Chat 0.73.0 and Voice 0.31.0.
 Gemini 4 Neon is an explicit, paid, image-capable option with streaming and
 tools on two routes. Native Gemini (`gemini-4-neon`, `MODEL_GEMINI_4_NEON`)
 exposes `low` (package default), `medium`, and `high`; OpenRouter

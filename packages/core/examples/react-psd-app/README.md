@@ -2,7 +2,7 @@
 
 ### Chat 0.73.0 and Voice 0.31.0
 
-Core 0.26.32 uses published Chat 0.73.0 and Voice 0.31.0.
+Core 0.26.33 uses published Chat 0.73.0 and Voice 0.31.0.
 Gemini 4 Neon is an explicit, paid, image-capable option with streaming and
 tools on two routes. Native Gemini (`gemini-4-neon`, `MODEL_GEMINI_4_NEON`)
 exposes `low` (package default), `medium`, and `high`; OpenRouter
@@ -95,7 +95,7 @@ Providers whose APIs must not be called directly from this browser example are
 shown disabled: currently Sakana AI and Sarashina. Sarashina API keys must stay
 on a protected backend; use a Node/backend integration.
 
-Core 0.26.32 uses published Chat 0.73.0 and Voice 0.31.0. Select
+Core 0.26.33 uses published Chat 0.73.0 and Voice 0.31.0. Select
 `deepseek-flash` for DeepSeek-V4.1-Flash-1017; this rolling API ID follows
 provider updates. Fish Audio's Model selector includes `drama-3` and
 `drama-3-preview` for one-shot, single-speaker speech. The preview may change;
@@ -445,7 +445,7 @@ Deepgram offers Haley (English) and Ayumi, Hayato, Nozomi, and Sayaka (Japanese)
 
 ### Sarashina and reasoning defaults
 
-This example uses Core 0.26.32 with Chat 0.73.0 and Voice 0.31.0. Sarashina is
+This example uses Core 0.26.33 with Chat 0.73.0 and Voice 0.31.0. Sarashina is
 shown but disabled for new browser selections, like Sakana AI. Saved provider,
 model and key values remain intact. The backend provider offers text-only
 `sarashina3-nano` (default), `sarashina3-mini`, and `sarashina3.2-mini-thinking`;

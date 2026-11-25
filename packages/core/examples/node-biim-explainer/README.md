@@ -198,7 +198,7 @@ The live-streaming React sample is independent from this offline renderer.
 
 ### Chat 0.73.0 and Voice 0.31.0
 
-Core 0.26.32 uses published Chat 0.73.0 and Voice 0.31.0.
+Core 0.26.33 uses published Chat 0.73.0 and Voice 0.31.0.
 Gemini 4 Neon is an explicit, paid, image-capable option with streaming and
 tools on two routes. Native Gemini (`gemini-4-neon`, `MODEL_GEMINI_4_NEON`)
 exposes `low` (package default), `medium`, and `high`; OpenRouter

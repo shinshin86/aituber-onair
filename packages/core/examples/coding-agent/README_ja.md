@@ -61,7 +61,7 @@ E2E はローカル OpenAI 互換モックサーバーで実行し、
 
 ### Chat 0.73.0・Voice 0.31.0
 
-Core 0.26.32は公開済みのChat 0.73.0とVoice 0.31.0を利用します。
+Core 0.26.33は公開済みのChat 0.73.0とVoice 0.31.0を利用します。
 Gemini 4 Neonは画像入力・ストリーミング・ツールに対応する有料の明示選択肢で、2つの経路で使えます。
 Gemini公式（`gemini-4-neon`、`MODEL_GEMINI_4_NEON`）は`low`（パッケージの初期値）・`medium`・`high`、
 OpenRouter（`google/gemini-4-neon`、`MODEL_GOOGLE_GEMINI_4_NEON`）はこれに加えて`xhigh`を選べます。
