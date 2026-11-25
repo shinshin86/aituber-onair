@@ -71,7 +71,7 @@ test('generated templates use published dependency ranges', async () => {
       '^0.0.9',
     );
     assert.equal(packageJson.dependencies['@aituber-onair/manneri'], '^0.4.0');
-    assert.equal(packageJson.dependencies['@aituber-onair/kizuna'], '^0.0.3');
+    assert.equal(packageJson.dependencies['@aituber-onair/kizuna'], '^0.0.4');
     assert.equal(
       packageJson.dependencies['@aituber-onair/transcription'],
       '^0.0.4',
