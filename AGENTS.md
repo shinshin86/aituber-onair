@@ -75,6 +75,7 @@
 - Applies to all packages: do not use the Changeset CLI or create `.changeset/*` files.
 - For releases, update each package’s `CHANGELOG.md` and `package.json` manually (align dependent version ranges as needed).
 - Refer to `README.md` for the current release flow; when in doubt, re-read it before acting.
+- Never bump a package and its workspace dependency in the same PR (currently `chat`/`voice` with `core`, and `chat` with `agent`/`noise`), even for patches. Parallel publishing makes the dependent's `prepublishOnly` build fail while the dependency rebuilds. Release the dependency first, confirm it on npm, then bump the dependent in a separate PR. CI enforces this via `npm run check:release-order`.
 ### Release Flow & Failure Recovery
 - `release.yml` runs `changesets/action@v1` with `createGithubReleases: true`.
 - On merge to `main`, it publishes updated packages to npm, creates tags like `@aituber-onair/<pkg>@x.y.z`, and creates GitHub Releases **only for packages published in that run**.

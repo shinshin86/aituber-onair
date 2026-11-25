@@ -12,6 +12,7 @@
         "fmt:check": "npm run fmt:check --workspaces",
         "check:biome-config": "node scripts/check-biome-config.mjs",
         "check:node-esm": "node scripts/check-node-esm.mjs",
+        "check:release-order": "node scripts/check-release-order.mjs",
         "lint": "npm run lint --workspaces",
         "changeset": "changeset",
         "changeset:version": "changeset version",
