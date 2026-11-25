@@ -46,6 +46,9 @@ npm create aituber-onair@latest my-pet-aituber -- --template pet
 npm create aituber-onair@latest my-purupuru -- --template purupuru
 npm create aituber-onair@latest my-psd-aituber -- --template psd
 npm create aituber-onair@latest my-inochi2d-aituber -- --template inochi2d
+npm create aituber-onair@latest my-media-avatar -- --template media-avatar
+npm create aituber-onair@latest my-mesh-avatar -- --template mesh-avatar
+npm create aituber-onair@latest my-single-image-avatar -- --template single-image-avatar
 ```
 
 `inochi2d` を選ぶと、Aka サンプルモデルを取得するか確認されます。

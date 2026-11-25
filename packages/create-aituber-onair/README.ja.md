@@ -21,6 +21,8 @@ npm run dev
 
 ## テンプレート
 
+10 種類のアバターテンプレートから選べます。デフォルトは `pngtuber` です。
+
 - `pngtuber`: PNG アバター画像アセット同梱の 2D PNGTuber アプリ
 - `vrm`: `miko.vrm` と待機アニメーション同梱の 3D VRM アプリ
 - `live2d`: Live2D モデルアセットを同梱しない Live2D アプリ
@@ -28,6 +30,9 @@ npm run dev
 - `purupuru`: アバター同梱の物理演算対応ぷるぷる PNGTuber アプリ
 - `psd`: ミコの motion avatar 同梱の PSD 立ち絵アプリ
 - `inochi2d`: Aka サンプルモデルを任意取得できる Inochi2D アプリ
+- `media-avatar`: 4 種類の感情 GIF を同梱した、画像・GIF・動画対応のアバターアプリ
+- `mesh-avatar`: ミコの `.mavatar` ファイルを同梱した WebGL2 メッシュアバターアプリ
+- `single-image-avatar`: イラスト版・パペット版のミコ画像を同梱した 1 枚絵アバターアプリ
 
 ## 使い方
 
@@ -53,6 +58,9 @@ npm create aituber-onair@latest my-pet-aituber -- --template pet
 npm create aituber-onair@latest my-purupuru -- --template purupuru
 npm create aituber-onair@latest my-psd-aituber -- --template psd
 npm create aituber-onair@latest my-inochi2d-aituber -- --template inochi2d
+npm create aituber-onair@latest my-media-avatar -- --template media-avatar
+npm create aituber-onair@latest my-mesh-avatar -- --template mesh-avatar
+npm create aituber-onair@latest my-single-image-avatar -- --template single-image-avatar
 ```
 
 作成時に依存関係もインストールする場合:
@@ -82,6 +90,11 @@ npm create aituber-onair@latest my-aituber -- --no-install
 `--no-download-assets` を指定してください。生成後に
 `npm run setup:sample-model` で取得することもできます。ランタイムと必要な
 第三者ライセンス表記はテンプレートに同梱します。
+
+同梱アセットの利用条件は、生成された各アプリのドキュメントで確認できます。
+`media-avatar` は AI で生成した 4 種類の GIF を同梱し、README に説明を記載しています。
+`mesh-avatar` と `single-image-avatar` は、ミコのアセットの利用条件を記載した
+`MIKO_ASSET_TERMS.md` を同梱します。
 
 ## テンプレートのメンテナンス
 

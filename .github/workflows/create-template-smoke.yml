@@ -23,6 +23,9 @@ jobs:
           - purupuru
           - psd
           - inochi2d
+          - media-avatar
+          - mesh-avatar
+          - single-image-avatar
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

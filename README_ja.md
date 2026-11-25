@@ -74,9 +74,9 @@ npm run dev
 
 ### 2. スターターアプリを作成する
 
-`create-aituber-onair` を使うと、公式の PNGTuber / VRM / Live2D / Pet /
-ぷるぷる PNGTuber / PSD / Inochi2D スターターから自分の AITuber OnAir
-アプリを作成できます。
+`create-aituber-onair` を使うと、公式スターターから自分の AITuber OnAir
+アプリを作成できます。PNGTuber / VRM / Live2D / Pet / ぷるぷる PNGTuber /
+PSD / Inochi2D / Media Avatar / Mesh Avatar / Single Image Avatar から選べます。
 
 ```bash
 npm create aituber-onair@latest

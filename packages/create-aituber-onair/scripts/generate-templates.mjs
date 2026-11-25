@@ -376,6 +376,27 @@ async function applyTransform(options) {
     return;
   }
 
+  if (options.template.transform === 'meshAvatarStandalone') {
+    for (const [name, comment] of [
+      ['README.md', '# at the repository root, build the local packages first'],
+      [
+        'README.ja.md',
+        '# リポジトリのルートで、ローカルパッケージを先にビルド',
+      ],
+    ]) {
+      const readmePath = path.join(options.templateRoot, name);
+      const contents = await readFile(readmePath, 'utf8');
+      const workspaceSetup = `${comment}\nnpm install\nnpm run build\n\n`;
+      if (!contents.includes(workspaceSetup)) {
+        throw new Error(
+          `Could not find the Mesh Avatar workspace setup in ${name}.`,
+        );
+      }
+      await writeFile(readmePath, contents.replace(workspaceSetup, ''));
+    }
+    return;
+  }
+
   throw new Error(`Unknown template transform: ${options.template.transform}`);
 }
 

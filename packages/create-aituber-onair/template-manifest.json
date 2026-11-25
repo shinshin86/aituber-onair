@@ -118,6 +118,52 @@
       ],
       "dependencyOverrides": {},
       "transform": "inochi2dOptionalSample"
+    },
+    {
+      "id": "media-avatar",
+      "name": "Media Avatar",
+      "description": "Image, GIF, and video avatar app with four bundled emotion GIFs",
+      "sourcePath": "packages/core/examples/react-media-avatar-app",
+      "requiredFiles": [
+        "_gitignore",
+        "package.json",
+        "src/main.tsx",
+        "public/avatar/media/neutral.gif",
+        "public/avatar/media/happy.gif",
+        "public/avatar/media/angry.gif",
+        "public/avatar/media/sad.gif"
+      ],
+      "dependencyOverrides": {}
+    },
+    {
+      "id": "mesh-avatar",
+      "name": "Mesh Avatar",
+      "description": "WebGL2 mesh avatar app with a bundled Miko .mavatar file",
+      "sourcePath": "packages/core/examples/react-mesh-avatar-app",
+      "requiredFiles": [
+        "_gitignore",
+        "MIKO_ASSET_TERMS.md",
+        "package.json",
+        "src/main.tsx",
+        "public/avatar/miko-qipao.mavatar"
+      ],
+      "dependencyOverrides": {},
+      "transform": "meshAvatarStandalone"
+    },
+    {
+      "id": "single-image-avatar",
+      "name": "Single Image Avatar",
+      "description": "Single-image avatar app with bundled illustration and puppet Miko images",
+      "sourcePath": "packages/core/examples/react-single-image-avatar-app",
+      "requiredFiles": [
+        "_gitignore",
+        "MIKO_ASSET_TERMS.md",
+        "package.json",
+        "src/main.tsx",
+        "public/avatar/miko-avatar.png",
+        "public/avatar/miko-puppet-avatar.png"
+      ],
+      "dependencyOverrides": {}
     }
   ]
 }
