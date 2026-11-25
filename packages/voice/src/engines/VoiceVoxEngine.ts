@@ -1,7 +1,7 @@
-import { VOICE_VOX_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { buildQueryUrl, fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+import { VOICE_VOX_API_URL } from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import { buildQueryUrl, fetchWithTimeout } from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 /**
  * VOICEVOX audio query parameter overrides

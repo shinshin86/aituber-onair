@@ -1,5 +1,5 @@
-import { ChatResponseLength } from '../../../constants';
-import { AgentTextChatService, wrapAgentProviderError } from './shared';
+import { ChatResponseLength } from '../../../constants/index.js';
+import { AgentTextChatService, wrapAgentProviderError } from './shared.js';
 
 export const DEFAULT_COPILOT_SDK_MODEL = 'gpt-4.1';
 

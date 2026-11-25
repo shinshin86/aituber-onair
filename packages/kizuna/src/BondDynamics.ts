@@ -1,4 +1,4 @@
-import type { BondEvaluator } from './BondEvaluator';
+import type { BondEvaluator } from './BondEvaluator.js';
 import type {
   BondAtmosphere,
   BondDynamicsConfig,
@@ -11,7 +11,7 @@ import type {
   KizunaUser,
   NegativeSeverity,
   PointRule,
-} from './types';
+} from './types.js';
 
 const DAY_MS = 24 * 60 * 60 * 1_000;
 const MAX_BUCKET_HISTORY_LIMIT = 1_024;

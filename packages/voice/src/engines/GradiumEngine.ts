@@ -1,10 +1,10 @@
 import {
   GRADIUM_TTS_API_URL,
   GRADIUM_VOICES_API_URL,
-} from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { clampNumber, fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+} from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import { clampNumber, fetchWithTimeout } from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 /** Production or opt-in beta alias, currently matching default and tracking future betas. */
 export type GradiumModel = 'default' | 'gradium-tts-beta';

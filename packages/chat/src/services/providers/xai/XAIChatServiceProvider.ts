@@ -9,16 +9,16 @@ import {
   getDefaultXaiReasoningEffort,
   isXaiVisionModel,
   normalizeXaiReasoningEffort,
-} from '../../../constants/xai';
-import { ChatService } from '../../ChatService';
-import { XAIChatService } from './XAIChatService';
+} from '../../../constants/xai.js';
+import { ChatService } from '../../ChatService.js';
+import { XAIChatService } from './XAIChatService.js';
 import {
   XAIChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { ToolDefinition } from '../../../types/toolChat';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 /**
  * xAI API provider implementation

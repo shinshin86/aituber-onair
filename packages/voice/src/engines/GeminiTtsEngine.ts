@@ -1,8 +1,8 @@
-import { GEMINI_TTS_API_URL } from '../constants/voiceEngine';
-import type { Talk } from '../types/voice';
-import { createPcm16Wav } from '../utils/wavHeader';
-import { fetchWithTimeout } from './internal/utils';
-import type { VoiceEngine } from './VoiceEngine';
+import { GEMINI_TTS_API_URL } from '../constants/voiceEngine.js';
+import type { Talk } from '../types/voice.js';
+import { createPcm16Wav } from '../utils/wavHeader.js';
+import { fetchWithTimeout } from './internal/utils.js';
+import type { VoiceEngine } from './VoiceEngine.js';
 
 export type GeminiTtsModel =
   | 'gemini-3.8-flash-tts'

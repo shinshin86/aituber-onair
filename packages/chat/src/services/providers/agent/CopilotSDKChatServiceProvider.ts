@@ -1,15 +1,15 @@
-import { ChatService } from '../../ChatService';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
+} from '../ChatServiceProvider.js';
 import {
   CopilotSDKChatService,
   CopilotSDKChatServiceOptions,
   CopilotSDKLoader,
   DEFAULT_COPILOT_SDK_MODEL,
-} from './CopilotSDKChatService';
-import { rejectUnsupportedAgentOptions } from './shared';
+} from './CopilotSDKChatService.js';
+import { rejectUnsupportedAgentOptions } from './shared.js';
 
 export class CopilotSDKChatServiceProvider
   implements ChatServiceProvider<CopilotSDKChatServiceOptions>

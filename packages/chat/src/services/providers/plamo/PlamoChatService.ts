@@ -2,10 +2,10 @@ import {
   ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
   MODEL_PLAMO_3_0_PRIME,
   type PlamoReasoningEffort,
-} from '../../../constants/plamo';
-import { ChatResponseLength } from '../../../constants/chat';
-import { ToolDefinition } from '../../../types/toolChat';
-import { OpenAIChatService } from '../openai/OpenAIChatService';
+} from '../../../constants/plamo.js';
+import { ChatResponseLength } from '../../../constants/chat.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { OpenAIChatService } from '../openai/OpenAIChatService.js';
 
 export class PlamoChatService extends OpenAIChatService {
   constructor(

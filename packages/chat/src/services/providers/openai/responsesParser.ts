@@ -1,7 +1,7 @@
-import { ToolChatBlock, ToolChatCompletion } from '../../../types';
-import type { JsonParseErrorHandler } from '../../../utils/safeJsonParse';
-import { safeParseToolCallInput } from '../../../utils/safeJsonParse';
-import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
+import { ToolChatBlock, ToolChatCompletion } from '../../../types/index.js';
+import type { JsonParseErrorHandler } from '../../../utils/safeJsonParse.js';
+import { safeParseToolCallInput } from '../../../utils/safeJsonParse.js';
+import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator.js';
 
 type ResponsesMetadata = {
   responseStatus?: string;

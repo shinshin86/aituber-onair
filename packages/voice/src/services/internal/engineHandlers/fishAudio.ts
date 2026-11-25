@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { FishAudioVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { FishAudioVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   type FishAudioConfigurableEngine,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'fishAudioApiUrl',

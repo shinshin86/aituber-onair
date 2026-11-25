@@ -4,7 +4,7 @@
  */
 
 // Type definitions exports
-export * from './types';
+export * from './types/index.js';
 
 // Chat exports (re-exported from @aituber-onair/chat for backward compatibility)
 export {
@@ -493,29 +493,29 @@ export {
 } from '@aituber-onair/chat';
 
 // Core module exports
-export { EventEmitter } from './core/EventEmitter';
-export type { MemoryOptions, Summarizer } from './core/MemoryManager';
-export { MemoryManager } from './core/MemoryManager';
-export { OpenAISummarizer } from './services/chat/providers/openai/OpenAISummarizer';
-export { GeminiSummarizer } from './services/chat/providers/gemini/GeminiSummarizer';
-export { ClaudeSummarizer } from './services/chat/providers/claude/ClaudeSummarizer';
-export type { ChatProcessorOptions } from './core/ChatProcessor';
-export { ChatProcessor } from './core/ChatProcessor';
+export { EventEmitter } from './core/EventEmitter.js';
+export type { MemoryOptions, Summarizer } from './core/MemoryManager.js';
+export { MemoryManager } from './core/MemoryManager.js';
+export { OpenAISummarizer } from './services/chat/providers/openai/OpenAISummarizer.js';
+export { GeminiSummarizer } from './services/chat/providers/gemini/GeminiSummarizer.js';
+export { ClaudeSummarizer } from './services/chat/providers/claude/ClaudeSummarizer.js';
+export type { ChatProcessorOptions } from './core/ChatProcessor.js';
+export { ChatProcessor } from './core/ChatProcessor.js';
 export type {
   AITuberOnAirCoreOptions,
   SpeechChunkingOptions,
-} from './core/AITuberOnAirCore';
+} from './core/AITuberOnAirCore.js';
 export {
   AITuberOnAirCore,
   AITuberOnAirCoreEvent,
-} from './core/AITuberOnAirCore';
+} from './core/AITuberOnAirCore.js';
 
 // Constants exports
-export * from './constants';
+export * from './constants/index.js';
 
 // Utility exports
-export * from './utils';
-export { createMemoryStorage } from './utils/storage';
+export * from './utils/index.js';
+export { createMemoryStorage } from './utils/storage.js';
 
 // Voice exports (re-exported from @aituber-onair/voice for backward compatibility)
 export {

@@ -1,4 +1,4 @@
-import { ChatServiceHttpClient } from '../utils/chatServiceHttpClient';
+import { ChatServiceHttpClient } from '../utils/chatServiceHttpClient.js';
 
 // Declare GAS global to avoid leaking types into public .d.ts
 declare const UrlFetchApp: any;

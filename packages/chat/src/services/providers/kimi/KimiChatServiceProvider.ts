@@ -8,16 +8,16 @@ import {
   isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
-} from '../../../constants/kimi';
-import { ChatService } from '../../ChatService';
-import { KimiChatService } from './KimiChatService';
+} from '../../../constants/kimi.js';
+import { ChatService } from '../../ChatService.js';
+import { KimiChatService } from './KimiChatService.js';
 import {
   KimiChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { ToolDefinition } from '../../../types/toolChat';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 /**
  * Kimi API provider implementation

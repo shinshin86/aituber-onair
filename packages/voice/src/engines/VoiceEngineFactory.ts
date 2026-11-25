@@ -1,25 +1,25 @@
-import { VoiceEngineType } from '../types/voiceEngine';
-import { AivisCloudEngine } from './AivisCloudEngine';
-import { AivisSpeechEngine } from './AivisSpeechEngine';
-import { CartesiaEngine } from './CartesiaEngine';
-import { DeepgramEngine } from './DeepgramEngine';
-import { ElevenLabsEngine } from './ElevenLabsEngine';
-import { FishAudioEngine } from './FishAudioEngine';
-import { GeminiTtsEngine } from './GeminiTtsEngine';
-import { GradiumEngine } from './GradiumEngine';
-import { InworldEngine } from './InworldEngine';
-import { MinimaxEngine } from './MinimaxEngine';
-import { NoneEngine } from './NoneEngine';
-import { OpenRouterEngine } from './OpenRouterEngine';
-import { OpenAiEngine } from './OpenAiEngine';
-import { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine';
-import { PiperPlusEngine } from './PiperPlusEngine';
-import { UnrealSpeechEngine } from './UnrealSpeechEngine';
-import { VoiceEngine } from './VoiceEngine';
-import { VoicePeakEngine } from './VoicePeakEngine';
-import { VoiceVoxEngine } from './VoiceVoxEngine';
-import { WebSpeechEngine } from './WebSpeechEngine';
-import { XaiEngine } from './XaiEngine';
+import { VoiceEngineType } from '../types/voiceEngine.js';
+import { AivisCloudEngine } from './AivisCloudEngine.js';
+import { AivisSpeechEngine } from './AivisSpeechEngine.js';
+import { CartesiaEngine } from './CartesiaEngine.js';
+import { DeepgramEngine } from './DeepgramEngine.js';
+import { ElevenLabsEngine } from './ElevenLabsEngine.js';
+import { FishAudioEngine } from './FishAudioEngine.js';
+import { GeminiTtsEngine } from './GeminiTtsEngine.js';
+import { GradiumEngine } from './GradiumEngine.js';
+import { InworldEngine } from './InworldEngine.js';
+import { MinimaxEngine } from './MinimaxEngine.js';
+import { NoneEngine } from './NoneEngine.js';
+import { OpenRouterEngine } from './OpenRouterEngine.js';
+import { OpenAiEngine } from './OpenAiEngine.js';
+import { OpenAiCompatibleEngine } from './OpenAiCompatibleEngine.js';
+import { PiperPlusEngine } from './PiperPlusEngine.js';
+import { UnrealSpeechEngine } from './UnrealSpeechEngine.js';
+import { VoiceEngine } from './VoiceEngine.js';
+import { VoicePeakEngine } from './VoicePeakEngine.js';
+import { VoiceVoxEngine } from './VoiceVoxEngine.js';
+import { WebSpeechEngine } from './WebSpeechEngine.js';
+import { XaiEngine } from './XaiEngine.js';
 
 const ENGINE_CONSTRUCTORS = {
   voicevox: VoiceVoxEngine,

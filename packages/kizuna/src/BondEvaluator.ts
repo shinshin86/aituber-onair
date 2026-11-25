@@ -1,4 +1,4 @@
-import { DEFAULT_BOND_STAGES } from './defaultConfig';
+import { DEFAULT_BOND_STAGES } from './defaultConfig.js';
 import type {
   BondStage,
   ContinuityConfig,
@@ -7,7 +7,7 @@ import type {
   KizunaConfig,
   SessionInfo,
   WarmthConfig,
-} from './types';
+} from './types.js';
 
 export interface ContinuityBucket {
   key: string;

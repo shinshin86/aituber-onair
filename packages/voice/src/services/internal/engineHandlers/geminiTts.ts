@@ -1,11 +1,11 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { GeminiTtsVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { GeminiTtsVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   type GeminiTtsConfigurableEngine,
   hasApiEndpointSetter,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'geminiTtsApiUrl',

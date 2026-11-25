@@ -1,4 +1,4 @@
-import { ToolChatBlock } from '../types';
+import { ToolChatBlock } from '../types/index.js';
 
 /**
  * Utility class for accumulating text in streaming chat responses

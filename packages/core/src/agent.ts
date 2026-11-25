@@ -1,7 +1,7 @@
 /**
  * Node.js entry point for Core with Agent SDK chat providers registered.
  */
-export * from './index';
+export * from './index.js';
 
 export {
   type AgentChatProviderName,

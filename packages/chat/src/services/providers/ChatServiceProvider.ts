@@ -1,16 +1,16 @@
-import { ChatService } from '../ChatService';
-import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat';
-import type { GeminiReasoningEffort } from '../../constants/gemini';
-import type { ClaudeReasoningEffort } from '../../constants/claude';
-import type { MistralReasoningEffort } from '../../constants/mistral';
-import type { PlamoReasoningEffort } from '../../constants/plamo';
-import type { XaiReasoningEffort } from '../../constants/xai';
-import type { KimiReasoningEffort } from '../../constants/kimi';
-import type { DeepSeekReasoningEffort } from '../../constants/deepseek';
-import type { OpenRouterReasoningEffort } from '../../constants/openrouter';
-import type { SarashinaReasoningEffort } from '../../constants/sarashina';
-import type { ZaiReasoningEffort } from '../../constants/zai';
-import { ToolDefinition, MCPServerConfig } from '../../types';
+import { ChatService } from '../ChatService.js';
+import { ChatResponseLength, GPT5PresetKey } from '../../constants/chat.js';
+import type { GeminiReasoningEffort } from '../../constants/gemini.js';
+import type { ClaudeReasoningEffort } from '../../constants/claude.js';
+import type { MistralReasoningEffort } from '../../constants/mistral.js';
+import type { PlamoReasoningEffort } from '../../constants/plamo.js';
+import type { XaiReasoningEffort } from '../../constants/xai.js';
+import type { KimiReasoningEffort } from '../../constants/kimi.js';
+import type { DeepSeekReasoningEffort } from '../../constants/deepseek.js';
+import type { OpenRouterReasoningEffort } from '../../constants/openrouter.js';
+import type { SarashinaReasoningEffort } from '../../constants/sarashina.js';
+import type { ZaiReasoningEffort } from '../../constants/zai.js';
+import { ToolDefinition, MCPServerConfig } from '../../types/index.js';
 
 /**
  * Options for chat service providers

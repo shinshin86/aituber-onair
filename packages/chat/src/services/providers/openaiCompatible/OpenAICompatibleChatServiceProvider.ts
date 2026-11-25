@@ -1,10 +1,10 @@
-import { ChatService } from '../../ChatService';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   OpenAICompatibleChatServiceOptions,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { OpenAIChatService } from '../openai/OpenAIChatService';
+} from '../ChatServiceProvider.js';
+import { OpenAIChatService } from '../openai/OpenAIChatService.js';
 
 /**
  * OpenAI-compatible provider implementation.

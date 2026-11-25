@@ -1,7 +1,7 @@
-import { AIVIS_CLOUD_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+import { AIVIS_CLOUD_API_URL } from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import { fetchWithTimeout } from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 /**
  * Aivis Cloud API voice synthesis engine

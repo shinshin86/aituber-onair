@@ -1,11 +1,11 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { VoiceVoxVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { VoiceVoxVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   type VoiceVoxConfigurableEngine,
   hasApiEndpointSetter,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'voicevoxApiUrl',

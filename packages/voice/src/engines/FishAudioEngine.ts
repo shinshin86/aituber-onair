@@ -1,7 +1,11 @@
-import { FISH_AUDIO_TTS_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { clampNumber, fetchWithTimeout, throwApiError } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+import { FISH_AUDIO_TTS_API_URL } from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import {
+  clampNumber,
+  fetchWithTimeout,
+  throwApiError,
+} from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 /**
  * S1 retires on 2026-12-31 and then routes to s2.1-pro. Migrate parenthesis

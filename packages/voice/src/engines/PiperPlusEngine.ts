@@ -1,7 +1,7 @@
-import type { Talk } from '../types/voice';
-import { float32ToPcm16Wav } from '../utils/wavHeader';
-import { fetchWithTimeout } from './internal/utils';
-import type { VoiceEngine } from './VoiceEngine';
+import type { Talk } from '../types/voice.js';
+import { float32ToPcm16Wav } from '../utils/wavHeader.js';
+import { fetchWithTimeout } from './internal/utils.js';
+import type { VoiceEngine } from './VoiceEngine.js';
 
 export interface PiperPlusAssets {
   /** Base path where piper assets are served (e.g. '/piper/' or 'https://example.com/piper/'). Must end with '/'. */

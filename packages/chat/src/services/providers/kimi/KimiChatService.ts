@@ -1,7 +1,7 @@
-import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
-import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../types';
-import { ToolDefinition, ToolChatCompletion } from '../../../types';
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning.js';
+import { ChatService } from '../../ChatService.js';
+import { Message, MessageWithVision } from '../../../types/index.js';
+import { ToolDefinition, ToolChatCompletion } from '../../../types/index.js';
 import {
   ENDPOINT_KIMI_CHAT_COMPLETIONS_API,
   KimiReasoningEffort,
@@ -11,18 +11,18 @@ import {
   isKimiReasoningEffortModel,
   isKimiThinkingRequiredModel,
   isKimiVisionModel,
-} from '../../../constants/kimi';
+} from '../../../constants/kimi.js';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
-} from '../../../constants/chat';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+} from '../../../constants/chat.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
 import {
   buildOpenAICompatibleTools,
   parseOpenAICompatibleOneShot,
   parseOpenAICompatibleToolStream,
   processChatWithOptionalTools,
-} from '../../../utils';
+} from '../../../utils/index.js';
 
 /**
  * Kimi implementation of ChatService (OpenAI-compatible Chat Completions)

@@ -1,6 +1,13 @@
-import { ChatResponseLength, MAX_TOKENS_BY_LENGTH } from '../../../constants';
-import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision, ToolChatCompletion } from '../../../types';
+import {
+  ChatResponseLength,
+  MAX_TOKENS_BY_LENGTH,
+} from '../../../constants/index.js';
+import { ChatService } from '../../ChatService.js';
+import {
+  Message,
+  MessageWithVision,
+  ToolChatCompletion,
+} from '../../../types/index.js';
 
 export type AgentBaseChatServiceOptions = {
   /** Base agent providers use local/CLI auth unless a provider overrides it. */

@@ -1,8 +1,8 @@
 /**
  * Export utility functions
  */
-export * from './screenshot';
-export * from './storage';
+export * from './screenshot.js';
+export * from './storage.js';
 
 // Re-export screenplay utilities from chat package
 export {

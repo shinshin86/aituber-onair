@@ -1,5 +1,13 @@
 # @aituber-onair/voice
 
+## 0.31.1
+
+### Patch Changes
+
+- Fix plain Node.js ESM imports of `@aituber-onair/voice`. The ESM build now
+  uses explicit `.js` relative specifiers and ships `dist/esm/package.json`
+  with `"type": "module"`, so `import` works without a bundler (#443).
+
 ## 0.31.0
 
 ### Minor Changes

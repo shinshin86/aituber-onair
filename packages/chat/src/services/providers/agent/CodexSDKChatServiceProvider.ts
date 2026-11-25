@@ -1,15 +1,15 @@
-import { ChatService } from '../../ChatService';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
+} from '../ChatServiceProvider.js';
 import {
   CodexSDKChatService,
   CodexSDKChatServiceOptions,
   CodexSDKLoader,
   DEFAULT_CODEX_SDK_MODEL,
-} from './CodexSDKChatService';
-import { rejectUnsupportedAgentOptions } from './shared';
+} from './CodexSDKChatService.js';
+import { rejectUnsupportedAgentOptions } from './shared.js';
 
 export class CodexSDKChatServiceProvider
   implements ChatServiceProvider<CodexSDKChatServiceOptions>

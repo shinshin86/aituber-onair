@@ -1,4 +1,4 @@
-import { MemoryRecord, MemoryStorage } from '../types';
+import { MemoryRecord, MemoryStorage } from '../types/index.js';
 
 /**
  * LocalStorage implementation of MemoryStorage

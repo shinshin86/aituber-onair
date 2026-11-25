@@ -1,11 +1,11 @@
-import { BondEvaluator } from './BondEvaluator';
+import { BondEvaluator } from './BondEvaluator.js';
 import type {
   Interaction,
   KizunaConfig,
   KizunaUser,
   PointRule,
   SessionInfo,
-} from './types';
+} from './types.js';
 
 interface CalculationResult {
   points: number;

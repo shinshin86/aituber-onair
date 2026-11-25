@@ -1,11 +1,11 @@
-import { OPENAI_COMPATIBLE_TTS_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
+import { OPENAI_COMPATIBLE_TTS_API_URL } from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
 import {
   clampNumberWithFallback,
   fetchWithTimeout,
   throwApiError,
-} from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+} from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 /**
  * OpenAI-compatible TTS engine for self-hosted endpoints such as Kokoro FastAPI

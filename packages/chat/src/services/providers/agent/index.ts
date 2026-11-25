@@ -1,54 +1,54 @@
-import { ChatService } from '../../ChatService';
-import { ChatServiceFactory } from '../../ChatServiceFactory';
-import { ClaudeAgentSDKChatServiceProvider } from './ClaudeAgentSDKChatServiceProvider';
-import { CodexSDKChatServiceProvider } from './CodexSDKChatServiceProvider';
-import { CopilotSDKChatServiceProvider } from './CopilotSDKChatServiceProvider';
-import { CursorSDKChatServiceProvider } from './CursorSDKChatServiceProvider';
+import { ChatService } from '../../ChatService.js';
+import { ChatServiceFactory } from '../../ChatServiceFactory.js';
+import { ClaudeAgentSDKChatServiceProvider } from './ClaudeAgentSDKChatServiceProvider.js';
+import { CodexSDKChatServiceProvider } from './CodexSDKChatServiceProvider.js';
+import { CopilotSDKChatServiceProvider } from './CopilotSDKChatServiceProvider.js';
+import { CursorSDKChatServiceProvider } from './CursorSDKChatServiceProvider.js';
 import {
   ClaudeAgentSDKChatServiceOptions,
   ClaudeAgentSDKLoader,
-} from './ClaudeAgentSDKChatService';
+} from './ClaudeAgentSDKChatService.js';
 import {
   CodexSDKChatServiceOptions,
   CodexSDKLoader,
-} from './CodexSDKChatService';
+} from './CodexSDKChatService.js';
 import {
   CopilotSDKChatServiceOptions,
   CopilotSDKLoader,
-} from './CopilotSDKChatService';
+} from './CopilotSDKChatService.js';
 import {
   CursorSDKChatServiceOptions,
   CursorSDKLoader,
-} from './CursorSDKChatService';
+} from './CursorSDKChatService.js';
 
 export {
   ClaudeAgentSDKChatService,
   DEFAULT_CLAUDE_AGENT_SDK_MODEL,
   type ClaudeAgentSDKChatServiceOptions,
   type ClaudeAgentSDKLoader,
-} from './ClaudeAgentSDKChatService';
-export { ClaudeAgentSDKChatServiceProvider } from './ClaudeAgentSDKChatServiceProvider';
+} from './ClaudeAgentSDKChatService.js';
+export { ClaudeAgentSDKChatServiceProvider } from './ClaudeAgentSDKChatServiceProvider.js';
 export {
   CodexSDKChatService,
   DEFAULT_CODEX_SDK_MODEL,
   type CodexSDKChatServiceOptions,
   type CodexSDKLoader,
-} from './CodexSDKChatService';
-export { CodexSDKChatServiceProvider } from './CodexSDKChatServiceProvider';
+} from './CodexSDKChatService.js';
+export { CodexSDKChatServiceProvider } from './CodexSDKChatServiceProvider.js';
 export {
   CopilotSDKChatService,
   DEFAULT_COPILOT_SDK_MODEL,
   type CopilotSDKChatServiceOptions,
   type CopilotSDKLoader,
-} from './CopilotSDKChatService';
-export { CopilotSDKChatServiceProvider } from './CopilotSDKChatServiceProvider';
+} from './CopilotSDKChatService.js';
+export { CopilotSDKChatServiceProvider } from './CopilotSDKChatServiceProvider.js';
 export {
   CursorSDKChatService,
   DEFAULT_CURSOR_SDK_MODEL,
   type CursorSDKChatServiceOptions,
   type CursorSDKLoader,
-} from './CursorSDKChatService';
-export { CursorSDKChatServiceProvider } from './CursorSDKChatServiceProvider';
+} from './CursorSDKChatService.js';
+export { CursorSDKChatServiceProvider } from './CursorSDKChatServiceProvider.js';
 
 export type AgentChatProviderName =
   | 'codex-sdk'

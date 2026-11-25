@@ -3,10 +3,10 @@ import {
   ChatCompletionToolCall,
   ToolChatBlock,
   ToolChatCompletion,
-} from '../types';
-import type { JsonParseErrorHandler } from './safeJsonParse';
-import { safeParseToolCallInput } from './safeJsonParse';
-import { StreamTextAccumulator } from './streamTextAccumulator';
+} from '../types/index.js';
+import type { JsonParseErrorHandler } from './safeJsonParse.js';
+import { safeParseToolCallInput } from './safeJsonParse.js';
+import { StreamTextAccumulator } from './streamTextAccumulator.js';
 
 type SseParseOptions = {
   onJsonError?: JsonParseErrorHandler;

@@ -1,4 +1,4 @@
-import { createConfigurationError } from './utils';
+import { createConfigurationError } from './utils.js';
 
 export const OPENROUTER_VOICE_SUFFIXES = {
   'microsoft/mai-voice-2.1': 'MAI-Voice-2.1',

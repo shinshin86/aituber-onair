@@ -1,5 +1,15 @@
 # @aituber-onair/core
 
+## 0.26.33
+
+### Patch Changes
+
+- Fix plain Node.js imports of `@aituber-onair/core` and
+  `@aituber-onair/core/agent`. The build now uses explicit `.js` relative
+  specifiers and the package declares `"type": "module"`, so `import` works
+  without a bundler and `require()` works on Node.js versions that support
+  loading ES modules synchronously (#443).
+
 ## 0.26.32
 
 ### Patch Changes

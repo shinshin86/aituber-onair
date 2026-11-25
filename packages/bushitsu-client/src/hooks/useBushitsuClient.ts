@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { BushitsuClient } from '../client/BushitsuClient';
-import type { BushitsuClientOptions } from '../client/types';
+import { BushitsuClient } from '../client/BushitsuClient.js';
+import type { BushitsuClientOptions } from '../client/types.js';
 import type {
   UseBushitsuClientOptions,
   UseBushitsuClientReturn,
-} from '../types';
+} from '../types.js';
 import {
   WEBSOCKET_RATE_LIMIT_WINDOW,
   WEBSOCKET_RATE_LIMIT_MAX_MESSAGES,
   WEBSOCKET_MESSAGE_DEDUP_WINDOW,
   WEBSOCKET_MESSAGE_DEDUP_MAX_SIZE,
-} from '../client/constants';
+} from '../client/constants.js';
 
 /**
  * React hook for Bushitsu WebSocket chat client

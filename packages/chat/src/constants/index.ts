@@ -1,18 +1,18 @@
 /**
  * Constants for AITuber OnAir Chat
  */
-export * from './openai';
-export * from './gemini';
-export * from './claude';
-export * from './openrouter';
-export * from './zai';
-export * from './xai';
-export * from './kimi';
-export * from './deepseek';
-export * from './mistral';
-export * from './sakana';
-export * from './plamo';
-export * from './chat';
-export * from './prompts';
-export * from './geminiNano';
-export * from './sarashina';
+export * from './openai.js';
+export * from './gemini.js';
+export * from './claude.js';
+export * from './openrouter.js';
+export * from './zai.js';
+export * from './xai.js';
+export * from './kimi.js';
+export * from './deepseek.js';
+export * from './mistral.js';
+export * from './sakana.js';
+export * from './plamo.js';
+export * from './chat.js';
+export * from './prompts.js';
+export * from './geminiNano.js';
+export * from './sarashina.js';

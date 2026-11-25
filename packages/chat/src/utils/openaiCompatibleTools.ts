@@ -1,4 +1,4 @@
-import { ToolDefinition } from '../types';
+import { ToolDefinition } from '../types/index.js';
 
 export type OpenAICompatibleToolFormat = 'chat-completions' | 'responses';
 

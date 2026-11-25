@@ -10,7 +10,7 @@ import {
   type StorageInfo,
   StorageError,
   StorageErrorCode,
-} from './StorageProvider';
+} from './StorageProvider.js';
 
 /**
  * External storage adapter interface

@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { CartesiaVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { CartesiaVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type CartesiaConfigurableEngine,
   type EngineHandler,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'cartesiaApiUrl',

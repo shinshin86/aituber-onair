@@ -15,16 +15,16 @@ import {
   MODEL_CLAUDE_5_5_HAIKU,
   CLAUDE_VISION_SUPPORTED_MODELS,
   getClaudeSupportedReasoningEfforts,
-} from '../../../constants';
-import { ChatService } from '../../ChatService';
-import { ClaudeChatService } from './ClaudeChatService';
-// import { MCPServerConfig } from '../../../types';
+} from '../../../constants/index.js';
+import { ChatService } from '../../ChatService.js';
+import { ClaudeChatService } from './ClaudeChatService.js';
+// import { MCPServerConfig } from '../../../types/index.js';
 import {
   ClaudeChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 /**
  * Claude API provider implementation

@@ -1,5 +1,5 @@
-import { ChatScreenplay } from '../types/chat';
-import { EmotionParser } from './emotionParser';
+import { ChatScreenplay } from '../types/chat.js';
+import { EmotionParser } from './emotionParser.js';
 
 /**
  * Convert text to screenplay (text with emotion)

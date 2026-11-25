@@ -1,4 +1,4 @@
-import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning.js';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   ENDPOINT_OPENAI_RESPONSES_API,
@@ -13,20 +13,20 @@ import {
   normalizeMistralReasoningEffort,
   MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   isMistralReasoningEffortModel,
-} from '../../../constants';
+} from '../../../constants/index.js';
 import {
   CHAT_RESPONSE_LENGTH,
   ChatResponseLength,
   getMaxTokensForResponseLength,
-} from '../../../constants/chat';
+} from '../../../constants/chat.js';
 import type {
   MCPServerConfig,
   Message,
   MessageWithVision,
   ToolDefinition,
-} from '../../../types';
-import type { BaseChatServiceOptions } from '../ChatServiceProvider';
-import { buildOpenAIToolsDefinition } from './openaiToolBuilder';
+} from '../../../types/index.js';
+import type { BaseChatServiceOptions } from '../ChatServiceProvider.js';
+import { buildOpenAIToolsDefinition } from './openaiToolBuilder.js';
 
 type OpenAIResponseFormat = NonNullable<
   BaseChatServiceOptions['responseFormat']

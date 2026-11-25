@@ -1,4 +1,4 @@
-import type { Message, MessageWithVision } from '../../../types';
+import type { Message, MessageWithVision } from '../../../types/index.js';
 
 export function convertMessagesToClaudeFormat(messages: Message[]): any[] {
   return messages.map((msg) => ({

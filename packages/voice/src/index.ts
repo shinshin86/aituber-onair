@@ -24,40 +24,40 @@ export type {
   GradiumVoiceServiceOptions,
   VoiceVoxQueryParameterOverrides,
   AivisSpeechQueryParameterOverrides,
-} from './services/VoiceService';
-export { VoiceEngineAdapter } from './services/VoiceEngineAdapter';
-export type { PiperPlusAssets } from './engines/PiperPlusEngine';
+} from './services/VoiceService.js';
+export { VoiceEngineAdapter } from './services/VoiceEngineAdapter.js';
+export type { PiperPlusAssets } from './engines/PiperPlusEngine.js';
 
 // Audio players
-export * from './services/audio';
-export type { AudioPlayer } from './types/audioPlayer';
+export * from './services/audio/index.js';
+export type { AudioPlayer } from './types/audioPlayer.js';
 
 // Voice engines
-export * from './engines';
+export * from './engines/index.js';
 
 // Types
-export * from './types/voice';
-export * from './types/voiceEngine';
+export * from './types/voice.js';
+export * from './types/voiceEngine.js';
 export type {
   VoiceEngineCapabilities,
   VoiceEngineVoice,
   VoiceEngineVoiceListOptions,
   VoiceRuntime,
-} from './types/capabilities';
-export * from './types/chat';
+} from './types/capabilities.js';
+export * from './types/chat.js';
 
 // Utils
 export {
   textToScreenplay,
   textsToScreenplay,
   screenplayToText,
-} from './utils/screenplay';
-export { EmotionParser, emotionToTalkStyle } from './utils/emotionParser';
+} from './utils/screenplay.js';
+export { EmotionParser, emotionToTalkStyle } from './utils/emotionParser.js';
 export {
   getAllVoiceEngineCapabilities,
   getVoiceEngineCapabilities,
-} from './utils/voiceEngineCapabilities';
-export { getVoiceEngineVoiceList } from './utils/voiceEngineVoiceList';
+} from './utils/voiceEngineCapabilities.js';
+export { getVoiceEngineVoiceList } from './utils/voiceEngineVoiceList.js';
 export {
   OpenAICompatibleSpeechEndpointError,
   resolveOpenAICompatibleSpeechEndpoint,
@@ -72,13 +72,13 @@ export {
   type OpenAICompatibleSpeechServerInfo,
   type TestOpenAICompatibleSpeechOptions,
   type OpenAICompatibleSpeechTestResult,
-} from './utils/openaiCompatibleSpeech';
+} from './utils/openaiCompatibleSpeech.js';
 
 // Voice-specific messages utility
 export {
   splitSentence,
   textsToScreenplay as textsToVoiceScreenplay,
-} from './services/messages';
+} from './services/messages.js';
 
 // Constants
-export * from './constants/voiceEngine';
+export * from './constants/voiceEngine.js';

@@ -1,7 +1,10 @@
-import { INWORLD_TTS_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { decodeBase64ToArrayBuffer, fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+import { INWORLD_TTS_API_URL } from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import {
+  decodeBase64ToArrayBuffer,
+  fetchWithTimeout,
+} from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 export type InworldModel =
   | 'inworld-tts-2'

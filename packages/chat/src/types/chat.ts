@@ -2,7 +2,7 @@
  * AITuber OnAir Core type definitions
  */
 
-import type { ChatCompletionToolCall } from './toolChat';
+import type { ChatCompletionToolCall } from './toolChat.js';
 
 /**
  * Chat message basic type

@@ -1,6 +1,6 @@
-import { Message, MessageWithVision } from '../../../types';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
-import { getNeonHistory } from '../../../utils/neonHistory';
+import { Message, MessageWithVision } from '../../../types/index.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
+import { getNeonHistory } from '../../../utils/neonHistory.js';
 
 type GeminiMessage = {
   role: string | null;

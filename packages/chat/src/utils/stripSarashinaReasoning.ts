@@ -1,4 +1,4 @@
-import type { Message, MessageWithVision } from '../types';
+import type { Message, MessageWithVision } from '../types/index.js';
 
 /** Keep Sarashina's encrypted state out of other providers' message payloads. */
 export function stripSarashinaReasoning(

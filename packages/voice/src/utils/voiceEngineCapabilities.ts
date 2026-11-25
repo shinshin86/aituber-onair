@@ -1,8 +1,8 @@
 import type {
   VoiceEngineCapabilities,
   VoiceRuntime,
-} from '../types/capabilities';
-import type { VoiceEngineType } from '../types/voiceEngine';
+} from '../types/capabilities.js';
+import type { VoiceEngineType } from '../types/voiceEngine.js';
 
 const CLOUD_ENGINES = new Set<VoiceEngineType>([
   'openai',

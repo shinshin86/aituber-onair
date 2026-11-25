@@ -1,6 +1,6 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { NoneVoiceServiceOptions } from '../../VoiceService';
-import { type EngineHandler, mergeOptionValues } from './types';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { NoneVoiceServiceOptions } from '../../VoiceService.js';
+import { type EngineHandler, mergeOptionValues } from './types.js';
 
 export const noneEngineHandler: EngineHandler<NoneVoiceServiceOptions> = {
   allowedUpdateKeys: [],

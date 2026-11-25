@@ -1,4 +1,4 @@
-import type { BondStage, KizunaConfig } from './types';
+import type { BondStage, KizunaConfig } from './types.js';
 
 export const DEFAULT_BOND_STAGES: BondStage[] = [
   { id: 'stranger', minPoints: 0 },

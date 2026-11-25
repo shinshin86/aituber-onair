@@ -1,25 +1,25 @@
-import { AudioPlayer } from '../types/audioPlayer';
+import { AudioPlayer } from '../types/audioPlayer.js';
 import {
   isSelfPlayingVoiceEngine,
   SelfPlayingVoiceEngine,
   VoiceEngine,
-} from '../engines/VoiceEngine';
-import { ChatScreenplay } from '../types/chat';
-import { Talk } from '../types/voice';
-import { textToScreenplay } from '../utils/screenplay';
-import { emotionToTalkStyle } from '../utils/emotionParser';
+} from '../engines/VoiceEngine.js';
+import { ChatScreenplay } from '../types/chat.js';
+import { Talk } from '../types/voice.js';
+import { textToScreenplay } from '../utils/screenplay.js';
+import { emotionToTalkStyle } from '../utils/emotionParser.js';
 import {
   AudioPlayOptions,
   VoiceService,
   VoiceServiceOptions,
   VoiceServiceOptionsUpdate,
-} from './VoiceService';
+} from './VoiceService.js';
 import {
   applyOptionsToEngine,
   getAllowedUpdateKeys,
   mergeOptionsForEngine,
-} from './internal/engineHandlers';
-import { AudioPlayerFactory } from './audio/AudioPlayerFactory';
+} from './internal/engineHandlers/index.js';
+import { AudioPlayerFactory } from './audio/AudioPlayerFactory.js';
 
 interface SpeechRequest {
   id: number;
@@ -218,7 +218,7 @@ export class VoiceEngineAdapter implements VoiceService {
 
   private async getEngine(): Promise<VoiceEngine> {
     const { VoiceEngineFactory } = await import(
-      '../engines/VoiceEngineFactory'
+      '../engines/VoiceEngineFactory.js'
     );
 
     if (this.options.engineType === 'piperPlus') {

@@ -1,7 +1,7 @@
 import { Message } from '@aituber-onair/chat';
-import { MemoryRecord, MemoryType, MemoryStorage } from '../types';
-import { AITuberOnAirCoreEvent } from './AITuberOnAirCore';
-import { EventEmitter } from './EventEmitter';
+import { MemoryRecord, MemoryType, MemoryStorage } from '../types/index.js';
+import { AITuberOnAirCoreEvent } from './AITuberOnAirCore.js';
+import { EventEmitter } from './EventEmitter.js';
 
 /**
  * Memory manager settings

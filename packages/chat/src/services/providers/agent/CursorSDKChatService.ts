@@ -1,5 +1,5 @@
-import { ChatResponseLength } from '../../../constants';
-import { AgentTextChatService, wrapAgentProviderError } from './shared';
+import { ChatResponseLength } from '../../../constants/index.js';
+import { AgentTextChatService, wrapAgentProviderError } from './shared.js';
 
 /** Default model identifier passed to the Cursor SDK. */
 export const DEFAULT_CURSOR_SDK_MODEL = 'default';

@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import type {
   BushitsuInitiativeOptions,
   UseBushitsuInitiativeReturn,
-} from '../types';
+} from '../types.js';
 
 // Default priority value (equivalent to announcement priority in original code)
 const DEFAULT_PRIORITY = 1;

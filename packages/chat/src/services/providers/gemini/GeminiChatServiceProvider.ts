@@ -4,15 +4,15 @@ import {
   MODEL_GEMINI_3_1_FLASH_LITE,
   isGeminiReasoningEffortModel,
   normalizeGeminiReasoningEffort,
-} from '../../../constants';
-import { ChatService } from '../../ChatService';
-import { GeminiChatService } from './GeminiChatService';
+} from '../../../constants/index.js';
+import { ChatService } from '../../ChatService.js';
+import { GeminiChatService } from './GeminiChatService.js';
 import {
   GeminiChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 /**
  * Gemini API provider implementation

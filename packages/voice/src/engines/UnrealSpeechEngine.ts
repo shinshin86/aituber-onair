@@ -1,7 +1,7 @@
-import { UNREAL_SPEECH_TTS_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+import { UNREAL_SPEECH_TTS_API_URL } from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import { fetchWithTimeout } from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 export type UnrealSpeechCodec = 'libmp3lame' | 'pcm_mulaw' | 'pcm_s16le';
 

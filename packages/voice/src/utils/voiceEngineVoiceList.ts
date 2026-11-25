@@ -10,20 +10,20 @@ import {
   OPENROUTER_MODELS_API_URL,
   VOICE_VOX_API_URL,
   XAI_VOICES_API_URL,
-} from '../constants/voiceEngine';
+} from '../constants/voiceEngine.js';
 import type {
   VoiceEngineVoice,
   VoiceEngineVoiceListOptions,
-} from '../types/capabilities';
-import type { VoiceEngineType } from '../types/voiceEngine';
-import { getDeepgramFluxVoiceLanguage } from '../engines/internal/deepgram';
-import { fetchWithTimeout } from '../engines/internal/utils';
+} from '../types/capabilities.js';
+import type { VoiceEngineType } from '../types/voiceEngine.js';
+import { getDeepgramFluxVoiceLanguage } from '../engines/internal/deepgram.js';
+import { fetchWithTimeout } from '../engines/internal/utils.js';
 import {
   isOpenRouterVoice,
   requireOpenRouterModel,
   resolveOpenRouterUrl,
-} from '../engines/internal/openRouter';
-import { getWebSpeechVoiceList } from '../engines/WebSpeechEngine';
+} from '../engines/internal/openRouter.js';
+import { getWebSpeechVoiceList } from '../engines/WebSpeechEngine.js';
 
 interface LocalSpeakerStyleResponse {
   id: number | string;

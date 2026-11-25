@@ -32,6 +32,11 @@ jobs:
       - name: Run tests
         run: npm run test --workspaces
 
+      - name: Check built entry points load in plain Node.js
+        run: |
+          npm run build
+          npm run check:node-esm
+
       - name: Install Voice React example dependencies
         run: npm --prefix packages/voice/examples/react-basic ci
 

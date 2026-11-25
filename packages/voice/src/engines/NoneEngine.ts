@@ -1,5 +1,5 @@
-import { Talk } from '../types/voice';
-import { VoiceEngine } from './VoiceEngine';
+import { Talk } from '../types/voice.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 /**
  * None (no voice) engine

@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { ElevenLabsVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { ElevenLabsVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type ElevenLabsConfigurableEngine,
   type EngineHandler,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'elevenLabsApiUrl',

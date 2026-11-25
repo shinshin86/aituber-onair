@@ -105,16 +105,16 @@ import {
   OPENROUTER_FREE_MODELS,
   isOpenRouterFreeModel,
   isOpenRouterVisionModel,
-} from '../../../constants/openrouter';
-import { ChatService } from '../../ChatService';
-import { OpenRouterChatService } from './OpenRouterChatService';
+} from '../../../constants/openrouter.js';
+import { ChatService } from '../../ChatService.js';
+import { OpenRouterChatService } from './OpenRouterChatService.js';
 import {
   OpenRouterChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { ToolDefinition } from '../../../types/toolChat';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 /**
  * OpenRouter API provider implementation

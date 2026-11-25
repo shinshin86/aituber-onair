@@ -1,10 +1,10 @@
-import { ENDPOINT_YOUTUBE_API } from '../../constants';
-import { EventEmitter } from '../../core/EventEmitter';
+import { ENDPOINT_YOUTUBE_API } from '../../constants/index.js';
+import { EventEmitter } from '../../core/EventEmitter.js';
 import {
   YouTubeService,
   YouTubeServiceOptions,
   YouTubeComment,
-} from './YouTubeService';
+} from './YouTubeService.js';
 
 /**
  * YouTube Data API implementation using YouTube service

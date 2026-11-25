@@ -9,7 +9,7 @@ import {
   type StorageInfo,
   StorageError,
   StorageErrorCode,
-} from './StorageProvider';
+} from './StorageProvider.js';
 
 /**
  * LocalStorageProvider configuration

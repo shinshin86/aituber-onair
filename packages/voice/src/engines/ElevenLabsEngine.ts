@@ -1,7 +1,7 @@
-import { ELEVENLABS_TTS_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { clampNumber, fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+import { ELEVENLABS_TTS_API_URL } from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import { clampNumber, fetchWithTimeout } from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 export type ElevenLabsApplyTextNormalization = 'auto' | 'on' | 'off';
 

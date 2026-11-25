@@ -3,16 +3,16 @@ import {
   ENDPOINT_DEEPSEEK_CHAT_COMPLETIONS_API,
   MODEL_DEEPSEEK_FLASH,
   isDeepSeekVisionModel,
-} from '../../../constants/deepseek';
-import { ChatService } from '../../ChatService';
+} from '../../../constants/deepseek.js';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   DeepSeekChatServiceOptions,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { DeepSeekChatService } from './DeepSeekChatService';
-import { ToolDefinition } from '../../../types/toolChat';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { DeepSeekChatService } from './DeepSeekChatService.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 export class DeepSeekChatServiceProvider
   implements ChatServiceProvider<DeepSeekChatServiceOptions>

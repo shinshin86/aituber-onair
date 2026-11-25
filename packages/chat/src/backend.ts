@@ -3,7 +3,7 @@ import type {
   ToolChatCompletion,
   ToolResultBlock,
   ToolUseBlock,
-} from './types';
+} from './types/index.js';
 
 const KNOWN_CHAT_PROVIDERS = new Set([
   'claude',

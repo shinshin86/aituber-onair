@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/bushitsu-client",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "WebSocket client for chat functionality with React hooks support",
   "keywords": [
     "websocket",
@@ -52,7 +52,7 @@
     "build": "npm run build:clean && npm run build:cjs && npm run build:esm && npm run build:types",
     "build:clean": "rm -rf dist",
     "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:esm": "tsc -p tsconfig.esm.json && echo '{\"type\":\"module\"}' > dist/esm/package.json",
     "build:types": "tsc -p tsconfig.json --emitDeclarationOnly --declaration --declarationDir dist/types",
     "typecheck": "tsc --noEmit",
     "test": "npm run typecheck && vitest run",

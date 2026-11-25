@@ -28,17 +28,17 @@ import {
   allowsReasoningLow,
   getDefaultReasoningEffortForOpenAIModel,
   OpenAIReasoningEffort,
-} from '../../../constants';
-import { GPT5_PRESETS } from '../../../constants/chat';
-import { ChatService } from '../../ChatService';
-import { OpenAIChatService } from './OpenAIChatService';
+} from '../../../constants/index.js';
+import { GPT5_PRESETS } from '../../../constants/chat.js';
+import { ChatService } from '../../ChatService.js';
+import { OpenAIChatService } from './OpenAIChatService.js';
 import {
   OpenAIChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { ToolDefinition } from '../../../types/toolChat';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 /**
  * OpenAI API provider implementation

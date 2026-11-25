@@ -2,14 +2,14 @@ import {
   ENDPOINT_SARASHINA_CHAT_COMPLETIONS_API,
   MODEL_SARASHINA_3_NANO,
   SARASHINA_SUPPORTED_MODELS,
-} from '../../../constants/sarashina';
-import { ChatService } from '../../ChatService';
+} from '../../../constants/sarashina.js';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   SarashinaChatServiceOptions,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { SarashinaChatService } from './SarashinaChatService';
+} from '../ChatServiceProvider.js';
+import { SarashinaChatService } from './SarashinaChatService.js';
 
 export class SarashinaChatServiceProvider
   implements ChatServiceProvider<SarashinaChatServiceOptions>

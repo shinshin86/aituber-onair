@@ -1,5 +1,5 @@
-import { Talk } from '../types/voice';
-import { DirectSpeechOptions, SelfPlayingVoiceEngine } from './VoiceEngine';
+import { Talk } from '../types/voice.js';
+import { DirectSpeechOptions, SelfPlayingVoiceEngine } from './VoiceEngine.js';
 
 export interface WebSpeechEngineDependencies {
   synthesis?: SpeechSynthesis;

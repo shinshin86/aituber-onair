@@ -3,10 +3,10 @@ import {
   type DeepSeekReasoningEffort,
   MODEL_DEEPSEEK_FLASH,
   normalizeDeepSeekReasoningEffort,
-} from '../../../constants/deepseek';
-import { ChatResponseLength } from '../../../constants/chat';
-import { ToolDefinition } from '../../../types/toolChat';
-import { OpenAIChatService } from '../openai/OpenAIChatService';
+} from '../../../constants/deepseek.js';
+import { ChatResponseLength } from '../../../constants/chat.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { OpenAIChatService } from '../openai/OpenAIChatService.js';
 
 export class DeepSeekChatService extends OpenAIChatService {
   constructor(

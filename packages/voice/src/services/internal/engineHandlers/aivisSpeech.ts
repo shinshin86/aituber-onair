@@ -1,11 +1,11 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { AivisSpeechVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { AivisSpeechVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type AivisSpeechConfigurableEngine,
   type EngineHandler,
   hasApiEndpointSetter,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'aivisSpeechApiUrl',

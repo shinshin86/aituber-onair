@@ -1,4 +1,4 @@
-import { VoiceEngineError } from '../VoiceEngineError';
+import { VoiceEngineError } from '../VoiceEngineError.js';
 
 export function buildQueryUrl(
   baseUrl: string,

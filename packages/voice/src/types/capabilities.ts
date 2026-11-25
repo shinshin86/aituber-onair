@@ -1,5 +1,5 @@
-import type { OpenRouterTtsModel } from '../engines/OpenRouterEngine';
-import type { VoiceEngineType } from './voiceEngine';
+import type { OpenRouterTtsModel } from '../engines/OpenRouterEngine.js';
+import type { VoiceEngineType } from './voiceEngine.js';
 
 export type VoiceRuntime = 'browser' | 'node' | 'server' | 'unknown';
 

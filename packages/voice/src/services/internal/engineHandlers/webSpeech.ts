@@ -1,9 +1,9 @@
-import type { WebSpeechVoiceServiceOptions } from '../../VoiceService';
+import type { WebSpeechVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   mergeOptionValues,
   type WebSpeechConfigurableEngine,
-} from './types';
+} from './types.js';
 
 export const webSpeechEngineHandler: EngineHandler<WebSpeechVoiceServiceOptions> =
   {
