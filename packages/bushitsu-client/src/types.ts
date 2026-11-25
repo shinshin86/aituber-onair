@@ -1,5 +1,5 @@
 // Re-export client types
-export type { BushitsuMessage, BushitsuClientOptions } from './client/types';
+export type { BushitsuMessage, BushitsuClientOptions } from './client/types.js';
 
 // Hook types
 export interface UseBushitsuClientOptions {

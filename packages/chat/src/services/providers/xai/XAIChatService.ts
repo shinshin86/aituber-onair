@@ -1,27 +1,27 @@
-import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
-import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../types';
-import { ToolDefinition, ToolChatCompletion } from '../../../types';
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning.js';
+import { ChatService } from '../../ChatService.js';
+import { Message, MessageWithVision } from '../../../types/index.js';
+import { ToolDefinition, ToolChatCompletion } from '../../../types/index.js';
 import {
   ENDPOINT_XAI_CHAT_COMPLETIONS_API,
   MODEL_GROK_4_3,
   isXaiReasoningEffortModel,
   isXaiVisionModel,
   normalizeXaiReasoningEffort,
-} from '../../../constants/xai';
-import type { XaiReasoningEffort } from '../../../constants/xai';
+} from '../../../constants/xai.js';
+import type { XaiReasoningEffort } from '../../../constants/xai.js';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
-} from '../../../constants/chat';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+} from '../../../constants/chat.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
 import {
   buildOpenAICompatibleTools,
   parseOpenAICompatibleOneShot,
   parseOpenAICompatibleTextStream,
   parseOpenAICompatibleToolStream,
   processChatWithOptionalTools,
-} from '../../../utils';
+} from '../../../utils/index.js';
 
 /**
  * xAI implementation of ChatService (OpenAI-compatible Chat Completions)

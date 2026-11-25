@@ -1,4 +1,4 @@
-import type { VoiceEngineVoice } from '../types/capabilities';
+import type { VoiceEngineVoice } from '../types/capabilities.js';
 
 export type OpenAICompatibleSpeechEndpointErrorCode =
   | 'invalid-url'

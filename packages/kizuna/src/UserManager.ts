@@ -1,5 +1,5 @@
-import type { BondEvaluator } from './BondEvaluator';
-import { BondDynamics } from './BondDynamics';
+import type { BondEvaluator } from './BondEvaluator.js';
+import { BondDynamics } from './BondDynamics.js';
 import type {
   Achievement,
   BondScar,
@@ -12,7 +12,7 @@ import type {
   SessionInfo,
   UserRole,
   UserStats,
-} from './types';
+} from './types.js';
 
 export class UserManager {
   private users = new Map<string, KizunaUser>();

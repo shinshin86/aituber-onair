@@ -1,4 +1,4 @@
-import { ChatService } from '../../ChatService';
+import { ChatService } from '../../ChatService.js';
 import {
   MODEL_GPT_6_1_SOL,
   isGPT62Model,
@@ -8,30 +8,30 @@ import {
   ENDPOINT_OPENAI_RESPONSES_API,
   MODEL_GPT_5_6_LUNA,
   VISION_SUPPORTED_MODELS,
-} from '../../../constants';
-import type { OpenAIReasoningEffort } from '../../../constants';
-import type { ChatResponseLength } from '../../../constants/chat';
+} from '../../../constants/index.js';
+import type { OpenAIReasoningEffort } from '../../../constants/index.js';
+import type { ChatResponseLength } from '../../../constants/chat.js';
 import type {
   MCPServerConfig,
   Message,
   MessageWithVision,
   ToolChatCompletion,
   ToolDefinition,
-} from '../../../types';
-import type { BaseChatServiceOptions } from '../ChatServiceProvider';
-import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+} from '../../../types/index.js';
+import type { BaseChatServiceOptions } from '../ChatServiceProvider.js';
+import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
 import {
   parseOpenAICompatibleOneShot,
   parseOpenAICompatibleTextStream,
   parseOpenAICompatibleToolStream,
   processChatWithOptionalTools,
-} from '../../../utils';
+} from '../../../utils/index.js';
 import {
   parseOpenAIResponsesOneShot,
   parseOpenAIResponsesStream,
-} from './responsesParser';
-import { buildOpenAIRequestBody } from './openaiRequestBuilder';
+} from './responsesParser.js';
+import { buildOpenAIRequestBody } from './openaiRequestBuilder.js';
 
 type OpenAIResponseFormat = NonNullable<
   BaseChatServiceOptions['responseFormat']

@@ -1,5 +1,5 @@
-import { ChatResponseLength } from '../../../constants';
-import { AgentTextChatService, wrapAgentProviderError } from './shared';
+import { ChatResponseLength } from '../../../constants/index.js';
+import { AgentTextChatService, wrapAgentProviderError } from './shared.js';
 
 export const DEFAULT_CLAUDE_AGENT_SDK_MODEL = 'claude-default';
 

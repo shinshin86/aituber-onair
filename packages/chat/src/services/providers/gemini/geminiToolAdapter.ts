@@ -1,4 +1,4 @@
-import type { MCPServerConfig, ToolDefinition } from '../../../types';
+import type { MCPServerConfig, ToolDefinition } from '../../../types/index.js';
 
 type GeminiFunctionDeclaration = {
   name: string;

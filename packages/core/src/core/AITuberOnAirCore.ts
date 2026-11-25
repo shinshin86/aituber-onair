@@ -1,6 +1,6 @@
-import { EventEmitter } from './EventEmitter';
-import { ChatProcessor, ChatProcessorOptions } from './ChatProcessor';
-import { MemoryManager, MemoryOptions, Summarizer } from './MemoryManager';
+import { EventEmitter } from './EventEmitter.js';
+import { ChatProcessor, ChatProcessorOptions } from './ChatProcessor.js';
+import { MemoryManager, MemoryOptions, Summarizer } from './MemoryManager.js';
 import {
   ChatService,
   ChatServiceFactory,
@@ -26,9 +26,9 @@ import type {
   AgentChatProviderName,
   AgentChatServiceOptionsByProvider,
 } from '@aituber-onair/chat/agent';
-import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer';
-import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer';
-import { ClaudeSummarizer } from '../services/chat/providers/claude/ClaudeSummarizer';
+import { OpenAISummarizer } from '../services/chat/providers/openai/OpenAISummarizer.js';
+import { GeminiSummarizer } from '../services/chat/providers/gemini/GeminiSummarizer.js';
+import { ClaudeSummarizer } from '../services/chat/providers/claude/ClaudeSummarizer.js';
 import {
   VoiceService,
   VoiceServiceOptions,
@@ -45,8 +45,8 @@ import {
   screenplayToText,
   MCPServerConfig,
 } from '@aituber-onair/chat';
-import { MemoryStorage } from '../types';
-import { ToolExecutor } from './ToolExecutor';
+import { MemoryStorage } from '../types/index.js';
+import { ToolExecutor } from './ToolExecutor.js';
 
 type SpeechChunkLocalePreset = Exclude<SpeechChunkLocale, 'all'>;
 

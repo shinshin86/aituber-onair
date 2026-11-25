@@ -1,15 +1,15 @@
-import { ChatService } from '../../ChatService';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
+} from '../ChatServiceProvider.js';
 import {
   ClaudeAgentSDKChatService,
   ClaudeAgentSDKChatServiceOptions,
   ClaudeAgentSDKLoader,
   DEFAULT_CLAUDE_AGENT_SDK_MODEL,
-} from './ClaudeAgentSDKChatService';
-import { rejectUnsupportedAgentOptions } from './shared';
+} from './ClaudeAgentSDKChatService.js';
+import { rejectUnsupportedAgentOptions } from './shared.js';
 
 export class ClaudeAgentSDKChatServiceProvider
   implements ChatServiceProvider<ClaudeAgentSDKChatServiceOptions>

@@ -4,16 +4,16 @@ import {
   isMistralVisionModel,
   MISTRAL_SUPPORTED_MODELS,
   MODEL_MISTRAL_SMALL_LATEST,
-} from '../../../constants/mistral';
-import { ChatService } from '../../ChatService';
+} from '../../../constants/mistral.js';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   MistralChatServiceOptions,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { MistralChatService } from './MistralChatService';
-import { ToolDefinition } from '../../../types/toolChat';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { MistralChatService } from './MistralChatService.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 export class MistralChatServiceProvider
   implements ChatServiceProvider<MistralChatServiceOptions>

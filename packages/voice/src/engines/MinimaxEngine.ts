@@ -1,10 +1,10 @@
 import {
   MINIMAX_CHINA_API_URL,
   MINIMAX_GLOBAL_API_URL,
-} from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { decodeHexToArrayBuffer, fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+} from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import { decodeHexToArrayBuffer, fetchWithTimeout } from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 /**
  * MiniMax endpoint types

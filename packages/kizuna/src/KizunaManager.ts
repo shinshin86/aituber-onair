@@ -1,7 +1,10 @@
-import { BondEvaluator } from './BondEvaluator';
-import { BondDynamics } from './BondDynamics';
-import { BondContextBuilder } from './context/BondContextBuilder';
-import { PointCalculator, type PersistedLimitRecord } from './PointCalculator';
+import { BondEvaluator } from './BondEvaluator.js';
+import { BondDynamics } from './BondDynamics.js';
+import { BondContextBuilder } from './context/BondContextBuilder.js';
+import {
+  PointCalculator,
+  type PersistedLimitRecord,
+} from './PointCalculator.js';
 import type {
   Achievement,
   BondContextOptions,
@@ -18,8 +21,8 @@ import type {
   StorageProvider,
   Threshold,
   ThresholdAction,
-} from './types';
-import { UserManager } from './UserManager';
+} from './types.js';
+import { UserManager } from './UserManager.js';
 
 interface TriggeredThreshold {
   threshold: Threshold;
@@ -609,7 +612,7 @@ export class KizunaManager
   }
 
   private log(
-    level: import('./types').LogLevel,
+    level: import('./types.js').LogLevel,
     message: string,
     ...arguments_: unknown[]
   ): void {

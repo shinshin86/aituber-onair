@@ -1,19 +1,19 @@
-import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../types';
-import { ToolChatCompletion } from '../../../types/toolChat';
+import { ChatService } from '../../ChatService.js';
+import { Message, MessageWithVision } from '../../../types/index.js';
+import { ToolChatCompletion } from '../../../types/toolChat.js';
 import {
   MODEL_GEMINI_NANO,
   GEMINI_NANO_MAX_CONTEXT_MESSAGES,
-} from '../../../constants/geminiNano';
+} from '../../../constants/geminiNano.js';
 import {
   CHAT_RESPONSE_LENGTH,
   type ChatResponseLength,
   MAX_TOKENS_BY_LENGTH,
-} from '../../../constants/chat';
+} from '../../../constants/chat.js';
 import type {
   GeminiNanoChatServiceOptions,
   GeminiNanoInitialPrompt,
-} from '../ChatServiceProvider';
+} from '../ChatServiceProvider.js';
 
 interface LanguageModelTextExpectation {
   type: 'text';

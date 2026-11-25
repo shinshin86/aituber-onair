@@ -1,5 +1,5 @@
-import { EmotionType, Screenplay } from '../types/voice';
-import { EmotionParser, emotionToTalkStyle } from '../utils/emotionParser';
+import { EmotionType, Screenplay } from '../types/voice.js';
+import { EmotionParser, emotionToTalkStyle } from '../utils/emotionParser.js';
 
 export const splitSentence = (text: string): string[] => {
   const splitMessages = text.split(/(?<=[。．！？\n])/g);

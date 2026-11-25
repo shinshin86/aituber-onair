@@ -4,16 +4,16 @@ import {
   MODEL_SAKANA_NAMAZU,
   SAKANA_SUPPORTED_MODELS,
   isSakanaVisionModel,
-} from '../../../constants/sakana';
-import { ChatService } from '../../ChatService';
+} from '../../../constants/sakana.js';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   SakanaChatServiceOptions,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { SakanaChatService } from './SakanaChatService';
-import { ToolDefinition } from '../../../types/toolChat';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { SakanaChatService } from './SakanaChatService.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 export class SakanaChatServiceProvider
   implements ChatServiceProvider<SakanaChatServiceOptions>

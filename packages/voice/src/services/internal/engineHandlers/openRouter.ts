@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { OpenRouterVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { OpenRouterVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   type OpenRouterConfigurableEngine,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 export const openRouterEngineHandler: EngineHandler<OpenRouterVoiceServiceOptions> =
   {

@@ -1,2 +1,2 @@
-export { useBushitsuClient } from '../hooks/useBushitsuClient';
-export { useBushitsuInitiative } from '../hooks/useBushitsuInitiative';
+export { useBushitsuClient } from '../hooks/useBushitsuClient.js';
+export { useBushitsuInitiative } from '../hooks/useBushitsuInitiative.js';

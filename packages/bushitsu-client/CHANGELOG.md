@@ -1,5 +1,14 @@
 # @aituber-onair/bushitsu-client
 
+## 0.2.2
+
+### Patch Changes
+
+- Fix plain Node.js ESM imports of the root, `/node`, and `/react` entry
+  points. The ESM build now uses explicit `.js` relative specifiers and ships
+  `dist/esm/package.json` with `"type": "module"`, so `import` works without a
+  bundler (#443).
+
 ## 0.2.1
 
 ### Patch Changes

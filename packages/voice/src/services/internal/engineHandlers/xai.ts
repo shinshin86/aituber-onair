@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { XaiVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { XaiVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   type XaiConfigurableEngine,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'xaiLanguage',

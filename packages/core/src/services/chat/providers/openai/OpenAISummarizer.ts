@@ -1,5 +1,5 @@
 import { Message } from '@aituber-onair/chat';
-import { Summarizer } from '../../../../core/MemoryManager';
+import { Summarizer } from '../../../../core/MemoryManager.js';
 import {
   ENDPOINT_OPENAI_CHAT_COMPLETIONS_API,
   MODEL_GPT_4O_MINI,
@@ -8,7 +8,7 @@ import {
 import {
   createSummaryContext,
   summarizeWithFallback,
-} from '../summarizerUtils';
+} from '../summarizerUtils.js';
 
 /**
  * Implementation of summarization functionality using OpenAI

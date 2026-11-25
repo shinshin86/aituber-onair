@@ -1,5 +1,5 @@
-import { ToolDefinition, MCPServerConfig } from '../types';
-import { ChatServiceHttpClient } from './chatServiceHttpClient';
+import { ToolDefinition, MCPServerConfig } from '../types/index.js';
+import { ChatServiceHttpClient } from './chatServiceHttpClient.js';
 
 export type MCPSchemaFetchFailure = {
   server: MCPServerConfig;

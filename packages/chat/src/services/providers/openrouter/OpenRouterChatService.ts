@@ -1,8 +1,8 @@
-import { getNeonHistory, NEON_HISTORY } from '../../../utils/neonHistory';
-import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
-import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../types';
-import { ToolDefinition, ToolChatCompletion } from '../../../types';
+import { getNeonHistory, NEON_HISTORY } from '../../../utils/neonHistory.js';
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning.js';
+import { ChatService } from '../../ChatService.js';
+import { Message, MessageWithVision } from '../../../types/index.js';
+import { ToolDefinition, ToolChatCompletion } from '../../../types/index.js';
 import {
   MODEL_UNBIASED_PARETO_26_9,
   MODEL_UNBIASED_PARETO_26_10,
@@ -40,19 +40,19 @@ import {
   isOpenRouterVisionModel,
   isOpenRouterFreeModel,
   OPENROUTER_FREE_RATE_LIMIT_PER_MINUTE,
-} from '../../../constants/openrouter';
+} from '../../../constants/openrouter.js';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
-} from '../../../constants/chat';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+} from '../../../constants/chat.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
 import {
   buildOpenAICompatibleTools,
   parseOpenAICompatibleOneShot,
   parseOpenAICompatibleTextStream,
   parseOpenAICompatibleToolStream,
   processChatWithOptionalTools,
-} from '../../../utils';
+} from '../../../utils/index.js';
 
 const isOpenRouterAutoModel = (model: string): boolean =>
   [MODEL_OPENROUTER_AUTO, MODEL_OPENROUTER_AUTO_BETA].includes(model.trim());

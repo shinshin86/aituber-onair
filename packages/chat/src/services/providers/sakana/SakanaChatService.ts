@@ -1,10 +1,10 @@
 import {
   ENDPOINT_SAKANA_CHAT_COMPLETIONS_API,
   MODEL_FUGU,
-} from '../../../constants/sakana';
-import { ChatResponseLength } from '../../../constants/chat';
-import { ToolDefinition } from '../../../types/toolChat';
-import { OpenAIChatService } from '../openai/OpenAIChatService';
+} from '../../../constants/sakana.js';
+import { ChatResponseLength } from '../../../constants/chat.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { OpenAIChatService } from '../openai/OpenAIChatService.js';
 
 export class SakanaChatService extends OpenAIChatService {
   constructor(

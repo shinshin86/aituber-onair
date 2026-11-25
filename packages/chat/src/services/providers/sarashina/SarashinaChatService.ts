@@ -1,10 +1,10 @@
-import { ChatService } from '../../ChatService';
+import { ChatService } from '../../ChatService.js';
 import {
   Message,
   MessageWithVision,
   ToolDefinition,
   ToolChatCompletion,
-} from '../../../types';
+} from '../../../types/index.js';
 import {
   ENDPOINT_SARASHINA_CHAT_COMPLETIONS_API,
   MODEL_SARASHINA_3_NANO,
@@ -12,18 +12,18 @@ import {
   SarashinaReasoningEffort,
   getDefaultSarashinaReasoningEffort,
   getSarashinaSupportedReasoningEfforts,
-} from '../../../constants/sarashina';
+} from '../../../constants/sarashina.js';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
-} from '../../../constants/chat';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+} from '../../../constants/chat.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
 import {
   buildOpenAICompatibleTools,
   parseOpenAICompatibleOneShot,
   parseOpenAICompatibleToolStream,
   processChatWithOptionalTools,
-} from '../../../utils';
+} from '../../../utils/index.js';
 
 /** Text-only Sarashina Chat Completions for protected backend runtimes. */
 export class SarashinaChatService implements ChatService {

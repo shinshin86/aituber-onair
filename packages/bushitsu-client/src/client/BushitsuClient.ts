@@ -3,19 +3,19 @@
  * A WebSocket chat room client for real-time communication
  */
 
-import type { BushitsuMessage, BushitsuClientOptions } from './types';
+import type { BushitsuMessage, BushitsuClientOptions } from './types.js';
 import {
   WEBSOCKET_CONNECTION_TIMEOUT,
   WEBSOCKET_MAX_RECONNECT_ATTEMPTS,
   WEBSOCKET_MAX_RECONNECT_DELAY,
-} from './constants';
+} from './constants.js';
 import {
   BushitsuTransportReadyState,
   type BushitsuTransport,
   type BushitsuTransportCloseEvent,
   type BushitsuTransportMessageEvent,
-} from '../core/transport';
-import { createBrowserWebSocketTransport } from '../transports/webSocketTransport';
+} from '../core/transport.js';
+import { createBrowserWebSocketTransport } from '../transports/webSocketTransport.js';
 
 interface BushitsuClientDependencies {
   transport?: BushitsuTransport;

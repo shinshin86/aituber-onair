@@ -1,5 +1,5 @@
-import { AudioPlayer } from '../../types/audioPlayer';
-import { getAudioFormat, getWavDataOffset } from '../../utils/wavHeader';
+import { AudioPlayer } from '../../types/audioPlayer.js';
+import { getAudioFormat, getWavDataOffset } from '../../utils/wavHeader.js';
 
 /**
  * Node.js-based audio player implementation

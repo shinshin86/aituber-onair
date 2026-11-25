@@ -1,5 +1,5 @@
-import { ToolChatBlock, ToolChatCompletion } from '../types';
-import { StreamTextAccumulator } from './streamTextAccumulator';
+import { ToolChatBlock, ToolChatCompletion } from '../types/index.js';
+import { StreamTextAccumulator } from './streamTextAccumulator.js';
 
 type ProcessChatFlowOptions<B = ToolChatBlock> = {
   hasTools: boolean;

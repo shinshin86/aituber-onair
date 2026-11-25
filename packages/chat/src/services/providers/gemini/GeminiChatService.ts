@@ -1,5 +1,5 @@
-import { ChatService } from '../../ChatService';
-import { NEON_HISTORY } from '../../../utils/neonHistory';
+import { ChatService } from '../../ChatService.js';
+import { NEON_HISTORY } from '../../../utils/neonHistory.js';
 import {
   Message,
   MessageWithVision,
@@ -7,7 +7,7 @@ import {
   ToolChatCompletion,
   ToolDefinition,
   MCPServerConfig,
-} from '../../../types';
+} from '../../../types/index.js';
 import {
   ENDPOINT_GEMINI_API,
   MODEL_GEMINI_3_1_FLASH_LITE,
@@ -18,25 +18,25 @@ import {
   GEMINI_VISION_SUPPORTED_MODELS,
   normalizeGeminiReasoningEffort,
   type GeminiReasoningEffort,
-} from '../../../constants';
+} from '../../../constants/index.js';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
-} from '../../../constants/chat';
-import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
-import { MCPSchemaFetcher } from '../../../utils/mcpSchemaFetcher';
-import { processChatWithOptionalTools } from '../../../utils';
+} from '../../../constants/chat.js';
+import { StreamTextAccumulator } from '../../../utils/streamTextAccumulator.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
+import { MCPSchemaFetcher } from '../../../utils/mcpSchemaFetcher.js';
+import { processChatWithOptionalTools } from '../../../utils/index.js';
 import {
   convertMessagesToGeminiFormat,
   convertVisionMessagesToGeminiFormat,
   extractGeminiSystemInstruction,
   type GeminiFunctionCallContext,
-} from './geminiMessageConverter';
+} from './geminiMessageConverter.js';
 import {
   buildGeminiToolConfig,
   createFallbackMCPToolSchemas,
-} from './geminiToolAdapter';
+} from './geminiToolAdapter.js';
 
 /**
  * Gemini implementation of ChatService

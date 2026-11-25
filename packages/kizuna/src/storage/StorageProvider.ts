@@ -5,7 +5,7 @@
  * (LocalStorage, IndexedDB, external APIs, etc.)
  */
 
-import type { StorageProvider as IStorageProvider } from '../types';
+import type { StorageProvider as IStorageProvider } from '../types.js';
 
 /**
  * Abstract base class for storage providers

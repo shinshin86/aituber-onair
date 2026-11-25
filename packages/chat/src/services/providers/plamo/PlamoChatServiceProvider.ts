@@ -2,15 +2,15 @@ import {
   ENDPOINT_PLAMO_CHAT_COMPLETIONS_API,
   MODEL_PLAMO_3_0_PRIME,
   PLAMO_SUPPORTED_MODELS,
-} from '../../../constants/plamo';
-import { ChatService } from '../../ChatService';
+} from '../../../constants/plamo.js';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   PlamoChatServiceOptions,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { PlamoChatService } from './PlamoChatService';
-import { ToolDefinition } from '../../../types/toolChat';
+} from '../ChatServiceProvider.js';
+import { PlamoChatService } from './PlamoChatService.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
 
 export class PlamoChatServiceProvider
   implements ChatServiceProvider<PlamoChatServiceOptions>

@@ -1,35 +1,39 @@
-import type { AivisSpeechQueryParameterOverrides } from '../engines/AivisSpeechEngine';
+import type { AivisSpeechQueryParameterOverrides } from '../engines/AivisSpeechEngine.js';
 import type {
   ElevenLabsApplyTextNormalization,
   ElevenLabsVoiceSettingsOptions,
-} from '../engines/ElevenLabsEngine';
+} from '../engines/ElevenLabsEngine.js';
 import type {
   FishAudioFormat,
   FishAudioLatency,
   FishAudioModel,
-} from '../engines/FishAudioEngine';
+} from '../engines/FishAudioEngine.js';
 import type {
   CartesiaLanguage,
   CartesiaOutputContainer,
-} from '../engines/CartesiaEngine';
-import type { OpenRouterTtsModel } from '../engines/OpenRouterEngine';
-import type { GeminiTtsModel } from '../engines';
+} from '../engines/CartesiaEngine.js';
+import type { OpenRouterTtsModel } from '../engines/OpenRouterEngine.js';
+import type { GeminiTtsModel } from '../engines/index.js';
 import type {
   GradiumModel,
   GradiumOutputFormat,
-} from '../engines/GradiumEngine';
+} from '../engines/GradiumEngine.js';
 import type {
   InworldAudioEncoding,
   InworldModel,
   InworldDeliveryMode,
-} from '../engines/InworldEngine';
-import type { UnrealSpeechCodec } from '../engines/UnrealSpeechEngine';
-import type { XaiBitRate, XaiCodec, XaiSampleRate } from '../engines/XaiEngine';
-import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine';
+} from '../engines/InworldEngine.js';
+import type { UnrealSpeechCodec } from '../engines/UnrealSpeechEngine.js';
+import type {
+  XaiBitRate,
+  XaiCodec,
+  XaiSampleRate,
+} from '../engines/XaiEngine.js';
+import type { VoiceVoxQueryParameterOverrides } from '../engines/VoiceVoxEngine.js';
 export type { VoiceVoxQueryParameterOverrides };
 export type { AivisSpeechQueryParameterOverrides };
-import { ChatScreenplay } from '../types/chat';
-import type { VoicepeakEmotionInput } from '../types/voice';
+import { ChatScreenplay } from '../types/chat.js';
+import type { VoicepeakEmotionInput } from '../types/voice.js';
 
 /**
  * MiniMax audio format types

@@ -1,15 +1,15 @@
-import { ChatService } from '../../ChatService';
+import { ChatService } from '../../ChatService.js';
 import {
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
+} from '../ChatServiceProvider.js';
 import {
   CursorSDKChatService,
   CursorSDKChatServiceOptions,
   CursorSDKLoader,
   DEFAULT_CURSOR_SDK_MODEL,
-} from './CursorSDKChatService';
-import { rejectUnsupportedAgentOptions } from './shared';
+} from './CursorSDKChatService.js';
+import { rejectUnsupportedAgentOptions } from './shared.js';
 
 /** Creates text-only Cursor SDK chat services. */
 export class CursorSDKChatServiceProvider

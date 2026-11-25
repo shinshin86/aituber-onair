@@ -1,5 +1,5 @@
-import { Screenplay } from '../types';
-import { EmotionParser } from './emotionParser';
+import { Screenplay } from '../types/index.js';
+import { EmotionParser } from './emotionParser.js';
 
 /**
  * Convert text to screenplay (text with emotion)

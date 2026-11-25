@@ -1,6 +1,6 @@
-import { AudioPlayer } from '../../types/audioPlayer';
-import { BrowserAudioPlayer } from './BrowserAudioPlayer';
-import { NodeAudioPlayer } from './NodeAudioPlayer';
+import { AudioPlayer } from '../../types/audioPlayer.js';
+import { BrowserAudioPlayer } from './BrowserAudioPlayer.js';
+import { NodeAudioPlayer } from './NodeAudioPlayer.js';
 
 /**
  * Runtime detection utility

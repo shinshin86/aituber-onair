@@ -3,11 +3,11 @@
  * Creates appropriate StorageProvider based on environment
  */
 
-import type { StorageProvider } from '../storage/StorageProvider';
-import { LocalStorageProvider } from '../storage/LocalStorageProvider';
-import { ExternalStorageProvider } from '../storage/ExternalStorageProvider';
-import type { ExternalStorageAdapter } from '../storage/ExternalStorageProvider';
-import { detectEnvironment } from './environmentDetector';
+import type { StorageProvider } from '../storage/StorageProvider.js';
+import { LocalStorageProvider } from '../storage/LocalStorageProvider.js';
+import { ExternalStorageProvider } from '../storage/ExternalStorageProvider.js';
+import type { ExternalStorageAdapter } from '../storage/ExternalStorageProvider.js';
+import { detectEnvironment } from './environmentDetector.js';
 
 /**
  * Create default StorageProvider based on environment

@@ -19,16 +19,16 @@ import {
   isZaiAlwaysThinkingModel,
   isZaiVisionModel,
   normalizeZaiReasoningEffort,
-} from '../../../constants/zai';
-import { ChatService } from '../../ChatService';
-import { ZAIChatService } from './ZAIChatService';
+} from '../../../constants/zai.js';
+import { ChatService } from '../../ChatService.js';
+import { ZAIChatService } from './ZAIChatService.js';
 import {
   ZAIChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { ToolDefinition } from '../../../types/toolChat';
-import { resolveVisionModel } from '../../../utils';
+} from '../ChatServiceProvider.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { resolveVisionModel } from '../../../utils/index.js';
 
 /**
  * Z.ai API provider implementation

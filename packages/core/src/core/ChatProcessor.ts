@@ -13,8 +13,8 @@ import {
   textsToScreenplay,
   buildToolContinuationMessages,
 } from '@aituber-onair/chat';
-import { MemoryManager } from './MemoryManager';
-import { EventEmitter } from './EventEmitter';
+import { MemoryManager } from './MemoryManager.js';
+import { EventEmitter } from './EventEmitter.js';
 
 type ToolCallback = (blocks: ToolUseBlock[]) => Promise<ToolResultBlock[]>;
 /**

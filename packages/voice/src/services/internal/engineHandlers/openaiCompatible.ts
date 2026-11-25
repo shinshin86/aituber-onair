@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { OpenAiCompatibleVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { OpenAiCompatibleVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   type OpenAiCompatibleConfigurableEngine,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'openAiCompatibleApiUrl',

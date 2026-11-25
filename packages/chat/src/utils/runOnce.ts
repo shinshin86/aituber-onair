@@ -1,6 +1,6 @@
-import type { ChatService } from '../services/ChatService';
-import type { Message } from '../types';
-import { StreamTextAccumulator } from './streamTextAccumulator';
+import type { ChatService } from '../services/ChatService.js';
+import type { Message } from '../types/index.js';
+import { StreamTextAccumulator } from './streamTextAccumulator.js';
 
 /**
  * Run a single non-streaming chat request and return concatenated text.

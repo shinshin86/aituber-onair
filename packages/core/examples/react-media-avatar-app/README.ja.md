@@ -2,7 +2,7 @@
 
 ### Chat 0.73.0・Voice 0.31.0
 
-Core 0.26.32は公開済みのChat 0.73.0とVoice 0.31.0を利用します。
+Core 0.26.33は公開済みのChat 0.73.0とVoice 0.31.0を利用します。
 Gemini 4 Neonは画像入力・ストリーミング・ツールに対応する有料の明示選択肢で、2つの経路で使えます。
 Gemini公式（`gemini-4-neon`、`MODEL_GEMINI_4_NEON`）は`low`（パッケージの初期値）・`medium`・`high`、
 OpenRouter（`google/gemini-4-neon`、`MODEL_GOOGLE_GEMINI_4_NEON`）はこれに加えて`xhigh`を選べます。
@@ -82,7 +82,7 @@ Mistral Medium 3.5、OpenRouter Mercury 2.5/3・Kimi K2.5・GPT Latestは新規�
 現在は Sakana AI と Sarashina が該当します。Sarashina の API キーは保護された
 バックエンドで管理し、Node.js などのサーバー環境から利用してください。
 
-Core 0.26.32、Chat 0.73.0、Voice 0.31.0 を使用します。
+Core 0.26.33、Chat 0.73.0、Voice 0.31.0 を使用します。
 
 `@aituber-onair/core` を使い、返答の感情に合わせて画像・GIF・動画を
 切り替えるReactチャットサンプルです。

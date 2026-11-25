@@ -1,4 +1,4 @@
-import type { VisionSupportLevel } from '../services/providers/ChatServiceProvider';
+import type { VisionSupportLevel } from '../services/providers/ChatServiceProvider.js';
 
 export interface ChatProviderCapabilities {
   provider: string;

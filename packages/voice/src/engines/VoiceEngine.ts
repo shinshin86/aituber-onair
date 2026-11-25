@@ -1,4 +1,4 @@
-import { Talk } from '../types/voice';
+import { Talk } from '../types/voice.js';
 
 export interface DirectSpeechOptions {
   rate?: number;

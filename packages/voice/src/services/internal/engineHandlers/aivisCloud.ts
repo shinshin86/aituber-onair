@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { AivisCloudVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { AivisCloudVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type AivisCloudConfigurableEngine,
   type EngineHandler,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'aivisCloudModelUuid',

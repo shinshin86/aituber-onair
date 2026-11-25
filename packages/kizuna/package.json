@@ -1,6 +1,6 @@
 {
   "name": "@aituber-onair/kizuna",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A bond model for relationships between people and AI characters, with warmth, continuity, and LLM context.",
   "type": "module",
   "main": "dist/index.js",

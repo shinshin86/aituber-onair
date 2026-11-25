@@ -1,5 +1,5 @@
-import type { MCPServerConfig, ToolDefinition } from '../../../types';
-import { buildOpenAICompatibleTools } from '../../../utils';
+import type { MCPServerConfig, ToolDefinition } from '../../../types/index.js';
+import { buildOpenAICompatibleTools } from '../../../utils/index.js';
 
 type BuildOpenAIToolsDefinitionOptions = {
   tools: ToolDefinition[];

@@ -1,4 +1,4 @@
-import { ChatService } from '../../ChatService';
+import { ChatService } from '../../ChatService.js';
 import {
   CoreToolChatBlock,
   Message,
@@ -8,25 +8,25 @@ import {
   MCPServerConfig,
   ClaudeMCPToolUseBlock,
   ClaudeMCPToolResultBlock,
-} from '../../../types';
+} from '../../../types/index.js';
 import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_4_5_HAIKU,
   getDefaultClaudeReasoningEffort,
   CLAUDE_VISION_SUPPORTED_MODELS,
   getClaudeSupportedReasoningEfforts,
-} from '../../../constants';
-import type { ClaudeReasoningEffort } from '../../../constants/claude';
+} from '../../../constants/index.js';
+import type { ClaudeReasoningEffort } from '../../../constants/claude.js';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
-} from '../../../constants/chat';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
-import { processChatWithOptionalTools } from '../../../utils';
+} from '../../../constants/chat.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
+import { processChatWithOptionalTools } from '../../../utils/index.js';
 import {
   convertMessagesToClaudeFormat,
   convertVisionMessagesToClaudeFormat,
-} from './claudeMessageConverter';
+} from './claudeMessageConverter.js';
 
 export interface ClaudeToolResultBlock {
   type: 'tool_result';

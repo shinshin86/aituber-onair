@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { UnrealSpeechVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { UnrealSpeechVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   mergeOptionValues,
   type UnrealSpeechConfigurableEngine,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'unrealSpeechApiUrl',

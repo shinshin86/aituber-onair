@@ -1,14 +1,14 @@
-import { DEEPGRAM_TTS_API_URL } from '../constants/voiceEngine';
-import type { Talk } from '../types/voice';
-import { DEEPGRAM_FLUX_VOICE_ID_PATTERN } from './internal/deepgram';
+import { DEEPGRAM_TTS_API_URL } from '../constants/voiceEngine.js';
+import type { Talk } from '../types/voice.js';
+import { DEEPGRAM_FLUX_VOICE_ID_PATTERN } from './internal/deepgram.js';
 import {
   clampNumber,
   createConfigurationError,
   fetchWithTimeout,
   throwApiError,
-} from './internal/utils';
-import type { VoiceEngine } from './VoiceEngine';
-import { VoiceEngineError } from './VoiceEngineError';
+} from './internal/utils.js';
+import type { VoiceEngine } from './VoiceEngine.js';
+import { VoiceEngineError } from './VoiceEngineError.js';
 
 /**
  * One-shot Flux TTS on /v2/speak. The speaker is a full English or Japanese

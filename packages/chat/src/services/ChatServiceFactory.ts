@@ -1,13 +1,13 @@
-import { ChatService } from './ChatService';
+import { ChatService } from './ChatService.js';
 import {
   ChatServiceOptions,
   ChatServiceOptionsByProvider,
   ChatProviderName,
   ChatServiceProvider,
   VisionSupportLevel,
-} from './providers/ChatServiceProvider';
-import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers';
-import type { ChatProviderCapabilities } from '../types/capabilities';
+} from './providers/ChatServiceProvider.js';
+import { DEFAULT_CHAT_SERVICE_PROVIDERS } from './providers/index.js';
+import type { ChatProviderCapabilities } from '../types/capabilities.js';
 import {
   MODEL_GPT_6_1_SOL,
   isGPT62Model,
@@ -15,20 +15,20 @@ import {
   MODEL_GPT_6_ASTRA,
   MODEL_GPT_6_LUNA,
   MODEL_GPT_6_SOL,
-} from '../constants/openai';
-import { getClaudeSupportedReasoningEfforts } from '../constants/claude';
-import { getGeminiSupportedReasoningEfforts } from '../constants/gemini';
-import { getKimiSupportedReasoningEfforts } from '../constants/kimi';
-import { getDeepSeekSupportedReasoningEfforts } from '../constants/deepseek';
-import { getOpenRouterSupportedReasoningEfforts } from '../constants/openrouter';
+} from '../constants/openai.js';
+import { getClaudeSupportedReasoningEfforts } from '../constants/claude.js';
+import { getGeminiSupportedReasoningEfforts } from '../constants/gemini.js';
+import { getKimiSupportedReasoningEfforts } from '../constants/kimi.js';
+import { getDeepSeekSupportedReasoningEfforts } from '../constants/deepseek.js';
+import { getOpenRouterSupportedReasoningEfforts } from '../constants/openrouter.js';
 import {
   getMistralSupportedReasoningEfforts,
   MODEL_MISTRAL_ZAI_GLM_5_3_FLASH,
   MODEL_MISTRAL_DEEPSEEK_V4_1_FLASH_1017,
-} from '../constants/mistral';
-import { getXaiSupportedReasoningEfforts } from '../constants/xai';
-import { getZaiSupportedReasoningEfforts } from '../constants/zai';
-import { getChatBackendProviderCapabilities } from '../backend';
+} from '../constants/mistral.js';
+import { getXaiSupportedReasoningEfforts } from '../constants/xai.js';
+import { getZaiSupportedReasoningEfforts } from '../constants/zai.js';
+import { getChatBackendProviderCapabilities } from '../backend.js';
 
 const MCP_SUPPORTED_PROVIDERS = new Set<string>(['openai', 'gemini', 'claude']);
 

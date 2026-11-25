@@ -4,11 +4,11 @@
  */
 
 // Type definitions exports
-export * from './types';
+export * from './types/index.js';
 
 // Service exports
-export type { ChatService } from './services/ChatService';
-export { ChatServiceFactory } from './services/ChatServiceFactory';
+export type { ChatService } from './services/ChatService.js';
+export { ChatServiceFactory } from './services/ChatServiceFactory.js';
 
 // Provider exports
 export type {
@@ -32,67 +32,67 @@ export type {
   PlamoChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from './services/providers/ChatServiceProvider';
+} from './services/providers/ChatServiceProvider.js';
 
 // OpenAI provider exports
-export { OpenAIChatService } from './services/providers/openai/OpenAIChatService';
-export { OpenAIChatServiceProvider } from './services/providers/openai/OpenAIChatServiceProvider';
-export { OpenAICompatibleChatServiceProvider } from './services/providers/openaiCompatible/OpenAICompatibleChatServiceProvider';
+export { OpenAIChatService } from './services/providers/openai/OpenAIChatService.js';
+export { OpenAIChatServiceProvider } from './services/providers/openai/OpenAIChatServiceProvider.js';
+export { OpenAICompatibleChatServiceProvider } from './services/providers/openaiCompatible/OpenAICompatibleChatServiceProvider.js';
 
 // Gemini provider exports
-export { GeminiChatService } from './services/providers/gemini/GeminiChatService';
-export { GeminiChatServiceProvider } from './services/providers/gemini/GeminiChatServiceProvider';
+export { GeminiChatService } from './services/providers/gemini/GeminiChatService.js';
+export { GeminiChatServiceProvider } from './services/providers/gemini/GeminiChatServiceProvider.js';
 
 // Gemini Nano provider exports
-export { GeminiNanoChatService } from './services/providers/geminiNano/GeminiNanoChatService';
-export { GeminiNanoChatServiceProvider } from './services/providers/geminiNano/GeminiNanoChatServiceProvider';
+export { GeminiNanoChatService } from './services/providers/geminiNano/GeminiNanoChatService.js';
+export { GeminiNanoChatServiceProvider } from './services/providers/geminiNano/GeminiNanoChatServiceProvider.js';
 
 // Claude provider exports
-export { ClaudeChatService } from './services/providers/claude/ClaudeChatService';
-export { ClaudeChatServiceProvider } from './services/providers/claude/ClaudeChatServiceProvider';
+export { ClaudeChatService } from './services/providers/claude/ClaudeChatService.js';
+export { ClaudeChatServiceProvider } from './services/providers/claude/ClaudeChatServiceProvider.js';
 
 // OpenRouter provider exports
-export { OpenRouterChatService } from './services/providers/openrouter/OpenRouterChatService';
-export { OpenRouterChatServiceProvider } from './services/providers/openrouter/OpenRouterChatServiceProvider';
+export { OpenRouterChatService } from './services/providers/openrouter/OpenRouterChatService.js';
+export { OpenRouterChatServiceProvider } from './services/providers/openrouter/OpenRouterChatServiceProvider.js';
 
 // Z.ai provider exports
-export { ZAIChatService } from './services/providers/zai/ZAIChatService';
-export { ZAIChatServiceProvider } from './services/providers/zai/ZAIChatServiceProvider';
+export { ZAIChatService } from './services/providers/zai/ZAIChatService.js';
+export { ZAIChatServiceProvider } from './services/providers/zai/ZAIChatServiceProvider.js';
 
 // xAI provider exports
-export { XAIChatService } from './services/providers/xai/XAIChatService';
-export { XAIChatServiceProvider } from './services/providers/xai/XAIChatServiceProvider';
+export { XAIChatService } from './services/providers/xai/XAIChatService.js';
+export { XAIChatServiceProvider } from './services/providers/xai/XAIChatServiceProvider.js';
 
 // Kimi provider exports
-export { KimiChatService } from './services/providers/kimi/KimiChatService';
-export { KimiChatServiceProvider } from './services/providers/kimi/KimiChatServiceProvider';
+export { KimiChatService } from './services/providers/kimi/KimiChatService.js';
+export { KimiChatServiceProvider } from './services/providers/kimi/KimiChatServiceProvider.js';
 
 // DeepSeek provider exports
-export { DeepSeekChatService } from './services/providers/deepseek/DeepSeekChatService';
-export { DeepSeekChatServiceProvider } from './services/providers/deepseek/DeepSeekChatServiceProvider';
+export { DeepSeekChatService } from './services/providers/deepseek/DeepSeekChatService.js';
+export { DeepSeekChatServiceProvider } from './services/providers/deepseek/DeepSeekChatServiceProvider.js';
 
 // Mistral provider exports
-export { MistralChatService } from './services/providers/mistral/MistralChatService';
-export { MistralChatServiceProvider } from './services/providers/mistral/MistralChatServiceProvider';
+export { MistralChatService } from './services/providers/mistral/MistralChatService.js';
+export { MistralChatServiceProvider } from './services/providers/mistral/MistralChatServiceProvider.js';
 
 // Sakana provider exports
-export { SakanaChatService } from './services/providers/sakana/SakanaChatService';
-export { SakanaChatServiceProvider } from './services/providers/sakana/SakanaChatServiceProvider';
+export { SakanaChatService } from './services/providers/sakana/SakanaChatService.js';
+export { SakanaChatServiceProvider } from './services/providers/sakana/SakanaChatServiceProvider.js';
 
 // Sarashina provider exports
-export { SarashinaChatService } from './services/providers/sarashina/SarashinaChatService';
-export { SarashinaChatServiceProvider } from './services/providers/sarashina/SarashinaChatServiceProvider';
+export { SarashinaChatService } from './services/providers/sarashina/SarashinaChatService.js';
+export { SarashinaChatServiceProvider } from './services/providers/sarashina/SarashinaChatServiceProvider.js';
 
 // PLaMo provider exports
-export { PlamoChatService } from './services/providers/plamo/PlamoChatService';
-export { PlamoChatServiceProvider } from './services/providers/plamo/PlamoChatServiceProvider';
+export { PlamoChatService } from './services/providers/plamo/PlamoChatService.js';
+export { PlamoChatServiceProvider } from './services/providers/plamo/PlamoChatServiceProvider.js';
 
 // Constants exports
-export * from './constants';
+export * from './constants/index.js';
 
 // Utility exports
-export * from './utils';
-export * from './backend';
+export * from './utils/index.js';
+export * from './backend.js';
 
 // Adapters
-export { installGASFetch } from './adapters/gasFetch';
+export { installGASFetch } from './adapters/gasFetch.js';

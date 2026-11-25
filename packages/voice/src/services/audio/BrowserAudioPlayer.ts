@@ -1,4 +1,4 @@
-import { AudioPlayer } from '../../types/audioPlayer';
+import { AudioPlayer } from '../../types/audioPlayer.js';
 
 /**
  * Browser-based audio player implementation using HTMLAudioElement

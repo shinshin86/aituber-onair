@@ -1,12 +1,12 @@
-import { VOICEPEAK_API_URL } from '../constants/voiceEngine';
+import { VOICEPEAK_API_URL } from '../constants/voiceEngine.js';
 import {
   EmotionTypeForVoicepeak,
   Talk,
   VoicepeakEmotionInput,
   VoicepeakEmotionWeights,
-} from '../types/voice';
-import { buildQueryUrl, fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+} from '../types/voice.js';
+import { buildQueryUrl, fetchWithTimeout } from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 const VOICEPEAK_EMOTION_KEYS: readonly EmotionTypeForVoicepeak[] = [
   'happy',

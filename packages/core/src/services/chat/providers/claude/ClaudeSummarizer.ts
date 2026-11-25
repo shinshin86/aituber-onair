@@ -1,5 +1,5 @@
 import { Message } from '@aituber-onair/chat';
-import { Summarizer } from '../../../../core/MemoryManager';
+import { Summarizer } from '../../../../core/MemoryManager.js';
 import {
   ENDPOINT_CLAUDE_API,
   MODEL_CLAUDE_4_5_HAIKU,
@@ -8,7 +8,7 @@ import {
 import {
   createSummaryContext,
   summarizeWithFallback,
-} from '../summarizerUtils';
+} from '../summarizerUtils.js';
 
 /**
  * Implementation of summarization functionality using Claude

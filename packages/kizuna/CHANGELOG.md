@@ -1,5 +1,14 @@
 # @aituber-onair/kizuna
 
+## 0.0.4
+
+### Patch Changes
+
+- Fix plain Node.js imports of `@aituber-onair/kizuna`. The build now uses
+  explicit `.js` relative specifiers, so `import` works without a bundler and
+  `require()` works on Node.js versions that support loading ES modules
+  synchronously (#443).
+
 ## 0.0.3
 
 ### Breaking Changes

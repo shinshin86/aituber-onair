@@ -3,7 +3,7 @@ import type {
   BondContextLanguage,
   BondContextOptions,
   BondSnapshot,
-} from '../types';
+} from '../types.js';
 
 export class BondContextBuilder {
   constructor(private readonly config: BondContextConfig = {}) {}

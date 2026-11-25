@@ -5,7 +5,7 @@ import {
   type BushitsuTransportCloseEvent,
   type BushitsuTransportMessageEvent,
   mapReadyState,
-} from '../core/transport';
+} from '../core/transport.js';
 
 export interface WebSocketLike {
   readyState: number;

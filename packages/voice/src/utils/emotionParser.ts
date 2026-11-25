@@ -1,4 +1,4 @@
-import { EmotionType, emotions, TalkStyle } from '../types/voice';
+import { EmotionType, emotions, TalkStyle } from '../types/voice.js';
 
 /**
  * Regular expressions for emotion tag parsing

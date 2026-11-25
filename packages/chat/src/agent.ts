@@ -1,6 +1,6 @@
-export * from './index';
-export * from './services/providers/agent';
+export * from './index.js';
+export * from './services/providers/agent/index.js';
 
-import { registerAgentChatProviders } from './services/providers/agent';
+import { registerAgentChatProviders } from './services/providers/agent/index.js';
 
 registerAgentChatProviders();

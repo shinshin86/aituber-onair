@@ -1,11 +1,11 @@
 import {
   ENDPOINT_MISTRAL_CHAT_COMPLETIONS_API,
   MODEL_MISTRAL_SMALL_LATEST,
-} from '../../../constants/mistral';
-import { ChatResponseLength } from '../../../constants/chat';
-import { ToolDefinition } from '../../../types/toolChat';
-import { OpenAIChatService } from '../openai/OpenAIChatService';
-import type { MistralReasoningEffort } from '../../../constants/mistral';
+} from '../../../constants/mistral.js';
+import { ChatResponseLength } from '../../../constants/chat.js';
+import { ToolDefinition } from '../../../types/toolChat.js';
+import { OpenAIChatService } from '../openai/OpenAIChatService.js';
+import type { MistralReasoningEffort } from '../../../constants/mistral.js';
 
 export class MistralChatService extends OpenAIChatService {
   constructor(

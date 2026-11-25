@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { GradiumVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { GradiumVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type EngineHandler,
   type GradiumConfigurableEngine,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 const allowedUpdateKeys = [
   'gradiumApiUrl',

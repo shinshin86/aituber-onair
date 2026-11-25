@@ -10,11 +10,11 @@ export {
   VisionBlock,
   ChatType,
   Screenplay,
-} from './chat';
+} from './chat.js';
 
 // Tool related type definitions
-export * from './toolChat';
+export * from './toolChat.js';
 
 // MCP related type definitions
-export * from './mcp';
-export type { ChatProviderCapabilities } from './capabilities';
+export * from './mcp.js';
+export type { ChatProviderCapabilities } from './capabilities.js';

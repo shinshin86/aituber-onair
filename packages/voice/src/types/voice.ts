@@ -68,7 +68,7 @@ export type VoicepeakEmotionInput =
  * Screenplay - Text with emotion expression
  * This has a different structure from the Screenplay type in chat.ts.
  * Be careful of name conflicts when importing both types.
- * Example: import { Screenplay as VoiceScreenplay } from '../types/voice';
+ * Example: import { Screenplay as VoiceScreenplay } from '../types/voice.js';
  */
 export type Screenplay = {
   expression: EmotionType;

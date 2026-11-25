@@ -1,5 +1,5 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { PiperPlusAssets } from '../../../engines/PiperPlusEngine';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { PiperPlusAssets } from '../../../engines/PiperPlusEngine.js';
 import type {
   AivisCloudVoiceServiceOptions,
   AivisSpeechVoiceServiceOptions,
@@ -19,7 +19,7 @@ import type {
   VoiceVoxVoiceServiceOptions,
   WebSpeechVoiceServiceOptions,
   XaiVoiceServiceOptions,
-} from '../../VoiceService';
+} from '../../VoiceService.js';
 
 export interface ApiEndpointConfigurableEngine extends VoiceEngine {
   setApiEndpoint(apiUrl: string): void;

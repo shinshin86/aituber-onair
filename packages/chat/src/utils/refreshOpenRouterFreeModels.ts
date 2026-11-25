@@ -1,7 +1,7 @@
 import {
   ENDPOINT_OPENROUTER_API,
   isOpenRouterFreeModel,
-} from '../constants/openrouter';
+} from '../constants/openrouter.js';
 
 const OPENROUTER_MODELS_ENDPOINT = 'https://openrouter.ai/api/v1/models';
 const DEFAULT_CONCURRENCY = 2;

@@ -1,7 +1,7 @@
-import { OPENAI_TTS_API_URL } from '../constants/voiceEngine';
-import { Talk } from '../types/voice';
-import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils';
-import { VoiceEngine } from './VoiceEngine';
+import { OPENAI_TTS_API_URL } from '../constants/voiceEngine.js';
+import { Talk } from '../types/voice.js';
+import { clampNumberWithFallback, fetchWithTimeout } from './internal/utils.js';
+import { VoiceEngine } from './VoiceEngine.js';
 
 /**
  * OpenAI Speech API voice synthesis engine.

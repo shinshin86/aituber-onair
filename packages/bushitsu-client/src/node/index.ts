@@ -1,10 +1,10 @@
-import { BushitsuClient } from '../client/BushitsuClient';
-import type { BushitsuClientOptions } from '../client/types';
+import { BushitsuClient } from '../client/BushitsuClient.js';
+import type { BushitsuClientOptions } from '../client/types.js';
 import {
   createWebSocketTransport,
   type WebSocketFactory,
   type WebSocketLike,
-} from '../transports/webSocketTransport';
+} from '../transports/webSocketTransport.js';
 
 export interface NodeBushitsuClientOptions extends BushitsuClientOptions {
   /**

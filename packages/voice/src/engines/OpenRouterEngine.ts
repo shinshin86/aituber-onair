@@ -1,22 +1,22 @@
-import { OPENROUTER_TTS_API_URL } from '../constants/voiceEngine';
-import type { Talk } from '../types/voice';
-import { createPcm16Wav } from '../utils/wavHeader';
+import { OPENROUTER_TTS_API_URL } from '../constants/voiceEngine.js';
+import type { Talk } from '../types/voice.js';
+import { createPcm16Wav } from '../utils/wavHeader.js';
 import {
   isOpenRouterVoice,
   OPENROUTER_AUDIO_FORMATS,
   requireOpenRouterModel,
   resolveOpenRouterUrl,
   type OpenRouterTtsModel,
-} from './internal/openRouter';
+} from './internal/openRouter.js';
 import {
   createConfigurationError,
   fetchWithTimeout,
   throwApiError,
-} from './internal/utils';
-import type { VoiceEngine } from './VoiceEngine';
-import { VoiceEngineError } from './VoiceEngineError';
+} from './internal/utils.js';
+import type { VoiceEngine } from './VoiceEngine.js';
+import { VoiceEngineError } from './VoiceEngineError.js';
 
-export type { OpenRouterTtsModel } from './internal/openRouter';
+export type { OpenRouterTtsModel } from './internal/openRouter.js';
 
 /** One-shot speech with explicit model selection: MAI PCM as WAV, or MP3. */
 export class OpenRouterEngine implements VoiceEngine {

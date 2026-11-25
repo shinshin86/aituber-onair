@@ -1,7 +1,7 @@
-import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning';
-import { ChatService } from '../../ChatService';
-import { Message, MessageWithVision } from '../../../types';
-import { ToolDefinition, ToolChatCompletion } from '../../../types';
+import { stripSarashinaReasoning } from '../../../utils/stripSarashinaReasoning.js';
+import { ChatService } from '../../ChatService.js';
+import { Message, MessageWithVision } from '../../../types/index.js';
+import { ToolDefinition, ToolChatCompletion } from '../../../types/index.js';
 import {
   ENDPOINT_ZAI_CHAT_COMPLETIONS_API,
   MODEL_GLM_5_2,
@@ -12,19 +12,19 @@ import {
   isZaiToolStreamModel,
   isZaiVisionModel,
   type ZaiReasoningEffort,
-} from '../../../constants/zai';
+} from '../../../constants/zai.js';
 import {
   ChatResponseLength,
   getMaxTokensForResponseLength,
-} from '../../../constants/chat';
-import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient';
+} from '../../../constants/chat.js';
+import { ChatServiceHttpClient } from '../../../utils/chatServiceHttpClient.js';
 import {
   buildOpenAICompatibleTools,
   parseOpenAICompatibleOneShot,
   parseOpenAICompatibleTextStream,
   parseOpenAICompatibleToolStream,
   processChatWithOptionalTools,
-} from '../../../utils';
+} from '../../../utils/index.js';
 
 /**
  * Z.ai implementation of ChatService (OpenAI-compatible Chat Completions)

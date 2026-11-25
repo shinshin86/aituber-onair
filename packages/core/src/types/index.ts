@@ -4,4 +4,4 @@
  */
 
 // Memory related type definitions
-export * from './memory';
+export * from './memory.js';

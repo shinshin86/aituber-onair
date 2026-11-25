@@ -1,10 +1,10 @@
-import type { VoiceEngine } from '../../../engines/VoiceEngine';
-import type { DeepgramVoiceServiceOptions } from '../../VoiceService';
+import type { VoiceEngine } from '../../../engines/VoiceEngine.js';
+import type { DeepgramVoiceServiceOptions } from '../../VoiceService.js';
 import {
   type DeepgramConfigurableEngine,
   type EngineHandler,
   mergeOptionValues,
-} from './types';
+} from './types.js';
 
 export const deepgramEngineHandler: EngineHandler<DeepgramVoiceServiceOptions> =
   {

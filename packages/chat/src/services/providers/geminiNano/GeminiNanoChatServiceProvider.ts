@@ -1,11 +1,11 @@
-import { ChatService } from '../../ChatService';
-import { GeminiNanoChatService } from './GeminiNanoChatService';
+import { ChatService } from '../../ChatService.js';
+import { GeminiNanoChatService } from './GeminiNanoChatService.js';
 import {
   GeminiNanoChatServiceOptions,
   ChatServiceProvider,
   VisionSupportLevel,
-} from '../ChatServiceProvider';
-import { MODEL_GEMINI_NANO } from '../../../constants/geminiNano';
+} from '../ChatServiceProvider.js';
+import { MODEL_GEMINI_NANO } from '../../../constants/geminiNano.js';
 
 /**
  * Gemini Nano (Chrome built-in AI) provider implementation.
