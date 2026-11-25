@@ -411,6 +411,17 @@ This project manages releases through manual version updates and CHANGELOG maint
    5. Include `package-lock.json` **and** consumer `package.json` range updates
       in the **same commit** (or at least the same PR) as the version bump.
 
+5. **Never bump a package and its workspace dependency in the same PR**
+   - The release workflow publishes all bumped packages in parallel and each
+     one rebuilds in `prepublishOnly`, so a dependent package fails to build
+     while its dependency's `dist` is being rebuilt. Release the dependency
+     first, confirm it is on npm, then bump the dependent in a separate PR.
+     This applies to patch releases too.
+   - Current pairs: `chat` or `voice` with `core`, and `chat` with `agent` or
+     `noise`.
+   - CI enforces this with `npm run check:release-order` (the `release-order`
+     job). Run it locally before opening a release PR.
+
 **IMPORTANT**: Never use `npm publish` directly - all publishing is automated via CI/CD
 
 ### Failure Recovery Notes
