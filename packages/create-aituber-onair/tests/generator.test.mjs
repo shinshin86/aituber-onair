@@ -12,14 +12,25 @@ import {
 
 const packageRoot = path.resolve('.');
 const templateRoot = path.join(packageRoot, 'templates');
-const maximumPackedBytes = 30 * 1024 * 1024;
-const maximumUnpackedBytes = 56 * 1024 * 1024;
+const maximumPackedBytes = 38 * 1024 * 1024;
+const maximumUnpackedBytes = 68 * 1024 * 1024;
 
-test('manifest defines the seven generated templates', async () => {
+test('manifest defines the ten generated templates', async () => {
   const manifest = await readTemplateManifest();
   assert.deepEqual(
     manifest.templates.map((template) => template.id),
-    ['pngtuber', 'vrm', 'live2d', 'pet', 'purupuru', 'psd', 'inochi2d'],
+    [
+      'pngtuber',
+      'vrm',
+      'live2d',
+      'pet',
+      'purupuru',
+      'psd',
+      'inochi2d',
+      'media-avatar',
+      'mesh-avatar',
+      'single-image-avatar',
+    ],
   );
 });
 
@@ -47,6 +58,9 @@ test('generated templates use published dependency ranges', async () => {
     'purupuru',
     'psd',
     'inochi2d',
+    'media-avatar',
+    'mesh-avatar',
+    'single-image-avatar',
   ]) {
     const packageJson = JSON.parse(
       await readFile(path.join(templateRoot, template, 'package.json'), 'utf8'),
@@ -57,6 +71,11 @@ test('generated templates use published dependency ranges', async () => {
       '^0.0.9',
     );
     assert.equal(packageJson.dependencies['@aituber-onair/manneri'], '^0.4.0');
+    assert.equal(packageJson.dependencies['@aituber-onair/kizuna'], '^0.0.4');
+    assert.equal(
+      packageJson.dependencies['@aituber-onair/transcription'],
+      '^0.0.4',
+    );
   }
 });
 
@@ -73,6 +92,24 @@ test('npm pack includes generated templates without ignored assets', async () =>
   );
   const [packResult] = JSON.parse(output);
   const packedFiles = packResult.files.map((file) => file.path);
+
+  for (const file of [
+    'media-avatar/public/avatar/media/neutral.gif',
+    'media-avatar/public/avatar/media/happy.gif',
+    'media-avatar/public/avatar/media/angry.gif',
+    'media-avatar/public/avatar/media/sad.gif',
+    'mesh-avatar/public/avatar/miko-qipao.mavatar',
+    'mesh-avatar/MIKO_ASSET_TERMS.md',
+    'single-image-avatar/public/avatar/miko-avatar.png',
+    'single-image-avatar/public/avatar/miko-puppet-avatar.png',
+    'single-image-avatar/MIKO_ASSET_TERMS.md',
+  ]) {
+    assert.ok(packedFiles.includes(`templates/${file}`), file);
+  }
+  assert.equal(
+    packedFiles.includes('templates/media-avatar/MIKO_ASSET_TERMS.md'),
+    false,
+  );
 
   assert.equal(
     packedFiles.includes(
@@ -148,4 +185,21 @@ test('generated VRM resolves Three.js from the standalone project', async () => 
   );
   assert.equal(viteConfig.includes('../../../../node_modules/three'), false);
   assert.equal(viteConfig.includes("'node_modules/three'"), true);
+});
+
+test('generated Mesh Avatar readmes use standalone setup steps', async () => {
+  for (const name of ['README.md', 'README.ja.md']) {
+    const readme = await readFile(
+      path.join(templateRoot, 'mesh-avatar', name),
+      'utf8',
+    );
+    assert.ok(
+      readme.includes('cd <project-directory>\nnpm install\nnpm run dev'),
+    );
+    assert.equal(readme.includes('npm run build'), false);
+    assert.equal(
+      readme.includes('packages/core/examples/react-mesh-avatar-app'),
+      false,
+    );
+  }
 });

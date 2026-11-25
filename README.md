@@ -78,7 +78,8 @@ walkthrough.
 ### 2. Create a starter app
 
 Use `create-aituber-onair` to scaffold your own app from the official
-PNGTuber, VRM, Live2D, Pet, PuruPuru, PSD, or Inochi2D starter templates.
+starter templates: PNGTuber, VRM, Live2D, Pet, PuruPuru, PSD, Inochi2D,
+Media Avatar, Mesh Avatar, and Single Image Avatar.
 
 ```bash
 npm create aituber-onair@latest

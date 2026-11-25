@@ -21,6 +21,8 @@ npm run dev
 
 ## Templates
 
+Choose from ten avatar templates. `pngtuber` is the default.
+
 - `pngtuber`: 2D PNG avatar app with bundled avatar image assets
 - `vrm`: 3D VRM avatar app with bundled `miko.vrm` and idle animation assets
 - `live2d`: Live2D avatar app without bundled Live2D model assets
@@ -28,6 +30,9 @@ npm run dev
 - `purupuru`: Physics-driven PuruPuru PNGTuber app with a bundled avatar
 - `psd`: PSD Tachie app with a bundled Miko motion avatar
 - `inochi2d`: Inochi2D app with an optional Aka sample-model download
+- `media-avatar`: Image, GIF, and video avatar app with four bundled emotion GIFs
+- `mesh-avatar`: WebGL2 mesh avatar app with a bundled Miko `.mavatar` file
+- `single-image-avatar`: Single-image avatar app with illustration and puppet Miko images
 
 ## Usage
 
@@ -53,6 +58,9 @@ npm create aituber-onair@latest my-pet-aituber -- --template pet
 npm create aituber-onair@latest my-purupuru -- --template purupuru
 npm create aituber-onair@latest my-psd-aituber -- --template psd
 npm create aituber-onair@latest my-inochi2d-aituber -- --template inochi2d
+npm create aituber-onair@latest my-media-avatar -- --template media-avatar
+npm create aituber-onair@latest my-mesh-avatar -- --template mesh-avatar
+npm create aituber-onair@latest my-single-image-avatar -- --template single-image-avatar
 ```
 
 Install dependencies during project creation:
@@ -81,6 +89,11 @@ package. Interactive setup asks whether to download them from a commit-pinned
 URL and verifies their SHA-256 checksums. Use `--no-download-assets` to skip
 the download, or run `npm run setup:sample-model` in the generated app later.
 The runtime and required third-party notices remain bundled.
+
+Bundled asset terms are documented in each generated app. `media-avatar`
+includes four AI-generated GIFs and documents them in its README. The
+`mesh-avatar` and `single-image-avatar` templates include `MIKO_ASSET_TERMS.md`
+for their bundled Miko assets.
 
 ## Template maintenance
 

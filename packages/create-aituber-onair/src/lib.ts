@@ -274,7 +274,8 @@ Usage:
 
 Options:
   -t, --template <name>  Template to use: pngtuber, vrm, live2d, pet,
-                         purupuru, psd, inochi2d
+                         purupuru, psd, inochi2d, media-avatar,
+                         mesh-avatar, single-image-avatar
       --install          Run npm install after creating the project
       --no-install       Do not run npm install
       --download-assets  Download optional template assets

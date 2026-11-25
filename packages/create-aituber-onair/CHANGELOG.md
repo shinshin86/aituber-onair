@@ -1,5 +1,16 @@
 # create-aituber-onair
 
+## 0.3.0
+
+### Minor Changes
+
+- Added `media-avatar`, `mesh-avatar`, and `single-image-avatar` starter
+  templates generated from the corresponding Core examples. PNGTuber remains
+  the default template.
+- Bundle the four emotion GIFs for Media Avatar, the Miko `.mavatar` file for
+  Mesh Avatar, and the illustration and puppet images for Single Image Avatar.
+  Mesh Avatar and Single Image Avatar include `MIKO_ASSET_TERMS.md`.
+
 ## 0.2.4
 
 ### Patch Changes

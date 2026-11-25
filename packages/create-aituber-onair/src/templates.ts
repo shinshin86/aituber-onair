@@ -10,6 +10,9 @@ export const TEMPLATE_IDS = [
   'purupuru',
   'psd',
   'inochi2d',
+  'media-avatar',
+  'mesh-avatar',
+  'single-image-avatar',
 ] as const;
 
 export type TemplateId = (typeof TEMPLATE_IDS)[number];
