@@ -420,7 +420,9 @@ This project manages releases through manual version updates and CHANGELOG maint
    - Current pairs: `chat` or `voice` with `core`, and `chat` with `agent` or
      `noise`.
    - CI enforces this with `npm run check:release-order` (the `release-order`
-     job). Run it locally before opening a release PR.
+     job). A repository ruleset makes that job a required status check on
+     `main` with no bypass, so a PR cannot be merged while it fails. Run it
+     locally before opening a release PR.
 
 **IMPORTANT**: Never use `npm publish` directly - all publishing is automated via CI/CD
 
